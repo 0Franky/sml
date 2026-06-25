@@ -1,0 +1,113 @@
+# Claude Code local config
+.claude/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ML / Experiments
+wandb/
+mlruns/
+lightning_logs/
+checkpoints/
+runs/
+outputs/
+logs/
+*.ckpt
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.gguf
+*.onnx
+
+# Datasets (di solito troppo grandi per git)
+data/
+datasets/
+*.csv
+*.parquet
+*.arrow
+*.jsonl
+
+# HuggingFace cache
+.cache/
+hf_cache/
+
+# Secrets & env
+.env.local
+.env.*.local
+*.key
+*.pem
+secrets/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Coverage / testing
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+
+# Logs
+*.log
+GRANT-*.log
+
+# Local tooling state / junk (added for publish 2026-06-25)
+.serena/
+*.stackdump
+graphify-out/
+
+# Ledger operativo interno — tenuto locale, NON pubblicato (note di processo, no design)
+wiki/log.md
+
+# Raw sources personali — tenuti locali, NON pubblicati (info già nella wiki)
+appunti su quaderno.png
+HANDOFF.md
+transcript.md
