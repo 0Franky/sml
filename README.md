@@ -2,7 +2,7 @@
 
 > Knowledge base di ricerca per la progettazione di uno **Small Language Model** specializzato **prima nell'organizzazione/pianificazione** e poi nel coding, con architettura modulare **three-tier** e un wrapper applicativo.
 >
-> Stato: **fase di design / ricerca** (knowledge base in evoluzione, pre-implementazione). Repo privato.
+> Stato: **fase di design / ricerca** — knowledge base in evoluzione (pre-implementazione).
 
 ## Idea in breve
 
