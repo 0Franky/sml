@@ -41,8 +41,9 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 - [`entities/med-moe-lora.md`](entities/med-moe-lora.md) — Med-MoE-LoRA / Specialized Generalists, decoupling cognizione generale vs dominio (match three-tier)
 - [`entities/hdmole.md`](entities/hdmole.md) — HDMoLE, hierarchical routing + dynamic thresholds, mapping esplicito experts↔dominio (ASR)
 
-### Tooling
+### Tooling / inference engines
 - (da popolare in grill-me) — Unsloth, PEFT, vLLM, TRL, Axolotl, LLaMA-Factory
+- [`entities/dwarfstar4.md`](entities/dwarfstar4.md) 🆕🔬 — **DwarfStar 4 (DS4)** di antirez: inference engine locale self-contained per **DeepSeek V4 Flash** (MoE ~284B). **Quant asimmetrica 2/8-bit sui soli routed experts** (router/shared/proj full) = **esempio shipped** del per-expert MoE quant. KV-cache su disco = sessione (multi-day), coding agent in-process + server OpenAI/Anthropic. Rilevante per quant MoE + wrapper + teacher. Studiato 2026-06-26
 
 ## Concepts (tecniche, principi, trade-off)
 
@@ -80,6 +81,7 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 - [`concepts/reward-hacking-mitigation.md`](concepts/reward-hacking-mitigation.md) 🆕⚠️ — **vincolo di prima classe su tutto il reward design**: mappa dove il reward hacking avviene nella pipeline (PRM/GRPO/RLAIF/self-score/judge) + difese in profondità (ancorare al verificabile, scorer≠scored, hidden tests, monitor overoptimization). Emphasis utente 2026-06-23
 - [`concepts/multimodality-vision-audio.md`](concepts/multimodality-vision-audio.md) 🆕 — **feasibility vision+audio (comprensione)**: Gemma 4 encoder-free (verificato), Qwen3-VL/Omni, spettro 4 opzioni (wrapper-as-tool / adapter / base-swap / encoder-free) + reco (defer native, wrapper-as-tool per MVP). Impatta base-model ADR. Domanda utente 2026-06-24
 - [`concepts/self-analysis-strategy-revision.md`](concepts/self-analysis-strategy-revision.md) 🆕 — **autoanalisi introspettiva**: il modello capisce *perché* fallisce, cosa crea attrito (anche lato utente) e **revisiona le proprie strategie** (oltre l'artefatto). Estende Area 16/4 al livello traiettoria+strategia. Reflexion-like ma reward **outcome-anchored** (anti-confabulazione) + friction-awareness. Candidato paper-claim #7. Idea utente 2026-06-26
+- [`concepts/moe-per-expert-quantization.md`](concepts/moe-per-expert-quantization.md) 🆕🔬 — **quantizzare ogni esperto MoE in modo differente** (mixed-precision per-expert): fattibile e SOTA (MoQE/QMoE/MoPEQ/MxMoE/AlphaQ). Bit allocati per frequenza o (meglio) **sensibilità Hessian**. Caveat: kernel eterogenei, importanza data-dependent, router in alta precisione. Per noi = ottimizzazione **Wave 7-8** sul target 35B-A3B MoE. Query utente 2026-06-26 (citazioni verificate)
 
 **Categoria A — Reasoning structure** (come pensa il modello):
 - [`concepts/structured-thinking.md`](concepts/structured-thinking.md) — "caveman thinking" strutturato, marker `[V]/[A]/[?]`, no discorsivo
