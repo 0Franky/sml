@@ -233,6 +233,18 @@ Mantenere knowledge graph parallelo alla wiki. Single source of truth per query 
 
 Audit trail: ogni edge ha confidence tag (EXTRACTED/INFERRED/AMBIGUOUS), allineato con la convenzione wiki.
 
+### Portabilità / OS-agnostic (obbligatorio)
+
+Tutti gli artifact graphify destinati al repo devono essere **device-independent** (Linux / Windows / macOS / altri). Convenzione unica e standard:
+
+- **Path relativi alla root del repo**, sempre. Mai assoluti, mai username/home dir (`D:\Users\<user>\...`, `C:\Users\...`, `/home/<user>/...`). Un path relativo è già di per sé root- e device-agnostic e **risolvibile dai tool** (graph viewer, GitHub, Obsidian) — niente token/placeholder custom (`<repo-root>/`, `$ROOT/`…): romperebbero la risoluzione automatica.
+- **Forward slash `/`** ovunque, **mai** backslash `\` (Windows-only → rompe su Linux).
+- I link interni nel contenuto wiki seguono già questa convenzione (Obsidian `[[...]]` / markdown relativo): mantienila a ogni scrittura.
+- I subagent di estrazione graphify devono emettere `source_file` **repo-relative con `/`** (è già il default di `graph.json`).
+- **Al push**: pubblicare SOLO `graph.json` + `graph.html` + `GRAPH_REPORT.md`. **Escludere `manifest.json`** (contiene path assoluti del device). Prima del push, pass di sanitizzazione: ogni `\` → `/`, ogni path assoluto/username → ridotto a repo-relative.
+
+> Razionale: il grafo va pushato per evitare ad altri di rigenerarlo (~170K token); deve clonarsi e aprirsi identico su qualsiasi device. Un solo path assoluto lo rende non-portabile **e** leaka l'username (→ [[feedback_no_pii_in_repo]]).
+
 ---
 
 ## Regole permanenti
@@ -243,6 +255,7 @@ Audit trail: ogni edge ha confidence tag (EXTRACTED/INFERRED/AMBIGUOUS), allinea
 4. **Italiano** in tutta la conversazione con l'utente (vedi globalCLAUDE.md). Termini tecnici e identifier in inglese.
 5. **No co-author Claude** nei commit (vedi globalCLAUDE.md).
 6. **Skill `grill-me`** prima di scrivere codice/training pipeline. È la fase 2 dell'onboarding, ma riformulata e più rigorosa.
+7. **Artifact graphify OS-agnostic**: path repo-relative + forward slash, mai assoluti/backslash/username, niente token custom. Push solo `graph.json`+`graph.html`+`GRAPH_REPORT.md`, escludi `manifest.json` (vedi Fase 5 → Portabilità).
 
 ---
 
