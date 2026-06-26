@@ -4,7 +4,7 @@ description: Tassonomia completa dei dati/argomenti di training del SLM. Ogni ar
 type: index
 tags: [training, dataset, taxonomy, curriculum, skills, qualitative, quantitative, hints, recovery, master]
 last_updated: 2026-06-23
-status: draft in costruzione — backbone completo, example-space da completare per tutte le foglie
+status: example-space GENERATO 2026-06-25 (16 file area-NN-*.md) — backbone + esempi completi
 ---
 
 # Training Taxonomy — backbone master
@@ -297,7 +297,7 @@ Ogni **area/foglia** va assegnata a una fase (la maggior parte: teoria in fase 1
 - **16 aree · ~77 topic · ~215 foglie** (stima). Tag distribuiti: la maggioranza Q nelle aree code/safety/security/SWE; L concentrate in quality/communication/critique/planning.
 - **Quality-target tiers** (PoC/MVP/Prod + scorecard) = meta-skill cross-area → concept [[../concepts/quality-target-tiers]], foglie in Area 1 + Area 16.
 - **Fatto**: backbone (aree+topic+tag+foglie+skill) + schema example-space + 2 foglie canoniche lavorate.
-- **Da fare**: example-space completo (1–5, con TUTTI gli hint definiti) per ogni foglia → file `area-NN-*.md`.
+- ✅ **Fatto 2026-06-25**: example-space completo (1–5, con TUTTI gli hint definiti forte→debole) per ogni foglia → **16 file `area-NN-*.md`** generati via 16 subagent. Vedi `index.md` per la lista.
 
 ## 6. Next
 

@@ -1,0 +1,25 @@
+# .graphifyignore — knowledge graph allineato al repo PUBBLICO.
+# Esclude ciò che è local-only / personale / output, così il grafo si può
+# pushare senza leak e gli altri lo aprono identico (cross-device).
+# Sintassi: gitignore-style (last-match-wins, ! per ri-includere).
+# NB: i secret (.env, *.key, *.pem, token...) sono già auto-skippati da graphify.
+
+# --- Output di graphify stesso (no self-graph) ---
+graphify-out/
+
+# --- Raw sources personali / local-only (gitignored) ---
+transcript.md
+HANDOFF.md
+appunti su quaderno.png
+wiki/log.md
+
+# --- Doc di ricerca personale (nomi di persone, non project knowledge) ---
+Ricerca AI*
+
+# --- Utility/script di sessione (non project knowledge, generano noise) ---
+convert_to_markdown.py
+*.jsonl
+
+# --- Tooling state locale ---
+.serena/
+.claude/

@@ -31,7 +31,7 @@ Il wrapper mantiene lane persistenti e a **ogni turno ri-assembla** il contesto 
 | `interconnections` | dipendenze + flag WIP | criticità implicite (organization-first) |
 | `last_tool_calls` | log con scope | azioni recenti + line-range |
 | `open_file_view` | stream/partial read inline | porzione di file in lettura |
-| `messages_with_user` | ultimi N scambi | continuità (blocco separato dal context tecnico) |
+| `messages_with_user` | ultimi N scambi (**N scelto dal modello**) | continuità; storico COMPLETO persistito su file, la finestra è solo la coda recente (§7.1) |
 
 Mappa su [[agent-wrapper-vars-queue]] + [[structured-context-sections]].
 
@@ -115,7 +115,7 @@ Mappa su [[agent-wrapper-vars-queue]] + [[structured-context-sections]].
 </context>
 
 
-<messages_with_user N:3>   <!-- blocco separato dal context tecnico -->
+<messages_with_user N:3>   <!-- blocco separato dal context tecnico. N impostato dal modello; storico completo su file, qui solo gli ultimi N (§7.1) -->
   User: ...
   AI:   ...
   User: ...
@@ -154,6 +154,40 @@ Il contesto non è statico: il wrapper espone API/tool per costruirlo e mutarlo 
 - **`open/stream_read_file` → `close_stream_file(file)`** — lo stream-read porta porzioni di file **inline** nel contesto (`<open_file_view>`); **`close_stream_file` lo cancella TOTALMENTE dal contesto**. È **context-eviction esplicita guidata dall'LLM** → istanza concreta dell'autocompact/context-edit ([[_user-notes-2026-06-23]] nota 5) e complemento di [[sliding-window-variable-tool]]. Token-saving: apri quando serve, chiudi quando hai finito.
 
 **Pattern emergente**: il modello **gestisce attivamente il proprio contesto** — apre file in stream, lavora, li chiude per liberare spazio; aggiunge secret alla lista; il harness ricompone tutto via `ctx.getContext()` a ogni turno. Questo realizza concretamente la metacognizione/autocompact delle note 4+5.
+
+## 7.1 Message-log persistente + finestra N model-set (design utente 2026-06-25)
+
+Precisazione utente sulla lane `messages_with_user`:
+
+- **Storico completo su file**: **tutti** i messaggi user↔AI sono salvati in un **file dedicato** (`messages.log` o simile) — source-of-truth, auditabile, abilita la **continuità multi-day** ([[temporal-awareness-timestamps]]) e la retrieval di scambi vecchi.
+- **Finestra = coda recente**: nel contesto entra solo la coda degli **ultimi N scambi**.
+- **N è scelto/impostato dal modello** (`set_history_window(N)` LLM-callable): è un **grado di libertà metacognitivo**, gemello di `close_stream_file` per i file → istanza di autocompact/context-edit *model-driven* ([[_user-notes-2026-06-23]] note 4+5).
+
+> ⚠️ **Critica & decisioni aperte (N model-set)** `[da-validare]`:
+> 1. **N-in-messaggi ≠ budget-token**: N scambi è a lunghezza variabile → pochi messaggi lunghi sforano la window. Meglio **N + cap token** (o N derivato da un budget), legando la length-prediction ([[multi-token-prediction-training]], Area 10 taxonomy).
+> 2. **Quando lo decide?** A inizio turno il modello non sa ancora cosa gli servirà (chicken-and-egg). Più robusto: **N di default + retrieval mirato dal file** (per id/timestamp/ricerca) quando rileva un buco, invece di gonfiare la finestra — più token-efficient. Lega a `<context_request>` (Area 8) e a degradation-self-awareness (Area 4).
+> 3. **Sweet-spot come skill addestrabile**: N troppo basso → **context-miss** (perde un vincolo detto 10 messaggi fa); troppo alto → spreco + lost-in-the-middle. Reward **ancorato all'OUTCOME**: penalizza la N che ha *causato un miss verificabile*, non l'atto di impostarla (anti participation-hack → [[reward-hacking-mitigation]]). **Candidato foglia in Area 4** (context-window sizing) della [[../training-taxonomy/README|training taxonomy]].
+> 4. **Coda recente + summary del resto**: oltre gli ultimi N raw, tenere un **summary rolling** dei più vecchi (come la history gerarchica §3), così gli scambi fuori-finestra non "spariscono" ma restano in forma compressa + recuperabili dal file.
+
+**Risoluzione utente (2026-06-26)**:
+- **Punti 1+4 → la window serve SOLO alla coerenza del dialogo** (capire di cosa si sta parlando per rispondere coerente). Per dettagli specifici il modello **legge il file di chat**; se vuole più contesto **allarga N**. → **niente summary rolling obbligatorio** per la chat (il file è il fallback). Distinto dalla history *tecnica* §3, che invece resta gerarchica con summary. Il punto 4 quindi **non si applica** alla lane chat.
+- **Punto 2 → retrieval sul file di chat = `grep`/file-search** (default leggero) **o graphify** (query semantiche). `[NB critico]` graphify è pensato per il **corpus di conoscenza** (wiki), pesante/overkill per un log di chat effimero → per il recall conversazionale preferire grep/substring/semantic-search; graphify solo se serve davvero cross-document.
+- **Punto 3 (count vs token-budget)** resta dettaglio implementativo: con window "solo-coerenza" basta un **piccolo N a conteggio**, ma prevedere comunque un **cap-token** per messaggi lunghi.
+
+## 7.2 Context sempre allineato — constraint capture (esplicito + dedotto) (utente 2026-06-26)
+
+Claim utente: *"l'agente deve tenere SEMPRE aggiornato e allineato il context. Se l'utente dà un vincolo, o l'agente ne intercetta uno dai messaggi (vincolo NON esplicito ma dedotto dalle esigenze), se lo segna nel contesto — ha la sua lista di note e regole. NON si DEVE perdere nulla."*
+
+Mappa **esattamente** sulle lane `rules` + `block_notes` (decision-cache, passo 7) + `interconnections` già nel design (§1, §3): sono il posto dove vincoli e decisioni vengono *pinnati* e propagati. Il claim **conferma e rafforza** quelle lane, estendendole a **due fonti**:
+- **Vincolo esplicito** (l'utente lo dice) → nota/regola diretta.
+- **Vincolo dedotto** (emergente dalle esigenze, non detto) → l'agente lo **inferisce e lo registra**. È organization-first / criticality-awareness applicato al dialogo (Area 1 goal/constraint tracking + Area 2 implicit-criticality).
+
+> ⚠️ **Critica onesta — il "non perdere nulla" va qualificato** (`[da-validare]`):
+> 1. **Dedotto ≠ confermato**: un vincolo *inferito* può essere **sbagliato**. Pinnarlo come regola hard per sempre = rischio **over-constraining** / agire su un requisito allucinato. → marcare i vincoli dedotti con **confidence**, e per quelli ad **alto impatto chiedere conferma** (deferenza, Area 9) prima di trattarli come hard. *Esplicito = hard; dedotto = provvisorio-da-confermare.*
+> 2. **"Niente perso" = persistenza durevole, non ritenzione verbatim infinita**: una lista note/regole che cresce all'infinito satura il budget e si auto-contraddice su sessioni lunghe. "Non perdere" deve significare **salvato in modo durevole** (file/wiki) + nel contesto vivo solo il sottoinsieme **attivo**. Serve **dedup + supersession** (una decisione nuova rimpiazza la vecchia — già il principio del decision-cache) + **contradiction-check** ([[contradiction-detection-layer]]).
+> 3. **Misura outcome-anchored, non partecipazione**: "cattura ogni vincolo" può degenerare in **over-noting** (segnare tutto per sembrare diligente). Il valore è catturare i vincoli che **contano**; metrica = *un vincolo reale è stato perso e ha causato un errore?*, non il numero di note → [[reward-hacking-mitigation]]. **Candidato foglia Area 1/2** (constraint extraction & maintenance).
+
+Lega a [[scientific-method-operating-protocol]] passo 2 (orient: far emergere obiettivo/limiti/criticità implicite), [[error-memo-system]] (memoria persistente), [[contradiction-detection-layer]].
 
 ## Sources
 - User notes 2026-06-23, nota 5 + 3 iterazioni esempio (Telegram msg 44/46/51/54 + sessione).
