@@ -23,6 +23,8 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 - [`architecture/programming-generalist.md`](architecture/programming-generalist.md) — dettagli LoRA programming generalist
 - [`architecture/vertical-loras.md`](architecture/vertical-loras.md) — dettagli LoRA verticali stack-specifici
 - [`architecture/wrapper.md`](architecture/wrapper.md) — wrapper applicativo, **ancorato su pi (harness MIT)**: 3 layer (frontend Web/App → pi+extensions → serving vLLM). I concept wrapper = extension di pi
+- [`architecture/harness-feature-catalog.md`](architecture/harness-feature-catalog.md) — **catalogo delle 6 feature-class che introduciamo su pi** (Context-Assembly · Dynamic-Context · Safety · Reasoning · Routing · Verification): contesto + funzionamento + mapping hook pi + MVP-vs-post + principio SKILL(pesi)-vs-FEATURE(wrapper). Punto di partenza per l'allineamento harness
+- [`architecture/wrapper-implementation-plan.md`](architecture/wrapper-implementation-plan.md) — piano operativo fasato (Fase 0 walking-skeleton → 1 MVP → 2 abilitatori Phase-3 → 3 post-MVP) + Step 0.0 verifica API pi
 
 ## Entities (paper, modelli, framework, persone)
 
