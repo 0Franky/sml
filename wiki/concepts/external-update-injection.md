@@ -9,6 +9,8 @@ last_updated: 2026-05-21
 
 # External Update Injection
 
+> ⚠️ **Correzione di fattibilità `[VERIFICATO 2026-06-27 contro l'API di pi]`**: il modello *pause/resume mid-stream* (pausare la generazione dopo una `</section>`, iniettare token, riprendere) **NON è disponibile** su pi (né hook "confine di sezione", né pausa/ripresa della generazione). L'unità di controllo è il **TURNO** + i delta di streaming. → questa feature **degrada** a *interrupt + steer al prossimo confine di turno*: si usa `turn_end`/`message_end` (post-turn) o **steering** (`session.steer()` / `streamingBehavior:"steer"`) per influenzare il **turno successivo**, NON il pensiero corrente a metà. Cambia la semantica (latency + caso d'uso "interrompo mentre pensa" → "steero il prossimo turno") e conferma il collocamento **post-MVP / Fase 3**. Le primitive "pausare/riprendere" sotto (riga ~114) vanno lette come *non-implementabili così*; vedi [[../architecture/wrapper-implementation-plan]] §Step-0.0 divergenza-1 e [[../architecture/harness-feature-catalog]] §Classe-B.
+
 ## Idea ground truth (utente, 2026-05-21)
 
 > "Se arriva una nuova info mentre pensa, valutare se iniettare l'aggiornamento nel pensiero. Mentre lm scrive il pensiero delimitato da `<sections>` dopo una section iniettare una cosa del tipo `<update from external>content</...>`"
