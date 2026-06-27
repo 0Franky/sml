@@ -1,0 +1,109 @@
+#!/usr/bin/env sh
+# =============================================================================
+# pre-push — gate secret/PII PRIMA del push (repo PUBBLICO slm)
+# =============================================================================
+# Allineato alla convenzione NetView/WillHouse (gitleaks + .gitleaks.toml +
+# bypass SKIP_GITLEAKS), con due differenze volute per questo repo pubblico:
+#   1) ESTENSIONE PII (email / chat_id) nel .gitleaks.toml — nv/wh sono
+#      secret-focused e deboli sulla PII (gap noto).
+#   2) FALLBACK self-contained se gitleaks NON e' installato: invece di
+#      fail-closed (bloccare tutto) esegue uno scan a pattern integrato, cosi'
+#      il repo resta protetto anche senza gitleaks (gitleaks resta consigliato).
+#
+# Install:  bash scripts/git-hooks/install-secret-hooks.sh   # set core.hooksPath .githooks
+# Bypass:   SKIP_GITLEAKS=1 git push        (oppure: git push --no-verify) -> loggato
+# Denylist (fallback): .githooks/denylist.local (gitignored) per token PII specifici.
+# Razionale (catena): repo PUBBLICO -> un secret/PII che sfugge e' permanente e
+#   indicizzabile -> gate deterministico PRIMA del push. Vedi feedback_no_pii_in_repo.
+# =============================================================================
+set -u
+
+ZERO='0000000000000000000000000000000000000000'
+ROOT="$(git rev-parse --show-toplevel)"
+
+if [ "${SKIP_GITLEAKS:-0}" = "1" ]; then
+  printf '[pre-push] WARN  SKIP_GITLEAKS=1 -> scan saltato (bypass consapevole, loggato).\n' >&2
+  ts="$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo unknown)"
+  printf '%s SKIP_GITLEAKS bypass\n' "$ts" >> "$ROOT/.githooks/bypass.log" 2>/dev/null || true
+  exit 0
+fi
+
+# --- raccogli i range in push da stdin: "<lref> <lsha> <rref> <rsha>" ---
+RANGES=""
+HAVE=0
+while read -r _lref lsha _rref rsha; do
+  HAVE=1
+  [ -z "${lsha:-}" ] && continue
+  [ "$lsha" = "$ZERO" ] && continue                 # delete di un ref
+  if [ "$rsha" = "$ZERO" ]; then
+    RANGES="$RANGES
+$lsha --not --remotes"                              # nuovo branch -> solo i suoi commit
+  else
+    RANGES="$RANGES
+$rsha..$lsha"                                       # update -> solo il range in push
+  fi
+done
+[ "$HAVE" = 0 ] && RANGES="HEAD"                     # invocazione manuale
+
+CFG=""
+[ -f "$ROOT/.gitleaks.toml" ] && CFG="$ROOT/.gitleaks.toml"
+
+# ============================ Path A: gitleaks ===============================
+if command -v gitleaks >/dev/null 2>&1; then
+  printf '%s\n' "$RANGES" | while IFS= read -r lo; do
+    [ -z "$lo" ] && continue
+    if [ -n "$CFG" ]; then
+      gitleaks git "$ROOT" --config "$CFG" --log-opts="$lo" --no-banner --redact -v --exit-code 1 >&2 || exit 1
+    else
+      gitleaks git "$ROOT" --log-opts="$lo" --no-banner --redact -v --exit-code 1 >&2 || exit 1
+    fi
+  done || {
+    printf '\n[pre-push] BLOCCATO (gitleaks): potenziale secret nei commit sopra.\n' >&2
+    printf '   Rimuovi+riscrivi il commit, o allowlist in .gitleaks.toml, o: SKIP_GITLEAKS=1 git push\n' >&2
+    exit 1
+  }
+  printf '[pre-push] OK (gitleaks): nessun secret/PII nelle righe in uscita.\n' >&2
+  exit 0
+fi
+
+# ======================= Path B: fallback integrato ==========================
+printf '[pre-push] gitleaks non trovato -> scanner fallback integrato (consigliato: installalo).\n' >&2
+DENY="$ROOT/.githooks/denylist.local"
+WL='example[.]com|@example|noreply|your-email|user@host|placeholder|foo@bar|/home/user/|/home/code/|home/<user>|ROOT_PROJ|proj1'
+
+scan_added() { git diff "$1" --unified=0 --no-color 2>/dev/null | grep -E '^\+' | grep -Ev '^\+\+\+'; }
+
+printf '%s\n' "$RANGES" | while IFS= read -r lo; do
+  [ -z "$lo" ] && continue
+  rng="$(printf '%s' "$lo" | sed 's/ --not --remotes//')"   # il fallback usa il solo sha/range
+  added="$(scan_added "$rng")"
+  [ -z "$added" ] && continue
+  for pat in \
+    'glpat-[A-Za-z0-9_-]{20,}' 'ghp_[A-Za-z0-9]{36}' 'gho_[A-Za-z0-9]{36}' \
+    'github_pat_[A-Za-z0-9_]{22,}' 'xox[baprs]-[A-Za-z0-9-]{10,}' 'AKIA[0-9A-Z]{16}' \
+    'AIza[0-9A-Za-z_-]{35}' '-----BEGIN [A-Z ]*PRIVATE KEY-----' \
+    '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+[.][A-Za-z]{2,}' \
+    '(chat_id|channel_id)[^0-9]{1,8}[0-9]{8,}' ; do
+    hits="$(printf '%s\n' "$added" | grep -En "$pat" | grep -Ev "$WL")"
+    if [ -n "$hits" ]; then
+      printf '[pre-push] FAIL pattern «%s»:\n%s\n' "$pat" "$hits" >&2
+      exit 1
+    fi
+  done
+  if [ -f "$DENY" ]; then
+    while IFS= read -r needle; do
+      [ -z "$needle" ] && continue
+      case "$needle" in \#*) continue;; esac
+      if printf '%s\n' "$added" | grep -Fq "$needle"; then
+        printf '[pre-push] FAIL denylist locale: <redacted len=%s>\n' "${#needle}" >&2
+        exit 1
+      fi
+    done < "$DENY"
+  fi
+done || {
+  printf '\n[pre-push] BLOCCATO (fallback): potenziale secret/PII nelle righe in uscita.\n' >&2
+  printf '   Redigi/rimuovi, oppure bypass consapevole: SKIP_GITLEAKS=1 git push\n' >&2
+  exit 1
+}
+printf '[pre-push] OK (fallback): nessun secret/PII nelle righe in uscita.\n' >&2
+exit 0

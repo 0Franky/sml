@@ -189,6 +189,15 @@ Mappa **esattamente** sulle lane `rules` + `block_notes` (decision-cache, passo 
 
 Lega a [[scientific-method-operating-protocol]] passo 2 (orient: far emergere obiettivo/limiti/criticità implicite), [[error-memo-system]] (memoria persistente), [[contradiction-detection-layer]].
 
+## 7.3 Gather-on-low-confidence, reorg proattiva, harness-as-files (utente 2026-06-27)
+
+Tre comportamenti che agiscono SUL context-assembly, ora formalizzati come concept a sé (msg 130/131/132):
+- **Low-confidence → gather/ask + reorg** ([[low-confidence-gather-and-reorg]]): quando il modello è poco confident NON procede; **riorganizza** le lane (`task_list`/`block_notes`/`rules`, chiude il superfluo per recuperare budget) e poi *have-lead→gather* (grep/file-search/web) oppure *no-lead→ASK*. La reorg è un'operazione di prima classe sul context, non un effetto collaterale.
+- **Harness-capabilities-as-files** ([[harness-capabilities-as-files]]): le capacità dell'harness sono **file leggibili on-fly** via `stream_read`; il modello apre (anche **più file** in temp-read concorrente), estrae, **annota in `block_notes`**, e `close_stream_file` per liberare budget. Ciò che serve resta nelle note, non nei file aperti.
+- **Path-portability** ([[path-portability-awareness]]): il root assoluto vive come `<ROOT_PROJ>` in config (lane `rules`/`vars`); i path negli artifact sono relativi (portabilità + no leak username).
+
+→ Estendono il context-assembly da "struttura statica" a **gestione attiva del budget** (apri/estrai/annota/chiudi + reorg). Lega a [[agent-wrapper-vars-queue]] e [[sliding-window-variable-tool]].
+
 ## Sources
 - User notes 2026-06-23, nota 5 + 3 iterazioni esempio (Telegram msg 44/46/51/54 + sessione).
 - Collega: [[agent-wrapper-vars-queue]], [[structured-context-sections]], [[task-decomposition-adhoc-context]], [[temporal-awareness-timestamps]], [[scientific-method-operating-protocol]], [[secret-section-exfiltration-defense]], [[_user-notes-2026-06-23]].

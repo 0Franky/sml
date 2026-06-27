@@ -1,0 +1,47 @@
+title = "slm secret + PII scan config (local pre-push guard)"
+
+# Parte dal ruleset built-in di gitleaks (AWS, GitLab/GitHub PAT glpat-/ghp_/gho_,
+# chiavi private, JWT, api-key/secret/password generici) e AGGIUNGE regole PII
+# custom + allowlist. nv/wh sono secret-focused: qui estendiamo alla PII perche'
+# il repo e' PUBBLICO. Disabilitare [extend] scansionerebbe NULLA.
+[extend]
+useDefault = true
+
+# -----------------------------------------------------------------------------
+# Regole PII custom (il gap di NetView/WillHouse).
+# -----------------------------------------------------------------------------
+[[rules]]
+id = "pii-email"
+description = "Email address (PII accidentale)"
+regex = '''[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'''
+tags = ["pii", "email"]
+
+[[rules]]
+id = "pii-chat-id"
+description = "Telegram/Discord chat_id o channel_id (PII)"
+regex = '''(?i)(chat_id|channel_id)["'\s:=]{1,8}[0-9]{8,}'''
+tags = ["pii", "chat-id"]
+
+# -----------------------------------------------------------------------------
+# Allowlist — placeholder leciti + artefatti generati (NON segreti reali).
+# Tenere TIGHT: ogni voce e' un buco nella guardia.
+# -----------------------------------------------------------------------------
+[allowlist]
+description = "slm: placeholder leciti + artefatti generati (non-produzione)"
+paths = [
+  '''graphify-out/.*''',                                       # cache AST/semantica (high-entropy FP)
+  '''.*\.gitleaks\.toml$''',                                   # questo file elenca pattern per design
+  '''(^|/)(.*\.)?(example|sample|template)\.(env|json|ya?ml|toml)$''',
+  '''(^|/).*\.example$''',
+  '''(^|/)wiki/_private/.*''',                                 # cattura grezza locale (comunque gitignored)
+]
+regexes = [
+  '''example[.]com''',
+  '''(test|dummy|placeholder|your-email|user)@(example|test|local)[.][A-Za-z]{2,}''',
+  '''noreply@''',
+  '''slm_dev_[A-Za-z0-9_]+''',
+  '''slm_test_[A-Za-z0-9_]+''',
+  '''\bchangeme\b''',
+  '''/home/(user|code)/''',                                    # esempi generici nei doc (path-portability)
+  '''<ROOT_PROJ>''',
+]

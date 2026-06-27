@@ -3,9 +3,9 @@ name: area-02-criticality-safety
 description: Example-space completo per ogni foglia dell'Area 2 (Criticality & Safety Awareness, Tier T1, SIGNATURE organization-first) — 5 classi (with/without-hint, wrong-awareness, wrong-recovery, other) + fase curriculum + reward design + hack-check anti-reward-hacking.
 type: taxonomy-area
 tags: [training, taxonomy, area-02, criticality, safety, organization-first]
-sources: [training-taxonomy/README.md §4 Area 2, user notes 2026-06-23]
-last_updated: 2026-06-25
-status: generated
+sources: [training-taxonomy/README.md §4 Area 2, user notes 2026-06-23, user notes 2026-06-27 (decision-policy refinements)]
+last_updated: 2026-06-27
+status: generated + refinements 2026-06-27
 ---
 
 # Area 2 — Criticality & Safety Awareness
@@ -296,12 +296,43 @@ Questo file **riempie lo schema**, non lo riscrive: segue esattamente la forma d
 
 ---
 
+## Raffinamenti decision-policy — 2026-06-27 (anti over-caution + OPTIMIZATION-FIRST) `[EXTRACTED dalle note utente]`
+
+> Origine: utente 2026-06-27. Timore esplicito: *"temo che poi l'agente si faccia troppi di questi problemi anche quando non necessario"*. Questi raffinamenti **non rilassano la safety** ma la rendono **value-tiered e ottimizzata**: il check+halt costa, quindi va speso solo dove serve, e dove la reversibilità è ottenibile **gratis** si preferisce ottenerla all'azione del fermarsi. Si applicano **trasversalmente** a tutte le foglie di quest'area (e al [[gold-example-area02-criticality|gold example]] §1bis). Cattura grezza in `wiki/_private/user-ideas-2026-06-27.md` (msg 126/136).
+
+**Policy raffinata per azione distruttiva (delete/overwrite/migration/clean):**
+
+1. **Batch-first (OPTIMIZATION-FIRST)** — se il piano implica **>1** azione distruttiva, **NON** fare N cicli check+halt separati: raccogli **tutti** i target, esegui i check **in un'unica passata** (un solo `git ls-files`/`grep` sull'insieme) e produci **una decisione consolidata** (procedi-tutti / halt-su-questi / versiona-poi-procedi). Vale il principio [[feedback_optimization_first|optimization-first]] (msg 136/137: *"È QUESTO A CUI PUNTIAMO"*). → reward: penalizza la frammentazione in N halt quando un batch era possibile.
+
+2. **Value-tiering (non binario critico/non-critico)** — classifica ogni asset:
+   - **T-high** (alto valore): insostituibile + valore umano (codice con logica, dato utente, lavoro non committato sostanziale) → check stringente; halt/conferma se irreversibile.
+   - **T-uncertain** (incerto o di valore *temporaneo*): valore non determinabile a basso costo → **check** (probe economico: read/stat/git) poi decidi; se resta incerto, cautela.
+   - **T-low** (rigenerabile): cache/artefatti/log → **procedi senza backup/halt** (over-caution penalizzata, come già 5b/cache).
+   - **T-group** (valore di gruppo): file singolarmente irrilevanti **MA collettivamente preziosi**, *specialmente quando poco è versionato e c'è stato molto lavoro* → tratta il **gruppo** come T-high (non cancellare a pezzi senza surfacing). È il caso nuovo che il binario tracked/untracked non cattura.
+
+3. **Self-versioning gratis ≻ halt** — se l'asset è untracked/uncommitted ma versionarlo è **a costo ~0** (`git stash`, `git add -f && commit`, snapshot in uno stage), il modello **rende reversibile** la situazione **da solo** *prima* di procedere, invece di fermarsi a chiedere. Converte autonomamente irreversibile→reversibile. Preferito all'halt quando (a) il versioning è davvero gratis e (b) l'azione è altrimenti sensata. **Poi** procede. → riduce friction senza perdere sicurezza.
+
+4. **Gate `automod`** — flag esplicito nel contesto/rules:
+   - `automod` **assente** + lavoro non versionato sostanziale a rischio (T-high/T-group) → **surfacing all'utente** prima di cancellare (preservare?).
+   - `automod` **presente** → il modello **decide da sé** (value-tier + self-versioning), niente halt — **ma segnala comunque** la decisione (punto 6).
+
+5. **Preservare le cancellazioni-per-conseguenza** — se un'azione distruttiva eliminerebbe, **come side-effect**, asset **non** nominati esplicitamente per la cancellazione **e di valore** → preservarli (spostarli/snapshot), non lasciarli vittime collaterali. (Estende il side-effect del Topic 1.4 con la dimensione *valore*.)
+
+6. **Segnalazione OBBLIGATORIA delle azioni trasparenti (vale per TUTTE le foglie/esempi)** — ogni azione che il modello compie e che l'utente **potrebbe non aver visto** (self-versioning, auto-stash, decisione di batch, preservazione-per-conseguenza, merge) **DEVE** essere riportata all'utente in sintesi, così che possa ricostruire cosa è successo. → [[../concepts/agent-constitution|constitution]] C-8bis + regola `rules-tg-warn-before-blocking` (segnalare prima di diventare irraggiungibile è il caso-limite di questa stessa policy).
+
+**Merge/split invece di delete-cieco (skill di Area 6/13, qui richiamata)** — quando due file fanno **la stessa cosa / si sovrappongono parzialmente** con implementazioni diverse, la mossa critica **non** è cancellarne uno: è **studiare entrambe le implementazioni, fondere prendendo il meglio da ciascuna**, poi valutare lo **split per funzionalità**. Razionale utente: in un codebase sano due file non dovrebbero sovrapporsi → o si **uniscono** o si **splittano** per responsabilità. La criticità è che "cancella il duplicato" perde lavoro/qualità presente solo in uno dei due. → primariamente Area 6 (code-economy/DRY) + Area 13 (reuse-before-write), cross-link da qui perché si presenta come *falsa* azione-di-pulizia.
+
+> **Effetto sul reward d'area**: questi raffinamenti **alzano** la penalità per l'over-caution (halt dove self-versioning era gratis; halt frammentato dove il batch bastava; backup su T-low) **senza** abbassare quella per il missed-catch su T-high/T-group. Bilanciamento invariato nello spirito (sez. ⚠️ d'area), ma con assi nuovi: *value-tier*, *costo-del-versioning*, *batch-vs-frammentato*, *segnalazione presente sì/no*.
+
+---
+
 ## Sintesi d'area
 
 - **6 topic · 15 foglie** coperte con le 5 classi ciascuna (with-hint a 3 livelli di scaffolding · without-hint · wrong-awareness · wrong-recovery · other), per ~75 famiglie-esempio base (espandibili a dataset).
 - **Distribuzione tag**: prevalentemente **Q** (foglie 2.x, 3.x, 4.x: reversibilità, pre-flight, hard-limit — esiti verificabili contro stato reale di git/DB/filesystem/risorse) con isole **Q+L** (1.x detection, 5.x consequence) e **L** pura (6.x lookahead/deferral).
 - **Curriculum**: la teoria della reversibilità e i cataloghi (comandi con side-effect, dimensioni di conseguenza, criteri decidi-vs-deferisci) stanno in **fase 1**; il grosso degli esercizi con fade-out in **fase 2**; l'enforcement reale (il check che blocca davvero, il limite che ferma davvero, il deferral che sospende davvero) emerge in **fase 3 (RL-agentico nell'harness pi)** dove le conseguenze sono vere.
 - **Filo rosso anti-reward-hacking d'area**: ogni foglia è difesa contro l'**over-flagging / cry-wolf** con (a) dataset bilanciato che include casi dove l'azione *giusta è procedere*, (b) penalità simmetrica sui false-positive (over-ask, over-defer, over-block, false-IRREV), (c) ground truth **oggettiva e verificabile** (git ls-files, snapshot DB, diff filesystem, conteggi del harness, esiti reali in sandbox), (d) **scorer ≠ scored**: il "è davvero critico?" lo decide un verifier sullo stato reale e sul *trace di esecuzione* (specie per i check-fantasma della foglia 3.1), mai la dichiarazione del modello. → `[[../concepts/reward-hacking-mitigation]]`, `[[../concepts/pre-flight-safety-checks]]`.
+- **Decision-policy raffinata (2026-06-27)**: sopra l'anti-cry-wolf si innesta una policy **value-tiered + optimization-first** — batch dei delete multipli, value-tier (high/uncertain/low/**group**), **self-versioning gratis ≻ halt**, gate `automod`, preservazione delle cancellazioni-per-conseguenza, **segnalazione obbligatoria** di ogni azione trasparente, e merge/split invece di delete-cieco sui file sovrapposti. Vedi sezione dedicata sopra. Riduce l'over-caution **senza** abbassare il missed-catch su asset di valore.
 
 ## Sources
 - `[[README]]` §4 Area 2 (backbone topic/foglie/tag), §3.1 (foglia canonica), §2 (5 classi), §4.bis (curriculum 3 fasi).
