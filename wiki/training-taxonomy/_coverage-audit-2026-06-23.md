@@ -49,3 +49,13 @@ Overlap / reward double-counting da sorvegliare: Area 2 (criticality/irreversibl
 
 ## Esito
 Tassonomia: 12 → **16 aree**. Aggiunte 4 nuove aree (13 SWE repo-level, 14 Algorithmic&Math, 15 Instruction-following&Interaction, 16 Self-Evaluation&Critique) + ~15 foglie nelle aree esistenti + Benchmark Coverage Matrix + note out-of-taxonomy (curiosity, steering).
+
+## Addendum 2026-06-27 — Long-horizon come DIMENSIONE cross-cutting (domanda utente) `[da-formalizzare]`
+
+Domanda utente: "stiamo mettendo la foglia long-horizon organization e long-horizon tasks per OGNI categoria?"
+
+**Stato**: long-horizon **organization** c'è già (è l'**Area 1** *Organization & Long-Horizon Planning*: multi-day-continuity, goal-tracking, timeline-blocking, plan-mode/re-planning) + multi-day/long-context in **Area 4**. **NON** c'è un "long-horizon X" per ogni area.
+
+**Reco (critica)**: NON duplicare una foglia "long-horizon" in ogni area (esploderebbe la taxonomy e doppio-conterebbe l'organization). Meglio trattare l'orizzonte temporale come **dimensione/regime CROSS-CUTTING ortogonale** (come la dynamic-context augmentation e il quality-tier): ogni skill (A5/A8/A13/…) viene esercitata sia **short-** sia **long-horizon**, soprattutto in **Fase 3 (RL agentico con harness)** dove le traiettorie sono lunghe per costruzione. La *skill* è l'area; l'*orizzonte* è un asse.
+
+**Azione**: formalizzarlo come **3ª dimensione cross-cutting documentata** (accanto a dynamic-context e quality-tier) nel README — assegnare a ogni area un flag "long-horizon variant in Fase 3 sì/no" invece di nuove foglie. Da fare al ritorno sulla taxonomy.
