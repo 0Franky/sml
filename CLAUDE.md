@@ -256,6 +256,9 @@ Tutti gli artifact graphify destinati al repo devono essere **device-independent
 5. **No co-author Claude** nei commit (vedi globalCLAUDE.md).
 6. **Skill `grill-me`** prima di scrivere codice/training pipeline. È la fase 2 dell'onboarding, ma riformulata e più rigorosa.
 7. **Artifact graphify OS-agnostic**: path repo-relative + forward slash, mai assoluti/backslash/username, niente token custom. Push solo `graph.json`+`graph.html`+`GRAPH_REPORT.md`, escludi `manifest.json` (vedi Fase 5 → Portabilità).
+8. **Optimization-first** (utente 2026-06-27, "ricordatelo sempre"): batch le operazioni ripetute (analisi unica, non N volte), **ottimizza proattivamente il contesto** (riorganizza task-list/note/regole, chiudi ciò che non serve), NON over-cautela su cose a basso valore. Vale per il modello in progettazione E per il mio modo di lavorare. Vedi memory `feedback_optimization_first`.
+9. **Cattura idee + low-confidence→gather**: cattura SUBITO ogni idea utente in modo durevole (anti-loss; idee grezze non-pubblicabili → `wiki/_private/` gitignored). Quando poco confident: fermati, riorganizza, fai gathering (grep/file-search/web) prima di procedere.
+10. **Catene di pensiero = priorità #1** (utente 2026-06-27, enfatico — "ricorda SEMPRE", "sempre e subito"): davanti a ogni idea/decisione/skill estrai SUBITO la catena **why → problema → soluzione** (non solo la conclusione/regola). Documentala nei concept wiki **E** aggiungila come **componente obbligatoria** ai **gold template** di training (è l'OUTPUT TARGET che vogliamo il modello internalizzi; una catena esplicita è anti-shortcut e più difficile da reward-hackare di una conclusione nuda). Vedi memory `feedback_chain_of_thought_extraction`.
 
 ---
 

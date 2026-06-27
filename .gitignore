@@ -114,3 +114,7 @@ transcript.md
 
 # Note private utente — cattura grezza non-pubblicabile
 wiki/_private/
+
+# Hook pre-push: denylist PII locale + audit log dei bypass (mai pushare)
+.githooks/denylist.local
+.githooks/bypass.log
