@@ -3,7 +3,7 @@ name: secret-section-exfiltration-defense
 description: Difesa anti-exfiltration di dati sensibili (credenziali, PII) — 3+1 livelli (training adversariale, contesto a riferimenti opachi, guardrail deterministico secrets-map dinamica, refusal steering opzionale). Da nota utente 8 + design secrets-map 2026-06-23.
 type: concept
 tags: [security, secret, exfiltration, guardrail, refusal, defense-in-depth, wrapper]
-last_updated: 2026-06-23
+last_updated: 2026-06-27
 status: draft — design consolidato, da validare
 confidence: provisional
 ---
@@ -16,6 +16,16 @@ confidence: provisional
 Esfiltrazione di dati sensibili (chiavi, password, token, PII, numeri di carta) verso l'esterno tramite: **output al utente**, **argomenti di tool-call**, **log**, **commit**. Il modello potrebbe rivelarli per errore, per sycophancy, o sotto **prompt injection** (richiesta avversaria di "stampa la chiave").
 
 > Duale di [[untrusted-content-delimiting]]: là il rischio è *injection in entrata*; qui è *exfiltration in uscita*.
+
+## Gold-example: path assoluto = leak username (PII)
+
+Caso incorporato da [[path-portability-awareness]] (demoted 2026-06-27). Un **path assoluto** in un artefatto pushato/versionato (es. `/home/<user>/proj/...`, `D:\Users\<user>\proj\...`) **leaka l'username** → stessa superficie PII di un secret: un dato sensibile che esce verso l'esterno via output. Quindi è la **stessa famiglia di difesa** — scan deterministico in uscita + uso di riferimenti relativi (l'analogo dei `SECRET#n` opachi del Livello 2).
+
+Why-chain didattica (gold-example per il modello):
+
+> "vedo che è un repo → un repo può essere clonato → chi lo clona può avere OS e home-dir diverse → un path assoluto si romperebbe altrove **e** leakerebbe l'username → uso path relativi alla root + forward-slash."
+
+Enforcement coerente col Livello 3: un **regex-linter wrapper-side** scansiona l'output verso destinazione versionata (0 backslash, 0 home-dir/username) e blocca/avvisa, esattamente come il secrets-guardrail. Nessun username/path reale negli esempi — solo placeholder `<user>`.
 
 ## Difesa in profondità (3+1 livelli)
 
@@ -54,4 +64,4 @@ Nessun livello da solo basta: training aggirabile (L1), struttura non copre i ra
 
 ## Sources
 - User notes 2026-06-23, nota 8 + design secrets-map (Telegram msg 44/51 + sessione).
-- Collega: [[_user-notes-2026-06-23]], [[wrapper-context-assembly-example]], [[untrusted-content-delimiting]], [[out-of-domain-refusal-training]], [[steering-vectors]], [[pre-flight-safety-checks]], [[agent-constitution]].
+- Collega: [[_user-notes-2026-06-23]], [[wrapper-context-assembly-example]], [[untrusted-content-delimiting]], [[out-of-domain-refusal-training]], [[steering-vectors]], [[pre-flight-safety-checks]], [[agent-constitution]], [[path-portability-awareness]] (gold-example path-as-PII, merged 2026-06-27).

@@ -272,6 +272,7 @@ Implementazione: 80% del dataset segue distribuzioni naturali, 20% campiona da e
 ## Link interni
 
 - [[runtime-symbol-randomization-training]] — complementare, simbolo random ortogonale a context random
+- [[dataset-on-the-fly-pseudorandom]] — vedi per l'applicazione transform-layer ai gold autorati (label-invariante, no success-checklist in training); questo regime genera invece context sintetici da template di sezioni
 - [[scuola-learning-philosophy]] — questo è la "fase di studio" che insegna pattern strutturali
 - [[structured-context-sections]] — i tag fissi che incapsulano i contenuti dinamici
 - [[untrusted-content-delimiting]] — chiarito come singolo tag, allineato qui

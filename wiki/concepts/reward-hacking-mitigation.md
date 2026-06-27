@@ -3,7 +3,7 @@ name: reward-hacking-mitigation
 description: Vincolo di prima classe sull'intero reward design. Mappa DOVE il reward hacking può avvenire nella nostra pipeline (PRM, GRPO, RLAIF "il gioco", self-score scorecard, LLM-judge) e le difese in profondità. Emphasis utente 2026-06-23.
 type: concept
 tags: [reward-hacking, goodhart, rlhf, rlaif, prm, grpo, reward-overoptimization, safety, training, guardrail]
-last_updated: 2026-06-23
+last_updated: 2026-06-27
 status: draft — vincolo cross-pipeline, da raffinare
 confidence: provisional
 ---
@@ -29,6 +29,9 @@ Ogni segnale di reward è un **proxy** della qualità vera. Il modello, ottimizz
 | **Refusal/safety reward** (Area 11) | **over-refusal**: rifiuta tutto per non sbagliare | 🟠 media |
 | **Length/format reward** (Area 10) | padding, formato senza sostanza | 🟡 bassa-media |
 | **Verification / self-election reward** (cross-expert, "il gioco", self-election EXP-ME-9) | **participation-hack**: critica / si auto-elegge / recluta OVUNQUE per massimizzare coinvolgimento e reward | 🔴 alta |
+| **Catena-fantasma** (CoT / reasoning trace) | **catena di pensiero plausibile ma NON causale / NON predittiva**: reasoning-teatro che soddisfa il judge senza corrispondere a vero lavoro cognitivo. È il check-fantasma (cfr. [[contradiction-detection-layer]]) spostato dal piano delle tool-call al piano del **puro testo**, dove non è catturabile da un verifier d'esecuzione. Difesa: (i) marker `[V]` ↔ artefatto / tool-call reale nel trace (Q), (ii) **predittività verificata in fase 3** — esito previsto vs reale (L), (iii) **NIENTE reward su catena non-ancorabile** (deferral/valore). La regola CLAUDE.md #10 ("CoT = priorità #1") va **subordinata a questo ancoraggio**: altrimenti COSTRUISCE il vettore invece di mitigarlo. | 🔴 alta (specie foglie **L** senza artefatto) |
+
+> **Nuova sorgente di reward**: il **process-reward per-fase** è documentato in [[phased-reward-and-rh-detection]] (parent naturale = questo file). Ogni fase aggiunge un proxy gameable → applicare lì lo stesso hack-check + ancoraggio all'outcome.
 
 ## 3. Difese in profondità
 
@@ -49,6 +52,7 @@ Ogni segnale di reward è un **proxy** della qualità vera. Il modello, ottimizz
 | 10 | **Red-team del reward**: audit periodico "cosa sta REALMENTE premiando il reward?" su campioni | tutti |
 | 11 | **Anti-reward-hack nel dataset**: esempi dove "passa il test ma è hardcoded/sbagliato" → il modello deve **riconoscerlo e NON farlo** (lega a honesty constitution + self-critique) | meta: insegnare a non barare |
 | 12 ⭐ | **Reward ancorato all'OUTCOME, non alla partecipazione** (principio first-class, emphasis utente 2026-06-24): il reward di verifica / critica / self-election / reclutamento si dà SOLO se *"ha scovato/risolto un errore REALE"* (verificabile), mai per il solo atto di partecipare/criticare/candidarsi | **participation-hack** (auto-eleggersi/criticare/reclutare ovunque) |
+| 13 ⭐ | **Monitor di ablazione della catena (CoT load-bearing test)**: su un campione, *ablate* la catena — rimuovila o **corrompi una premessa `[V]`** — e verifica che l'azione/output **cambi**. Se non cambia, la catena era **teatro** (non load-bearing) → segnale di Goodhart sul reasoning → re-tune del reward. | **catena-fantasma** (CoT non causale / non predittiva) |
 
 ### Difesa specifica per lo scorecard (preoccupazione utente)
 - Le dimensioni **Q** (test coverage, security-scan, perf-benchmark) → score da **strumenti deterministici**, non dal modello.
@@ -59,6 +63,7 @@ Ogni segnale di reward è un **proxy** della qualità vera. Il modello, ottimizz
 
 - **Reward design della taxonomy**: ogni foglia, quando definisce il reward (Q/L), deve passare un **"hack-check"**: *"come potrebbe il modello massimizzare questo senza la skill?"* → aggiungere la difesa corrispondente.
 - **[[scientific-method-operating-protocol]] D3**: il process reward (split pos/neg) va sempre **ancorato all'outcome verificabile** + monitor di overoptimization.
+- **[[phased-reward-and-rh-detection]]**: nuova sorgente di reward (process-reward **per-fase**) di cui questo file è il **parent naturale**; ogni fase introduce un proxy gameable → hack-check + ancoraggio all'outcome + il monitor di ablazione della catena (difesa #13).
 - **[[quality-target-tiers]]**: scorer esterno per il reward, self-score solo per comunicazione.
 - **[[agent-constitution]]**: aggiungere principio "**non gamificare metriche/test**: riporta la qualità vera, non barare per far passare un check" (inference-side; complementa la difesa training-side).
 - **Area 16 "il gioco"**: giudici a lenti diverse + il teacher come ancora, mai self-reward puro.

@@ -87,8 +87,8 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 
 ### Agentic skills & operating rules (2026-06-27) 🆕
 
-- [`concepts/path-portability-awareness.md`](concepts/path-portability-awareness.md) 🆕 — skill: path relativi vs assoluti **context-aware** (repo condiviso → relativo + `/`; root assoluto solo in config come `<ROOT_PROJ>`). Anti leak username/PII. Con la why-chain utente
-- [`concepts/harness-capabilities-as-files.md`](concepts/harness-capabilities-as-files.md) 🆕 — "tutto è un file leggibile": **temp-read on-fly** delle capacità harness (open→extract→note→close-to-reclaim), **multi-file concorrente** (requisito wrapper Fase 1)
+- [`concepts/path-portability-awareness.md`](concepts/path-portability-awareness.md) 🆕 — path relativi vs assoluti **context-aware** + why-chain. **DEMOTED 2026-06-27** (review): micro-regola, gold-example in [`secret-section-exfiltration-defense`](concepts/secret-section-exfiltration-defense.md); enforcement = regex-linter wrapper-side
+- [`concepts/harness-capabilities-as-files.md`](concepts/harness-capabilities-as-files.md) 🆕 — temp-read on-fly delle capacità harness (open→extract→note→close). **Demoted a primitiva-wrapper** (review): è context-editing già nativo; caveat costo KV-cache; la skill residua = "cosa annotare"
 - [`concepts/low-confidence-gather-and-reorg.md`](concepts/low-confidence-gather-and-reorg.md) 🆕 — sotto bassa confidence: STOP → reorg contesto → bivio **have-lead→gather / no-lead→ASK** (no gather-cieco). Anti-confabulazione
 - [`concepts/task-interruption-discipline.md`](concepts/task-interruption-discipline.md) 🆕 — **preemption-by-urgency**: nuova richiesta durante un task → enqueue+reference+finish di default; preempt solo se urgente/invalidante. Anti context-switch distruttivo
 - [`concepts/dataset-on-the-fly-pseudorandom.md`](concepts/dataset-on-the-fly-pseudorandom.md) 🆕 — transform-layer pseudo-random sui gold template (posizione/lingua/prompt) con **label invariante** + NO success-checklist in training. Verdetto: sì come knob ×3-5, non ×N
