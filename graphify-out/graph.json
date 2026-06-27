@@ -4,100 +4,56 @@
   "graph": {
     "hyperedges": [
       {
-        "id": "runtime_safety_coherence_stack",
-        "label": "Runtime Safety & Coherence Stack",
-        "nodes": [
-          "pre_flight_safety_checks",
-          "contradiction_detection_layer",
-          "error_memo_system",
-          "agent_constitution"
+        "id": "hyper_anti_reward_hacking_outcome_anchor",
+        "label": "Anti reward-hacking outcome-anchored pattern",
+        "relation": "conceptually_related_to",
+        "members": [
+          "ref_reward_hacking_mitigation",
+          "phasedreward_and_rh_detection",
+          "goldexamplearea02_criticality",
+          "area02_criticality_safety",
+          "datasetonthefly_pseudorandom",
+          "pathportability_awareness"
         ],
-        "relation": "participate_in",
         "confidence": "INFERRED",
         "confidence_score": 0.85,
-        "source_file": "wiki/concepts/agent-constitution.md"
+        "source_file": "wiki/concepts/reward-hacking-mitigation.md",
+        "source_location": null,
+        "weight": 1.0
       },
       {
-        "id": "organization_first_reasoning_protocol",
-        "label": "Organization-First Reasoning & Training Protocol",
-        "nodes": [
-          "scientific_method_protocol",
-          "staged_curriculum_training",
-          "post_rl_path_optimization",
-          "structured_context_sections"
+        "id": "hyper_agentic_context_management_skills",
+        "label": "Agentic context-management skills (2026-06-27)",
+        "relation": "conceptually_related_to",
+        "members": [
+          "harnesscapabilities_as_files",
+          "lowconfidence_gather_and_reorg",
+          "taskinterruption_discipline",
+          "pathportability_awareness",
+          "wrappercontextassembly_example"
         ],
-        "relation": "participate_in",
         "confidence": "INFERRED",
         "confidence_score": 0.85,
-        "source_file": "wiki/concepts/scientific-method-operating-protocol.md"
+        "source_file": "wiki/concepts/wrapper-context-assembly-example.md",
+        "source_location": null,
+        "weight": 1.0
       },
       {
-        "id": "moe_of_lora_router_family",
-        "label": "Router-Learned MoE-of-LoRA Family (concurrent alternative)",
-        "nodes": [
-          "ext_xlora",
-          "ext_hmora",
-          "ext_mole",
-          "hdmole_paper",
-          "multi_expert_collaboration"
+        "id": "hyper_wrapper_harness_pi_stack",
+        "label": "Wrapper/harness pi stack",
+        "relation": "conceptually_related_to",
+        "members": [
+          "wrapperimplementationplan_plan",
+          "wrappercontextassembly_example",
+          "ref_adr_pi_harness_base",
+          "dwarfstar4_ds4",
+          "ref_agent_wrapper_vars_queue"
         ],
-        "relation": "form",
-        "confidence": "INFERRED",
-        "confidence_score": 0.85,
-        "source_file": "wiki/concepts/xlora-vs-hmora.md"
-      },
-      {
-        "id": "reward_hacking_hack_check_all_areas",
-        "label": "Per-leaf hack-check / reward-hacking defense recurs across all 16 areas",
-        "nodes": [
-          "ext_reward_hacking_mitigation",
-          "training-taxonomy_hack_check",
-          "area-02_over_flagging_defense",
-          "area-03_process_marker_spoofing",
-          "area-05_overfit_visible_tests_defense",
-          "area-06_judge_reward_hacking_defense",
-          "area-07_over_refusal_defense",
-          "area-08_participation_hack_defense",
-          "area-09_sycophancy_defense",
-          "area-12_confident_hallucination_defense",
-          "area-13_test_tampering_defense",
-          "area-14_hardcode_shortcut_defense",
-          "area-16_scorer_not_scored"
-        ],
-        "relation": "participate_in",
-        "confidence": "INFERRED",
-        "confidence_score": 0.85,
-        "source_file": "wiki/training-taxonomy/README.md"
-      },
-      {
-        "id": "macro_curriculum_3_phases_spans_areas",
-        "label": "3-phase macro-curriculum (theory->exercises->agentic RL) assigns every area/leaf",
-        "nodes": [
-          "training-taxonomy_macro_curriculum_3_phases",
-          "ext_staged_curriculum_training",
-          "ext_scuola_learning_philosophy",
-          "ext_scientific_method_protocol",
-          "ext_pi_harness_adr"
-        ],
-        "relation": "form",
-        "confidence": "INFERRED",
-        "confidence_score": 0.85,
-        "source_file": "wiki/training-taxonomy/README.md"
-      },
-      {
-        "id": "process_reward_prm_cluster",
-        "label": "Process-reward (PRM) cluster: long-correct CoT, verify-loop, self-verification anchored to outcome",
-        "nodes": [
-          "area-03_prm_core",
-          "area-14_algorithmic_math",
-          "area-16_self_evaluation_critique",
-          "ext_prm_paper",
-          "ext_rstar_math_paper"
-        ],
-        "relation": "participate_in",
         "confidence": "INFERRED",
         "confidence_score": 0.75,
-        "source_file": "wiki/training-taxonomy/area-03-reasoning-scientific-method.md"
+        "source_file": "wiki/architecture/wrapper-implementation-plan.md",
+        "source_location": null,
+        "weight": 1.0
       }
     ]
   },
@@ -501,7 +457,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 12,
+      "community": 19,
       "norm_label": "wiki \u2014 tier 2 programming generalist lora",
       "id": "programming_generalist_doc"
     },
@@ -514,7 +470,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 12,
+      "community": 19,
       "norm_label": "tier 2 \u2014 programming generalist lora",
       "id": "tier2_programming_generalist_concept"
     },
@@ -605,7 +561,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 11,
       "norm_label": "vertical loras (stack-specific)",
       "id": "vertical-loras"
     },
@@ -618,7 +574,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 11,
       "norm_label": "qlora 4-bit",
       "id": "qlora"
     },
@@ -631,7 +587,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 11,
       "norm_label": "vllm --enable-lora",
       "id": "vllm-enable-lora"
     },
@@ -644,7 +600,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 13,
       "norm_label": "the stack v2",
       "id": "the-stack-v2"
     },
@@ -657,7 +613,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 13,
       "norm_label": "oss-instruct",
       "id": "oss-instruct"
     },
@@ -670,7 +626,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 11,
       "norm_label": "magicoder",
       "id": "magicoder"
     },
@@ -683,7 +639,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 11,
       "norm_label": "livecodebench",
       "id": "livecodebench"
     },
@@ -696,7 +652,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 11,
       "norm_label": "bigcodebench",
       "id": "bigcodebench"
     },
@@ -709,7 +665,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 13,
       "norm_label": "catastrophic forgetting",
       "id": "catastrophic-forgetting"
     },
@@ -722,7 +678,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 13,
       "norm_label": "scaling laws for forgetting when fine-tuning llms",
       "id": "paper-scaling-laws-forgetting"
     },
@@ -735,7 +691,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 13,
       "norm_label": "elastic weight consolidation (ewc)",
       "id": "ewc"
     },
@@ -748,7 +704,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 13,
       "norm_label": "replay strategy (10-20% pretraining data)",
       "id": "replay-strategy"
     },
@@ -761,7 +717,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 13,
       "norm_label": "commitpackft",
       "id": "commitpackft"
     },
@@ -774,7 +730,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 11,
       "norm_label": "eval modern coding benchmarks",
       "id": "eval-modern-coding"
     },
@@ -787,7 +743,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 11,
       "norm_label": "swe-bench verified",
       "id": "swe-bench-verified"
     },
@@ -800,7 +756,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 11,
       "norm_label": "aider polyglot",
       "id": "aider-polyglot"
     },
@@ -813,7 +769,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 11,
       "norm_label": "humaneval (saturated)",
       "id": "humaneval"
     },
@@ -826,7 +782,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 11,
       "norm_label": "mbpp (saturated)",
       "id": "mbpp"
     },
@@ -839,7 +795,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 15,
       "norm_label": "lora stacking",
       "id": "lora-stacking"
     },
@@ -852,7 +808,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 15,
       "norm_label": "composition-aware training",
       "id": "composition-aware-training"
     },
@@ -865,7 +821,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 15,
       "norm_label": "peft library",
       "id": "peft"
     },
@@ -878,7 +834,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 14,
       "norm_label": "adr 2026-05-21 project bootstrap",
       "id": "adr-2026-05-21-bootstrap"
     },
@@ -891,7 +847,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 12,
       "norm_label": "three-tier design (architecture)",
       "id": "three-tier-design"
     },
@@ -904,7 +860,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 14,
       "norm_label": "karpathy llm-wiki pattern",
       "id": "karpathy-llm-wiki"
     },
@@ -917,7 +873,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 14,
       "norm_label": "graphify knowledge graph tool",
       "id": "graphify-tool"
     },
@@ -930,7 +886,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 14,
       "norm_label": "grill-me skill",
       "id": "grill-me-skill"
     },
@@ -943,7 +899,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 15,
       "norm_label": "hmora (iclr 2025)",
       "id": "hmora"
     },
@@ -956,7 +912,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 15,
       "norm_label": "hmora github repo (liaomengqi)",
       "id": "hmora-repo"
     },
@@ -969,7 +925,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 15,
       "norm_label": "ld-mole",
       "id": "ld-mole"
     },
@@ -982,7 +938,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 11,
       "norm_label": "lora-mixer",
       "id": "lora-mixer"
     },
@@ -995,7 +951,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 12,
       "norm_label": "qwen3-coder-next 80b-a3b",
       "id": "qwen3-coder-next"
     },
@@ -1008,7 +964,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 12,
       "norm_label": "unsloth training framework",
       "id": "unsloth"
     },
@@ -1021,7 +977,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 12,
       "norm_label": "latent space (april 2026 local models list)",
       "id": "latent-space"
     },
@@ -1034,7 +990,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 12,
       "norm_label": "qwen3-coder",
       "id": "qwen3-coder"
     },
@@ -1047,7 +1003,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 17,
       "norm_label": "s-lora",
       "id": "s-lora"
     },
@@ -1060,7 +1016,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 15,
       "norm_label": "x-lora",
       "id": "x-lora"
     },
@@ -1073,7 +1029,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 12,
       "norm_label": "orchestrator layer (tier 1)",
       "id": "orchestrator-layer"
     },
@@ -1086,7 +1042,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 11,
       "norm_label": "programming generalist lora",
       "id": "programming-generalist"
     },
@@ -1099,7 +1055,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "open questions register",
       "id": "open-questions"
     },
@@ -1112,7 +1068,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 14,
       "norm_label": "transcript.md (raw source)",
       "id": "transcript-md"
     },
@@ -1125,7 +1081,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 14,
       "norm_label": "handoff.md (raw source)",
       "id": "handoff-md"
     },
@@ -1138,7 +1094,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 14,
       "norm_label": "qwen layered architecture design v1.0",
       "id": "qwen-layered-design-v1"
     },
@@ -1151,7 +1107,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "agent wrapper runtime \u2014 queue + vars registry",
       "id": "agent-wrapper-vars-queue"
     },
@@ -1164,7 +1120,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "contradiction detection layer",
       "id": "contradiction-detection-layer"
     },
@@ -1177,7 +1133,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "error memo system",
       "id": "error-memo-system"
     },
@@ -1190,7 +1146,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "explicit attention layer",
       "id": "explicit-attention-layer"
     },
@@ -1203,7 +1159,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "external update injection",
       "id": "external-update-injection"
     },
@@ -1216,7 +1172,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "post-rl path optimization (impratichimento)",
       "id": "post-rl-path-optimization"
     },
@@ -1229,7 +1185,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "pre-flight safety checks",
       "id": "pre-flight-safety-checks"
     },
@@ -1242,7 +1198,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "sliding window variable tool",
       "id": "sliding-window-variable-tool"
     },
@@ -1255,7 +1211,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "slm coding models landscape 2026",
       "id": "slm-coding-landscape"
     },
@@ -1268,7 +1224,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "structured context \u2014 sections and state tracking",
       "id": "structured-context-sections"
     },
@@ -1281,7 +1237,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "structured thinking \u2014 caveman reasoning",
       "id": "structured-thinking"
     },
@@ -1294,7 +1250,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "task decomposition + ad-hoc context per step",
       "id": "task-decomposition-adhoc-context"
     },
@@ -1307,7 +1263,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "temporal awareness \u2014 timestamps & tool timing",
       "id": "temporal-awareness-timestamps"
     },
@@ -1320,7 +1276,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "user notes \u2014 index by category",
       "id": "user-notes-index"
     },
@@ -1333,7 +1289,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "user notes \u2014 related research & derivative ideas",
       "id": "user-notes-related-research"
     },
@@ -1346,7 +1302,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "adr 2026-05-21 \u2014 base model pipeline",
       "id": "adr-base-model-pipeline"
     },
@@ -1359,7 +1315,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "multi-token prediction training",
       "id": "multi-token-prediction-training"
     },
@@ -1372,7 +1328,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 20,
       "norm_label": "adr 2026-05-21 \u2014 project bootstrap",
       "id": "adr-project-bootstrap"
     },
@@ -1385,7 +1341,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "qwen3-4b-instruct-2507",
       "id": "qwen3-4b-instruct-2507"
     },
@@ -1398,7 +1354,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "qwen3-8b",
       "id": "qwen3-8b"
     },
@@ -1411,7 +1367,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "qwen3.6-35b-a3b",
       "id": "qwen3.6-35b-a3b"
     },
@@ -1424,7 +1380,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "qwen3.5-4b",
       "id": "qwen3.5-4b"
     },
@@ -1437,7 +1393,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "qwen3.5-9b",
       "id": "qwen3.5-9b"
     },
@@ -1450,7 +1406,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "deepseek-coder-v2-lite-instruct",
       "id": "deepseek-coder-v2-lite"
     },
@@ -1463,7 +1419,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "codestral-22b-v0.1",
       "id": "codestral-22b"
     },
@@ -1476,7 +1432,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "starcoder2-15b",
       "id": "starcoder2-15b"
     },
@@ -1489,7 +1445,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "granite-8b-code-instruct-4k",
       "id": "granite-8b-code"
     },
@@ -1502,7 +1458,7 @@
       "captured_at": null,
       "author": "Liu et al.",
       "contributor": null,
-      "community": 2,
+      "community": 7,
       "norm_label": "lost in the middle",
       "id": "paper-lost-in-the-middle"
     },
@@ -1515,7 +1471,7 @@
       "captured_at": null,
       "author": "Xiao et al.",
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "attention sinks (xiao 2023)",
       "id": "paper-attention-sinks"
     },
@@ -1528,7 +1484,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "focused chain-of-thought (f-cot)",
       "id": "paper-focused-cot"
     },
@@ -1541,7 +1497,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "tokenskip (emnlp 2025)",
       "id": "paper-tokenskip"
     },
@@ -1554,7 +1510,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "verification-first prompting",
       "id": "paper-verification-first"
     },
@@ -1567,7 +1523,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "revise",
       "id": "paper-revise"
     },
@@ -1580,7 +1536,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "codi (emnlp 2025)",
       "id": "paper-codi"
     },
@@ -1593,7 +1549,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "pause/thinking tokens",
       "id": "paper-pause-tokens"
     },
@@ -1606,7 +1562,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "codeact (icml 2024)",
       "id": "paper-codeact"
     },
@@ -1619,7 +1575,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "struq (usenix 2025)",
       "id": "paper-struq"
     },
@@ -1632,7 +1588,7 @@
       "captured_at": null,
       "author": "Archiki et al.",
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "adapt (archiki 2024)",
       "id": "paper-adapt"
     },
@@ -1645,7 +1601,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "plan-and-act",
       "id": "paper-plan-and-act"
     },
@@ -1658,7 +1614,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "selfcheckgpt",
       "id": "paper-selfcheckgpt"
     },
@@ -1671,7 +1627,7 @@
       "captured_at": null,
       "author": "Gou et al.",
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "critic (gou et al.)",
       "id": "paper-critic"
     },
@@ -1684,7 +1640,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "openhands",
       "id": "paper-openhands"
     },
@@ -1697,7 +1653,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "sglang radixattention",
       "id": "paper-radixattention"
     },
@@ -1710,7 +1666,7 @@
       "captured_at": null,
       "author": "Wei et al.",
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "chain-of-thought (wei 2022)",
       "id": "paper-cot"
     },
@@ -1723,7 +1679,7 @@
       "captured_at": null,
       "author": "Yao et al.",
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "react (yao 2022)",
       "id": "paper-react"
     },
@@ -1736,7 +1692,7 @@
       "captured_at": null,
       "author": "Hinton et al.",
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "knowledge distillation (hinton 2015)",
       "id": "paper-knowledge-distillation"
     },
@@ -1749,7 +1705,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "unsloth",
       "id": "tool-unsloth"
     },
@@ -1762,7 +1718,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "sglang (incl. hicache)",
       "id": "tool-sglang"
     },
@@ -1775,7 +1731,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "langgraph (interrupts, hil)",
       "id": "tool-langgraph"
     },
@@ -1788,7 +1744,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "letta / memgpt",
       "id": "tool-letta"
     },
@@ -1801,7 +1757,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "aider (git/lint/test workflow)",
       "id": "tool-aider"
     },
@@ -1814,7 +1770,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "claude code subagents",
       "id": "tool-claude-code-subagents"
     },
@@ -1827,7 +1783,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "anthropic xml tags guide",
       "id": "tool-anthropic-xml-tags"
     },
@@ -1840,7 +1796,7 @@
       "captured_at": null,
       "author": "OWASP",
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "owasp top 10 llm01 prompt injection",
       "id": "owasp-llm01"
     },
@@ -1853,7 +1809,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "rtx 2080 ti 11gb (turing)",
       "id": "hw-rtx-2080-ti"
     },
@@ -1866,7 +1822,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "prompts/thinking-style.v1.md",
       "id": "prompts-thinking-style-v1"
     },
@@ -1879,7 +1835,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "pattern \u03b1 \u2014 knowledge graph runtime",
       "id": "pattern-knowledge-graph-runtime"
     },
@@ -1892,7 +1848,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "pattern \u03b2 \u2014 self-supervision loop",
       "id": "pattern-self-supervision-loop"
     },
@@ -1905,7 +1861,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "pattern \u03b3 \u2014 context api callable",
       "id": "pattern-context-api"
     },
@@ -1918,7 +1874,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "pattern \u03b4 \u2014 trust gradient end-to-end",
       "id": "pattern-trust-gradient"
     },
@@ -1931,7 +1887,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "pattern \u03b5 \u2014 section-aligned kv cache",
       "id": "pattern-section-kv-cache"
     },
@@ -1944,7 +1900,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 12,
       "norm_label": "wiki index",
       "id": "wiki-index"
     },
@@ -1957,7 +1913,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 9,
+      "community": 10,
       "norm_label": "wiki open questions",
       "id": "wiki-open-questions"
     },
@@ -1970,7 +1926,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 12,
       "norm_label": "session summary 2026-05-21",
       "id": "session-summary-2026-05-21"
     },
@@ -1983,7 +1939,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 17,
       "norm_label": "wrapper applicativo (web/app)",
       "id": "wrapper"
     },
@@ -1996,7 +1952,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 16,
       "norm_label": "curiosity-driven exploration training",
       "id": "curiosity-driven-exploration-training"
     },
@@ -2009,7 +1965,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 7,
       "norm_label": "dynamic context training regime",
       "id": "dynamic-context-training-regime"
     },
@@ -2022,7 +1978,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 7,
       "norm_label": "pipeline producer/consumer asincrona data gen",
       "id": "pipeline-architecture-data-generation"
     },
@@ -2035,7 +1991,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 7,
       "norm_label": "pretrained name bias mitigation",
       "id": "pretrained-name-bias-mitigation"
     },
@@ -2048,7 +2004,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 7,
       "norm_label": "runtime symbol randomization training",
       "id": "runtime-symbol-randomization-training"
     },
@@ -2061,7 +2017,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 12,
       "norm_label": "filosofia training 'come la scuola'",
       "id": "scuola-learning-philosophy"
     },
@@ -2074,7 +2030,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "untrusted content delimiting",
       "id": "untrusted-content-delimiting"
     },
@@ -2087,7 +2043,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 16,
       "norm_label": "paper verification sweep 2026-05-21",
       "id": "paper-verification-2026-05-21"
     },
@@ -2100,7 +2056,7 @@
       "captured_at": "2026-05-21",
       "author": null,
       "contributor": null,
-      "community": 9,
+      "community": 10,
       "norm_label": "adr training from scratch clarification",
       "id": "adr-training-from-scratch-clarification"
     },
@@ -2113,7 +2069,7 @@
       "captured_at": null,
       "author": "Behrouz, Zhong, Mirrokni (Google)",
       "contributor": null,
-      "community": 4,
+      "community": 16,
       "norm_label": "titans: learning to memorize at test time",
       "id": "paper-titans"
     },
@@ -2126,7 +2082,7 @@
       "captured_at": null,
       "author": "Pathak et al.",
       "contributor": null,
-      "community": 4,
+      "community": 16,
       "norm_label": "pathak curiosity-driven exploration (icm)",
       "id": "paper-pathak-icm"
     },
@@ -2139,7 +2095,7 @@
       "captured_at": null,
       "author": "J\u00fcrgen Schmidhuber",
       "contributor": null,
-      "community": 4,
+      "community": 16,
       "norm_label": "schmidhuber formal theory of creativity",
       "id": "paper-schmidhuber-creativity"
     },
@@ -2152,7 +2108,7 @@
       "captured_at": null,
       "author": "Karl Friston",
       "contributor": null,
-      "community": 4,
+      "community": 16,
       "norm_label": "friston free energy principle",
       "id": "paper-friston-free-energy"
     },
@@ -2165,7 +2121,7 @@
       "captured_at": null,
       "author": "Peng et al.",
       "contributor": null,
-      "community": 4,
+      "community": 7,
       "norm_label": "yarn",
       "id": "paper-yarn"
     },
@@ -2178,7 +2134,7 @@
       "captured_at": null,
       "author": "Greg Kamradt",
       "contributor": null,
-      "community": 4,
+      "community": 7,
       "norm_label": "needle in a haystack eval",
       "id": "paper-needle-haystack"
     },
@@ -2191,7 +2147,7 @@
       "captured_at": null,
       "author": "Olsson et al., Anthropic",
       "contributor": null,
-      "community": 4,
+      "community": 7,
       "norm_label": "olsson in-context learning & induction heads",
       "id": "paper-olsson-induction-heads"
     },
@@ -2204,7 +2160,7 @@
       "captured_at": null,
       "author": "Trinh et al.",
       "contributor": null,
-      "community": 4,
+      "community": 7,
       "norm_label": "alphageometry",
       "id": "paper-alphageometry"
     },
@@ -2217,7 +2173,7 @@
       "captured_at": null,
       "author": "Guo et al.",
       "contributor": null,
-      "community": 4,
+      "community": 7,
       "norm_label": "graphcodebert",
       "id": "paper-graphcodebert"
     },
@@ -2230,7 +2186,7 @@
       "captured_at": null,
       "author": "Guo et al.",
       "contributor": null,
-      "community": 4,
+      "community": 7,
       "norm_label": "unixcoder",
       "id": "paper-unixcoder"
     },
@@ -2243,7 +2199,7 @@
       "captured_at": null,
       "author": "Kaushik et al.",
       "contributor": null,
-      "community": 4,
+      "community": 7,
       "norm_label": "counterfactual data augmentation",
       "id": "paper-counterfactual-aug"
     },
@@ -2256,7 +2212,7 @@
       "captured_at": null,
       "author": "Tobin et al.",
       "contributor": null,
-      "community": 4,
+      "community": 7,
       "norm_label": "domain randomization (tobin 2017)",
       "id": "paper-domain-randomization"
     },
@@ -2269,7 +2225,7 @@
       "captured_at": null,
       "author": "Lake & Baroni",
       "contributor": null,
-      "community": 4,
+      "community": 7,
       "norm_label": "scan compositionality",
       "id": "paper-scan"
     },
@@ -2282,7 +2238,7 @@
       "captured_at": null,
       "author": "Bengio et al.",
       "contributor": null,
-      "community": 4,
+      "community": 12,
       "norm_label": "curriculum learning (bengio 2009)",
       "id": "paper-curriculum-learning"
     },
@@ -2295,7 +2251,7 @@
       "captured_at": null,
       "author": "Madaan et al.",
       "contributor": null,
-      "community": 4,
+      "community": 12,
       "norm_label": "self-refine",
       "id": "paper-self-refine"
     },
@@ -2308,7 +2264,7 @@
       "captured_at": null,
       "author": "Hsieh et al.",
       "contributor": null,
-      "community": 4,
+      "community": 12,
       "norm_label": "distilling step-by-step!",
       "id": "paper-distilling-step-by-step"
     },
@@ -2321,7 +2277,7 @@
       "captured_at": null,
       "author": "Alibaba Qwen",
       "contributor": null,
-      "community": 9,
+      "community": 10,
       "norm_label": "qwen3-4b-instruct-2507",
       "id": "model-qwen3-4b-instruct-2507"
     },
@@ -2334,7 +2290,7 @@
       "captured_at": null,
       "author": "Alibaba Qwen",
       "contributor": null,
-      "community": 9,
+      "community": 10,
       "norm_label": "qwen3-8b",
       "id": "model-qwen3-8b"
     },
@@ -2347,7 +2303,7 @@
       "captured_at": null,
       "author": "Alibaba Qwen",
       "contributor": null,
-      "community": 9,
+      "community": 10,
       "norm_label": "qwen3.6-35b-a3b",
       "id": "model-qwen36-35b-a3b"
     },
@@ -2360,7 +2316,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 17,
       "norm_label": "vllm (multi-lora hot-swap)",
       "id": "framework-vllm"
     },
@@ -2373,7 +2329,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 9,
+      "community": 10,
       "norm_label": "unsloth",
       "id": "framework-unsloth"
     },
@@ -2386,7 +2342,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 9,
+      "community": 10,
       "norm_label": "axolotl",
       "id": "framework-axolotl"
     },
@@ -2399,7 +2355,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 9,
+      "community": 10,
       "norm_label": "trl",
       "id": "framework-trl"
     },
@@ -2412,7 +2368,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 9,
+      "community": 10,
       "norm_label": "deepspeed",
       "id": "framework-deepspeed"
     },
@@ -2425,7 +2381,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 7,
       "norm_label": "ray data",
       "id": "framework-ray-data"
     },
@@ -2438,7 +2394,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 7,
       "norm_label": "pytorch lightning",
       "id": "framework-pytorch-lightning"
     },
@@ -2451,7 +2407,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 17,
       "norm_label": "fastapi",
       "id": "framework-fastapi"
     },
@@ -2464,7 +2420,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 17,
       "norm_label": "tauri",
       "id": "framework-tauri"
     },
@@ -2477,7 +2433,7 @@
       "captured_at": null,
       "author": "BigCode",
       "contributor": null,
-      "community": 9,
+      "community": 10,
       "norm_label": "the stack v2 (filtered)",
       "id": "dataset-the-stack-v2"
     },
@@ -2490,7 +2446,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 9,
+      "community": 10,
       "norm_label": "swe-bench verified",
       "id": "dataset-swe-bench"
     },
@@ -2503,7 +2459,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 9,
+      "community": 10,
       "norm_label": "livecodebench v6",
       "id": "dataset-livecodebench"
     },
@@ -2516,7 +2472,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 9,
+      "community": 10,
       "norm_label": "bigcodebench",
       "id": "dataset-bigcodebench"
     },
@@ -2529,7 +2485,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 9,
+      "community": 10,
       "norm_label": "aider polyglot benchmark",
       "id": "dataset-aider-polyglot"
     },
@@ -2552,7 +2508,7 @@
       "last_updated": "2026-05-21",
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "decision:2026-05-21-training-philosophy-roadmap"
     },
@@ -2575,7 +2531,7 @@
       "last_updated": "2026-05-21",
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "decision:2026-05-21-vision-clarification"
     },
@@ -2609,7 +2565,7 @@
       "last_updated": "2026-05-21",
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "paper:dora"
     },
@@ -2644,7 +2600,7 @@
       "last_updated": "2026-05-21",
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 10,
+      "community": 8,
       "norm_label": "",
       "id": "paper:em-llm"
     },
@@ -2673,7 +2629,7 @@
       "last_updated": "2026-05-21",
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 10,
+      "community": 8,
       "norm_label": "",
       "id": "paper:friston-free-energy"
     },
@@ -2705,7 +2661,7 @@
       "last_updated": "2026-05-21",
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "paper:lorahub"
     },
@@ -2744,7 +2700,7 @@
       "last_updated": "2026-05-21",
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "paper:prm"
     },
@@ -2771,7 +2727,7 @@
       "last_updated": "2026-05-21",
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "paper:rslora"
     },
@@ -2808,7 +2764,7 @@
       "last_updated": "2026-05-21",
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "paper:rstar-math"
     },
@@ -2837,7 +2793,7 @@
       "last_updated": "2026-05-21",
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 10,
+      "community": 8,
       "norm_label": "",
       "id": "paper:schmidhuber-creativity"
     },
@@ -2867,7 +2823,7 @@
       "last_updated": "2026-05-21",
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "paper:lora-plus"
     },
@@ -2896,7 +2852,7 @@
       "last_updated": "2026-05-21",
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "paper:mole"
     },
@@ -2928,7 +2884,7 @@
       "last_updated": "2026-05-21",
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 10,
+      "community": 8,
       "norm_label": "",
       "id": "paper:pathak-icm"
     },
@@ -2958,7 +2914,7 @@
       "last_updated": "2026-05-21",
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 10,
+      "community": 8,
       "norm_label": "",
       "id": "paper:titans"
     },
@@ -2995,7 +2951,7 @@
       "last_updated": "2026-05-21",
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "paper:voyager"
     },
@@ -3018,7 +2974,7 @@
       "last_updated": "2026-05-21",
       "cs": 0.65,
       "confidence_tag": "INFERRED",
-      "community": 11,
+      "community": 18,
       "norm_label": "",
       "id": "image:appunti-quaderno"
     },
@@ -3036,7 +2992,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "concept:wave-roadmap"
     },
@@ -3054,7 +3010,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "concept:two-regime-dataset"
     },
@@ -3072,7 +3028,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "concept:async-producer-consumer-pipeline"
     },
@@ -3091,7 +3047,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "concept:organization-first-vision"
     },
@@ -3109,7 +3065,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "concept:tier-1-dataset-composition"
     },
@@ -3129,7 +3085,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "concept:wrapper-form-web-app"
     },
@@ -3147,7 +3103,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "concept:scientific-evolution-philosophy"
     },
@@ -3164,7 +3120,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "concept:weight-decomposition-magnitude-direction"
     },
@@ -3183,7 +3139,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 10,
+      "community": 8,
       "norm_label": "",
       "id": "concept:bayesian-surprise-segmentation"
     },
@@ -3201,7 +3157,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 10,
+      "community": 8,
       "norm_label": "",
       "id": "concept:active-inference"
     },
@@ -3219,7 +3175,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 10,
+      "community": 8,
       "norm_label": "",
       "id": "concept:predictive-coding"
     },
@@ -3237,7 +3193,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "concept:process-reward-model-prm"
     },
@@ -3255,7 +3211,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "concept:process-preference-model-ppm"
     },
@@ -3273,7 +3229,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "concept:gradient-collapse-rank"
     },
@@ -3291,7 +3247,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "concept:code-augmented-cot"
     },
@@ -3309,7 +3265,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "concept:mcts-test-time"
     },
@@ -3327,7 +3283,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "concept:self-evolution-recipe"
     },
@@ -3346,7 +3302,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 10,
+      "community": 8,
       "norm_label": "",
       "id": "concept:compression-progress-reward"
     },
@@ -3365,7 +3321,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "concept:lora-plus-lr-ratio"
     },
@@ -3384,7 +3340,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 10,
+      "community": 8,
       "norm_label": "",
       "id": "concept:icm-forward-inverse-model"
     },
@@ -3402,7 +3358,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 10,
+      "community": 8,
       "norm_label": "",
       "id": "concept:noisy-tv-problem"
     },
@@ -3420,7 +3376,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 10,
+      "community": 8,
       "norm_label": "",
       "id": "concept:titans-three-memories"
     },
@@ -3437,7 +3393,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 10,
+      "community": 8,
       "norm_label": "",
       "id": "concept:titans-mac-mag-mal-variants"
     },
@@ -3455,7 +3411,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 10,
+      "community": 8,
       "norm_label": "",
       "id": "concept:surprise-as-gradient-magnitude"
     },
@@ -3473,7 +3429,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "concept:voyager-automatic-curriculum"
     },
@@ -3492,7 +3448,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "concept:voyager-skill-library"
     },
@@ -3510,7 +3466,7 @@
       ],
       "cs": 1.0,
       "confidence_tag": "EXTRACTED",
-      "community": 7,
+      "community": 6,
       "norm_label": "",
       "id": "concept:iterative-prompting-env-feedback"
     },
@@ -3528,7 +3484,7 @@
       ],
       "cs": 0.65,
       "confidence_tag": "INFERRED",
-      "community": 11,
+      "community": 18,
       "norm_label": "",
       "id": "concept:user-notes-sliding-window-variable"
     },
@@ -3546,7 +3502,7 @@
       ],
       "cs": 0.55,
       "confidence_tag": "INFERRED",
-      "community": 11,
+      "community": 18,
       "norm_label": "",
       "id": "concept:user-notes-dataset-buckets"
     },
@@ -3559,7 +3515,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1,
+      "community": 2,
       "norm_label": "wiki index",
       "id": "index_wiki_index"
     },
@@ -5941,6 +5897,721 @@
       "community": 0,
       "norm_label": "dynamic-context training regime",
       "id": "ext_dynamic_context_regime"
+    },
+    {
+      "label": "CLAUDE.md (Wiki Schema)",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "claudemd_wiki_schema",
+      "community": 2,
+      "norm_label": "claude.md (wiki schema)"
+    },
+    {
+      "label": "Optimization-First (regola permanente #8)",
+      "file_type": "rationale",
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "claudemd_optimization_first",
+      "community": 2,
+      "norm_label": "optimization-first (regola permanente #8)"
+    },
+    {
+      "label": "Catene di pensiero = priorit\u00e0 #1 (regola #10)",
+      "file_type": "rationale",
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "claudemd_chain_of_thought_priority",
+      "community": 2,
+      "norm_label": "catene di pensiero = priorita #1 (regola #10)"
+    },
+    {
+      "label": "Artifact graphify OS-agnostic (regola #7)",
+      "file_type": "rationale",
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "claudemd_os_agnostic_portability",
+      "community": 2,
+      "norm_label": "artifact graphify os-agnostic (regola #7)"
+    },
+    {
+      "label": "Three-tier idea protetta (regola #1)",
+      "file_type": "rationale",
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "claudemd_three_tier_protected",
+      "community": 2,
+      "norm_label": "three-tier idea protetta (regola #1)"
+    },
+    {
+      "label": "Wrapper Implementation Plan (su pi)",
+      "file_type": "document",
+      "source_file": "wiki/architecture/wrapper-implementation-plan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "wrapperimplementationplan_plan",
+      "community": 2,
+      "norm_label": "wrapper implementation plan (su pi)"
+    },
+    {
+      "label": "Walking Skeleton (bottleneck-buster)",
+      "file_type": "rationale",
+      "source_file": "wiki/architecture/wrapper-implementation-plan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "wrapperimplementationplan_walking_skeleton",
+      "community": 2,
+      "norm_label": "walking skeleton (bottleneck-buster)"
+    },
+    {
+      "label": "Verifier-Sandbox",
+      "file_type": "rationale",
+      "source_file": "wiki/architecture/wrapper-implementation-plan.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "wrapperimplementationplan_verifier_sandbox",
+      "community": 2,
+      "norm_label": "verifier-sandbox"
+    },
+    {
+      "label": "Agent Constitution (codice di condotta)",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/agent-constitution.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "agentconstitution_constitution",
+      "community": 2,
+      "norm_label": "agent constitution (codice di condotta)"
+    },
+    {
+      "label": "Dataset On-the-Fly Pseudo-Random",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/dataset-on-the-fly-pseudorandom.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "datasetonthefly_pseudorandom",
+      "community": 2,
+      "norm_label": "dataset on-the-fly pseudo-random"
+    },
+    {
+      "label": "Harness Capabilities as Files",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/harness-capabilities-as-files.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "harnesscapabilities_as_files",
+      "community": 2,
+      "norm_label": "harness capabilities as files"
+    },
+    {
+      "label": "Low-Confidence: Gather & Reorg",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/low-confidence-gather-and-reorg.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "lowconfidence_gather_and_reorg",
+      "community": 2,
+      "norm_label": "low-confidence: gather & reorg"
+    },
+    {
+      "label": "Per-Expert MoE Quantization",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/moe-per-expert-quantization.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "moeperexpert_quantization",
+      "community": 2,
+      "norm_label": "per-expert moe quantization"
+    },
+    {
+      "label": "Path Portability Awareness",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/path-portability-awareness.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "pathportability_awareness",
+      "community": 2,
+      "norm_label": "path portability awareness"
+    },
+    {
+      "label": "Phased Reward + RH-Detection",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/phased-reward-and-rh-detection.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "phasedreward_and_rh_detection",
+      "community": 2,
+      "norm_label": "phased reward + rh-detection"
+    },
+    {
+      "label": "Self-Analysis & Strategy Revision",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/self-analysis-strategy-revision.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "selfanalysis_strategy_revision",
+      "community": 2,
+      "norm_label": "self-analysis & strategy revision"
+    },
+    {
+      "label": "Task Interruption Discipline",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/task-interruption-discipline.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "taskinterruption_discipline",
+      "community": 2,
+      "norm_label": "task interruption discipline"
+    },
+    {
+      "label": "Wrapper Context Assembly Example",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/wrapper-context-assembly-example.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "wrappercontextassembly_example",
+      "community": 2,
+      "norm_label": "wrapper context assembly example"
+    },
+    {
+      "label": "DwarfStar 4 (DS4)",
+      "file_type": "document",
+      "source_file": "wiki/entities/dwarfstar4.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "dwarfstar4_ds4",
+      "community": 2,
+      "norm_label": "dwarfstar 4 (ds4)"
+    },
+    {
+      "label": "Area 2 \u2014 Criticality & Safety Awareness",
+      "file_type": "document",
+      "source_file": "wiki/training-taxonomy/area-02-criticality-safety.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "area02_criticality_safety",
+      "community": 2,
+      "norm_label": "area 2 \u2014 criticality & safety awareness"
+    },
+    {
+      "label": "Data Volume Estimate (16 aree)",
+      "file_type": "document",
+      "source_file": "wiki/training-taxonomy/data-volume-estimate.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "datavolumeestimate_estimate",
+      "community": 2,
+      "norm_label": "data volume estimate (16 aree)"
+    },
+    {
+      "label": "Gold Example \u2014 Area 2 Criticality",
+      "file_type": "document",
+      "source_file": "wiki/training-taxonomy/gold-example-area02-criticality.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "goldexamplearea02_criticality",
+      "community": 2,
+      "norm_label": "gold example \u2014 area 2 criticality"
+    },
+    {
+      "label": "Coverage Audit 2026-06-23",
+      "file_type": "document",
+      "source_file": "wiki/training-taxonomy/_coverage-audit-2026-06-23.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "coverageaudit_2026_06_23",
+      "community": 2,
+      "norm_label": "coverage audit 2026-06-23"
+    },
+    {
+      "label": "Reward-Hacking Mitigation",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/reward-hacking-mitigation.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_reward_hacking_mitigation",
+      "community": 2,
+      "norm_label": "reward-hacking mitigation"
+    },
+    {
+      "label": "Scientific-Method Operating Protocol",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/scientific-method-operating-protocol.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_scientific_method_protocol",
+      "community": 2,
+      "norm_label": "scientific-method operating protocol"
+    },
+    {
+      "label": "Pre-Flight Safety Checks",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/pre-flight-safety-checks.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_pre_flight_safety_checks",
+      "community": 2,
+      "norm_label": "pre-flight safety checks"
+    },
+    {
+      "label": "Agent Wrapper Vars-Queue",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/agent-wrapper-vars-queue.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_agent_wrapper_vars_queue",
+      "community": 2,
+      "norm_label": "agent wrapper vars-queue"
+    },
+    {
+      "label": "Structured Context Sections",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/structured-context-sections.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_structured_context_sections",
+      "community": 2,
+      "norm_label": "structured context sections"
+    },
+    {
+      "label": "Sliding-Window Variable Tool",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/sliding-window-variable-tool.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_sliding_window_variable_tool",
+      "community": 2,
+      "norm_label": "sliding-window variable tool"
+    },
+    {
+      "label": "Error-Memo System",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/error-memo-system.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_error_memo_system",
+      "community": 2,
+      "norm_label": "error-memo system"
+    },
+    {
+      "label": "Secret-Section Exfiltration Defense",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/secret-section-exfiltration-defense.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_secret_section_exfiltration_defense",
+      "community": 2,
+      "norm_label": "secret-section exfiltration defense"
+    },
+    {
+      "label": "Contradiction-Detection Layer",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/contradiction-detection-layer.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_contradiction_detection_layer",
+      "community": 2,
+      "norm_label": "contradiction-detection layer"
+    },
+    {
+      "label": "Out-of-Domain Refusal Training",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/out-of-domain-refusal-training.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_out_of_domain_refusal_training",
+      "community": 2,
+      "norm_label": "out-of-domain refusal training"
+    },
+    {
+      "label": "Runtime Symbol-Randomization Training",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/runtime-symbol-randomization-training.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_runtime_symbol_randomization_training",
+      "community": 2,
+      "norm_label": "runtime symbol-randomization training"
+    },
+    {
+      "label": "Dynamic-Context Training Regime",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/dynamic-context-training-regime.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_dynamic_context_training_regime",
+      "community": 2,
+      "norm_label": "dynamic-context training regime"
+    },
+    {
+      "label": "Adversarial Needle-in-Haystack Training",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/adversarial-needle-haystack-training.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_adversarial_needle_haystack_training",
+      "community": 2,
+      "norm_label": "adversarial needle-in-haystack training"
+    },
+    {
+      "label": "Staged Curriculum Training",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/staged-curriculum-training.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_staged_curriculum_training",
+      "community": 2,
+      "norm_label": "staged curriculum training"
+    },
+    {
+      "label": "Steering Vectors",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/steering-vectors.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_steering_vectors",
+      "community": 2,
+      "norm_label": "steering vectors"
+    },
+    {
+      "label": "Structured Thinking",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/structured-thinking.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_structured_thinking",
+      "community": 2,
+      "norm_label": "structured thinking"
+    },
+    {
+      "label": "Multi-Token Prediction Training",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/multi-token-prediction-training.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_multi_token_prediction_training",
+      "community": 2,
+      "norm_label": "multi-token prediction training"
+    },
+    {
+      "label": "Multi-Expert Collaboration",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/multi-expert-collaboration.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_multi_expert_collaboration",
+      "community": 2,
+      "norm_label": "multi-expert collaboration"
+    },
+    {
+      "label": "Scuola Learning Philosophy",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/scuola-learning-philosophy.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_scuola_learning_philosophy",
+      "community": 2,
+      "norm_label": "scuola learning philosophy"
+    },
+    {
+      "label": "Post-RL Path Optimization",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/post-rl-path-optimization.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_post_rl_path_optimization",
+      "community": 2,
+      "norm_label": "post-rl path optimization"
+    },
+    {
+      "label": "Task-Decomposition Ad-hoc Context",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/task-decomposition-adhoc-context.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_task_decomposition_adhoc_context",
+      "community": 2,
+      "norm_label": "task-decomposition ad-hoc context"
+    },
+    {
+      "label": "Temporal Awareness Timestamps",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/temporal-awareness-timestamps.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_temporal_awareness_timestamps",
+      "community": 2,
+      "norm_label": "temporal awareness timestamps"
+    },
+    {
+      "label": "Explicit Attention Layer",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/explicit-attention-layer.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_explicit_attention_layer",
+      "community": 2,
+      "norm_label": "explicit attention layer"
+    },
+    {
+      "label": "Untrusted-Content Delimiting",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/untrusted-content-delimiting.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_untrusted_content_delimiting",
+      "community": 2,
+      "norm_label": "untrusted-content delimiting"
+    },
+    {
+      "label": "LoRA Stacking",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/lora-stacking.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_lora_stacking",
+      "community": 2,
+      "norm_label": "lora stacking"
+    },
+    {
+      "label": "SLM Coding Landscape",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/slm-coding-landscape.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_slm_coding_landscape",
+      "community": 2,
+      "norm_label": "slm coding landscape"
+    },
+    {
+      "label": "Pipeline Architecture Data Generation",
+      "file_type": "rationale",
+      "source_file": "wiki/concepts/pipeline-architecture-data-generation.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_pipeline_architecture_data_generation",
+      "community": 2,
+      "norm_label": "pipeline architecture data generation"
+    },
+    {
+      "label": "User Notes 2026-06-23",
+      "file_type": "document",
+      "source_file": "wiki/concepts/_user-notes-2026-06-23.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_user_notes_2026_06_23",
+      "community": 2,
+      "norm_label": "user notes 2026-06-23"
+    },
+    {
+      "label": "S-LoRA",
+      "file_type": "document",
+      "source_file": "wiki/entities/s-lora.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_s_lora",
+      "community": 2,
+      "norm_label": "s-lora"
+    },
+    {
+      "label": "Training Taxonomy README",
+      "file_type": "document",
+      "source_file": "wiki/training-taxonomy/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_taxonomy_readme",
+      "community": 2,
+      "norm_label": "training taxonomy readme"
+    },
+    {
+      "label": "ADR 2026-06-23 pi-harness-base",
+      "file_type": "document",
+      "source_file": "wiki/decisions/2026-06-23-pi-harness-base.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_adr_pi_harness_base",
+      "community": 2,
+      "norm_label": "adr 2026-06-23 pi-harness-base"
+    },
+    {
+      "label": "ADR 2026-05-21 base-model-pipeline",
+      "file_type": "document",
+      "source_file": "wiki/decisions/2026-05-21-base-model-pipeline.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "ref_adr_base_model_pipeline",
+      "community": 2,
+      "norm_label": "adr 2026-05-21 base-model-pipeline"
     }
   ],
   "links": [
@@ -9673,6 +10344,176 @@
       "weight": 1.0,
       "source": "index_wiki_index",
       "target": "wave2_research_findings"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "claudemd_wiki_schema",
+      "target": "index_wiki_index"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/index.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "index_wiki_index",
+      "target": "wrapperimplementationplan_plan"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/index.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "index_wiki_index",
+      "target": "dwarfstar4_ds4"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/index.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "index_wiki_index",
+      "target": "area02_criticality_safety"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/index.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "index_wiki_index",
+      "target": "datavolumeestimate_estimate"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/index.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "index_wiki_index",
+      "target": "goldexamplearea02_criticality"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/index.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "index_wiki_index",
+      "target": "coverageaudit_2026_06_23"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/index.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "index_wiki_index",
+      "target": "agentconstitution_constitution"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/index.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "index_wiki_index",
+      "target": "datasetonthefly_pseudorandom"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/index.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "index_wiki_index",
+      "target": "harnesscapabilities_as_files"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/index.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "index_wiki_index",
+      "target": "lowconfidence_gather_and_reorg"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/index.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "index_wiki_index",
+      "target": "moeperexpert_quantization"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/index.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "index_wiki_index",
+      "target": "pathportability_awareness"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/index.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "index_wiki_index",
+      "target": "phasedreward_and_rh_detection"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/index.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "index_wiki_index",
+      "target": "selfanalysis_strategy_revision"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/index.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "index_wiki_index",
+      "target": "taskinterruption_discipline"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/index.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "index_wiki_index",
+      "target": "wrappercontextassembly_example"
     },
     {
       "relation": "references",
@@ -13433,105 +14274,1271 @@
       "weight": 1.0,
       "source": "area-16_scorer_not_scored",
       "target": "ext_reward_hacking_mitigation"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "claudemd_wiki_schema",
+      "target": "claudemd_optimization_first"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "claudemd_wiki_schema",
+      "target": "claudemd_chain_of_thought_priority"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "claudemd_wiki_schema",
+      "target": "claudemd_os_agnostic_portability"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "claudemd_wiki_schema",
+      "target": "claudemd_three_tier_protected"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/harness-capabilities-as-files.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "harnesscapabilities_as_files",
+      "target": "claudemd_optimization_first"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/task-interruption-discipline.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "taskinterruption_discipline",
+      "target": "claudemd_optimization_first"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/area-02-criticality-safety.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "area02_criticality_safety",
+      "target": "claudemd_optimization_first"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "claudemd_chain_of_thought_priority",
+      "target": "goldexamplearea02_criticality"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "wiki/concepts/path-portability-awareness.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "pathportability_awareness",
+      "target": "claudemd_chain_of_thought_priority"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/path-portability-awareness.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "pathportability_awareness",
+      "target": "claudemd_os_agnostic_portability"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/architecture/wrapper-implementation-plan.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrapperimplementationplan_walking_skeleton",
+      "target": "wrapperimplementationplan_plan"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/architecture/wrapper-implementation-plan.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrapperimplementationplan_verifier_sandbox",
+      "target": "wrapperimplementationplan_plan"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/architecture/wrapper-implementation-plan.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrapperimplementationplan_plan",
+      "target": "datavolumeestimate_estimate"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/architecture/wrapper-implementation-plan.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrapperimplementationplan_plan",
+      "target": "goldexamplearea02_criticality"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/architecture/wrapper-implementation-plan.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrapperimplementationplan_plan",
+      "target": "ref_adr_pi_harness_base"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/architecture/wrapper-implementation-plan.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrapperimplementationplan_plan",
+      "target": "wrappercontextassembly_example"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/architecture/wrapper-implementation-plan.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrapperimplementationplan_plan",
+      "target": "ref_agent_wrapper_vars_queue"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/architecture/wrapper-implementation-plan.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrapperimplementationplan_plan",
+      "target": "ref_secret_section_exfiltration_defense"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/architecture/wrapper-implementation-plan.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrapperimplementationplan_plan",
+      "target": "ref_pre_flight_safety_checks"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/architecture/wrapper-implementation-plan.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrapperimplementationplan_plan",
+      "target": "ref_multi_expert_collaboration"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/architecture/wrapper-implementation-plan.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrapperimplementationplan_plan",
+      "target": "ref_contradiction_detection_layer"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/architecture/wrapper-implementation-plan.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrapperimplementationplan_plan",
+      "target": "ref_explicit_attention_layer"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/architecture/wrapper-implementation-plan.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrapperimplementationplan_plan",
+      "target": "ref_error_memo_system"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/agent-constitution.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "agentconstitution_constitution",
+      "target": "ref_scientific_method_protocol"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/agent-constitution.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "agentconstitution_constitution",
+      "target": "ref_pre_flight_safety_checks"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/agent-constitution.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "agentconstitution_constitution",
+      "target": "ref_secret_section_exfiltration_defense"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/agent-constitution.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "agentconstitution_constitution",
+      "target": "ref_user_notes_2026_06_23"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/agent-constitution.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "agentconstitution_constitution",
+      "target": "ref_out_of_domain_refusal_training"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/agent-constitution.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "agentconstitution_constitution",
+      "target": "ref_contradiction_detection_layer"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/agent-constitution.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "agentconstitution_constitution",
+      "target": "ref_error_memo_system"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/agent-constitution.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "agentconstitution_constitution",
+      "target": "ref_runtime_symbol_randomization_training"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/agent-constitution.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "agentconstitution_constitution",
+      "target": "ref_steering_vectors"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/agent-constitution.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "agentconstitution_constitution",
+      "target": "ref_reward_hacking_mitigation"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/agent-constitution.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "agentconstitution_constitution",
+      "target": "wrappercontextassembly_example"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/low-confidence-gather-and-reorg.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lowconfidence_gather_and_reorg",
+      "target": "agentconstitution_constitution"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/self-analysis-strategy-revision.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "selfanalysis_strategy_revision",
+      "target": "agentconstitution_constitution"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/area-02-criticality-safety.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "area02_criticality_safety",
+      "target": "agentconstitution_constitution"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/gold-example-area02-criticality.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "goldexamplearea02_criticality",
+      "target": "agentconstitution_constitution"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/dataset-on-the-fly-pseudorandom.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "datasetonthefly_pseudorandom",
+      "target": "ref_dynamic_context_training_regime"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/dataset-on-the-fly-pseudorandom.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "datasetonthefly_pseudorandom",
+      "target": "ref_runtime_symbol_randomization_training"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/dataset-on-the-fly-pseudorandom.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "datasetonthefly_pseudorandom",
+      "target": "ref_adversarial_needle_haystack_training"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/dataset-on-the-fly-pseudorandom.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "datasetonthefly_pseudorandom",
+      "target": "goldexamplearea02_criticality"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/dataset-on-the-fly-pseudorandom.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "datasetonthefly_pseudorandom",
+      "target": "datavolumeestimate_estimate"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/dataset-on-the-fly-pseudorandom.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "datasetonthefly_pseudorandom",
+      "target": "ref_reward_hacking_mitigation"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "wiki/concepts/dataset-on-the-fly-pseudorandom.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "datasetonthefly_pseudorandom",
+      "target": "phasedreward_and_rh_detection"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/wrapper-context-assembly-example.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrappercontextassembly_example",
+      "target": "harnesscapabilities_as_files"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/harness-capabilities-as-files.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "harnesscapabilities_as_files",
+      "target": "ref_agent_wrapper_vars_queue"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/harness-capabilities-as-files.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "harnesscapabilities_as_files",
+      "target": "ref_sliding_window_variable_tool"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/harness-capabilities-as-files.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "harnesscapabilities_as_files",
+      "target": "ref_explicit_attention_layer"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/path-portability-awareness.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "pathportability_awareness",
+      "target": "harnesscapabilities_as_files"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "wiki/concepts/harness-capabilities-as-files.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "harnesscapabilities_as_files",
+      "target": "taskinterruption_discipline"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/low-confidence-gather-and-reorg.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lowconfidence_gather_and_reorg",
+      "target": "ref_scientific_method_protocol"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/low-confidence-gather-and-reorg.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lowconfidence_gather_and_reorg",
+      "target": "ref_error_memo_system"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/low-confidence-gather-and-reorg.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lowconfidence_gather_and_reorg",
+      "target": "ref_agent_wrapper_vars_queue"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/low-confidence-gather-and-reorg.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lowconfidence_gather_and_reorg",
+      "target": "ref_reward_hacking_mitigation"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/wrapper-context-assembly-example.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrappercontextassembly_example",
+      "target": "lowconfidence_gather_and_reorg"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "wiki/concepts/low-confidence-gather-and-reorg.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lowconfidence_gather_and_reorg",
+      "target": "selfanalysis_strategy_revision"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/entities/dwarfstar4.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "dwarfstar4_ds4",
+      "target": "moeperexpert_quantization"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/moe-per-expert-quantization.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "moeperexpert_quantization",
+      "target": "ref_lora_stacking"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/moe-per-expert-quantization.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "moeperexpert_quantization",
+      "target": "ref_s_lora"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/moe-per-expert-quantization.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "moeperexpert_quantization",
+      "target": "ref_slm_coding_landscape"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/moe-per-expert-quantization.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "moeperexpert_quantization",
+      "target": "ref_adr_base_model_pipeline"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/path-portability-awareness.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "pathportability_awareness",
+      "target": "ref_secret_section_exfiltration_defense"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/path-portability-awareness.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "pathportability_awareness",
+      "target": "ref_structured_thinking"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/path-portability-awareness.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "pathportability_awareness",
+      "target": "ref_scientific_method_protocol"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/path-portability-awareness.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "pathportability_awareness",
+      "target": "ref_reward_hacking_mitigation"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/wrapper-context-assembly-example.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrappercontextassembly_example",
+      "target": "pathportability_awareness"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/phased-reward-and-rh-detection.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "phasedreward_and_rh_detection",
+      "target": "ref_reward_hacking_mitigation"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/phased-reward-and-rh-detection.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "phasedreward_and_rh_detection",
+      "target": "ref_staged_curriculum_training"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/phased-reward-and-rh-detection.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "phasedreward_and_rh_detection",
+      "target": "goldexamplearea02_criticality"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/phased-reward-and-rh-detection.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "phasedreward_and_rh_detection",
+      "target": "ref_error_memo_system"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/phased-reward-and-rh-detection.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "phasedreward_and_rh_detection",
+      "target": "ref_scientific_method_protocol"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/self-analysis-strategy-revision.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "selfanalysis_strategy_revision",
+      "target": "ref_error_memo_system"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/self-analysis-strategy-revision.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "selfanalysis_strategy_revision",
+      "target": "ref_scientific_method_protocol"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/self-analysis-strategy-revision.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "selfanalysis_strategy_revision",
+      "target": "ref_post_rl_path_optimization"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/self-analysis-strategy-revision.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "selfanalysis_strategy_revision",
+      "target": "ref_scuola_learning_philosophy"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/self-analysis-strategy-revision.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "selfanalysis_strategy_revision",
+      "target": "ref_reward_hacking_mitigation"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/self-analysis-strategy-revision.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "selfanalysis_strategy_revision",
+      "target": "ref_staged_curriculum_training"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/self-analysis-strategy-revision.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "selfanalysis_strategy_revision",
+      "target": "ref_taxonomy_readme"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/task-interruption-discipline.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "taskinterruption_discipline",
+      "target": "ref_agent_wrapper_vars_queue"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/task-interruption-discipline.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "taskinterruption_discipline",
+      "target": "ref_structured_context_sections"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/wrapper-context-assembly-example.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrappercontextassembly_example",
+      "target": "ref_agent_wrapper_vars_queue"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/wrapper-context-assembly-example.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrappercontextassembly_example",
+      "target": "ref_structured_context_sections"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/wrapper-context-assembly-example.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrappercontextassembly_example",
+      "target": "ref_task_decomposition_adhoc_context"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/wrapper-context-assembly-example.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrappercontextassembly_example",
+      "target": "ref_temporal_awareness_timestamps"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/wrapper-context-assembly-example.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrappercontextassembly_example",
+      "target": "ref_scientific_method_protocol"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/wrapper-context-assembly-example.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrappercontextassembly_example",
+      "target": "ref_secret_section_exfiltration_defense"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/wrapper-context-assembly-example.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrappercontextassembly_example",
+      "target": "ref_user_notes_2026_06_23"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/wrapper-context-assembly-example.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrappercontextassembly_example",
+      "target": "ref_sliding_window_variable_tool"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/wrapper-context-assembly-example.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrappercontextassembly_example",
+      "target": "ref_error_memo_system"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/wrapper-context-assembly-example.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrappercontextassembly_example",
+      "target": "ref_contradiction_detection_layer"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/wrapper-context-assembly-example.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrappercontextassembly_example",
+      "target": "ref_multi_token_prediction_training"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/concepts/wrapper-context-assembly-example.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "wrappercontextassembly_example",
+      "target": "ref_adr_pi_harness_base"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/entities/dwarfstar4.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "dwarfstar4_ds4",
+      "target": "wrappercontextassembly_example"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/gold-example-area02-criticality.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "goldexamplearea02_criticality",
+      "target": "wrappercontextassembly_example"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/entities/dwarfstar4.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "dwarfstar4_ds4",
+      "target": "ref_multi_expert_collaboration"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/entities/dwarfstar4.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "dwarfstar4_ds4",
+      "target": "ref_multi_token_prediction_training"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/entities/dwarfstar4.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "dwarfstar4_ds4",
+      "target": "ref_steering_vectors"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/entities/dwarfstar4.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "dwarfstar4_ds4",
+      "target": "ref_scientific_method_protocol"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/entities/dwarfstar4.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "dwarfstar4_ds4",
+      "target": "ref_adr_pi_harness_base"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/entities/dwarfstar4.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "dwarfstar4_ds4",
+      "target": "ref_adr_base_model_pipeline"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/area-02-criticality-safety.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "area02_criticality_safety",
+      "target": "ref_reward_hacking_mitigation"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/area-02-criticality-safety.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "area02_criticality_safety",
+      "target": "ref_pre_flight_safety_checks"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/area-02-criticality-safety.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "area02_criticality_safety",
+      "target": "ref_taxonomy_readme"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/area-02-criticality-safety.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "area02_criticality_safety",
+      "target": "coverageaudit_2026_06_23"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/area-02-criticality-safety.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "area02_criticality_safety",
+      "target": "ref_error_memo_system"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/area-02-criticality-safety.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "area02_criticality_safety",
+      "target": "ref_untrusted_content_delimiting"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/gold-example-area02-criticality.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "goldexamplearea02_criticality",
+      "target": "area02_criticality_safety"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/area-02-criticality-safety.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "area02_criticality_safety",
+      "target": "ref_user_notes_2026_06_23"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/data-volume-estimate.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "datavolumeestimate_estimate",
+      "target": "ref_taxonomy_readme"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/data-volume-estimate.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "datavolumeestimate_estimate",
+      "target": "coverageaudit_2026_06_23"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/data-volume-estimate.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "datavolumeestimate_estimate",
+      "target": "ref_pipeline_architecture_data_generation"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/data-volume-estimate.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "datavolumeestimate_estimate",
+      "target": "ref_scientific_method_protocol"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/data-volume-estimate.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "datavolumeestimate_estimate",
+      "target": "ref_reward_hacking_mitigation"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/gold-example-area02-criticality.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "goldexamplearea02_criticality",
+      "target": "ref_taxonomy_readme"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/gold-example-area02-criticality.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "goldexamplearea02_criticality",
+      "target": "ref_pre_flight_safety_checks"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/gold-example-area02-criticality.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "goldexamplearea02_criticality",
+      "target": "ref_scientific_method_protocol"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/gold-example-area02-criticality.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "goldexamplearea02_criticality",
+      "target": "ref_structured_thinking"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/gold-example-area02-criticality.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "goldexamplearea02_criticality",
+      "target": "ref_reward_hacking_mitigation"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/gold-example-area02-criticality.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "goldexamplearea02_criticality",
+      "target": "ref_error_memo_system"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "wiki/training-taxonomy/_coverage-audit-2026-06-23.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "coverageaudit_2026_06_23",
+      "target": "ref_taxonomy_readme"
     }
   ],
   "hyperedges": [
     {
-      "id": "runtime_safety_coherence_stack",
-      "label": "Runtime Safety & Coherence Stack",
-      "nodes": [
-        "pre_flight_safety_checks",
-        "contradiction_detection_layer",
-        "error_memo_system",
-        "agent_constitution"
+      "id": "hyper_anti_reward_hacking_outcome_anchor",
+      "label": "Anti reward-hacking outcome-anchored pattern",
+      "relation": "conceptually_related_to",
+      "members": [
+        "ref_reward_hacking_mitigation",
+        "phasedreward_and_rh_detection",
+        "goldexamplearea02_criticality",
+        "area02_criticality_safety",
+        "datasetonthefly_pseudorandom",
+        "pathportability_awareness"
       ],
-      "relation": "participate_in",
       "confidence": "INFERRED",
       "confidence_score": 0.85,
-      "source_file": "wiki/concepts/agent-constitution.md"
+      "source_file": "wiki/concepts/reward-hacking-mitigation.md",
+      "source_location": null,
+      "weight": 1.0
     },
     {
-      "id": "organization_first_reasoning_protocol",
-      "label": "Organization-First Reasoning & Training Protocol",
-      "nodes": [
-        "scientific_method_protocol",
-        "staged_curriculum_training",
-        "post_rl_path_optimization",
-        "structured_context_sections"
+      "id": "hyper_agentic_context_management_skills",
+      "label": "Agentic context-management skills (2026-06-27)",
+      "relation": "conceptually_related_to",
+      "members": [
+        "harnesscapabilities_as_files",
+        "lowconfidence_gather_and_reorg",
+        "taskinterruption_discipline",
+        "pathportability_awareness",
+        "wrappercontextassembly_example"
       ],
-      "relation": "participate_in",
       "confidence": "INFERRED",
       "confidence_score": 0.85,
-      "source_file": "wiki/concepts/scientific-method-operating-protocol.md"
+      "source_file": "wiki/concepts/wrapper-context-assembly-example.md",
+      "source_location": null,
+      "weight": 1.0
     },
     {
-      "id": "moe_of_lora_router_family",
-      "label": "Router-Learned MoE-of-LoRA Family (concurrent alternative)",
-      "nodes": [
-        "ext_xlora",
-        "ext_hmora",
-        "ext_mole",
-        "hdmole_paper",
-        "multi_expert_collaboration"
+      "id": "hyper_wrapper_harness_pi_stack",
+      "label": "Wrapper/harness pi stack",
+      "relation": "conceptually_related_to",
+      "members": [
+        "wrapperimplementationplan_plan",
+        "wrappercontextassembly_example",
+        "ref_adr_pi_harness_base",
+        "dwarfstar4_ds4",
+        "ref_agent_wrapper_vars_queue"
       ],
-      "relation": "form",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "wiki/concepts/xlora-vs-hmora.md"
-    },
-    {
-      "id": "reward_hacking_hack_check_all_areas",
-      "label": "Per-leaf hack-check / reward-hacking defense recurs across all 16 areas",
-      "nodes": [
-        "ext_reward_hacking_mitigation",
-        "training-taxonomy_hack_check",
-        "area-02_over_flagging_defense",
-        "area-03_process_marker_spoofing",
-        "area-05_overfit_visible_tests_defense",
-        "area-06_judge_reward_hacking_defense",
-        "area-07_over_refusal_defense",
-        "area-08_participation_hack_defense",
-        "area-09_sycophancy_defense",
-        "area-12_confident_hallucination_defense",
-        "area-13_test_tampering_defense",
-        "area-14_hardcode_shortcut_defense",
-        "area-16_scorer_not_scored"
-      ],
-      "relation": "participate_in",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "wiki/training-taxonomy/README.md"
-    },
-    {
-      "id": "macro_curriculum_3_phases_spans_areas",
-      "label": "3-phase macro-curriculum (theory->exercises->agentic RL) assigns every area/leaf",
-      "nodes": [
-        "training-taxonomy_macro_curriculum_3_phases",
-        "ext_staged_curriculum_training",
-        "ext_scuola_learning_philosophy",
-        "ext_scientific_method_protocol",
-        "ext_pi_harness_adr"
-      ],
-      "relation": "form",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "wiki/training-taxonomy/README.md"
-    },
-    {
-      "id": "process_reward_prm_cluster",
-      "label": "Process-reward (PRM) cluster: long-correct CoT, verify-loop, self-verification anchored to outcome",
-      "nodes": [
-        "area-03_prm_core",
-        "area-14_algorithmic_math",
-        "area-16_self_evaluation_critique",
-        "ext_prm_paper",
-        "ext_rstar_math_paper"
-      ],
-      "relation": "participate_in",
       "confidence": "INFERRED",
       "confidence_score": 0.75,
-      "source_file": "wiki/training-taxonomy/area-03-reasoning-scientific-method.md"
+      "source_file": "wiki/architecture/wrapper-implementation-plan.md",
+      "source_location": null,
+      "weight": 1.0
     }
   ],
-  "built_at_commit": "b2b92a52bc57964a6454eb6b62800abca5f625f1"
+  "built_at_commit": "f6530c616b3390345af3153ba65430797c2cb1fe"
 }
