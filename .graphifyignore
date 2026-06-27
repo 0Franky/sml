@@ -13,6 +13,14 @@ HANDOFF.md
 appunti su quaderno.png
 wiki/log.md
 
+# --- Note private utente (gitignored, cattura grezza con riferimenti PII) — MAI nel grafo pushato ---
+wiki/_private/
+
+# --- Tooling pre-push secret/PII (pubblico ma operativo, non project-knowledge → noise) ---
+.githooks/
+scripts/
+.gitleaks.toml
+
 # --- Doc di ricerca personale (nomi di persone, non project knowledge) ---
 Ricerca AI*
 
