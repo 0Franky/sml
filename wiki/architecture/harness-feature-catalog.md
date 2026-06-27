@@ -5,7 +5,7 @@ type: architecture
 tags: [harness, wrapper, pi, feature-catalog, extensions, three-tier, mvp, alignment]
 sources: [wiki/architecture/wrapper.md, wiki/decisions/2026-06-23-pi-harness-base.md, wiki/architecture/wrapper-implementation-plan.md, wiki/concepts/* (28 concept estratti 2026-06-27)]
 last_updated: 2026-06-27
-status: draft v1 (sintesi review-loop-ready) + §2bis completeness-check vs raw notes 2026-06-27
+status: draft v1 (sintesi review-loop-ready) + §2bis completeness-check + §2ter metacognition-needs-training audit (2026-06-27)
 confidence: provisional
 ---
 
@@ -149,6 +149,51 @@ Sintesi: **A** e **B** costruiscono e gestiscono il *contesto*; **C** lo difende
 4. **Domain-tag sui riassunti outer-task (doppio uso: awareness + routing) → Classe A+E** `[EXTRACTED nota 2]`. Ogni riassunto di task esterno/gerarchico porta **tag di dominio** (coding/finance/...) che servono sia all'awareness gerarchica (Classe A, lane `interconnections`/summary) sia come **segnale di routing** per il classifier che sceglie il LoRA verticale (Classe E). Multi-label per task compositi (es. `coding+finance`).
 
 > **Esito**: il resto delle note 2026-06-23 è **training-side** (note 3/6a/6b/7 = regimi di training, non feature harness → correttamente fuori dal catalogo, vivono in training-taxonomy) o **già coperto** (nota 8 = secrets, Classe C). Le idee 2026-06-27 (path-portability, harness-as-files, low-confidence, task-interruption, dataset-on-fly, phased-reward, KV-cache, T-group) sono già nelle Classi B/C/D. **Confidenza dopo il patch: alta** — il catalogo copre ora le capacità harness/runtime discusse; i regimi di training puri restano fuori scope by-design.
+
+---
+
+## §2ter — Le skill metacognitive richiedono TRAINING (audit 2026-06-27, conferma intuizione utente)
+
+> **Domanda utente (2026-06-27)**: *"alcune di queste cose dovrebbero rientrare nel training per avere efficienza maggiore — es. riconoscere il contesto degradato / capire quando fare compact credo abbiano bisogno di un training set"*. **Verdetto review-loop (3 reviewer + ricerca SOTA): l'intuizione è CORRETTA e PRECISA** — ha individuato esattamente la classe giusta, le **capacità metacognitive di self-management del contesto**.
+
+**Problema diagnosticato**: il principio SKILL-vs-FEATURE (§1) è corretto *in tabella*, ma in 4 punti la **prosa/fasatura tratta come "feature consegnabile in Fase 1" capacità il cui valore è gated su una SKILL non-addestrata**. Su un 4-8B queste skill NON sono native affidabili → senza training il tool è **guscio inerte** (o confabulante: chiama `compact_context` a caso, non riconosce la bassa-confidence, simula bivi inventati). È il rischio C4 ("il vero bottleneck è il modello") applicato **capacità-per-capacità**.
+
+### Audit per-capacità — stato SENZA training
+| Capacità | Feature basta? | Serve training? | Stato senza training | Regime |
+|---|---|---|---|---|
+| context-assembly · scanner sicurezza · task-interruption(default-ENQUEUE) · lora-router-mech · error-memo-storage | **Sì** | No | **piena** | — (feature pura) |
+| structured-thinking [V]/[A]/[?] · scientific-method | No | **Sì (totale)** | inerte | SFT→RL (task primario Tier 1) |
+| **context-management model-driven** (gestione budget) | tool sì | **Sì** | **degradata-ma-utile** (euristiche wrapper ~80%) | SFT-bootstrap → RL |
+| **degradation-awareness + when-to-compact** | tool sì | **Sì** | **inerte** (tool senza trigger non scatta) | SFT-boot → **RL-GRPO** |
+| **low-confidence → gather/ask** | tool grep/web sì | **Sì** | **inerte** (il caso `nv/wh` È un fallimento di questa skill) | SFT-traj → **RL uncertainty-aware** |
+| **decision-point lookahead** | guscio deferral sì | **Sì (+rischio confabulazione)** | **inerte** | SFT-branch → RL (roll-out duale) |
+| steering-vector application | applicazione=serving | parziale (solo policy α) | meccanismo=piena, policy-α=degradata | no-training-pesi (estrazione contrastiva) |
+
+→ **Le 4 metacognitive marcate "inerte"** sono **training travestito da feature** nella prosa attuale → ri-marcate "gated su training", valore reale in **Fase 2 (bootstrap) → Fase 3 (RL)**, non Fase 1.
+
+### Regime di training (SOTA-validato) `[EXTRACTED ricerca 2026-06-27]`
+Principio: **SFT-bootstrap del formato (Fase 2) → RL-GRPO outcome-anchored (Fase 3)**. Reward MAI sul self-report né sul gesto (anti participation-hack, regole #8/#10), SOLO sull'**outcome verificabile a valle**. SOTA chiave:
+- **AdaCoM** (arXiv 2605.30785) — match diretto "when-to-compact": **manager LLM separato** (Qwen3-4B), SFT-bootstrap → **GRPO con agente frozen**; nessuna label esplicita, policy da **two-level reward** (outcome + process rule-based: token-overflow/redundant-action penalty, gold-retrieval reward). *Scorer ≠ scored a livello architetturale.*
+- **ReSum/ReSum-GRPO** (arXiv 2509.13313) — schedule predefinito subottimo → appreso; **segmented-trajectory + advantage broadcasting**; 1K sample bastano.
+- **S-GRPO / "Learning When to Think"** (arXiv 2505.10832) — decaying-reward su exit-position (agire prima ma corretto = reward più alto): degradation/lookahead/adaptive-depth.
+- **EVPI clarification** (arXiv 2511.08798) / **SELAUR** (arXiv 2602.21158) — uncertainty-aware reward col **costo della domanda**: low-confidence gather/ask (= "l'info ha cambiato la decisione?").
+- **Limite critico** (arXiv 2509.21545): metacognizione LLM limitata + **verbalized-confidence sovra-confidente** → NON premiare il self-report.
+- **Context-rot** (Chroma + Lost-in-the-Middle Liu 2023): in parte **architetturale** (RoPE-decay) → la skill è "**riconoscere** di essere degradato e **agire**", non "non degradare".
+
+### Generazione LABEL (il debito vero, ora indirizzato)
+Metodi componibili (robustezza decrescente): (1) **sintetiche by-construction** (inietti loop/drift a posizione nota → label esatta); (2) **outcome-retrospettivo bisect** (traiettorie fallite → punto di collasso = boundary degrado, alla AdaCoM); (3) **self-consistency drop**; (4) **sonde held-out** (post-compact: l'info-chiave è ancora risolvibile? non-gameable con verbosità); (5) **EVPI** (necessità × cambio-decisione − costo).
+
+### Taxonomy + gap (follow-up Fase-2)
+**Esiste già `../training-taxonomy/area-04-context-metacognition`** (9 foglie). Gap: **[FASE]** re-annotare le foglie metacognitive come primariamente Fase-3-RL (SFT=solo bootstrap); **[FOGLIA NUOVA]** `compaction-scheduling decision` (il *quando*, distinto dal *cosa*); **[ESPLODI]** low-confidence in example-space (5 classi) con reward EVPI; **[RE-TAG]** decision-lookahead Area 2: L → **Q+L** (il ramo si roll-outa); **[CROSS-LINK]** Area 3 adaptive-depth ↔ Area 4; **[NON-GAP]** steering resta fuori-tassonomia (confermato).
+
+### Correzioni §2bis applicate
+- **Steering** → tieni SOLO l'esperimento minimo (depth-vector Qwen3-4B). ⚠️ **Blocker di fattibilità** (non "next"): su Qwen3 hybrid (Gated DeltaNet/MoE-A3B) il residual stream è diverso → potrebbe non trasferire; decidere PRIMA. **Opt-in (utente 2026-06-27, msg 192)**: feature opt-in controllata dall'utente; test specifici per capire se migliora o degrada; se migliora → promuovi a **opt-out** (default-on).
+- **Autocompact** → **consolidare** (era contato 3×: primitiva A-3 + constitution-15 + 2bis) in una primitiva + riferimenti. **Fase 1 = solo trigger euristico wrapper-side** (soglia `getContextUsage` → compatta), dichiarato tale; la degradation-awareness *appresa* è Fase 2+ misurata con un test (come 0-A.4).
+- **Lookahead** → **regola #10 esplicita**: reward SOLO se l'esito previsto è verificato contro l'outcome reale, MAI per la forma (è la più esposta alla catena-fantasma).
+- **Domain-tag** → definire la **precedenza** tra i 3 segnali di routing (token `<load:>` · classifier · domain-tag); il tag model-generated è **validato dal classifier esterno** (safety-net Classe E).
+- **Contradiction semantic judge** → è un **terzo asset** (Qwen3-0.6B da addestrare/validare), non "una feature"; factual/logical = deterministica.
+
+> **Bottom line**: le 4 aggiunte §2bis apportano **valore reale (zero "minchiate")**, ma con un **debito di ancoraggio** sulle metacognitive. La spina dorsale (scanner deterministici · scorer≠scored · default-safe wrapper-side · misura-gap 0-A.4) è solida e onesta. Chiuso il debito (ground-truth + trigger falsificabile + regime SFT→RL), queste diventano addestrabili; lasciato aperto, sarebbero vettori di reward-hacking — esattamente il timore dell'utente.
 
 ---
 
