@@ -32,7 +32,7 @@ SERVING = vLLM --enable-lora  (S-LoRA hot-swap)  (Python) ← QUI vive la RICERC
 
 **Principio di realizzazione**: ogni nostra feature è una **Extension TypeScript** che si aggancia a uno o più hook di pi. **pi dà gli hook, NON la safety**: i guardrail, i gate, gli scanner, lo stato persistente li **costruiamo noi** — pi non ha permission-gate built-in. `[EXTRACTED ADR pi]`
 
-> ⚠️ **Step 0.0 bloccante** `[EXTRACTED]`: i nomi-hook precisi (`context`/`before_agent_start`/`tool_call`/`tool_result`), la forma di `registerTool`, il supporto endpoint vLLM+LoRA per-request, la stabilità dell'API Extensions e lo storage sessione tree-structured vanno **verificati contro il sorgente reale di pi** prima di scrivere codice. Questo catalogo assume la mappatura `[INFERRED da-verificare]`.
+> ✅ **Step 0.0 VERIFICATO (2026-06-27)** `[VERIFICATO]`: i nomi-hook (`context`/`before_agent_start`/`tool_call`/`tool_result`/`before_provider_request`/`turn_end`/`message_end`), `registerTool`+TypeBox, il supporto vLLM/Ollama in `models.json`, l'API Extensions (auto-discovered, senza fork) e lo storage sessione tree-structured **sono confermati** contro doc+sorgente di pi. **2 divergenze materiali** (riprese sotto nelle Classi B/E): (1) NON esiste un hook "confine di sezione" → contradiction/external-update su **turn-boundary/steering**; (2) LoRA routing via **model-entry+`pi.setModel`** (primario) > payload-rewrite. Dettaglio in [[wrapper-implementation-plan]] §Step-0.0.
 
 ---
 
@@ -83,7 +83,7 @@ Sintesi: **A** e **B** costruiscono e gestiscono il *contesto*; **C** lo difende
   - [[../concepts/explicit-attention-layer]]: pinna le sezioni critiche (**CURRENT AIM · PREV STEP · GLOBAL · RULES**) — 3 implementazioni: (C) prompt-only marker `priority`, (B) auxiliary-loss training-time, (A) bias architetturale agli attention scores.
   - [[../concepts/external-update-injection]]: inietta `<update from external>` ai **confini di `</section>`** del thinking (mai a metà), con 4 priority (critical→restart / high→adjust / normal→defer / low); il modello risponde con `<update_handling>`.
   - [[../concepts/contradiction-detection-layer]]: monitor di coerenza (pre/in-flight/post-inference) che emette un **attention-event** (via external-update-injection) su 5 tipi di contraddizione (Factual deterministico / Semantic LLM-judge / Temporal / Logical / Cross-source con priorità trusted>untrusted).
-- **Mapping pi**: `context`/`before_agent_start` (assemblaggio ad-hoc per step + injection lane); coppia `stream_read`/`close_stream_file` (open/close); hook sul confine `</section>` dello stream (injection + contradiction in-flight); il judge semantic è un **small LLM separato** (Qwen3-0.6B), non il main model.
+- **Mapping pi** `[VERIFICATO]`: `context`/`before_agent_start` (assemblaggio ad-hoc per step + injection lane); coppia `stream_read`/`close_stream_file` (open/close). ⚠️ **Correzione Step-0.0**: NON esiste un hook "confine di `</section>`" — l'unità di controllo è il **TURNO** + i delta di streaming. → injection + contradiction-in-flight si fanno su **`turn_end`/`message_end`/steering** (`session.steer()` / `streamingBehavior:"steer"`) al **prossimo confine di turno**, non mid-message (al più monitorare `message_update` + `ctx.abort()`). Il judge semantic è un **small LLM separato** (Qwen3-0.6B), non il main model.
 - **MVP vs post**: **MVP** variante (C) prompt-only dell'attention; contradiction implementazione **(B) esterna deterministica** sotto-tipi factual/logical; loop plan/execute; coppia open/close (context-editing nativo). **Post-MVP** attention training-time/architetturale (B/A); **external-update-injection** (richiede streaming-inference che pausa/riprende — supporto serving incerto); contradiction judge semantic; sub-layer neurale (A).
 - **Peculiarità nostre**: open/close skill-vs-feature; tassonomia 5-tipi-contraddizione con judge dedicato; `<update from external>` solo ai confini di section; plan-mode/execute-mode con `estimated_thinking_tokens`.
 
@@ -120,7 +120,7 @@ Sintesi: **A** e **B** costruiscono e gestiscono il *contesto*; **C** lo difende
 
 - **Contesto / decisione**: la ground-truth utente = **Tier 1 orchestratore (Qwen base full-FT, organization-specialized)** + **Tier 2 LoRA programming generalist** + **Tier 3 LoRA verticali** caricati uno-alla-volta. NON è MoE neurale né router differenziabile. `[EXTRACTED]`
 - **Funzionamento**: il Tier 1 emette una decisione di routing — **token speciale** `<load:programming,vertical:frontend>` — con un **classifier esterno deterministico (BERT-tiny) come safety-net/fallback**; una **extension-router di pi** traduce in selezione adapter sulla richiesta verso vLLM, che fa l'**hot-swap S-LoRA per-richiesta**. Il multi-expert ([[../concepts/multi-expert-collaboration]]) è **sequenziale a confine-di-stage** (segment-and-rerun: ogni expert = nuova chiamata che riusa il contesto strutturato) — auditable, vs il learned-concurrent di [[../concepts/xlora-vs-hmora]].
-- **Mapping pi**: hook **`before_agent_start`** → leggi la decisione → setta l'header/adapter sulla richiesta vLLM. pi **non** fa l'hot-swap: lo fa vLLM; pi seleziona.
+- **Mapping pi** `[VERIFICATO]`: la strada **primaria raccomandata** è un **model-entry distinto per adapter** in `models.json` (stesso `baseUrl`, `id`/`name` diverso) + **`pi.setModel`** per il routing (dichiarativo, nativo) → il routing diventa "switch del modello", non patch fragile. **Fallback**: hook `before_provider_request` che rimpiazza `event.payload` (per iniettare `extra_body`/`adapter`). pi **non** fa l'hot-swap: lo fa vLLM; pi seleziona. Il **nome-campo** dell'adapter è lato vLLM, da validare separatamente.
 - **MVP vs post**: **MVP-v1** routing **solo per-richiesta** (1 LoRA/risposta via classifier; Tier1 + Tier3-frontend, skip Tier2). **Post-MVP** per-stage segment-and-rerun multi-expert (Wave 7-8, richiede ≥3 verticali); per-token **scartato**.
 - **Vincolo KV-cache (perché il design è segmentato)**: uno swap LoRA mid-forward lascia la KV-cache incoerente coi nuovi pesi → ogni expert = **nuova chiamata** che riusa il contesto accumulato. vLLM/S-LoRA sono ottimizzati esattamente per lo swap per-richiesta.
 - **Peculiarità nostre**: SLM **organization-specialized** (coding = capacità AGGIUNTA via LoRA, core-valore = planning/safety/criticality/multi-day); sequenziale-auditable con cross-expert state passing strutturato (**paper-claim #6**), in opposizione esplicita a X-LoRA/HMoRA (baseline).
@@ -154,7 +154,7 @@ Sintesi: **A** e **B** costruiscono e gestiscono il *contesto*; **C** lo difende
 
 ## §3 — Mapping consolidato: hook pi → feature
 
-| Hook pi `[INFERRED da-verificare in Step 0.0]` | Extensions che lo usano |
+| Hook pi `[VERIFICATO Step 0.0 2026-06-27]` | Extensions che lo usano |
 |---|---|
 | `context` / `before_agent_start` | context-assembly (assemblaggio lane) · attention-layer (C prompt-only) · untrusted-zone wrapping · secrets-L2 `SECRET#n` · constitution (`SYSTEM.md`) · temporal inject · ad-hoc context per-step · **lora-router** (scelta adapter) |
 | `tool_call` (gate, pre-esecuzione) | **pre-flight-safety** (HALT azioni distruttive) · hard-limit trigger-and-ask |
