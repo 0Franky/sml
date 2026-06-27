@@ -23,7 +23,7 @@ confidence: provisional
 
 ### Regola centrale 1 — il gather è un budget, non un giudizio a priori
 
-`[INFERRED]` Il "lead" **non** è qualcosa che il modello deve *indovinare* prima di muoversi ("ho un lead?" è esso stesso una stima di confidence, non operazionalizzabile e falsificabile come ogni stima — cfr. `nv/wh`). La skill addestrabile è invece: **tenta il gather mirato; se NON converge in K passi (K piccolo, es. 2), declassa a ASK.** Così l'oggetto da apprendere diventa *"gestisci un budget di gather con fallback ad ASK"* — osservabile (numero di passi, convergenza sì/no) e quindi addestrabile — non *"prevedi se hai un lead"*. Il budget K è il meccanismo, non un'eccezione di sicurezza.
+`[INFERRED]` Il "lead" **non** è qualcosa che il modello deve *indovinare* prima di muoversi ("ho un lead?" è esso stesso una stima di confidence, non operazionalizzabile e falsificabile come ogni stima — cfr. il caso del riferimento-opaco sotto). La skill addestrabile è invece: **tenta il gather mirato; se NON converge in K passi (K piccolo, es. 2), declassa a ASK.** Così l'oggetto da apprendere diventa *"gestisci un budget di gather con fallback ad ASK"* — osservabile (numero di passi, convergenza sì/no) e quindi addestrabile — non *"prevedi se hai un lead"*. Il budget K è il meccanismo, non un'eccezione di sicurezza.
 
 ### Regola centrale 2 — primo split del decision-tree: INTERNO vs ESTERNO
 
@@ -67,7 +67,7 @@ TRIGGER: sto per emettere un identificatore/numero/API/sigla/path
                           └─ utente async → domanda NON-BLOCCANTE (warn-before-blocking)
 ```
 
-**Caso reale `nv/wh` — dimostrazione del PRIMO SPLIT** `[EXTRACTED]` — sigle `nv/wh` ignote. L'AI ha fatto **web search** e ha "indovinato" *Whispers* — risposta plausibile ma **falsa**: erano repo privati (NetView / WillHouse), invisibili al web *per costruzione*. L'errore non è "ho insistito troppo nel gather": è **a monte**, nello split. `nv/wh` sono naming di repo privati → ramo ESTERNO + plausibilmente-privato → l'unica mossa valida è **ASK**. Il web, su un oggetto privato-invisibile, non *trova* nulla: **fabbrica** una corrispondenza plausibile (qui *Whispers*), cioè costruisce certezza dove serviva una domanda. Lezione distillata: il primo split (INTERNO vs ESTERNO, e dentro ESTERNO pubblico vs privato) intercetta l'errore *prima* che lo strumento sbagliato produca una risposta confabulata.
+**Caso reale — riferimento opaco a repo privati** `[EXTRACTED]` — una sigla interna ignota, riferita a repo privati (non indicizzati pubblicamente). L'AI ha fatto **web search** e ha "indovinato" una corrispondenza plausibile ma **falsa** (un progetto pubblico omonimo): l'oggetto reale era privato, invisibile al web *per costruzione*. L'errore non è "ho insistito troppo nel gather": è **a monte**, nello split. Un riferimento a repo privati → ramo ESTERNO + plausibilmente-privato → l'unica mossa valida è **ASK**. Il web, su un oggetto privato-invisibile, non *trova* nulla: **fabbrica** una corrispondenza plausibile, cioè costruisce certezza dove serviva una domanda. Lezione distillata: il primo split (INTERNO vs ESTERNO, e dentro ESTERNO pubblico vs privato) intercetta l'errore *prima* che lo strumento sbagliato produca una risposta confabulata.
 
 `[CRITICA]` Il budget K (Regola centrale 1) e lo split (Regola centrale 2) sono complementari ma distinti: lo split sceglie *dove/quale strumento* ed esclude i casi senza-lead-possibile (privato → ASK diretto, K=0); il budget gestisce il caso in cui lo strumento è giusto ma può non convergere (K passi, poi ASK). Né l'uno né l'altro richiede di *indovinare* un lead a priori: sono entrambi osservabili (categoria interno/esterno/privato; numero di passi; convergenza sì/no).
 
@@ -78,7 +78,7 @@ TRIGGER: sto per emettere un identificatore/numero/API/sigla/path
 `[INFERRED]` Senza un trigger osservabile la skill non è addestrabile (non si può premiare "riconosci di essere poco confident" se non si definisce *quando* scatta). Proxy grezzo di partenza, falsificabile sul testo generato:
 
 - **Trigger primario (token-non-in-contesto)**: il modello sta per **emettere** un identificatore concreto — nome di simbolo/funzione/file/path, **numero**, endpoint/API, sigla, versione, nome proprio — che **non compare** nel contesto fornito (prompt, file letti, history). → STOP → entra nel decision-tree (split → budget/ASK). È un proxy del classico failure "completo il token più plausibile invece di quello vero".
-- **Trigger secondari** (rafforzano il primario): riferimento a un oggetto introdotto dall'utente ma mai definito (`nv/wh`); un passo del piano che dipende da un fatto che non è stato verificato; due fonti in contesto che si contraddicono sul valore da emettere.
+- **Trigger secondari** (rafforzano il primario): riferimento a un oggetto introdotto dall'utente ma mai definito (una sigla interna mai esplicitata); un passo del piano che dipende da un fatto che non è stato verificato; due fonti in contesto che si contraddicono sul valore da emettere.
 - **Anti-trigger** (per non far scattare l'Hack A "paralisi"): il token è derivabile deterministicamente dal contesto, o è linguaggio naturale/glue senza claim verificabile → nessuno STOP.
 
 Il proxy è grezzo per scelta: dà un segnale **etichettabile** sulle tracce (token emesso ∈ contesto? sì/no) da cui partire per il reward, non una definizione finale di "confidence".
@@ -98,7 +98,7 @@ Il proxy è grezzo per scelta: dà un segnale **etichettabile** sulle tracce (to
 ## Linked
 
 - [[scientific-method-operating-protocol]] — passo 1 "Observe/Awareness": osserva e prendi consapevolezza prima di agire (questa skill ne è il sotto-caso "bassa confidence").
-- [[error-memo-system]] — errori da gather-cieco/azione-sotto-incertezza alimentano la memo (es. lezione `nv/wh`).
+- [[error-memo-system]] — errori da gather-cieco/azione-sotto-incertezza alimentano la memo (es. lezione del riferimento-opaco-a-repo-privato).
 - [[agent-wrapper-vars-queue]] — le note/task-list/watch-list che il REORG (euristica opzionale) riorganizza vivono qui.
 - [[agent-constitution]] — **C8** "Dichiara incertezza: se non sai, dillo, non confabulare" (`agent-constitution.md:32`); C7 deferenza ai bivi ad alto impatto = il ramo ASK.
 - [[phased-reward-and-rh-detection]] — è il **meccanismo di reward** che governa la fase "gathering": questo concept *definisce* la fase (quando fare gather, con quale budget K, INTERNO vs ESTERNO), mentre phased-reward la *premia* per-fase e ne previene il participation-hack (gather ripetuto per incassare il reward anche dove inutile = Hack A qui sotto).
@@ -110,6 +110,6 @@ Il proxy è grezzo per scelta: dà un segnale **etichettabile** sulle tracce (to
 
 ## Next
 - Grill-me: tarare **K** (passi di budget prima del fallback ad ASK) e affinare il **trigger** (oltre al token-non-in-contesto: serve un secondo proxy per i casi senza emissione di token concreto?).
-- Definire l'euristica di classificazione **plausibilmente pubblico vs privato** dentro il ramo ESTERNO (è la decisione che `nv/wh` mostra essere critica).
-- Generare tracce di training etichettabili sul trigger: positive (trigger→split corretto→gather entro K; ESTERNO-privato→ASK) e negative (`nv/wh` web su privato; over-asking su alta confidence = Hack A; budget ignorato e gather in loop).
+- Definire l'euristica di classificazione **plausibilmente pubblico vs privato** dentro il ramo ESTERNO (è la decisione che il caso del riferimento-opaco mostra essere critica).
+- Generare tracce di training etichettabili sul trigger: positive (trigger→split corretto→gather entro K; ESTERNO-privato→ASK) e negative (web search su un riferimento privato; over-asking su alta confidence = Hack A; budget ignorato e gather in loop).
 - `/graphify --update`.

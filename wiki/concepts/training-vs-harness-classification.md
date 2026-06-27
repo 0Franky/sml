@@ -47,9 +47,9 @@ confidence: provisional
 - **Feature travestita da training**: mettere a training qualcosa che la sola feature deterministica risolverebbe (spreco). Es. mettere a training un check che un `git ls-files` deterministico risolve.
 - **Reward sulla cerimonia**: premiare il gesto (chiamato il tool / aggiunto la sezione / dichiarato "uncertain") invece dell'esito verificabile.
 
-## Relazione con la governance NetView (4-tier) `[INFERRED]`
+## Relazione con la governance della conoscenza (pattern a tier) `[INFERRED]`
 
-La classificazione training-vs-harness è **ortogonale ma complementare** alla governance a 4-tier (CLAUDE.md-directive / situation-table / wiki-rule / **hook**) estratta da [[../_private/...|NetView]]: i loro **hook auto-enforced** ≈ la nostra categoria **F-pi deterministica** (Classe C guardrails, scorer≠scored); le loro **rule/directive** ≈ conoscenza che può diventare **S** (addestrata nei pesi) invece che lookup-prompt. La governance dice *dove vive una conoscenza*; questo playbook dice *se una capacità richiede pesi, wrapper, o entrambi*.
+La classificazione training-vs-harness è **ortogonale ma complementare** a un pattern generico di **governance della conoscenza a tier**: `LM.md`-directive (always-context) / situation-table (router) / wiki-rule (on-demand) / **hook** (auto-enforced). Gli **hook auto-enforced** ≈ la nostra categoria **F-pi deterministica** (Classe C guardrails, scorer≠scored); le **rule/directive** ≈ conoscenza che può diventare **S** (addestrata nei pesi) invece che lookup-prompt. La governance dice *dove vive una conoscenza*; questo playbook dice *se una capacità richiede pesi, wrapper, o entrambi*.
 
 ## Linked
 - [[harness-feature-catalog]] §1 (tabella SKILL-vs-FEATURE) + §2ter (audit "inerte senza training")

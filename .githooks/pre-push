@@ -2,10 +2,10 @@
 # =============================================================================
 # pre-push — gate secret/PII PRIMA del push (repo PUBBLICO slm)
 # =============================================================================
-# Allineato alla convenzione NetView/WillHouse (gitleaks + .gitleaks.toml +
-# bypass SKIP_GITLEAKS), con due differenze volute per questo repo pubblico:
-#   1) ESTENSIONE PII (email / chat_id) nel .gitleaks.toml — nv/wh sono
-#      secret-focused e deboli sulla PII (gap noto).
+# Basato su gitleaks (.gitleaks.toml + bypass SKIP_GITLEAKS), con due
+# differenze volute per questo repo pubblico:
+#   1) ESTENSIONE PII (email / chat_id) nel .gitleaks.toml — le convenzioni
+#      secret-focused di partenza erano deboli sulla PII (gap noto).
 #   2) FALLBACK self-contained se gitleaks NON e' installato: invece di
 #      fail-closed (bloccare tutto) esegue uno scan a pattern integrato, cosi'
 #      il repo resta protetto anche senza gitleaks (gitleaks resta consigliato).

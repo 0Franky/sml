@@ -2,13 +2,13 @@ title = "slm secret + PII scan config (local pre-push guard)"
 
 # Parte dal ruleset built-in di gitleaks (AWS, GitLab/GitHub PAT glpat-/ghp_/gho_,
 # chiavi private, JWT, api-key/secret/password generici) e AGGIUNGE regole PII
-# custom + allowlist. nv/wh sono secret-focused: qui estendiamo alla PII perche'
+# custom + allowlist. La convenzione di partenza era secret-focused: qui estendiamo alla PII perche'
 # il repo e' PUBBLICO. Disabilitare [extend] scansionerebbe NULLA.
 [extend]
 useDefault = true
 
 # -----------------------------------------------------------------------------
-# Regole PII custom (il gap di NetView/WillHouse).
+# Regole PII custom (gap delle convenzioni secret-focused di partenza).
 # -----------------------------------------------------------------------------
 [[rules]]
 id = "pii-email"

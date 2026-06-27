@@ -1,8 +1,8 @@
 # .githooks — pre-push secret/PII guard (slm)
 
 Gate locale che **blocca il push** se rileva secret o PII nelle righe in uscita.
-Allineato alla convenzione di NetView/WillHouse (gitleaks + `.gitleaks.toml` +
-bypass `SKIP_GITLEAKS`), esteso per repo **PUBBLICO** con regole PII (email,
+Basato su gitleaks (`.gitleaks.toml` + bypass `SKIP_GITLEAKS`), esteso per
+repo **PUBBLICO** con regole PII (email,
 chat_id) e con **fallback integrato** se gitleaks non è installato.
 
 ## Install (una volta per clone)
