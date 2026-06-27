@@ -5,7 +5,7 @@ type: architecture
 tags: [harness, wrapper, pi, feature-catalog, extensions, three-tier, mvp, alignment]
 sources: [wiki/architecture/wrapper.md, wiki/decisions/2026-06-23-pi-harness-base.md, wiki/architecture/wrapper-implementation-plan.md, wiki/concepts/* (28 concept estratti 2026-06-27)]
 last_updated: 2026-06-27
-status: draft v1 (sintesi review-loop-ready)
+status: draft v1 (sintesi review-loop-ready) + §2bis completeness-check vs raw notes 2026-06-27
 confidence: provisional
 ---
 
@@ -133,6 +133,22 @@ Sintesi: **A** e **B** costruiscono e gestiscono il *contesto*; **C** lo difende
 - **Funzionamento**: runner isolato (**Docker raccomandato** — riproducibile + allineato ai gym SWE) che esegue i verifier stile-gold (fixture git `FX-untracked`/`FX-tracked`/`FX-cache`/`FX-dynamic` + import-oracle Python) → verde/rosso. Seme del verifier Phase-3 (exec + hidden-test + anti-tamper test-read-only + reward plumbing GRPO).
 - **Mapping pi**: estensione **verifier-sandbox** invocata dal loop; per il training è infrastruttura standalone (gym Docker SWE-Gym/SWE-smith/R2E-Gym da scaricare, NON minare da zero).
 - **MVP vs post**: **Fase-0** il runner che valida l'esempio gold criticality (le 5 classi verde/rosso sulle fixture) — è la fetta che sblocca tutto. **Fase-2** sandbox/verifier completo per le aree Q (A5/A8/A13/A14) + SWE gym + decontamination.
+
+---
+
+## §2bis — Aggiunte dal completeness-check vs raw notes 2026-06-23
+
+> **Verifica di completezza** (delega utente 2026-06-27: *"sei confidente che è tutto quello che ci siamo detti?"*): cross-check del catalogo contro i raw [[../concepts/_user-notes-2026-06-23]] (9 note non-tutte-formalizzate). **4 capacità erano sotto-rappresentate** → integrate qui con la loro classe. Onestà: il catalogo §2 era ~90% completo; queste chiudono il gap.
+
+1. **Steering vectors — modulazione runtime (4° asse di controllo) → Classe E** `[EXTRACTED nota 1]`. Activation steering: una direzione aggiunta al residual stream a inference (`h' = h + α·v`) che **modula** il comportamento **senza toccare i pesi**. **Ortogonale ai LoRA** → 4° asse sopra i 3 tier: i tier danno *capacità*, lo steering dà *modulazione fine reversibile a costo ~0* (depth-reasoning · caution/criticality · refusal/anti-exfiltration = L4 della Classe C · dominio-fine). **FEATURE** (serving): applicazione del vettore a inference (toggle disattivabile, *fuori* dagli hook testuali di pi — è inference-level); **SKILL** (pesi): *quando/quanto* applicarlo (α guidato dalla difficoltà stimata). **Fase**: post-MVP (Wave 6+, esperimento depth-vector su Qwen3-4B). → [[../concepts/steering-vectors]] (8 aree d'applicazione, le 3 più promettenti).
+
+2. **Context-management model-driven esplicito: autocompact + degradation-awareness → Classe A/D** `[EXTRACTED note 4+5]`. Il modello (a) **riconosce il proprio stato degradato** (contesto troppo lungo/sporco, loop, perdita del filo) e (b) emette un'azione di **compact/edit del proprio contesto**. **SKILL** (pesi): il *quando* (metacognitive-degradation-awareness = trigger). **FEATURE** (wrapper): il **tool callable `compact_context`/`edit_context`** + l'assemblaggio dinamico conseguente — risoluzione utente 2026-06-23: il contesto è **wrapper-managed**, il modello *istruisce cosa tenere/buttare* (variante b, non self-rewrite del window). Già parzialmente sotto constitution-15; qui reso **esplicito come tool** e come skill metacognitiva. Estende la primitiva (3) della Classe A. → [[../concepts/self-analysis-strategy-revision]] (autoanalisi di traiettoria/strategia, reward outcome-anchored anti-confabulazione).
+
+3. **Decision-point lookahead (simula A/B + decidi/defer) → Classe D** `[EXTRACTED nota 9]`. Ai bivi: simula gli esiti di A vs B, li valuta su *affinità-all'intento / tradeoff / migliorabilità*, e decide **procedi / cerca-strada-migliore / chiedi-con-contesto** (template: strada-attuale + alternative + effort + reco). Signature capability organization-first; vive in training-taxonomy (Area 2 Topic 6 + Area 9) e constitution C6/C7. **Skill-pesante** (pesi); il deferral async non-bloccante è feature wrapper (warn-before-blocking).
+
+4. **Domain-tag sui riassunti outer-task (doppio uso: awareness + routing) → Classe A+E** `[EXTRACTED nota 2]`. Ogni riassunto di task esterno/gerarchico porta **tag di dominio** (coding/finance/...) che servono sia all'awareness gerarchica (Classe A, lane `interconnections`/summary) sia come **segnale di routing** per il classifier che sceglie il LoRA verticale (Classe E). Multi-label per task compositi (es. `coding+finance`).
+
+> **Esito**: il resto delle note 2026-06-23 è **training-side** (note 3/6a/6b/7 = regimi di training, non feature harness → correttamente fuori dal catalogo, vivono in training-taxonomy) o **già coperto** (nota 8 = secrets, Classe C). Le idee 2026-06-27 (path-portability, harness-as-files, low-confidence, task-interruption, dataset-on-fly, phased-reward, KV-cache, T-group) sono già nelle Classi B/C/D. **Confidenza dopo il patch: alta** — il catalogo copre ora le capacità harness/runtime discusse; i regimi di training puri restano fuori scope by-design.
 
 ---
 
