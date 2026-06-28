@@ -15,7 +15,9 @@ last_updated: 2026-05-21
 
 > "Quando llm pensa non deve fare solo un pensiero discorsivo. Troppo consumo di token inutili e rischio di sbagliare/allucinare. Quindi pensiero strutturato e verifiche ricorrenti. Usare tabelle di check (abbiamo questo dato necessario? Si/no) pochi token, massima resa e controllo. Concetti chiave e pensiero strutturato."
 
-## Cosa significa "caveman thinking"
+> ⚠️ **Chiarimento (utente 2026-06-28, msg 266)**: "caveman" è SOLO un soprannome per lo stile **terso/strutturato** (tabelle di check, marker, niente filler) — **NON** linguaggio rotto/primitivo/monosillabico (lo dice già la ground-truth: "ma non come a monosillabi"). Distinzione netta: il **pensiero interno** è strutturato+terso; la **risposta user-facing** è **prosa normale e ben scritta** (§rifinitura: thinking ≠ risposta). Nelle doc/comunicazioni preferire **"pensiero strutturato"** a "caveman".
+
+## Cosa significa "caveman thinking" (= pensiero strutturato)
 
 Pensiero **non-monosillabico ma essenziale**, strutturato in primitive computazionali invece di prosa narrativa. Una metafora corretta: non "scrivere un saggio sul problema", ma "compilare una scheda tecnica del problema".
 
