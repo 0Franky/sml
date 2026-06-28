@@ -46,6 +46,17 @@ last_updated: 2026-06-28
 - [ ] **Wiring 3 gold** (index/log) — in corso (lo fa l'integratore).
 - [ ] 🔴 **DECISIONE UTENTE: format di rollout** — i gold escono lunghi (340/430/491 righe per fedeltà al template canonico 686). ×215 foglie = corpus enorme. Opzioni: (A) template pieno · (B) versione compatta per-foglia · (C) staging multi-sessione. Reco da presentare col pilota.
 
+- [ ] 🆕 **Foglia-esercizi `hierarchical-decomposition`** (idea utente msg 284): concept creato (`wiki/concepts/hierarchical-decomposition.md`) — il modello deve pensare per fattorizzazione generale→assi→foglie (template-inheritance promosso a SKILL). La **foglia-esercizi** (5 classi, reward=coverage+non-ridondanza+invariante, caso-5 anti-over-decomposition) entra nel **rollout gold** (via template-inheritance). Classif: S + piccola F-scaffold.
+
+## 🔧 Scaffold slm-wrapper (Fase-0 base FATTA 2026-06-29) — repo SEPARATO `../slm-wrapper`
+- [x] Workspace `../slm-wrapper` (repo separato, `git init -b main`, commit **`5e8a688`** locale). Contro l'**API pi verificata**.
+- [x] Fase-0 walking skeleton: `serving/models.json` (vLLM `openai-completions`) + 4 extension (`context-assembly` inject · `secrets-guardrail` su `tool_result` · `pre-flight` gate `tool_call` · `verifier-sandbox` tool `run_verifier`) + `sandbox/Dockerfile` (python+git) + `verifiers/` (formato spec) + README/package.json/tsconfig.
+- [x] ✅ **Validazione FATTA**: `npm install` (142 pkg, `@earendil-works/pi-coding-agent@0.80.2` confermato) + `npm run typecheck` **GREEN**. Le 4 extension compilano contro i tipi REALI (`before_agent_start`/`tool_call`/`tool_result`/`registerTool`). Bug catturato+fixato: `tool_result.content` è `(TextContent|ImageContent)[]`, non stringa; `context-assembly` usa `before_agent_start` (systemPrompt).
+- [x] ✅ **verifier-sandbox MECCANISMO smoke-tested** (`sandbox/smoke-test.mjs`: setup git+file + asserts con oracolo positivo+negativo → `passed:true`). Il runner funziona end-to-end.
+- [ ] **verifier-sandbox — chiudere il loop**: isolamento **Docker** (oggi tempdir) + **estrarre gli spec REALI** dai 3 gold-draft + template 1.1 e **farli GIRARE** → rimuove `[UNVERIFIED]` + **cattura i bug-oracolo P0** (es. 1.2 `sha256` non-ancorato) → poi applicare i fix nel format **template-inheritance**.
+- [ ] **GH remote** (utente crea il repo): `git remote add origin` + push.
+- [ ] Wiring: link scaffold in `wiki/architecture/wrapper-implementation-plan.md`.
+
 ## 🟢 Milestone
 - [ ] **Greenlight implementazione** (gate 0-A: dati/verifier model-independent — fixture + verifier standalone + misura gap base-model). Awaiting go utente.
 

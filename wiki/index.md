@@ -111,6 +111,7 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 
 **Categoria A — Reasoning structure** (come pensa il modello):
 - [`concepts/structured-thinking.md`](concepts/structured-thinking.md) — "caveman thinking" strutturato, marker `[V]/[A]/[?]`, no discorsivo
+- [`concepts/hierarchical-decomposition.md`](concepts/hierarchical-decomposition.md) 🆕🧩 — **pensare per fattorizzazione**: problema generale → invariante-core + assi-di-specializzazione → foglie (la stessa struttura del template-inheritance, promossa a SKILL del modello). Reward = coverage+non-ridondanza+invariante; ⚠️ proporzionalità anti over-decomposition. + foglia-esercizi. Idea utente msg 284
 - [`concepts/post-rl-path-optimization.md`](concepts/post-rl-path-optimization.md) — impratichimento dopo RL training, token compression, distillation
 - [`concepts/error-memo-system.md`](concepts/error-memo-system.md) — memo errori + lessons learned, due livelli (generico + esempi pratici)
 - [`concepts/multi-token-prediction-training.md`](concepts/multi-token-prediction-training.md) — training multi-target: next, +2, +3, sketch, state heads
