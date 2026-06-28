@@ -303,7 +303,7 @@ confidence: provisional
 - **Dr.GRPO** — toglie length-norm/std-norm (bias che gonfia CoT lunghe-sbagliate) · *fix anti-verbosità quasi-gratis, sinergico col two-phase* · S · F2 · 2503.20783[ref?]
 - **DAPO (solo clip-higher + token-level, NO dynamic-sampling)** — pacchetto fix GRPO; ⚠️ drop-KL confligge con anti-hack → tieni KL piccolo · S · F2 · 2503.14476[ref?]
 - **QeRL** — RL(GRPO) su base 4-bit+LoRA, noise=exploration; ⚠️ NVFP4 è Blackwell → su Turing verificare path NF4/INT4 · F-serving+S · F2 · 2510.11696
-- **On-policy distillation** — student genera, teacher scora on-policy; **supera RL a meno compute** (Qwen3) → cold-start Tier1 ideale · S · F2 · ThinkingMachines + 2605.07725[ref?]
+- **On-policy distillation** — student genera, teacher scora on-policy; **supera RL a meno compute** (Qwen3) → cold-start Tier1 ideale · S · F2 · ThinkingMachines + 2605.07725 (SOD, verificato)
 - **GenRM (generative reward model)** — RM che genera critica+rubrica prima dello score → per le L (planning/architettura) · S+F · F2 · 2410.12832
 - **OpenRubrics / AutoRubric** — genera rubriche auto da traiettorie corrette · *rimpiazza il placeholder inventato `2607.xxxxx`* · S+F · F2 · 2510.07743/2510.14738
 - **LIMO / LIMR** — reasoning forte da ~1K esempi curatissimi (LIMR scarta il già-risolto) · *data-efficiency=budget* · dati+S · MVP/F2 · 2502.03387/2502.11886
@@ -325,7 +325,7 @@ confidence: provisional
 - **RLCR (calibration reward = correttezza + Brier)** — premia confidence **onesta** (proper scoring rule, NON il self-report); −90% ECE · *il how mancante di riga "uncertainty/calibration"* · S · F2 · 2507.16806
 - **ConfTuner (Brier tokenizzato, SFT)** — versione **SFT-cheap** di RLCR, niente label di confidence esterne · S · F2-bootstrap · 2508.18847
 - **Taming Overconfidence (PPO-M/PPO-C)** — ⚠️ **il nostro GRPO ERODE la calibrazione** come side-effect strutturale → vincolo cross-pipeline, non feature · S · F2 · 2410.09724
-- **Agentic-overconfidence (3 punti di misura)** — elicita confidence pre/mid/post-azione per un coding-agent; 73% predetto vs 35% reale · *framing operativo del when-to-stop* · F+S · F2-3 · 2602.06948[ref?]
+- **Agentic-overconfidence (3 punti di misura)** — elicita confidence pre/mid/post-azione per un coding-agent; 73% predetto vs 35% reale · *framing operativo del when-to-stop* · F+S · F2-3 · 2602.06948 (verificato)
 - **Activation-based abstention** — astensione da attivazioni interne (white-box), +10-15 AUROC vs verbalized · *sfrutta che abbiamo i pesi (no API)* · F-serving+S · F3 · [ref?]
 - ⚠️ **"Can LLMs Introspect? A Reality Check"** — gran parte dell'"introspezione" è pattern-matching sul prompt → **anti-hype guard** per self-analysis · metodologico · 2605.26242[ref?]
 
