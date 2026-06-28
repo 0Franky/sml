@@ -4,14 +4,14 @@ description: Protocollo metacognitivo del Tier 1 sotto bassa confidence — STOP
 type: concept
 tags: [agent-skill, metacognition, gathering, context-reorg, ask-vs-gather, optimization, gather-budget, internal-vs-external]
 sources: [user notes 2026-06-27 msg 130/131/159/160]
-last_updated: 2026-06-27
-status: draft v0
+last_updated: 2026-06-29
+status: finalized v1 — training-spec completa (EVPI twin-pair + costo-domanda + calibration)
 confidence: provisional
 ---
 
 # Low-Confidence: Gather & Reorg (Tier 1)
 
-> **Stato**: draft v0. Cattura + riorganizzazione delle idee utente 2026-06-27 (Telegram msg 130, 131, 159/160). Skill metacognitiva del Tier 1 organization-first: cosa fa il modello **quando è poco confident**. Non ancora validata via grill-me.
+> **Stato**: finalized v1. Cattura + riorganizzazione delle idee utente 2026-06-27 (Telegram msg 130, 131, 159/160), con training-spec completata 2026-06-29. Skill metacognitiva del Tier 1 organization-first: cosa fa il modello **quando è poco confident**. Non ancora validata via grill-me (vedi §Next).
 
 ---
 
@@ -85,6 +85,21 @@ Il proxy è grezzo per scelta: dà un segnale **etichettabile** sulle tracce (to
 
 ---
 
+## Classificazione training-vs-harness `[review-loop]`
+
+Applico il decision-tree di [[training-vs-harness-classification]] (Step-0 scomponi → classifica ogni metà → stato-senza-training). Cfr. worked-example 2 del playbook stesso.
+
+- **Q0 scomponi**:
+  - **{meccanismo}** = gli strumenti di gather (grep / file-search / Read come tool callable) **+** il canale **ASK** (domanda non-bloccante all'utente, warn-before-blocking) **+** il budget-counter K (contatore di passi gestito wrapper-side).
+  - **{decisione}** = riconoscere la bassa-confidence (trigger token-non-in-contesto) + scegliere INTERNO/ESTERNO + pubblico/privato + *quando* fermare il gather e declassare ad ASK.
+- **Q1/Q1a → F-harness**: strumenti di gather, canale-ASK e budget-counter sono tool/hook wrapper-side deterministici. **Stato: PIENA** (esistono e funzionano senza training).
+- **Q2 → S**: il riconoscimento dell'incertezza + lo split INTERNO/ESTERNO/privato + la gestione del budget sono decisioni che il modello deve fare nei pesi.
+- **Q3 → F+S**: Q1 ∧ Q2, e lo stato-senza-training della metà-S è **INERTE** (il caso reale del *riferimento-opaco-a-repo-privato* — dove il gather-cieco ha confabulato — È esattamente il fallimento di questa skill non-addestrata).
+- **Q5 stato-senza-training (metà-S): INERTE**. Il base-model non riconosce l'incertezza in modo affidabile e tende al default "completa-il-token-plausibile" (Hack B). NON spedibile come skill di Fase-1.
+- **Q6 fallback deterministico: DEBOLE**. Si può forzare un gather su ogni token-non-in-contesto, ma rischia **over-asking** sistematico (Hack A) e non dà stato PIENA → la skill resta **gated sul training** (a differenza di autocompact, dove la soglia `getContextUsage` dà un fallback forte). Per questo qui la skill è *più* critica che altrove.
+
+> **Output**: `{F+S · stato-S=INERTE · gate=training F2-3 (fallback debole) · spec-S=EVPI-twin-pair + uncertainty/calibration-reward + costo-domanda}`.
+
 ## Reward / hack-check
 
 - **Skill (outcome desiderato)**: ridurre l'incertezza *prima* di agire, con la mossa di costo minimo che cambia la decisione.
@@ -93,11 +108,47 @@ Il proxy è grezzo per scelta: dà un segnale **etichettabile** sulle tracce (to
 - **Difesa**: reward **bilanciato** che penalizza *entrambi* gli estremi — sia l'azione-sotto-incertezza (B) sia l'over-asking/over-gathering (A).
 - **Ground truth (ancora all'outcome, non alla partecipazione)** `[EXTRACTED]` — la domanda di verifica è: *l'info recuperata (o richiesta) era **necessaria** e ha **cambiato** la decisione?* Se gather/ask non ha mosso l'esito, era over. Se l'azione è stata presa senza l'info che poi serviva, era under. Niente reward per il gesto in sé.
 
+### Reward outcome-anchored: EVPI twin-pair (il meccanismo concreto) `[review-loop]`
+
+`[INFERRED]` "L'info ha cambiato la decisione?" è un'etichetta **non implementabile** se misurata su una singola traiettoria (non si osserva il controfattuale). Il meccanismo concreto — riuso del pattern gold di area-02 — è la **coppia gemella (twin-pair) by-construction**:
+
+- Si costruisce una **coppia di prompt identici** che differiscono **solo** per la presenza dell'informazione che il gather/ask recupererebbe:
+  - **Twin-A (info-assente)**: il fatto critico NON è nel contesto → il gather/ask è *necessario* per decidere bene.
+  - **Twin-B (info-già-presente)**: lo stesso fatto È già nel contesto → il gather/ask **non cambierebbe l'esito** (è ridondante).
+- **Reward = l'informazione ha cambiato la DECISIONE osservabile**, non il gesto di chiederla:
+  - su Twin-A: gather/ask che porta alla decisione corretta → **reward+**; procedere senza (Hack B) → penalità.
+  - su Twin-B: gather/ask che ripete un'info già disponibile (Hack A, over-asking) → **penalità**; procedere diretto e corretto → **reward+**.
+- Lo scorer confronta l'esito (decisione/azione finale corretta) **tra i due gemelli** → il segnale premia il *discriminare quando l'info serve*, non l'atto di cercarla. È by-construction non-gameable con la verbosità ("ho cercato accuratamente").
+
+### Costo-della-domanda esplicito `[review-loop]`
+
+`[INFERRED]` ASK e gather **non sono gratis**: interrompono l'utente / spendono turni / latenza. Il reward deve includere un **termine di costo** esplicito (allineato a EVPI / SELAUR `[ref?]`): l'azione di gather/ask vale solo se *Expected Value of Perfect Information − costo > 0*. Senza il termine di costo, il reward bilanciato collassa verso l'over-asking (chiedere è "safe"). Il costo è ciò che rende Twin-B una vera penalità e non un pareggio.
+
+### Calibration-reward (RLCR / Brier) `[review-loop]`
+
+`[INFERRED]` Questa è una **decisione sotto incertezza**: la confidence stimata dal modello deve essere *calibrata*, altrimenti il trigger token-non-in-contesto da solo è troppo grezzo. Si wira un **calibration-reward** (RLCR / ConfTuner-Brier `[ref?]`) — mai self-report grezzo — con **ECE/Brier come metrica di early-stop** di pari rango con l'accuracy del gather. Vincolo noto: **GRPO erode la calibrazione** (cfr. [[training-vs-harness-classification]] Q4), quindi il calibration-reward va mantenuto attivo *durante* l'RL, non solo in SFT.
+
+### Hack-check (scorer ≠ scored) `[review-loop]`
+
+`[INFERRED]` Lo scorer del twin-pair è **deterministico/by-construction** (confronto di esiti tra gemelli + lookup info∈contesto), **non** un giudizio del modello su sé stesso → **scorer ≠ scored** rispettato (CLAUDE.md #10). Il participation-hack ("dichiaro uncertain / cerco per incassare") è disinnescato perché il reward è sul *delta di decisione tra gemelli*, non sull'emissione del gesto.
+
 ---
+
+## Training (regime)
+
+`[INFERRED]` Pipeline a 3 stadi standard per le skill metacognitive inerti (cfr. [[training-vs-harness-classification]] Q4 "cold-start a 3 stadi"):
+
+1. **SFT-format-bootstrap** — traiettorie con la sequenza canonica (trigger → split INTERNO/ESTERNO/privato → gather entro K → ASK come fallback) per insegnare il *formato* della decisione. Le grammar (XGrammar) possono forzare la forma del blocco-decisione, lasciando al training solo la semantica.
+2. **On-policy distillation cold-start** — lo student genera traiettorie, un teacher le scora; riduce il gap del cold-start del GRPO su modello 4B (`on-policy-distill` `[ref?]`).
+3. **RL-GRPO uncertainty-aware** — reward EVPI-twin-pair + costo-domanda + calibration-reward (sopra). Outcome-anchored, scorer≠scored.
+
+- **Label-generation**: **EVPI twin-pair by-construction** (coppia info-assente/info-presente) — riuso del pattern gold area-02; più tracce held-out negative (web su riferimento privato; over-asking ad alta confidence; budget ignorato in loop).
+- **Foglia di training**: Area 4 (metacognition) per il riconoscimento bassa-confidence + bivio; Area 9 (communication / deference) per il ramo ASK.
 
 ## Linked
 
 - [[scientific-method-operating-protocol]] — passo 1 "Observe/Awareness": osserva e prendi consapevolezza prima di agire (questa skill ne è il sotto-caso "bassa confidence").
+- [[training-vs-harness-classification]] — il playbook di classificazione; questo concept è il **worked-example 2** del playbook (F+S, stato-S INERTE, fallback debole).
 - [[error-memo-system]] — errori da gather-cieco/azione-sotto-incertezza alimentano la memo (es. lezione del riferimento-opaco-a-repo-privato).
 - [[agent-wrapper-vars-queue]] — le note/task-list/watch-list che il REORG (euristica opzionale) riorganizza vivono qui.
 - [[agent-constitution]] — **C8** "Dichiara incertezza: se non sai, dillo, non confabulare" (`agent-constitution.md:32`); C7 deferenza ai bivi ad alto impatto = il ramo ASK.
@@ -105,8 +156,6 @@ Il proxy è grezzo per scelta: dà un segnale **etichettabile** sulle tracce (to
 - [[task-interruption-discipline]] — disambiguazione (nota B1): lo STOP-low-confidence è **intra-task** (sospendi-poi-riprendi lo stesso task), distinto dal *finish-then-switch* che governa il passaggio *tra* task.
 - `feedback_optimization_first` (memory) — reorg proattivo del contesto + low-confidence→gather; "ricordatelo sempre".
 - [[_private/rules-tg-warn-before-blocking]] — il ramo ASK in modalità async dev'essere **non-bloccante** (warn before blocking).
-
-> **Skill di training**: Area 4 (metacognition) per il riconoscimento bassa-confidence + bivio; Area 9 (communication / deference) per il ramo ASK. `[INFERRED]`
 
 ## Next
 - Grill-me: tarare **K** (passi di budget prima del fallback ad ASK) e affinare il **trigger** (oltre al token-non-in-contesto: serve un secondo proxy per i casi senza emissione di token concreto?).
