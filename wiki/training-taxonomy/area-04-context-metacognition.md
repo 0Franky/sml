@@ -4,8 +4,8 @@ description: Example-space completo (5 classi × tutti gli hint) per le 9 foglie
 type: taxonomy-area
 tags: [training, taxonomy, area-04, context, metacognition, long-context, needle]
 sources: [training-taxonomy/README.md §4 Area 4, user notes 2026-06-23]
-last_updated: 2026-06-25
-status: generated
+last_updated: 2026-06-27
+status: generated + addendum 2026-06-27 (gap §2ter chiusi)
 ---
 
 # Area 4 — Context Management & Metacognition
@@ -241,6 +241,38 @@ status: generated
 - **Reward pattern dominante**: Area 4 è prevalentemente **Q** (recall/flag/decisione verificabili) → ideale per RL con reward verificabile (allinea con [[../concepts/scientific-method-operating-protocol]] D3). Le due foglie Q+L (autocompact, outer-summary, update-injection) hanno un nucleo Q che **ancora** la componente L del judge.
 - **Hack-check trasversale**: il rischio ricorrente in quest'area è **over-triggering** dei flag metacognitivi (DEGRADED/stale/contradiction/critical sempre) — la difesa comune è F1 (non recall puro) + dataset bilanciato + reward ancorato all'**outcome a valle**, non alla partecipazione (principio first-class #12, [[../concepts/reward-hacking-mitigation]]).
 - **Overlap da sorvegliare in training** (audit §A): degradation↔autocompact, temporal↔stale/TTL, update-injection↔self-contradiction — tenere le reward distinte per evitare double-counting.
+
+## Addendum 2026-06-27 — gap §2ter chiusi + nuove foglie + SOTA
+
+> Allineamento all'audit [[../architecture/harness-feature-catalog]] §2ter + al review-loop SOTA ([[../sota-techniques-catalog]] §RL-1 Dim-4). Le skill metacognitive sono **inerti/degradate senza training**: qui si esplicita il regime e si aggiungono le foglie mancanti.
+
+### [FASE] Le metacognitive sono primariamente Fase-3-RL `[INFERRED]`
+Per le foglie metacognitive (degradation-awareness, autocompact, compaction-scheduling, low-confidence, update-injection) la Fase-1/2 (teoria + esercizi con-hint) è **solo bootstrap del formato**; il valore reale emerge in **Fase-3-RL outcome-anchored**. SOTA: **AdaCoM** (arXiv 2605.30785) addestra il when-to-compact via GRPO con manager separato + agente frozen (scorer≠scored); **RLCR/ConfTuner** danno il reward di calibrazione via Brier (proper scoring rule, NON self-report). → nei reward design sopra il peso è su Fase-3.
+
+### [VINCOLO] GRPO erode la calibrazione `[EXTRACTED ricerca]`
+Il nostro GRPO/PPO binary-reward **degrada la calibrazione** come side-effect strutturale (arXiv 2410.09724 Taming Overconfidence: PPO-M/PPO-C). → vincolo cross-pipeline: integrare un calibration-reward (RLCR/PPO-C) o uno stage dedicato, non scoprirlo a valle. La verbalized-confidence è **sovra-confidente** (2509.21545) → mai premiare il self-report; preferire AURC/Brier su outcome verificato o probe sulle attivazioni (white-box, abbiamo i pesi).
+
+### [FOGLIA NUOVA] Compaction-scheduling decision (il *quando*)
+- **Foglia**: `metacognizione / quando-compattare`. **Tag**: **Q** (decisione compact-now sì/no vs ground-truth) + L sul rationale.
+- **Distinzione**: *Autocompact* (sopra) = il **come** (keep/summarize/drop); *Degradation-awareness* = **riconoscere** lo stato; questa = la **decisione di scheduling** (*è questo il momento di compattare?*, trade-off costo-compact vs rischio-overflow/degrado). Match AdaCoM/ReSum.
+- **Reward**: AdaCoM-style two-level (outcome del task a valle + process rule-based: token-overflow/redundant-action penalty, gold-retrieval reward) + **held-out probe post-compact**. Scorer≠scored (manager separato).
+- **Hack-check**: compattare a caso (participation-hack) o mai → reward solo se il timing migliora l'outcome; penalità simmetrica.
+
+### [FOGLIA NUOVA] Low-confidence → gather/ask (esplodere in example-space)
+- Esplodere [[../concepts/low-confidence-gather-and-reorg]] in 5 classi (trigger token-non-in-contesto → split INTERNO/ESTERNO → budget-K → ASK).
+- **Reward EVPI** (arXiv 2511.08798) / SELAUR (2602.21158): l'info recuperata/richiesta era **necessaria** e ha **cambiato** la decisione, col **costo della domanda**? Anti participation-hack (gather/ask non premiati se non cambiano l'esito).
+
+### [NUOVE skill collegate]
+- **interruption-robust-reasoning** ([[../concepts/interruption-robust-reasoning]]) → si innesta sulla foglia *Update-injection handling*: gestione dell'`<update>` a fine sezione (multi-call MinD); reward = l'update ha migliorato la risposta, coppia bilanciata rilevante/rumore.
+- **dependency-aware-error-recovery** ([[../concepts/dependency-aware-error-recovery]]) → foglia Area 2/4/16: traversare il dep-graph dal nodo-errore + revisione a cascata.
+- **situational-policy-table** ([[../concepts/situational-policy-table]]) → situational-awareness: riconoscere la situazione → azione corretta (eval SAD).
+
+### [CROSS-LINK] Adaptive-depth (Area 3) ↔ Area 4 `[INFERRED]`
+Il *think-or-not / adaptive-depth* (Area 3: S-GRPO/DEER/CoT-Valve) è la stessa famiglia "compute-allocation metacognitiva" di degradation/when-to-compact: decidere *quanto computare*. Reward decaying su exit-position (agire prima ma corretto). → reward allineati: mai premiare l'uscita-presto di per sé, solo uscire-presto-**E**-corretto.
+
+### [NON-GAP] Steering resta fuori-tassonomia (confermato).
+
+---
 
 ## Sources
 - [[README]] §4 Area 4 (topic/foglie/tag/skill) + §3 template canonico + §4.bis curriculum.
