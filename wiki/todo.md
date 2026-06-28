@@ -37,6 +37,15 @@ last_updated: 2026-06-28
 - [x] ✅ **6 ref VERIFICATI 2026-06-29** (agente, 3 fonti ciascuno → tutti REALI): AdaCoM 2605.30785 · SELAUR 2602.21158 · on-policy-distill/SOD 2605.07725 · Agentic-overconfidence 2602.06948 · BenchJack 2605.12673 · RHB 2605.02964. `[ref?]` rimossi dove presenti (catalogo righe 306/328; gli altri 4 erano già puliti).
 - [ ] **Restano `[ref?]` NON ancora verificati** (altri ID nel catalogo, NON nella lista sopra): LoRA-GA 2407.05000 · Dr.GRPO 2503.20783 · DAPO 2503.14476 · Can-LLMs-Introspect 2605.26242 · Cache-aware 2601.06007 · Judge-robustness 2602.09383 · + senza-ID (GRIFT, Activation-abstention, AURC, DemyAgent-github). → verificare in batch successivo; NON citarli in artefatti pubblici finché non confermati.
 
+## 🟣 Campagna Gold-example (PILOTA in corso 2026-06-29)
+- [x] **Pilota = 3 foglie area-02** (1.2 overwrite Q+L · 3.2 dep-check Q · 6.2 defer L), autori verticali + revisori agnostici (regola utente msg 274).
+- [x] ✅ **Enshrined in `judge-design.md`**: (a) **coherence-anchoring a DUE livelli** (esterna campi↔env_facts deterministica + interna razionale↔campi L) — il review agnostico ha mostrato che il solo livello-interno è gameabile; (b) **meta-schema contract** (campi-meta comuni + istanze per-foglia) → risolto il TODO-schema di judge-design.
+- [x] ✅ **`gold-methodology.md` creato** (convenzioni rollout: oracolo-unificato H0⊆post, predicato-vs-esecuzione, marker [UNVERIFIED], review-loop obbligatorio, lunghezza, omissioni-dichiarate, reward_tag).
+- [ ] **Fix P0/P1 per-file DIFFERITI a post-decisione-format** (no polish prima che l'utente scelga il format): 1.2 → P0 oracolo set-check unificato + classe(4) old&new + 5d declass + reward_tag + [UNVERIFIED]; 3.2 → FX-dynamic eseguibile + conteggio grep + §1bis omissioni; 6.2 → §3 two-level coherence + ancora-Q-predicato classi 1/2 + pre-check 'ben-formato'. Tutti: marker [UNVERIFIED], trim prosa ridondante.
+- [ ] ⚠️ **Sandbox-execution pass dei gold**: gli output git/grep/pytest dei gold sono *attesi/plausibili* ma NON eseguiti in sandbox reale → verificarli quando lo **scaffold verifier-sandbox** (Fase 0.3, task #6) è pronto. Gate del gold-reference definitivo.
+- [ ] **Wiring 3 gold** (index/log) — in corso (lo fa l'integratore).
+- [ ] 🔴 **DECISIONE UTENTE: format di rollout** — i gold escono lunghi (340/430/491 righe per fedeltà al template canonico 686). ×215 foglie = corpus enorme. Opzioni: (A) template pieno · (B) versione compatta per-foglia · (C) staging multi-sessione. Reco da presentare col pilota.
+
 ## 🟢 Milestone
 - [ ] **Greenlight implementazione** (gate 0-A: dati/verifier model-independent — fixture + verifier standalone + misura gap base-model). Awaiting go utente.
 
