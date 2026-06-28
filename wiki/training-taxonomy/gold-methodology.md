@@ -14,6 +14,19 @@ last_updated: 2026-06-29
 ## Review-loop OBBLIGATORIO (regola utente 2026-06-28, msg 274)
 Ogni gold: **autore verticale** (esperto di dominio) → **revisore agnostico** (severo, non-attaccato) → integratore finalizza. Il pilota ha dimostrato che il revisore pesca **bug P0 reali** (oracoli non ancorati, coherence-penalty gameabile) che l'autore razionalizza.
 
+## Template-inheritance: class → subclass → leaf (DECISIONE utente 2026-06-29)
+Per non riscrivere ~400 righe quasi-identiche ×215 foglie, i gold si organizzano in **gerarchia a 3 livelli** (DRY di authoring):
+1. **Template di gruppo/famiglia** (`reward-family × scenario-group`): lo skeleton condiviso — struttura 5-classi, convenzioni marker, pattern-reward/oracolo della famiglia, framing §0/§1bis. Es. "famiglia Q-distruttive area-02" (Foglie 1.x) vs "famiglia L-deferral" (Foglie 6.x).
+2. **Specializzazione di sottoclasse**: pattern-scenario + oracolo specifico della sottoclasse.
+3. **Foglia = delta finale**: solo lo scenario concreto + oracolo/hack-check specifici (~50-100 righe).
+
+**Raffinamenti (regole)**:
+- ⚠️ **Il modello si addestra sugli esempi ESPANSI** (template + sottoclasse + foglia → istanza completa a piena fedeltà). La gerarchia è **solo authoring-time** (manutenzione DRY), NON ciò che vede il modello → serve uno **step di espansione** che compila il full-gold per il training.
+- **Fattorizza al taglio naturale** = `(famiglia-di-reward × gruppo-di-scenario)`, non un template unico per area (Q-deterministiche e L-judged hanno skeleton diversi → template diversi).
+- **Slot/override espliciti** (niente eredità ambigua): il template definisce le sezioni; la foglia riempie/override slot specifici.
+- **Vantaggi**: duplicazione azzerata, **fix-once-propaga**, **review-loop veloce** (template una volta + delta-foglia).
+> Supera la dicotomia compatto-vs-pieno: authoring *compatto-ma-principled*, espanso a piena fedeltà per il training, rollout area-per-area.
+
 ## Oracoli (reward Q)
 - **Content-preservation** → oracolo **unificato**: "campi-chiave di `H0` ⊆ contenuto-post" (snapshot pre `H0`, verifica inclusione nel post). NON `sha256(file)==H0` quando l'azione legittima cambia il file (merge/append); `sha256` puro SOLO per copie esatte (`.bak`).
 - **Recovery** → l'oracolo deve verificare **ENTRAMBI** (vecchio preservato **E** nuovo presente); un check solo-sul-vecchio è gameabile da un `git restore` secco.
