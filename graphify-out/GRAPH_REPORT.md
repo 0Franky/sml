@@ -1,12 +1,12 @@
-# Graph Report - .  (2026-06-27)
+# Graph Report - .  (2026-06-28)
 
 ## Corpus Check
-- 0 files · ~99,999 words
+- 12 files · ~0 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 488 nodes · 804 edges · 26 communities (20 shown, 6 thin omitted)
-- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 34 edges (avg confidence: 0.79)
+- 516 nodes · 880 edges · 24 communities (14 shown, 10 thin omitted)
+- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 41 edges (avg confidence: 0.81)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -34,26 +34,24 @@
 - [[_COMMUNITY_Community 21|Community 21]]
 - [[_COMMUNITY_Community 22|Community 22]]
 - [[_COMMUNITY_Community 23|Community 23]]
-- [[_COMMUNITY_Community 24|Community 24]]
-- [[_COMMUNITY_Community 25|Community 25]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `User Notes — Related Research & Derivative Ideas` - 29 edges
-2. `Agent Constitution (operational code of conduct)` - 22 edges
-3. `User Notes 2026-06-23 (Telegram batch)` - 22 edges
-4. `Training Taxonomy backbone master (16 areas)` - 22 edges
-5. `Multi-Expert Collaboration via Sequential LoRA Hot-Swap` - 19 edges
-6. `Scientific Method Operating Protocol (Tier 1)` - 17 edges
-7. `Structured Context — Sections and State Tracking` - 16 edges
-8. `SLM Coding Models Landscape 2026` - 15 edges
-9. `User Notes — Index by Category` - 15 edges
-10. `Wrapper Context Assembly Example` - 15 edges
+1. `Harness Feature Catalog (6 feature-class on pi)` - 38 edges
+2. `User Notes — Related Research & Derivative Ideas` - 28 edges
+3. `Agent Constitution (16 principles, 6 groups)` - 25 edges
+4. `User Notes 2026-06-23 (Telegram batch)` - 22 edges
+5. `Multi-Expert Collaboration (LoRA hot-swap sequential, paper-claim #6)` - 21 edges
+6. `Training Taxonomy backbone master (16 areas)` - 21 edges
+7. `Reward-Hacking Mitigation (first-class cross-pipeline constraint)` - 21 edges
+8. `Scientific Method Operating Protocol (Tier 1)` - 17 edges
+9. `Area 04 — Context Management & Metacognition (9 leaves example-space)` - 17 edges
+10. `Steering Vectors (activation steering, 4th orthogonal axis)` - 16 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Idea Capture + Low-Confidence Gather` --conceptually_related_to--> `Low-Confidence: Gather & Reorg`  [INFERRED]
-  CLAUDE.md → wiki/concepts/low-confidence-gather-and-reorg.md
-- `Graphify OS-Agnostic Portability` --references--> `Path Portability Awareness`  [EXTRACTED]
-  CLAUDE.md → wiki/concepts/path-portability-awareness.md
+- `Reward-Hacking Mitigation (first-class cross-pipeline constraint)` --conceptually_related_to--> `CLAUDE.md — Project Schema (Wiki/Graphify Rules)`  [INFERRED]
+  wiki/concepts/reward-hacking-mitigation.md → CLAUDE.md
+- `Karpathy LLM-Wiki Template` --rationale_for--> `Karpathy LLM-Wiki Pattern (raw/wiki/schema)`  [EXTRACTED]
+  .karpathy-wiki-template.md → CLAUDE.md
 - `Structured Thinking — Caveman Reasoning` --cites--> `prompts/thinking-style.v1.md`  [EXTRACTED]
   wiki/concepts/structured-thinking.md → prompts/thinking-style.v1.md
 - `Staged Curriculum Training (reasoning→org→criticality→coding)` --semantically_similar_to--> `Post-RL Path Optimization (impratichimento, token compression)`  [INFERRED] [semantically similar]
@@ -66,107 +64,83 @@
 - **Phantom-Check / Trace-Anchored Verification** —  [INFERRED 0.85]
 - **Context/Template Randomization Training Regimes** —  [INFERRED 0.75]
 
-## Communities (26 total, 6 thin omitted)
+## Communities (24 total, 10 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.06
-Nodes (63): ADR 2026-06-23 pi Harness Base, Adversarial Needle-in-Haystack Training, Axolotl (training framework), DeepSeek-R1 (teacher, long-CoT), Ollama (local serving), pi (earendil-works/pi harness, MIT), Qwen3-4B-Instruct-2507 (base model), TRL (RL post-training) (+55 more)
+Nodes (65): ADR 2026-06-23 pi Harness Base, Adversarial Needle-in-Haystack Training, Agent Constitution (16 principles, 6 groups), Axolotl (training framework), DeepSeek-R1 (teacher, long-CoT), Ollama (local serving), pi (earendil-works/pi harness, MIT), Qwen3-4B-Instruct-2507 (base model) (+57 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.05
-Nodes (60): ADR 2026-05-21 Project Bootstrap, ADR 2026-05-21 — Base Model Pipeline, Aider Polyglot, BigCodeBench, Catastrophic Forgetting, Codestral-22B-v0.1, CommitPackFT, Composition-aware training (+52 more)
+Cohesion: 0.07
+Nodes (64): Adversarial Needle-in-Haystack Training (paper-claim #5), Agent-Wrapper VARS-Queue (4 lane + CURR, O(1) map), Area 04 — Context Management & Metacognition (9 leaves example-space), Contradiction-Detection Layer (5 types, attention-event), Data Volume Estimate (leaf-by-leaf, harness-bottleneck), Dependency-Aware Error Recovery (truth-maintenance on dep-graph), Error-Memo System (2-level post-mortem, reinjected top-K), Explicit-Attention Layer (pin CURRENT_AIM/PREV_STEP/GLOBAL/RULES) (+56 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.05
-Nodes (59): Area 1 - Organization & Long-Horizon Planning (T1), Quality-target inference & calibration leaf, Process-reward core (long-correct CoT + verify-loop, PRM split pos/neg), Process-marker spoofing defense (anchor to outcome not marker), Area 3 - Reasoning & Scientific Method (T1), Area 4 - Context Management & Metacognition (T1/X), Area 5 - Code Correctness (T2/T3, all Q), Anti-overfit-to-visible-tests defense (hidden/property/mutation tests) (+51 more)
+Nodes (60): ADR 2026-05-21 Project Bootstrap, ADR 2026-05-21 — Base Model Pipeline, Aider Polyglot, BigCodeBench, Catastrophic Forgetting, Codestral-22B-v0.1, CommitPackFT, Composition-aware training (+52 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.10
-Nodes (47): Agent Wrapper Runtime — Queue + Vars Registry, Contradiction Detection Layer, Error Memo System, Explicit Attention Layer, External Update Injection, Multi-Token Prediction Training, OWASP Top 10 LLM01 Prompt Injection, ADaPT (Archiki 2024) (+39 more)
+Cohesion: 0.06
+Nodes (55): Area 1 - Organization & Long-Horizon Planning (T1), Quality-target inference & calibration leaf, Process-reward core (long-correct CoT + verify-loop, PRM split pos/neg), Process-marker spoofing defense (anchor to outcome not marker), Area 3 - Reasoning & Scientific Method (T1), Area 5 - Code Correctness (T2/T3, all Q), Anti-overfit-to-visible-tests defense (hidden/property/mutation tests), Area 6 - Code Quality & Architecture (T2/T3, mostly L) (+47 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.10
-Nodes (44): Agent Constitution (operational code of conduct), Agent Wrapper Runtime — Queue + Vars Registry, Contradiction Detection Layer (runtime coherence monitor), Error Memo System (lessons-learned memory), AutoGen (Wu et al. 2023, Microsoft), Constitutional AI (Bai et al. 2022, Anthropic), Domain Randomization (Tobin et al. 2017), Gemma 4 (encoder-free multimodal, Google DeepMind 2026) (+36 more)
+Cohesion: 0.05
+Nodes (48): automod Provenance Invariant (anti-injection), Balanced Asymmetric Reward (TP+FP penalty), Batch-First Consolidated Decision, Area 2 — Criticality & Safety Awareness, Over-Flagging / Cry-Wolf Defense, Check-Fantasma Detection (trace-anchored), Self-Versioning Gratis > Halt, T-group Regenerability Probe (primary Q discriminant) (+40 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.09
-Nodes (37): Agent Constitution (codice di condotta), Coverage Audit 2026-06-23, Data Volume Estimate (16 aree), DwarfStar 4 (DS4), Per-Expert MoE Quantization, ADR 2026-05-21 base-model-pipeline, ADR 2026-06-23 pi-harness-base, Agent Wrapper Vars-Queue (+29 more)
+Nodes (46): Agent Wrapper Runtime — Queue + Vars Registry, Contradiction Detection Layer, Error Memo System, Explicit Attention Layer, Multi-Token Prediction Training, OWASP Top 10 LLM01 Prompt Injection, ADaPT (Archiki 2024), Attention Sinks (Xiao 2023) (+38 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.07
 Nodes (36): ADR Training From Scratch Clarification, Curiosity-Driven Exploration Training, Aider Polyglot benchmark, BigCodeBench, LiveCodeBench v6, SWE-Bench Verified, The Stack v2 (filtered), Axolotl (+28 more)
 
 ### Community 7 - "Community 7"
+Cohesion: 0.09
+Nodes (33): Agent Constitution (codice di condotta), Coverage Audit 2026-06-23, Data Volume Estimate (16 aree), DwarfStar 4 (DS4), Per-Expert MoE Quantization, ADR 2026-05-21 base-model-pipeline, ADR 2026-06-23 pi-harness-base, Agent Wrapper Vars-Queue (+25 more)
+
+### Community 8 - "Community 8"
 Cohesion: 0.07
 Nodes (28): concept:async-producer-consumer-pipeline, concept:code-augmented-cot, concept:gradient-collapse-rank, concept:iterative-prompting-env-feedback, concept:lora-plus-lr-ratio, concept:mcts-test-time, concept:organization-first-vision, concept:process-preference-model-ppm (+20 more)
 
-### Community 8 - "Community 8"
-Cohesion: 0.12
-Nodes (18): Curriculum Learning training strategy (Approach C), Conceptual confusion: 'delegation' base->LoRA misinterpreted as MoE, Design v1.0 — Modular layered LLM architecture, Approach A — External Python router, Approach B — MoE integration, Ingest / Query / Lint operations, LLM Wiki pattern (raw/wiki/schema 3 layers), Memex (Vannevar Bush, 1945) (+10 more)
-
 ### Community 9 - "Community 9"
-Cohesion: 0.16
-Nodes (15): automod Provenance Invariant (anti-injection), Balanced Asymmetric Reward (TP+FP penalty), Area 2 — Criticality & Safety Awareness, Over-Flagging / Cry-Wolf Defense, Check-Fantasma Detection (trace-anchored), Self-Versioning Gratis > Halt, T-group Regenerability Probe (primary Q discriminant), Value-Tiering (T-high/probe/T-low/T-group) (+7 more)
+Cohesion: 0.11
+Nodes (26): aLoRA — Activated LoRA (KV-cache reuse on swap, 20-58x faster), AutoGen (Wu et al. 2023, Microsoft), Gemma 4 (encoder-free multimodal, Google DeepMind 2026), HDMoLE, HMoRA (Hierarchical Mixture of LoRA Experts, ICLR 2025), LoraHub (gradient-free LoRA composition), MoLE / Mixture of LoRA Experts family, pi harness/wrapper base (earendil-works/pi) (+18 more)
 
 ### Community 10 - "Community 10"
+Cohesion: 0.10
+Nodes (22): Chain-of-Thought Extraction (why→problema→soluzione, anchored), CLAUDE.md — Project Schema (Wiki/Graphify Rules), Curriculum Learning training strategy (Approach C), Conceptual confusion: 'delegation' base->LoRA misinterpreted as MoE, Design v1.0 — Modular layered LLM architecture, Approach A — External Python router, Approach B — MoE integration, Graphify OS-Agnostic Portability Rule (repo-relative + forward slash) (+14 more)
+
+### Community 11 - "Community 11"
 Cohesion: 0.16
 Nodes (14): concept:active-inference, concept:bayesian-surprise-segmentation, concept:compression-progress-reward, concept:icm-forward-inverse-model, concept:noisy-tv-problem, concept:predictive-coding, concept:surprise-as-gradient-magnitude, concept:titans-mac-mag-mal-variants (+6 more)
 
-### Community 11 - "Community 11"
-Cohesion: 0.20
-Nodes (10): Augmentation Knob K~3-5 (not volume), Label/Verifier Invariance under T, Dataset On-the-Fly Pseudo-Random, Round-Trip Translation Check (gate), Seed Before Split (anti-leakage), Transform-Layer T(template, seed), 5+ Variable Dimensions per Section, Lost-in-the-Middle / Position Bias (+2 more)
-
 ### Community 12 - "Community 12"
-Cohesion: 0.22
-Nodes (9): Batch-First Consolidated Decision, Chain-of-Thought = Priority #1 (subordinate to anchoring), Graphify OS-Agnostic Portability, Idea Capture + Low-Confidence Gather, Optimization-First Principle, CLAUDE.md (Wiki Schema), Three-Tier Architecture (ground truth), Karpathy LLM-Wiki Pattern (+1 more)
-
-### Community 13 - "Community 13"
-Cohesion: 0.25
-Nodes (8): Low-Confidence: Gather & Reorg, Gather Budget K with ASK Fallback, Internal vs External First Split, Token-Not-in-Context Trigger, Task Interruption Discipline, Enqueue+Reference+Finish Default, Invalidation via Deps (HARD signal), Preemption-by-Urgency Policy
-
-### Community 14 - "Community 14"
-Cohesion: 0.29
-Nodes (8): Harness Capabilities as Files, open->extract->note->close-to-reclaim, Skill vs Feature Demotion, Wiki Index Catalog, Path Portability Awareness, Balanced Verifier (false-abs / false-rel), Context-Aware Path Decision (dest-dependent), Wrapper-Side Regex-Linter Enforcement
-
-### Community 15 - "Community 15"
-Cohesion: 0.33
-Nodes (6): KV-Cache Cost of close-to-reclaim, Phased Reward + RH-Detection, Potential-Based Reward Shaping (Ng 1999), Per-Phase Process Reward, Phase De-Duplication (cross-skill D1), RH-Monitor (decorrelated LLM judge ensemble)
-
-### Community 16 - "Community 16"
-Cohesion: 0.33
-Nodes (6): Anchor to Verifiable (Q over L), Goodhart's Law (proxy gaming), Reward Hacking Mitigation, Overoptimization Monitor, Participation-Hack (outcome not participation), Scorer != Scored
-
-### Community 17 - "Community 17"
-Cohesion: 0.40
-Nodes (5): HDMoLE, Three-tier design (orchestrator FT + LoRA programming + LoRA verticali), X-LoRA, Decoupling general cognition vs domain expertise, Med-MoE-LoRA / Specialized Generalists
-
-### Community 18 - "Community 18"
 Cohesion: 0.40
 Nodes (5): Prompts CHANGELOG — Thinking style versioning, State markers [V]/[A]/[?] for assertions, Structured reasoning principle (no free-flow thinking), Max yield per token spent — token efficiency, Thinking Style v1 — Structured reasoning prompt
 
-### Community 19 - "Community 19"
+### Community 13 - "Community 13"
 Cohesion: 0.67
 Nodes (3): concept:user-notes-dataset-buckets, concept:user-notes-sliding-window-variable, image:appunti-quaderno
 
 ## Knowledge Gaps
-- **83 isolated node(s):** `Prompts CHANGELOG — Thinking style versioning`, `wiki — Tier 2 Programming Generalist LoRA`, `Qwen 3.5 9B base model`, `PEFT (Hugging Face) — Adapter management`, `LoRA: Low-Rank Adaptation of LLMs (Hu et al., 2021)` (+78 more)
+- **86 isolated node(s):** `Prompts CHANGELOG — Thinking style versioning`, `wiki — Tier 2 Programming Generalist LoRA`, `Qwen 3.5 9B base model`, `PEFT (Hugging Face) — Adapter management`, `LoRA: Low-Rank Adaptation of LLMs (Hu et al., 2021)` (+81 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **10 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Process Reward Model (PRM) paper` connect `Community 2` to `Community 4`?**
-  _High betweenness centrality (0.045) - this node is a cross-community bridge._
-- **Why does `Filosofia training 'come la scuola'` connect `Community 6` to `Community 1`?**
-  _High betweenness centrality (0.041) - this node is a cross-community bridge._
-- **Why does `Training Taxonomy backbone master (16 areas)` connect `Community 2` to `Community 17`?**
-  _High betweenness centrality (0.040) - this node is a cross-community bridge._
-- **What connects `LLM Wiki pattern (raw/wiki/schema 3 layers)`, `Persistent compounding artifact principle`, `Ingest / Query / Lint operations` to the rest of the system?**
-  _167 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `wiki/README.md — Wiki entry point + synthesis` connect `Community 10` to `Community 6`?**
+  _High betweenness centrality (0.324) - this node is a cross-community bridge._
+- **Why does `CLAUDE.md — Project Schema (Wiki/Graphify Rules)` connect `Community 10` to `Community 1`, `Community 4`?**
+  _High betweenness centrality (0.321) - this node is a cross-community bridge._
+- **What connects `Persistent compounding artifact principle`, `Ingest / Query / Lint operations`, `Memex (Vannevar Bush, 1945)` to the rest of the system?**
+  _185 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.05837173579109063 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06201923076923077 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.05480225988700565 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07341269841269842 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.05376972530683811 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05480225988700565 - nodes in this community are weakly interconnected._
+- **Should `Community 3` be split into smaller, more focused modules?**
+  _Cohesion score 0.05858585858585859 - nodes in this community are weakly interconnected._

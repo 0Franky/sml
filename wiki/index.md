@@ -2,7 +2,7 @@
 name: wiki-index
 description: Catalogo di tutte le pagine della wiki. Aggiornato a ogni ingest.
 type: index
-last_updated: 2026-05-21
+last_updated: 2026-06-27
 ---
 
 # Index
@@ -14,6 +14,7 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 - [`README.md`](README.md) — entry point + synthesis del progetto
 - [`open-questions.md`](open-questions.md) — decisioni aperte da chiudere con l'utente
 - [`experiments-backlog.md`](experiments-backlog.md) 🆕🔬 — tracker esperimenti da eseguire (ipotesi + metrica + wave). Batch multi-expert (EXP-ME-1..8) + altri flaggati
+- [`sota-techniques-catalog.md`](sota-techniques-catalog.md) 🆕⭐ — **catalogo SOTA esaustivo** delle tecniche da introdurre (9 dimensioni + 7 orizzontali): per ognuna have-already vs NUOVO + classif training-vs-harness (F-pi/F-serving/S/F+S) + fase + rischi. Base mia + **review-loop 10 agenti** (msg 210). Knowledge-transfer SOTA 2024-2026
 - [`log.md`](log.md) — ledger cronologico di tutte le operazioni
 
 ## Architecture
@@ -95,6 +96,10 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 - [`concepts/task-interruption-discipline.md`](concepts/task-interruption-discipline.md) 🆕 — **preemption-by-urgency**: nuova richiesta durante un task → enqueue+reference+finish di default; preempt solo se urgente/invalidante. Anti context-switch distruttivo
 - [`concepts/dataset-on-the-fly-pseudorandom.md`](concepts/dataset-on-the-fly-pseudorandom.md) 🆕 — transform-layer pseudo-random sui gold template (posizione/lingua/prompt) con **label invariante** + NO success-checklist in training. Verdetto: sì come knob ×3-5, non ×N
 - [`concepts/phased-reward-and-rh-detection.md`](concepts/phased-reward-and-rh-detection.md) 🆕 — reward **per-fase** + twin-pair discriminanti + final-reward pesato dall'RH rilevato (monitor LLM). Safeguard: potential-based shaping + outcome-anchor dominante. Verdetto: sì con cautele
+- [`concepts/training-vs-harness-classification.md`](concepts/training-vs-harness-classification.md) 🆕⭐ — **PLAYBOOK + regola fondamentale**: classificare ogni capacità sull'asse training(pesi)-vs-harness(wrapper) → **F-pi/F-serving/S/F+S** + decision-tree + stato-senza-training (PIENA/DEGRADATA/INERTE) + reward outcome-anchored + anti-pattern. Principio cardine emerso 2026-06-27 (msg 205)
+- [`concepts/dependency-aware-error-recovery.md`](concepts/dependency-aware-error-recovery.md) 🆕 — errore a T1 → root-cause (delta concettuale) + ripercorri + propaga il fix a TUTTE le decisioni dipendenti (truth-maintenance sul dep-graph). FEATURE=dep-graph esistente, SKILL=traversal. Idea utente msg 197
+- [`concepts/situational-policy-table.md`](concepts/situational-policy-table.md) 🆕 — router "SE situazione X → azione Y": FEATURE lane lookup O(1) + SKILL recognition (addestra il COMPORTAMENTO non il file-path) + governance a 4 tier. Training goldmine. Idea utente msg 200-202 (pattern generico PII-free)
+- [`concepts/interruption-robust-reasoning.md`](concepts/interruption-robust-reasoning.md) 🆕 — skill (pesi) di mantenere accuratezza se interrotto a fine-sezione per un update esterno (−60% senza training, 2510.11713); il meccanismo MinD multi-call dà l'aggancio, il valore è gated sul training. Decisione utente msg 193
 
 **Categoria A — Reasoning structure** (come pensa il modello):
 - [`concepts/structured-thinking.md`](concepts/structured-thinking.md) — "caveman thinking" strutturato, marker `[V]/[A]/[?]`, no discorsivo

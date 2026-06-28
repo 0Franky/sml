@@ -27,7 +27,7 @@ Verifica su `pi.dev/docs/latest/*` + sorgente `github.com/earendil-works/pi`. **
 **Confermato** `[VERIFICATO]`: Extensions senza fork (`.pi/extensions/*.ts`, default-export factory `(pi)=>{}`); hook reali (ordine turno): `input → before_agent_start → agent_start → turn_start → context → before_provider_request → after_provider_response → tool_execution_start → tool_call`(BLOCK: `{block:true,reason}`)`→ tool_execution_end → tool_result`(MODIFY: `{content,isError}`)`→ message_end → turn_end → agent_end`; più `message_update` (delta streaming) e compaction (`session_before_compact`, `ctx.compact()`, `ctx.getContextUsage()`); tool via `pi.registerTool`+TypeBox; provider locale via `models.json` (`api:"openai-completions"`, vLLM/Ollama citati) o `pi.registerProvider`; stato via `appendCustomEntry` (CustomEntry **fuori** dal context) / `appendCustomMessageEntry` (dentro); sessioni tree-JSONL; deployment TUI/print/**RPC**/**SDK** (`createAgentSession`, `session.prompt/subscribe/steer/followUp`).
 
 **Divergenze adattate** `[VERIFICATO]`:
-1. **NON esiste hook "confine di sezione"** — unità = TURNO + delta. → contradiction-detection + external-update-injection su `turn_end`/`message_end`/**steering** (`session.steer()`), non mid-message. (`ctx.abort()` per tagliare mid-stream = `[NON VERIFICATO]`.)
+1. **NON esiste hook "confine di sezione"** nativo in pi — MA (decisione utente msg 193) lo **implementiamo noi** lato wrapper/serving via **multi-call con `stop=["</section>"]`** (pattern MinD, arXiv 2505.19788) + Automatic Prefix Caching (riuso del pensiero, ricomputo del solo update). **NON degradiamo a turn-boundary** (section≠turn). → external-update-injection + contradiction-in-flight si agganciano a questo confine-di-sezione realizzato dal wrapper; `turn_end`/`message_end`/`session.steer()` restano fallback. ⚠️ valore gated sul training (interruption-robust, −60% se non addestrato, arXiv 2510.11713).
 2. **LoRA routing**: primario = **model-entry per adapter in `models.json` + `pi.setModel`** (dichiarativo); fallback = `before_provider_request` payload-rewrite. ⚠️ **Single point of validation**: il `model` id della request OpenAI deve combaciare col nome-adapter vLLM (`--lora-modules <name>=<path>`) → da validare in 0.1 (vale per primaria E fallback).
 3. **Context-window**: niente hard-cap nativo. La window è **enforced da NOI** nell'hook `context` (filtro/rimpiazzo messaggi); `getContextUsage`/`ctx.compact` sono *segnale* + *fallback di compattazione*.
 4. **Secrets assistant-side**: `tool_result` redige l'output dei tool (atomico, affidabile); `message_end` redige in modalità non-streaming (MVP TUI) ma in **streaming** (Fase-3) è **detect-non-prevent** → la prevenzione reale resta L1 (training) + L2 (`SECRET#n` opachi, il valore raw non entra mai nell'output).
@@ -53,7 +53,7 @@ Verifica su `pi.dev/docs/latest/*` + sorgente `github.com/earendil-works/pi`. **
 | C9 | secrets-map Fase-0 model-driven (`add_secret`) ma `add_secret` è Fase-1 | MEDIA | Fase-0 = **map statica seedata + exact-match scanner** (deterministico); `add_secret` model-driven → Fase 1. |
 | C10 | explicit-attention (C prompt-only) e task-decomposition plan/execute = catalog-MVP ma in Fase-3/assenti | MEDIA | **(C) prompt-only → Fase 1** (è solo marker nel context); loop **plan/execute → Fase 1** (spina dorsale Classe B). Solo aux-loss/architetturale (B/A) resta Fase 3. |
 | C11 | Walking-skeleton = 4 test isolati, non 1 flusso verticale | MINORE | Acceptance Fase 0 = **un singolo scenario end-to-end** (classe (2) WITHOUT-hint del gold) che attraversa tutti i layer in una run. |
-| C12 | Concept `external-update-injection` ancora su modello pause/resume mid-stream | MINORE (igiene) | Da propagare la correzione "turn-boundary/steering" nel concept file (azione separata). |
+| C12 | Concept `external-update-injection` ancora su modello pause/resume mid-stream | MINORE (igiene) | **RISOLTO 2026-06-27**: propagata la correzione **MinD multi-call** (`stop=["</section>"]` + APC, NON turn-boundary) nel concept file + catalog Classe-B + div-1; section-boundary implementato da noi, gated sul training. |
 
 ---
 
@@ -116,7 +116,7 @@ Zero dipendenza da pi e dal modello. Valida i **dati gold**, che è metà del va
 
 ### Fase 3 — Post-MVP
 - Routing avanzato: token-routing `<load:X>` · multi-expert segment-and-rerun · **steering vectors** (4° asse, [[../concepts/steering-vectors]]) · classifier BERT-tiny reale.
-- Dynamic context: **contradiction-detection** + **external-update-injection** su turn-boundary/steering · explicit-attention aux-loss/architetturale.
+- Dynamic context: **contradiction-detection** + **external-update-injection** su **section-boundary (multi-call MinD `stop=["</section>"]` + APC)**, gated sul training interruption-robust · explicit-attention aux-loss/architetturale.
 - Memory layer (SQLite+embedding), frontend Web/Tauri.
 
 ---
@@ -138,8 +138,8 @@ Zero dipendenza da pi e dal modello. Valida i **dati gold**, che è metà del va
 | lora-router three-tier (E) | model-entry + `pi.setModel` (primario) · `before_provider_request` (fallback) | **CONFERMATA** (nome-adapter da validare 0-B.2) | 1/3 |
 | error-memo-system (D) | `appendCustomEntry` + inject `<memory>` | **CONFERMATA** | 2 |
 | steering vectors (E, 4° asse) | inference-level (toggle), fuori dagli hook testuali | DA-IMPL serving | 3 |
-| contradiction-detection (B) | `turn_end`/`message_end`/steering (NON section-boundary) | **DA-ADATTARE** | 3 |
-| external-update-injection (B) | `session.steer()`/`streamingBehavior:"steer"` al confine di turno | **DA-ADATTARE** | 3 |
+| contradiction-detection (B) | section-boundary via multi-call `stop=["</section>"]` (MinD) + APC; `turn_end`/steer = fallback | **ADATTATA** (gated training) | 3 |
+| external-update-injection (B) | multi-call `stop=["</section>"]` (MinD) + APC; caso d'uso primario = msg utente async (msg 203) | **ADATTATA** (gated training) | 3 |
 
 ---
 
