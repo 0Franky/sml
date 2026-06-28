@@ -235,6 +235,22 @@ confidence: provisional
 
 ---
 
+## Dimensione 10 — Ingegneria orizzontale (trasversale)
+
+*Non "cosa fa il modello" ma l'**ingegneria attorno** che abilita i claim — scoperta dall'agnostico come il gap più grosso (§RL-0). Diverse sono decisioni di **setup MVP irreversibili** se dimenticate. Consolidata qui nel corpo (era solo in §RL-0).*
+
+| # | Tecnica | Cos'è | Stato | Classif | Fase | Nota/rischio |
+|---|---|---|---|---|---|---|
+| **H1** | Reproducibility / experiment-tracking | seed/determinismo/lockfile/config-versioning/run-manifest (WandB/MLflow/TensorBoard) | 🆕 | F (infra) | setup MVP | claim non-riproducibile = morto in review; costo ~0 ora |
+| **H2** | Training observability | grad-norm/loss-spike/NaN + reward-collapse + KL-divergence monitoring | 🆕 | F (infra) | F2 (avvio RL) | RL diverge in silenzio → budget bruciato |
+| **H3** | Serving/deployment ops | **latenza reale hot-swap S-LoRA**, throughput vLLM, KV-budget 11GB, OOM-handling | 🆕 | F-serving | F1 | il claim three-tier ha bisogno di un numero di latenza |
+| **H4** | Data licensing / provenance | filtro GPL, ToS dei teacher-model, **provenance-manifest** | 🆕 | dati/processo | decisione MVP | north-star commerciale → vedi [[decisions/2026-06-28-open-decisions-briefing]] + Dim-7 |
+| **H5** | Cost/compute accounting | GPU-hour + $/esperimento tracciato (non stimato a posteriori) | 🆕 | F (infra) | MVP | budget <$200 = vincolo hard |
+| **H6** | Tokenizer / special-token | aggiungere `<load:X>`/`<section>`/`[V][A][?]` al vocab + embedding init | 🆕 | F (setup) + S | setup MVP | load-bearing; **irreversibile a metà training** |
+| **H7** | Artifact/adapter versioning | naming/versioning/compat-matrix (LoRA-vN ↔ base-vM) degli N verticali | 🆕 | F (infra) | F1 | è l'unità di prodotto del three-tier |
+
+> **H1/H5/H6 = checklist di setup MVP** (costo ~0, irreversibili dopo). **H3** (latenza hot-swap) e **H4** (licensing) sono parte integrante dei claim. Dettaglio originario + razionale in §RL-0.
+
 ## Gap noti / domande aperte (da chiudere col review-loop)
 
 1. **Priorità di adozione**: dato il budget MVP (2080Ti, <$200), quali NEW danno il maggior ROI subito? Candidati: QLoRA/NF4 (abilita FT locale), LoRA+ (cheap win), AWQ (serving), difficulty-filtering.

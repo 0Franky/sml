@@ -65,6 +65,18 @@ Classifica **ciascuna metà** separatamente nel tree. È il passo che la maggior
 - **Q6**: fallback = soglia `getContextUsage` → compatta → stato **DEGRADATA-MA-UTILE** → **spedisci il fallback in Fase-1**, addestra la skill in Fase-2/3.
 - **Output**: `{F+S · stato=INERTE(skill)/DEGRADATA(con-fallback) · gate=fallback-F1, skill-F2/3 · spec-S=AdaCoM+calibration}`.
 
+## Worked example 2 — `low-confidence → gather/ask` attraverso il tree `[review-loop add]`
+
+Contrasto utile con autocompact: qui il fallback deterministico è **debole** → la skill è ancora più critica.
+- **Q0 scomponi**: {meccanismo} = strumenti di gather (grep/file-search/web come tool callable) + il ramo **ASK** (domanda non-bloccante all'utente); {decisione} = riconoscere la bassa-confidence (trigger token-non-in-contesto) + scegliere INTERNO/ESTERNO + budget-K + *quando* fermarsi e chiedere.
+- **Q1/Q1a**: gli strumenti di gather e il canale-ASK sono tool/hook wrapper → **F-harness**.
+- **Q2**: riconoscere l'incertezza + decidere gather-vs-ask + dove cercare → **S**.
+- **Q3**: Q1 ∧ Q2; lo stato-senza-training della metà-S è **INERTE** (il caso reale del *riferimento-opaco-a-repo-privato*, dove il gather-cieco ha confabulato, È il fallimento di questa skill) → **F+S**.
+- **Q4**: regime SFT-traiettorie → **RL uncertainty-aware**; label = **EVPI twin-pair** (coppia gemella dove l'info NON cambia l'esito → si misura se gather/ask era *necessario*); reward = "l'info recuperata/richiesta ha **cambiato la decisione**?" col **costo della domanda** (EVPI/SELAUR), MAI il gesto di gather (participation-hack). Calibration-reward rilevante (è una decisione sotto incertezza).
+- **Q5**: **INERTE**.
+- **Q6**: fallback deterministico **debole** — si può forzare un gather su token-non-in-contesto, ma rischia **over-asking** e non dà stato PIENA → resta gated sul training.
+- **Output**: `{F+S · stato=INERTE · gate=training F2-3 · spec-S=EVPI-twin-pair + uncertainty-reward + costo-domanda}`.
+
 ## Anti-pattern (da evitare — e da flaggare in review)
 
 1. **Training travestito da feature**: presentare una `F+S` come consegnabile quando il valore è gated su skill non-addestrata (guscio inerte). → il difetto che §2ter ha corretto.
@@ -93,4 +105,4 @@ La classificazione training-vs-harness è **ortogonale ma complementare** a un p
 - [[reward-hacking-mitigation]] (outcome-anchored, scorer≠scored, participation-hack)
 - [[self-analysis-strategy-revision]], [[low-confidence-gather-and-reorg]], [[harness-capabilities-as-files]], [[dependency-aware-error-recovery]], [[situational-policy-table]], [[interruption-robust-reasoning]] (capacità F+S istanze)
 
-> **Provenance**: v1 dopo review-loop 3 reviewer (ML-training / wrapper-systems / agnostico, 2026-06-27). Fix applicati: Step-0 scomposizione, split F-serving (stock/custom) + F-harness per il verifier, structured-decoding classificato, soglia-materialità + retro-declass Q3↔Q6, Q4→checklist+pointer, worked example, anti-pattern #4/#5, nota training-spec. **Next**: regola fondamentale CLAUDE.md #11; eventuale 2° worked-example (low-confidence).
+> **Provenance**: v1 dopo review-loop 3 reviewer (ML-training / wrapper-systems / agnostico, 2026-06-27). Fix applicati: Step-0 scomposizione, split F-serving (stock/custom) + F-harness per il verifier, structured-decoding classificato, soglia-materialità + retro-declass Q3↔Q6, Q4→checklist+pointer, worked example, anti-pattern #4/#5, nota training-spec. **Next**: ✅ CLAUDE.md #11 fatta · ✅ worked-example 2 (low-confidence) aggiunto (2026-06-28). Resta: convertire le decisioni-aperte in ADR datati dopo conferma utente.
