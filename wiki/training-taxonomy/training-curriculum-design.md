@@ -57,8 +57,55 @@ Vedi [[provenance-manifest]] per dataset→teacher→licenza→verdetto. Sintesi
 
 **Adotta il curriculum a 5 stadi sopra** (la tua ipotesi a round + le 3 correzioni + toggle/merge). È SOTA, commercial-clean, e dimensionato al nostro budget (l'RL nostro = poche centinaia/migliaia di GPU-hours, NON le 140k H100-h di Nemotron-Ultra: 2-4 environment verificabili bastano per l'MVP, non 21). **Cosa NON prendere da Nemotron**: pretraining-from-scratch, NAS/Minitron-pruning (partiamo già piccoli), MoE/NVFP4, reward-model 235B, RL-21-environment.
 
+## 6. Verifica & decisioni aperte (review-loop 6 agenti, 2026-06-28)
+
+> Review-loop: 5 specialisti per-stadio + 1 agnostico. I design dettagliati per-stadio sono in [[curriculum-stages-detail]]. Qui la **mia verifica** (cross-check di coerenza) + i **gap load-bearing** scovati dall'agnostico + le **decisioni aperte** che ne derivano.
+
+### 6.1 Verifica di coerenza (mia, sui 5 stage-agent) `[verificato]`
+I 5 design sono **coerenti** tra loro e con i nostri doc (volumi ~14-18K St.1 / ~20-25K St.2 / RL prompt-set 1-3K MVP / preference ~2.3K — allineati a `data-volume-estimate`). Convergenza su: SFT-teoria→RL-verificabile→preference-corto→merge; reward outcome-anchored; GRPO+Dr.GRPO+clip-higher (no GRPO-vanilla); calibration-reward (RLCR) come vincolo (anti GRPO-overconfidence); DPO (non RLOO-su-RM) per la preference a budget basso; decontaminazione 3-stadi (n-gram→MinHash→embedding+judge). **Caveat ricorrente confermato da 2 fonti indipendenti**: il full-FT del Tier 1 **non sta** sul 2080Ti.
+
+### 6.2 ⭐ Tabella pesi-per-stadio (risolve il gap di componibilità — agnostico #1/#2) `[INFERRED, da confermare]`
+Il gap più grave: il curriculum lasciava implicito *su quale base* vivono le LoRA e *cosa si aggiorna* a ogni stadio. Risoluzione:
+
+| Stadio | Base di partenza | Trainable | Frozen | Output |
+|---|---|---|---|---|
+| **1 — SFT Tier1** | Qwen3-4B vergine | tutti i pesi (full-FT o QLoRA) | — | Tier1 cold-start (org) |
+| **1-RL — RL Tier1** | Tier1 post-SFT | **i pesi del Tier1** (metodi organizzativi: planning/criticality/safety *in azione*) | — | **Tier1 performante** → poi **CONGELATO** |
+| **2 — SFT coding** | Tier1 (CONGELATO) | LoRA (Tier 2/3) | Tier1 | Tier1 + LoRA-coding (compongono ✓) |
+| **3 — RL coding** | Tier1-frozen + LoRA | **solo la LoRA** | Tier1 | LoRA coding specializzata |
+| **4 — Preference** | Tier1/composto | breve (Tier1 o LoRA-pref) | — | allineato |
+| **5 — Merge** | checkpoint reasoning+chat | interpolazione α | — | merged |
+
+> **Punto chiave (corretto, utente msg 266)**: **DUE fasi RL** — prima sul **Tier1** (l'SFT da solo NON basta a renderlo performante; l'RL gli fa sviluppare *come/quando* usare i metodi organizzativi), poi sulle **LoRA** (specializzazione coding). Il Tier1 si **congela DOPO il suo RL**; l'RL coding aggiorna **solo le LoRA**, che vivono sopra il Tier1-frozen → si compongono al runtime. ⚠️ Implicazione budget: l'RL-Tier1 è un costo aggiuntivo (RL = voce a 4 cifre) — pesa sulla decisione hardware §6.5.b.
+
+### 6.3 Budget onesto (agnostico — corregge l'ottimismo) `[EXTRACTED]`
+- **Il full-FT Tier1 (4B) richiede A100 cloud** (~60-80GB tra pesi+grad+optimizer-states+attivazioni con ZeRO/offload), **NON** il 2080Ti. Il 2080Ti serve per walking-skeleton/serving + QLoRA-coding (Stadio 2), non per lo Stadio 1.
+- Il **"<$200"** di `data-volume-estimate` è **SFT-only, best-case, single-run**. Realistico: + **fattore-iterazione 5-10×** (un curriculum a 5 stadi non si azzecca al 1° run) → **~$1-3K** per il curriculum completo; l'**RL (Stadio 3) è la voce a 4 cifre**, già rimandata a Wave 6+.
+- **Implicazione onesta**: l'**MVP-v1 economico è SFT-only**; la tesi "org-first batte i più grandi sul coding **agentico governato**" (che è agentica = RL) **non è pienamente dimostrabile nell'MVP<$200** → va dichiarato. Alternativa per abbassare il costo Tier1: valutare **QLoRA anche per il "full"-FT Tier1** (invece del full-FT puro) — ablation.
+
+### 6.4 5 stadi = PRODOTTO FINALE · MVP = sottoinsieme di validazione (utente msg 262) `[reco]`
+Il curriculum a 5 stadi va fatto **TUTTO per il prodotto finale**. L'**MVP** = sottoinsieme delle fasi a **maggior valore** che ci dicono *"la strada è giusta"* (allinea a `project_mvp_scope`: Mini Three-Tier, Tier1-mini + 1 LoRA frontend):
+- **TIENI nell'MVP**: Stadio 1 **ridotto** (regole-hard anti-leak/safety + marker + logica; soul/constitution completa → prodotto) · Stadio 2 (**1 LoRA frontend**) · **smoke-test componibilità** · **uno slice di Stadio 3 RL (1 environment)** — la tesi è "coding **agentico GOVERNATO**", senza un minimo di RL non la validiamo.
+- **TAGLIA dall'MVP** (→ prodotto/Wave 6+): Stadio 5 **merge**, **toggle reasoning-on/off**, **multi-environment RL** (>1 env), Stadio 3 RL completo, Stadio 4 preference, authoring constitution/soul completo.
+
+### 6.5 Decisioni aperte scaturite (→ `wiki/todo.md`)
+1. ✅ **CHIARITO (utente msg 262/266)**: flusso = **Tier1 [SFT → RL] → FREEZE → LoRA [SFT → RL]**. RL **sia sul Tier1** (sviluppa i metodi organizzativi — l'SFT da solo non basta), **sia sulle LoRA** (coding). Tier1 si congela **dopo** il suo RL; l'RL coding aggiorna **solo le LoRA**. **Reco LoRA-size APPROVATA** (utente msg 266): il rank fissa il *tetto* della divergenza dal Tier1 (la divergenza reale la controllano data/replay/init-MiLoRA/DoRA); a inferenza l'output è (Tier1+LoRA) → un LoRA troppo grande può "coprire" il Tier1 senza toccarne i pesi. → rank **MINIMO** che centra il target coding tenendo alta la **ritenzione-Tier1**; start **r=64**, **ablazione r∈{32,64,128}** (= smoke-test §6.5.5). + **valutare tipi/config di LoRA diversi per i verticali Tier2/3** (rank/init/PEFT-variant per dominio, se sensato — ablation).
+2. **Hardware/budget Tier1**: **QLoRA-Tier1** (base 4-bit ~2GB + LoRA → ~6-8GB) addestra **anche il Tier1 in locale/cheap** (reshaping meno profondo) — ottimo per l'MVP; **full-FT-Tier1** (max qualità org-first) = A100 cloud (pochi $) per il prodotto. NB: gli **80GB** del full-FT sono la macchina (optimizer-states+grad+master-fp32), NON il modello (~8GB). → ablation + scelta MVP-vs-prodotto.
+3. **Tokenizer/special-token init** (già D2) — confermato necessario in setup.
+4. **Eval-protocol statistico + baseline-competitor**: contro CHI dimostriamo "batte i più grandi"? (Qwen3-4B vergine + ≥1 modello più grande), n-seed, CI.
+5. **Smoke-test componibilità three-tier = priorità #1 de-risking** (Tier1-mini-FT + 1 LoRA: il composto degrada Tier1 o coding vs standalone?). **Prima** dell'authoring dati su larga scala.
+
+### 6.6 Reward-hacking watch (agnostico) — gap da chiudere nelle foglie
+- **Stadio 3 test-exec** (il più esposto): test **read-only / ripristinati da golden baseline** + mutation/causality-check (revert-fix→test-rossi) + held-out test non-visibili.
+- **Format-reward marker** (catena-fantasma): premiare solo `[V]`↔artefatto-reale-nel-trace, mai la forma (XGrammar garantisce già la sintassi).
+- **Stadio 4 preference** (sycophancy): anti-sycophancy pairs + length-penalty + judge anti-bias.
+- Regola: phase-reward/twin-pair/RH-monitor **gate dietro ablation**, mai tutti dal giorno zero.
+
+### 6.7 Anti-forgetting gate (gap agnostico — da aggiungere) `[reco]`
+Tra Stadio 2 e dopo Stadio 3: **eval di non-regressione BLOCCANTE** della suite Tier1 (safety/criticality/planning + HumanEval/MMLU per il base) prima/dopo → fail se scende oltre soglia (es. >3-5pt) → aumenta replay/MiLoRA. Il 10% replay da solo è mitigazione debole non calibrata.
+
 ## Linked
-- [[staged-curriculum-training]] (la nostra curriculum 4-stage originale — questo la raffina con Nemotron) · [[data-volume-estimate]] (volumi) · [[provenance-manifest]] (dataset/licenze)
+- [[curriculum-stages-detail]] (i 5 design dettagliati per-stadio + piano dataset/decontaminazione) · [[staged-curriculum-training]] (la nostra curriculum 4-stage originale — questo la raffina con Nemotron) · [[data-volume-estimate]] (volumi) · [[provenance-manifest]] (dataset/licenze)
 - [[../decisions/2026-06-28-decisions-d1-d5]] (D1/D5) · [[../decisions/2026-06-28-open-decisions-briefing]] Parte 3 · [[../sota-techniques-catalog]] (Dim-2 training, Dim-7 dati)
 - [[../concepts/reward-hacking-mitigation]] (inoculation + curriculum + scorer≠scored) · [[../concepts/lora-initialization-strategy]]
 
