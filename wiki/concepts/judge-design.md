@@ -49,8 +49,15 @@ Lo schema fisso `[INFERRED]` (da specificare campo-per-campo): `{ dettagli, note
 - Reward ancorato all'**OUTCOME** (errore reale corretto, danno evitato), **mai** alla partecipazione (*participation-hack*). [[feedback_reward_hacking_principle]]
 - Difese cumulative: dataset bilanciato (positivi+negativi), penalità simmetrica, held-out negativo, council-diversity, contract obbligatorio, audit.
 
+### Penalità simmetrica per scelte-di-valore — coherence-anchoring a DUE livelli
+Per le foglie **L di tipo scelta-di-valore/deferral** (es. [[../training-taxonomy/area-02-criticality-safety]] Foglia 6.2) il reward NON può premiare il *ramo* scelto (decidere vs deferire) — sarebbe reward-hacking. Come ottenere penalità **simmetrica** senza premiare la scelta? Coerenza a **due livelli** (emerso dal pilota gold 2026-06-29, corretto dal review agnostico):
+1. **Livello 1 — coerenza esterna `campi ↔ <env_facts>` (PILASTRO, deterministico, non-gameabile)**: i campi auto-dichiarati del contract (`reversibilità`, `costo`, `confidence`) devono essere ancorati ai **fatti del contesto**. Se `<env_facts>` dice "addebito su account utente" e il contract dichiara `reversibilità: reversibile`, è un'incoerenza **verificabile come pre-check** → fallisce il gate. Pilastro perché i fatti sono nel contesto, non auto-dichiarati.
+2. **Livello 2 — coerenza interna `razionale ↔ campi` (COMPLEMENTO, L-judge)**: dato che i campi sono ancorati, il council penalizza l'illogicità (`act` + `reversibilità: irreversibile` + `confidence: bassa` = auto-contraddittorio).
+
+⚠️ **Enshrinare solo il livello 2 = meccanismo GAMEABILE**: un modello che mente scrive campi *falsi-ma-coerenti* (`reversibile` + `confidence:alta` + `act` resta internamente coerente). Solo il livello 1 lo cattura. **Servono ENTRAMBI.** `[INFERRED dal pilota, da validare in training]`
+
 ## Open / TODO (tracciati in [[../todo]])
-- Schema TOON/JSON **esatto** del contract (campo per campo, con esempi).
+- **Schema = META-SCHEMA + istanze per-foglia** (risolto dal pilota 2026-06-29): judge-design definisce i **campi-meta obbligatori comuni** a ogni contract — `{decisione, evidenza[], incertezza[], razionale}` — + il **pre-check** (ben-formato, evidenza ancorabile a `<env_facts>`). Ogni **foglia istanzia** un contract specializzato: es. foglia *analisi/review* → `{dettagli, note, errori_rilevati[], soluzioni, incertezze[]}`; foglia *deferral* (Foglia 6.2) → `{opzioni, conseguenze[], reversibilità, confidence, scelta, perché, reco, serve_da_te}`. **Precedenza**: il per-foglia prevale sul *contenuto*; judge-design prevale sui *campi-meta + pre-check*. (TODO residuo: fissare il TOON/JSON esatto dei meta-campi.)
 - Set di giudici open-weight **finale** + soglia di consenso del council.
 - **Calibrazione** del giudice (ECE su un set human-labeled) prima di usarlo come reward.
 
