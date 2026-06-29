@@ -9,7 +9,7 @@
 import {
   DEFAULT_CFG, collectMetrics, classifyPressure, currentDepth, canEnter, evaluateTrigger,
   buildFrame, serializeFrame, getFocusStack, enterFocus, popFocus, realignParent, buildNestedWorkspace,
-  shouldEmitReorgHint, markReorgEmitted, requireGateBlocks,
+  shouldEmitReorgHint, markReorgEmitted, requireGateBlocks, maybeAutoFocus,
 } from "../../src/nested-compact.mjs";
 import { VarsQueue } from "../../src/vars-queue.mjs";
 import { ConversationStore } from "../../src/conversation-store.mjs";
@@ -80,6 +80,33 @@ try {
     vq.setMeta("_gather_token", ""); // come azzeramento a inizio sessione / consume
     ok(requireGateBlocks(vq, { mode: "require", minTasksForForce: 5 }) === true, "REQUIRE: token azzerato → ri-blocca (no gather-once-forever)");
     vq.close();
+  }
+
+  // 2d) maybeAutoFocus — autofocus.mode=auto (OQ-A, msg 551) -------------------
+  //     NB: now ≥ cooldownMs perché shouldEmitFocusHint confronta now-lastTs(=0) col cooldown (primo enter ammesso).
+  {
+    const T = 1_000_000; // > cooldownMs → primo auto-enter ammesso
+    const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+    for (const id of ["A", "B", "C"]) vq.addTask(id, id); // 3 task ready (grafo piatto → tutti ready)
+    ok(maybeAutoFocus(vq, { tokens: 10, contextWindow: 100, now: T }) === null, "AUTO: pressione bassa (10%) → no-op");
+    const r = maybeAutoFocus(vq, { tokens: 80, contextWindow: 100, now: T }); // 80% ≥ tokenMatrioskaPct
+    ok(r && r.scopeId && getFocusStack(vq).length === 1, "AUTO: pressione matrioska + ready → auto-enter (scope aperto)");
+    ok(maybeAutoFocus(vq, { tokens: 80, contextWindow: 100, now: T + 1 }) === null, "AUTO: già in focus → no-op");
+    vq.close();
+  }
+  // 2e) maybeAutoFocus — no-op senza ready o entro cooldown -----------------------
+  {
+    const vqB = new VarsQueue(":memory:", { agent: "orchestrator" });
+    vqB.addTask("Z1", "z1"); vqB.addTask("Z2", "z2", { deps: ["Z1"] });
+    vqB.setTaskStatus("Z1", "done"); vqB.setTaskStatus("Z2", "blocked"); // Z1 done (esce), Z2 blocked-status → open vuoto
+    ok(maybeAutoFocus(vqB, { tokens: 90, contextWindow: 100, now: 1_000_000 }) === null, "AUTO: nessun task ready/open → no focus vuoto");
+    vqB.close();
+    const vqC = new VarsQueue(":memory:", { agent: "orchestrator" });
+    vqC.addTask("Q", "q"); // ready
+    vqC.setMeta("focus_hint_ts", String(1000)); // simula un hint/enter appena emesso a t=1000
+    ok(maybeAutoFocus(vqC, { tokens: 90, contextWindow: 100, now: 1001 }) === null, "AUTO: entro cooldown → no-op (anti-thrash)");
+    ok(maybeAutoFocus(vqC, { tokens: 90, contextWindow: 100, now: 1000 + DEFAULT_CFG.cooldownMs + 1 }).scopeId, "AUTO: oltre cooldown → auto-enter");
+    vqC.close();
   }
 
   // 3) enterFocus — depth-guard (×3 ok, ×4 throw) ------------------------------

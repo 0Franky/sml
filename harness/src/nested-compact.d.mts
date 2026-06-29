@@ -49,6 +49,11 @@ export function markFocusHintEmitted(vq: VarsQueue, opts?: { now?: number }): vo
 export function shouldEmitReorgHint(vq: VarsQueue, opts?: { now?: number; cooldownMs?: number }): boolean;
 export function markReorgEmitted(vq: VarsQueue, opts?: { now?: number }): void;
 export function requireGateBlocks(vq: VarsQueue, cfg?: { mode?: string; minTasksForForce?: number }): boolean;
+export function maybeAutoFocus(
+  vq: VarsQueue,
+  usage?: { tokens?: number | null; contextWindow?: number | null; now?: number },
+  cfg?: Partial<NestedCfg>,
+): { scopeId: string; depth: number; sinceSeq: number } | null;
 
 export function buildFrame(vq: VarsQueue, opts?: { now?: number }): Frame;
 export function serializeFrame(frame: Frame, opts?: { displayCap?: number }): string;

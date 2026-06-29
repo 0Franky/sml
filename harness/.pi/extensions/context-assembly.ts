@@ -15,7 +15,7 @@ import { getVarsQueue, getConversationStore, closeAll } from "../../src/state-db
 import { assembleContext, buildResumeDigest, buildAimTail, buildExecutionOrderLines } from "../../src/context-assembler.mjs";
 import { buildMessagesLane } from "../../src/conversation-store.mjs";
 import { getConvId } from "../../src/session-context.mjs";
-import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint, markFocusHintEmitted, shouldEmitReorgHint, markReorgEmitted } from "../../src/nested-compact.mjs";
+import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint, markFocusHintEmitted, shouldEmitReorgHint, markReorgEmitted, maybeAutoFocus } from "../../src/nested-compact.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
@@ -63,6 +63,10 @@ export default function (pi: ExtensionAPI) {
     // messaggi DOPO l'ultimo checkpoint per questa conversazione (la chat pre-checkpoint è ripiegata nel digest).
     const checkpointSeq = Number(vq.getMeta(`_checkpoint_seq:${convId}`)) || 0;
 
+    // autofocus.mode=auto (OQ-A, msg 551): l'harness entra in focus DA SOLO sotto pressione matrioska, PRIMA di
+    // leggere lo stack → il workspace di QUESTO turno riflette già lo scope aperto. No-op in off/nudge (default nudge).
+    if (HARNESS_CFG.autofocus.mode === "auto") maybeAutoFocus(vq, { tokens, contextWindow });
+
     const stack = getFocusStack(vq);
     let workspace: string;
     if (stack.length > 0) {
@@ -75,7 +79,9 @@ export default function (pi: ExtensionAPI) {
       const base = assembleContext(vq);
       const trig = evaluateTrigger(vq, { tokens, contextWindow }, HARNESS_CFG.trigger);
       let hint = "";
-      if (trig.recommend === "matrioska" && shouldEmitFocusHint(vq)) {
+      // focus_hint = il NUDGE: emesso SOLO in autofocus.mode='nudge' (default). In 'off' niente segnale; in 'auto'
+      // l'auto-enter sopra ha già gestito (o siamo passati al ramo nested). Il reorg_hint resta indipendente (anti-cecità).
+      if (HARNESS_CFG.autofocus.mode === "nudge" && trig.recommend === "matrioska" && shouldEmitFocusHint(vq)) {
         hint = `\n<focus_hint watch="${trig.metrics.watchCount}"${trig.metrics.percent != null ? ` ctx="${Math.round(trig.metrics.percent * 100)}%"` : ""}>Contesto in pressione: valuta enter_focus su un sotto-insieme di task per lavorare a fuoco (pop_focus al termine).</focus_hint>`;
         // gathering.mode=inject (msg 531): allega INLINE la vista ordinata, così quando l'harness nudga il focus il
         // modello non sceglie il subset alla cieca. Low-ceremony (niente focus dedicato). Gate proporzionalità: solo
