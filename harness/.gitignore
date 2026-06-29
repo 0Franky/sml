@@ -5,6 +5,8 @@ dist/
 .env.*
 # sandbox runtime artifacts
 sandbox/_run/
+# pi runtime state (vars.db datastore, created at runtime — not source)
+.pi/state/
 # OS
 .DS_Store
 Thumbs.db

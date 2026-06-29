@@ -24,28 +24,32 @@ La **ricerca** (Tier 1/2/3, training, LoRA) vive nel serving layer; pi la rende 
 - **0.3** `verifier-sandbox` — runner che esegue i verifier dei gold-example (git/python) in sandbox isolata → **valida i gold** (è il bottleneck-buster del rollout gold). ✅ **FATTO** (6/6 spec eseguibili PASS via pip-locale 2026-06-29; build Docker gated finché il daemon è giù).
 - **0.4** `secrets-guardrail` (scan su `tool_result`) + `pre-flight` (gate su `tool_call` per azioni distruttive).
 
-## Setup + Run con il TUO provider (dogfooding del metodo, PRIMA dell'SLM)
+## Setup + Run — A/B "pi vanilla" vs "pi + nostro context" (con QUALSIASI LLM, anche senza l'SLM)
 
-Le extension sono **provider-agnostiche** (pi parla OpenAI-compatible) → puoi usare l'harness — col nostro **context strutturato + stato persistente + guardrail + memo** — con un modello forte esistente e **valutare l'efficacia del metodo prima che l'SLM esista**.
+> **Architettura** (NON un fork): l'harness = **pi (dipendenza npm) + le nostre extension** (`.pi/extensions/`). pi porta GIÀ **tutti i provider nativi** (Anthropic/Claude built-in, OpenAI, Gemini…) + **OAuth** (`/login`). Le nostre extension aggiungono SOTTO — `<context>` strutturato + stato persistente + guardrail + memo — e sono **provider-agnostiche**. → chiunque può confrontare **`pi` (vanilla)** vs **`pi -e <nostre extension>` (nostro context)** col proprio LLM, **prima** che l'SLM esista. `serving/models.json` è **OPZIONALE** (solo per endpoint custom: vLLM locale, self-hosted, shim Gemini), NON limita i provider.
 
 ```bash
-npm ci                 # dipendenze da lockfile (@earendil-works/pi-coding-agent + typebox + typescript)
-npm run typecheck      # valida le extension contro i tipi reali di pi (GREEN)
-npm test               # smoke unit (vars-queue 24 + context 11 + facts 7 + sliding 12) + test:scenarios (secrets-guardrail 9 + organization 13 + note-after-finding 8 + temp-read 10 + long-run 17)
+npm ci                 # @earendil-works/pi-coding-agent + typebox + typescript (da lockfile)
+npm run typecheck      # extension vs tipi reali di pi (GREEN)
+npm test               # smoke unit (24+11+7+12) + test:scenarios (9+13+8+10+17)
 
-# 1) scegli un provider in serving/models.json e imposta le env. Es. provider GENERICO:
-export OAI_BASE_URL="https://api.openai.com/v1"   # o OpenRouter / Together / shim Anthropic-compat / vLLM remoto
-export OAI_API_KEY="sk-..."                        # la TUA key  (Ollama locale: nessuna key, usa il provider 'ollama-local')
-# 2) copia/merge serving/models.json in ~/.pi/agent/models.json
-# 3) lancia pi con le nostre extension caricate:
-pi                                                 # TUI nativa (auto-carica .pi/extensions/ se configurato)
-#  oppure esplicito (via affidabile):
-pi -e ./.pi/extensions/context-assembly.ts -e ./.pi/extensions/vars-queue.ts \
-   -e ./.pi/extensions/secrets-guardrail.ts -e ./.pi/extensions/pre-flight.ts \
-   -e ./.pi/extensions/error-memo.ts -e ./.pi/extensions/verifier-sandbox.ts
+# --- prova E2E HEADLESS (no TUI): dimostra che gira end-to-end con un provider reale ---
+#   richiede GEMINI_API_KEY in harness/.env (gitignored). VERDE = context iniettato + 15/15 nostri tool + pre-flight blocca rm-rf + secrets redatti.
+node src/_e2e-pi-run.mjs
+
+# --- USO INTERATTIVO (TUI nativa di pi; da questa cartella harness/ pi auto-carica .pi/extensions/) ---
+# A) DOGFOOD CON CLAUDE — col TUO abbonamento, NIENTE API key (Claude è built-in in pi):
+pi                              # TUI: poi  /login anthropic  (OAuth browser, una volta)
+                                #           seleziona un modello Claude (es. claude-sonnet-4-5 — Sonnet=reco per il test, Haiku=solo smoke)
+#   → chatti con Claude col NOSTRO context attivo sotto.  (fallback esplicito: pi -e ./.pi/extensions/<ognuna>.ts)
+#
+# B) A/B: la stessa sessione SENZA le nostre extension = pi VANILLA → confronti il comportamento.
+#
+# C) altri provider via API key (es. Gemini): metti GEMINI_API_KEY in harness/.env + carica ANCHE gemini-compat.ts
+#    (toglie il campo `store` che l'endpoint Gemini rifiuta con HTTP 400). Per Claude/OpenAI NON serve.
 ```
 
-L'unica cosa che serve da te = **il provider (baseUrl + key)**. Tutto il resto è già wired. Lo stato vive in `.pi/state/vars.db` (sopravvive al compact).
+L'unica cosa che richiede TE = l'**auth del provider** (per Claude: `/login anthropic` interattivo, una volta — l'OAuth non è automatizzabile). Tutto il resto è già wired. Lo stato vive in `.pi/state/vars.db` (gitignored, sopravvive al compact). E2E provato 2026-06-29 (`src/_e2e-pi-run.mjs`, verde).
 
 ## Extension attive (`.pi/extensions/`) — tutte typecheck-green
 
@@ -58,8 +62,9 @@ L'unica cosa che serve da te = **il provider (baseUrl + key)**. Tutto il resto �
 | `secrets-guardrail.ts` | tool `add_secret` + `tool_result` | Redige output che matchano i pattern statici (incl. **Google `AIza…` = GEMINI_API_KEY**) **+ la secrets-map dinamica** (riferimenti opachi per-sessione, in-memory). Logica in `src/secrets-redact.mjs` (thin-wrapper, smoke 9/9). |
 | `pre-flight.ts` | `tool_call` | Blocca azioni distruttive (`rm -rf`, `git reset --hard`, `mkfs`, `dd`…) prima dell'esecuzione. |
 | `verifier-sandbox.ts` | tool `run_verifier` | Esegue i verifier-spec dei gold (setup fixture + assert oracoli) in sandbox, ritorna pass/fail. |
+| `gemini-compat.ts` | `before_provider_request` | **Compat-shim provider**: rimuove dal body i campi OpenAI-only (`store`/`metadata`/`parallel_tool_calls`/`reasoning_effort`) che l'endpoint Gemini OpenAI-compat rifiuta con HTTP 400 (→ risposta vuota silenziosa). Caricala SOLO con Gemini; per Claude/OpenAI non serve. Scoperto+fixato nell'e2e 2026-06-29. |
 
-**API pi verificata** (v0.80.2): `before_agent_start` · `tool_call` (gate) · `tool_result` (transform array) · `registerTool` (typebox params). `verifier-sandbox` usa una tempdir (Fase 2: Docker).
+**API pi verificata** (v0.80.2): `before_agent_start` · `tool_call` (gate) · `tool_result` (transform array) · `before_provider_request` (mutate body) · `registerTool` (typebox params). **E2E headless provato** (`src/_e2e-pi-run.mjs`, 2026-06-29): `createAgentSession` + `AuthStorage.inMemory` + `ModelRegistry.registerProvider` + `bindExtensions` → turno reale verde (context iniettato, 15/15 tool, guardrail attivi). `verifier-sandbox` usa una tempdir (Fase 2: Docker).
 
 ## Roadmap
 

@@ -1,5 +1,5 @@
 {
-  "_comment": "Provider per pi (API pi verificata: api='openai-completions'). Copia/merge in ~/.pi/agent/models.json. Scegli UN provider e riempi baseUrl + apiKey. Le nostre extension (.pi/extensions/) funzionano con QUALSIASI provider OpenAI-compatible → puoi dogfoodare il metodo PRIMA dell'SLM.",
+  "_comment": "⚠️ OPZIONALE — questo NON è 'la lista-provider' dell'harness e NON limita nulla. Il nostro harness = pi (che ha GIÀ TUTTI i provider nativi: Claude/Anthropic built-in, OpenAI, Gemini, ecc. + OAuth via `/login`) + le nostre extension (.pi/extensions/). Per i provider STANDARD usa la config NATIVA di pi — es. per Claude col TUO abbonamento basta `/login anthropic` nella TUI (niente da mettere qui, niente API key). Questo file serve SOLO per endpoint CUSTOM/OpenAI-compatible non built-in: un vLLM locale (il nostro SLM futuro), un self-hosted, o lo shim Gemini-OpenAI-compat. Copia/merge in ~/.pi/agent/models.json SOLO le voci che ti servono. Le nostre extension sono provider-agnostiche → chiunque può fare A/B: `pi` (vanilla) vs `pi -e <le nostre extension>` (nostro context) con QUALSIASI modello, anche senza il nostro SLM.",
 
   "providers": {
 
@@ -15,7 +15,7 @@
     },
 
     "gemini": {
-      "_comment": "Google Gemini via endpoint OpenAI-compatible. Imposta $GEMINI_API_KEY (env o harness/.env gitignored — MAI nel repo). Model-id VERIFICATI via ListModels 2026-06-29 (NON esiste un 'gemini-3.1-flash' text puro: la 3.1-flash text è flash-lite). gemini-3.5-flash = più recente/forte.",
+      "_comment": "Google Gemini via endpoint OpenAI-compatible. Imposta $GEMINI_API_KEY (env o harness/.env gitignored — MAI nel repo). ⚠️ COMPAT: l'endpoint Gemini OpenAI-compat RIFIUTA il campo `store` (e altri OpenAI-only) iniettato da pi → HTTP 400 + risposta VUOTA silenziosa → carica ANCHE l'extension `.pi/extensions/gemini-compat.ts` (toglie store/metadata/parallel_tool_calls/reasoning_effort via hook before_provider_request). Default robusto: `gemini-3.1-flash-lite` (gemini-3.5-flash è un reasoning-model, spesso 503 e brucia il budget in reasoning). Verificato e2e 2026-06-29 (src/_e2e-pi-run.mjs).",
       "baseUrl": "https://generativelanguage.googleapis.com/v1beta/openai/",
       "api": "openai-completions",
       "apiKey": "$GEMINI_API_KEY",
