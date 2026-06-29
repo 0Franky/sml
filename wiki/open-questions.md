@@ -250,9 +250,11 @@ Concept dedicato: vedi [[../concepts/staged-curriculum-training]] per dettagli, 
 - 50 sample human eval per validare metriche automatiche.
 Ragione: standard benchmark non catturano la nostra granularità verticale; custom eval permette ablation rigorosa.
 
-### #19 Baseline da battere — open
-**Raccomandazione precompilata**: **Misura Qwen3-4B-Instruct-2507 base su quad-suite Phase 0**, numero diventa baseline. Ogni LoRA verticale ≥+5% sul domain-specific eval, no degrado >2% cross-domain.
-Ragione: hard target evita "vibe-check". Soglia 5% giustifica costo training.
+### #19 Baseline da battere + SOFFITTO di qualità — ⏳ open (parz. deciso 2026-06-29)
+**Due riferimenti distinti** (decisione utente msg 314 Q3):
+1. **BASELINE-da-battere** (floor, same-class): **Qwen3-4B-Instruct-2507 base** misurato su quad-suite Phase 0 → il numero diventa la baseline. Ogni LoRA verticale ≥ +5% sul domain-specific eval, no degrado > 2% cross-domain. *Ragione: hard target evita "vibe-check"; soglia 5% giustifica il costo training.*
+2. **SOFFITTO di qualità** (ceiling, reference, NON competitor-da-battere): **Claude Sonnet latest** (`claude-sonnet-4-6`) sulle stesse suite (criticality + coding). Serve a **calibrare il gap** verso un modello di frontiera molto più grande — *quanto ci avviciniamo al soffitto*, non un target da superare (irrealistico per un 4B). Si riporta come banda di riferimento nei grafici di eval (baseline-floor … nostro-modello … ceiling-Sonnet).
+   - ⚠️ **Vincolo ToS**: Claude può essere usato come **riferimento di misura/ceiling** (eval), MAI **dentro il loop di reward/training** (council judge resta OPEN — DSv4/Qwen, vedi [[concepts/judge-design]]). La distinzione è netta: misurare-vs ≠ trainare-con.
 
 ---
 
@@ -343,7 +345,7 @@ Sotto-domande emerse durante grill-me #1 (da approfondire in grill-me #2):
 | 16 | Framework | ⏳ open | rec: Unsloth → Axolotl → TRL+DeepSpeed |
 | 17 | Benchmark | ⏳ open | rec: quad-suite SWE+LCB+BCB+Aider |
 | 18 | Custom eval | ⏳ open | rec: 200/verticale + 50 human |
-| 19 | Baseline | ⏳ open | rec: Qwen3-4B base Phase 0 |
+| 19 | Baseline + soffitto | ⏳ open (parz.) | floor: Qwen3-4B base Phase 0 · **ceiling: Claude-Sonnet-4-6** (reference, non target; fuori dal reward-loop per ToS) |
 | 20 | Timeline | ⏳ open | da chiederti deadline |
 | 21 | Coinvolgimento | ⏳ open | rec: step-by-step strategy + auto training |
 | 22 | MVP | ✅ closed | Mini Three-Tier Tier1+3 (la reco "1 LoRA frontend prima di Tier 1" è SUPERATA) |

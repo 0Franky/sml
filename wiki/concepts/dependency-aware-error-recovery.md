@@ -52,7 +52,7 @@ Applico il decision-tree di [[training-vs-harness-classification]] (Step-0 scomp
 
 - **Regime** `[INFERRED]`: `SFT-format` (traiettorie errore→root-cause→traversal→fix-a-cascata) → **on-policy distillation cold-start** (student genera la traversata, teacher scora) → **RL-GRPO outcome-anchored** (coerenza finale verificabile). Il distillation step riduce il cold-start gap del GRPO su 4B.
 - **Label-generation = outcome-bisect** `[review-loop]`: il metodo concreto è l'**outcome-bisect** — si iniettano errori a nodi noti del dep-graph e si genera la ground-truth "quali downstream vanno toccati" *per costruzione* (dipendenze note). Cruciale: l'outcome-bisect **cattura anche le traiettorie degradate-ma-recuperate** — una traiettoria che ha imboccato un fix sbagliato ma poi ha propagato correttamente fino a uno stato finale coerente riceve reward sull'esito (coerenza end-to-end), non penalità sulla forma del percorso. Premia il *recupero verificato*, non la pulizia del cammino.
-  - Metodo SOTA di supporto (review-loop dim-5): **PALADIN** (arXiv 2509.25238, impara strategie compositive di recovery) + **AgentDebug** (trova il *critical error step* in una traiettoria fallita + re-rollout mirato) `[ref? da confermare]`.
+  - Metodo SOTA di supporto (review-loop dim-5): **PALADIN** (arXiv 2509.25238, impara strategie compositive di recovery) + **AgentDebug** (arXiv 2509.25370 — *"Where LLM Agents Fail and How They can Learn From Failures"*, trova il *critical error step* in una traiettoria fallita + re-rollout mirato). `[ref verificati 2026-06-29]`
 - **Foglia di training**: Area 2 (criticality/deps) + Area 4 (metacognition) + Area 16 (self-analysis).
 
 ## Linked
@@ -63,4 +63,4 @@ Applico il decision-tree di [[training-vs-harness-classification]] (Step-0 scomp
 - [[scientific-method-operating-protocol]] — il verify-loop deve verificare il downstream, non solo il sintomo.
 - [[reward-hacking-mitigation]] — outcome-anchored (coerenza end-to-end), anti participation-hack, scorer≠scored.
 
-> **Next**: foglia di training (Area 2/4/16) con example-space; ablare PALADIN/AgentDebug-style label-gen; verificare i ref (PALADIN 2509.25238, AgentDebug).
+> **Next**: foglia di training (Area 2/4/16) con example-space; ablare PALADIN/AgentDebug-style label-gen. Ref VERIFICATI 2026-06-29 (PALADIN 2509.25238, AgentDebug 2509.25370).

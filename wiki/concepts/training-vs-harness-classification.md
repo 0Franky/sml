@@ -92,7 +92,7 @@ Da indirizzare nelle foglie di training (vedi [[../training-taxonomy/area-04-con
 - **Calibration-reward wired** (non solo dichiarato): RLCR/ConfTuner-Brier nelle foglie confidence + **ECE/Brier come early-stop** di pari rango con l'accuracy.
 - **EVPI = controfattuale**: specificare il meccanismo (raccomandato **twin-pair by-construction**, riuso del pattern gold area-02), altrimenti "l'info ha cambiato la decisione" è un'etichetta non implementabile.
 - **AdaCoM frozen-agent**: precondizione = **Tier-1 base competente PRIMA** del training manager+frozen-agent (altrimenti scorer≈scored).
-- **Ref da verificare**: AdaCoM 2605.30785, SELAUR 2602.21158, on-policy-distill 2605.07725 hanno ID con YYMM futuro → `[ref?]` finché non confermati.
+- **Ref VERIFICATI 2026-06-29** (no-confab, 3 fonti): AdaCoM 2605.30785, SELAUR 2602.21158, on-policy-distill/SOD 2605.07725 — confermati reali (gli ID YYMM 26xx sono paper inizio-2026, legittimi).
 
 ## Relazione con la governance della conoscenza (pattern a tier) `[INFERRED]`
 

@@ -122,11 +122,11 @@ Applico il decision-tree di [[training-vs-harness-classification]] (Step-0 scomp
 
 ### Costo-della-domanda esplicito `[review-loop]`
 
-`[INFERRED]` ASK e gather **non sono gratis**: interrompono l'utente / spendono turni / latenza. Il reward deve includere un **termine di costo** esplicito (allineato a EVPI / SELAUR `[ref?]`): l'azione di gather/ask vale solo se *Expected Value of Perfect Information − costo > 0*. Senza il termine di costo, il reward bilanciato collassa verso l'over-asking (chiedere è "safe"). Il costo è ciò che rende Twin-B una vera penalità e non un pareggio.
+`[INFERRED]` ASK e gather **non sono gratis**: interrompono l'utente / spendono turni / latenza. Il reward deve includere un **termine di costo** esplicito (allineato a EVPI / SELAUR 2602.21158): l'azione di gather/ask vale solo se *Expected Value of Perfect Information − costo > 0*. Senza il termine di costo, il reward bilanciato collassa verso l'over-asking (chiedere è "safe"). Il costo è ciò che rende Twin-B una vera penalità e non un pareggio.
 
 ### Calibration-reward (RLCR / Brier) `[review-loop]`
 
-`[INFERRED]` Questa è una **decisione sotto incertezza**: la confidence stimata dal modello deve essere *calibrata*, altrimenti il trigger token-non-in-contesto da solo è troppo grezzo. Si wira un **calibration-reward** (RLCR / ConfTuner-Brier `[ref?]`) — mai self-report grezzo — con **ECE/Brier come metrica di early-stop** di pari rango con l'accuracy del gather. Vincolo noto: **GRPO erode la calibrazione** (cfr. [[training-vs-harness-classification]] Q4), quindi il calibration-reward va mantenuto attivo *durante* l'RL, non solo in SFT.
+`[INFERRED]` Questa è una **decisione sotto incertezza**: la confidence stimata dal modello deve essere *calibrata*, altrimenti il trigger token-non-in-contesto da solo è troppo grezzo. Si wira un **calibration-reward** (RLCR 2507.16806 / ConfTuner-Brier 2508.18847) — mai self-report grezzo — con **ECE/Brier come metrica di early-stop** di pari rango con l'accuracy del gather. Vincolo noto: **GRPO erode la calibrazione** (cfr. [[training-vs-harness-classification]] Q4), quindi il calibration-reward va mantenuto attivo *durante* l'RL, non solo in SFT.
 
 ### Hack-check (scorer ≠ scored) `[review-loop]`
 
@@ -139,7 +139,7 @@ Applico il decision-tree di [[training-vs-harness-classification]] (Step-0 scomp
 `[INFERRED]` Pipeline a 3 stadi standard per le skill metacognitive inerti (cfr. [[training-vs-harness-classification]] Q4 "cold-start a 3 stadi"):
 
 1. **SFT-format-bootstrap** — traiettorie con la sequenza canonica (trigger → split INTERNO/ESTERNO/privato → gather entro K → ASK come fallback) per insegnare il *formato* della decisione. Le grammar (XGrammar) possono forzare la forma del blocco-decisione, lasciando al training solo la semantica.
-2. **On-policy distillation cold-start** — lo student genera traiettorie, un teacher le scora; riduce il gap del cold-start del GRPO su modello 4B (`on-policy-distill` `[ref?]`).
+2. **On-policy distillation cold-start** — lo student genera traiettorie, un teacher le scora; riduce il gap del cold-start del GRPO su modello 4B (`on-policy-distill`/SOD 2605.07725).
 3. **RL-GRPO uncertainty-aware** — reward EVPI-twin-pair + costo-domanda + calibration-reward (sopra). Outcome-anchored, scorer≠scored.
 
 - **Label-generation**: **EVPI twin-pair by-construction** (coppia info-assente/info-presente) — riuso del pattern gold area-02; più tracce held-out negative (web su riferimento privato; over-asking ad alta confidence; budget ignorato in loop).

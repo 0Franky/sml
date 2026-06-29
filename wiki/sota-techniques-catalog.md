@@ -294,14 +294,14 @@ confidence: provisional
 **Dim-1 Architettura** — `[NB Turing/sm75: no bf16 nativo, no fp8-compute]`
 - **Unsloth Dynamic-4bit** — NF4 selettivo (non quantizza layer sensibili) → qualità ~fp16 a VRAM bnb-4bit · *default FT MVP su 2080Ti, supera QLoRA-NF4 piatto* · F-serving+S · MVP · unsloth.ai
 - **AWQ-int4 + kernel Marlin (W4A16, path fp16)** — serving Tier1 su sm75 SENZA fp8 · F-serving · MVP(0-B) · docs.vllm.ai
-- **LoRA-GA / PiSSA / MiLoRA** — init data-aware/SVD per i verticali → meno GPU-ore, MiLoRA anti-forgetting · S · F2 · 2407.05000[ref?]/2404.02948/2410.18035
+- **LoRA-GA / PiSSA / MiLoRA** — init data-aware/SVD per i verticali → meno GPU-ore, MiLoRA anti-forgetting · S · F2 · 2407.05000/2404.02948/2410.18035
 - **KIVI 2-bit KV-quant** — low-bit KV-cache **funziona su Turing** (no fp8-HW) → context lungo su 11GB · F-serving · F3 · 2402.02750
 - **SnapKV** — eviction prompt-aware, training-free, gira su Turing · F-serving · F3 · 2404.14469
 - **VeRA** — adapter ~10-100× più leggeri (shared frozen) se i verticali diventano molti · F-serving+S · F3 · 2310.11454
 
 **Dim-2 Training**
-- **Dr.GRPO** — toglie length-norm/std-norm (bias che gonfia CoT lunghe-sbagliate) · *fix anti-verbosità quasi-gratis, sinergico col two-phase* · S · F2 · 2503.20783[ref?]
-- **DAPO (solo clip-higher + token-level, NO dynamic-sampling)** — pacchetto fix GRPO; ⚠️ drop-KL confligge con anti-hack → tieni KL piccolo · S · F2 · 2503.14476[ref?]
+- **Dr.GRPO** — toglie length-norm/std-norm (bias che gonfia CoT lunghe-sbagliate) · *fix anti-verbosità quasi-gratis, sinergico col two-phase* · S · F2 · 2503.20783
+- **DAPO (solo clip-higher + token-level, NO dynamic-sampling)** — pacchetto fix GRPO; ⚠️ drop-KL confligge con anti-hack → tieni KL piccolo · S · F2 · 2503.14476
 - **QeRL** — RL(GRPO) su base 4-bit+LoRA, noise=exploration; ⚠️ NVFP4 è Blackwell → su Turing verificare path NF4/INT4 · F-serving+S · F2 · 2510.11696
 - **On-policy distillation** — student genera, teacher scora on-policy; **supera RL a meno compute** (Qwen3) → cold-start Tier1 ideale · S · F2 · ThinkingMachines + 2605.07725 (SOD, verificato)
 - **GenRM (generative reward model)** — RM che genera critica+rubrica prima dello score → per le L (planning/architettura) · S+F · F2 · 2410.12832
@@ -327,14 +327,14 @@ confidence: provisional
 - **Taming Overconfidence (PPO-M/PPO-C)** — ⚠️ **il nostro GRPO ERODE la calibrazione** come side-effect strutturale → vincolo cross-pipeline, non feature · S · F2 · 2410.09724
 - **Agentic-overconfidence (3 punti di misura)** — elicita confidence pre/mid/post-azione per un coding-agent; 73% predetto vs 35% reale · *framing operativo del when-to-stop* · F+S · F2-3 · 2602.06948 (verificato)
 - **Activation-based abstention** — astensione da attivazioni interne (white-box), +10-15 AUROC vs verbalized · *sfrutta che abbiamo i pesi (no API)* · F-serving+S · F3 · [ref?]
-- ⚠️ **"Can LLMs Introspect? A Reality Check"** — gran parte dell'"introspezione" è pattern-matching sul prompt → **anti-hype guard** per self-analysis · metodologico · 2605.26242[ref?]
+- ⚠️ **"Can LLMs Introspect? A Reality Check"** — gran parte dell'"introspezione" è pattern-matching sul prompt → **anti-hype guard** per self-analysis · metodologico · 2605.26242
 
 **Dim-5 Agentic** — `il buco = credit-assignment, non lo scaffold`
 - **GiGPO** — credit-assignment 2-livelli (trajectory + anchor-state), critic-free, +9-12% a pari memoria · *chiude il gap #1 dell'RL agentic, gira su 2080Ti* · S · F2 · 2505.10978
 - **Turn-level reward (mtGRPO)** — granularità intermedia, più semplice da impl (primo step prima di GiGPO) · S · F2 · 2505.11821
 - **mini-SWE-agent** — scaffold ~100 righe (bash-REPL stateless), >74% SWE-Verified, target 1-8B · *controesempio "scaffold leggero per SLM", struttura di riferimento, zero-training* · F-pi · F1 · github SWE-agent/mini-swe-agent
 - **DemyAgent-4B / Open-AgentRL** — checkpoint 4B agentic-RL coding = **il nostro identico setup** · *baseline da clonare/battere* · S+F · F2 · github[ref?]
-- **PALADIN / AgentDebug** — recovery appreso da traiettorie (critical-error detection + strategie) · *metodo concreto per dependency-aware-error-recovery (oggi concept pending)* · S+F · F2-3 · 2509.25238
+- **PALADIN / AgentDebug** — recovery appreso da traiettorie (critical-error detection + strategie) · *metodo concreto per dependency-aware-error-recovery (oggi concept pending)* · S+F · F2-3 · 2509.25238 (PALADIN) / 2509.25370 (AgentDebug)
 - **ReVeal / PAG** — self-generated test + policy-as-verifier; ⚠️ scorer≠scored (ancora a coverage/mutation, non pass-rate del self-test) · S+F · F2 · 2506.11442/2506.10406
 - **MemOS / A-MEM** — memory-OS stratificato (trace→policy→skill) / Zettelkasten linkato · *upgrade del MemGPT-placeholder; prendi il pattern, non l'OS completo* · F(+S) · F3 · github
 - **Survey-cardine**: "The Landscape of Agentic RL for LLMs" 2509.02547 (da linkare in testa a Dim-5)
@@ -363,7 +363,7 @@ confidence: provisional
 - **XGrammar structured decoding** ⭐ — constrained-decoding grammar (default vLLM); rende **garantiti** i token `<load:X>`/marker/blocchi XML · *anti-fragilità parsing su SLM 4B; extension-router e scanner non gestiscono più output malformati* · F-serving · F1 · 2411.15100
 - **Tool-result clearing** — compaction deterministica: droppa output raw dei tool vecchi (tieni nome+esito), recupero via VARS · *euristica wrapper-side zero-training (no skill metacognitiva)* · F-pi · F1 · Anthropic eng-blog
 - **Loop-breaking + pre-exec syntax-checker** — detector di ripetizione + gate sintattico su patch/diff PRIMA dell'exec · *difese deterministiche che catturano il fallimento quando la skill metacognitiva non scatta* · F-pi · F1 · 2511.13646
-- **Cache-aware layout** — ordina il context per frequenza-di-cambiamento (statico in testa, dinamico in coda); ⚠️ `<temporal>` con `now` va spostato fuori dal prefisso stabile · F-pi · F1 · 2601.06007[ref?]
+- **Cache-aware layout** — ordina il context per frequenza-di-cambiamento (statico in testa, dinamico in coda); ⚠️ `<temporal>` con `now` va spostato fuori dal prefisso stabile · F-pi · F1 · 2601.06007
 - **load_inplace adapter update (vLLM)** — hot-reload adapter senza restart per RL async · F-serving · F2-3 · vLLM docs
 
 **Dim-9 Eval** — `2 terremoti 2026`
@@ -375,7 +375,7 @@ confidence: provisional
 - **τ²-bench** — successore di τ-bench (dual-control); ⚠️ user-simulato = proxy umano inaffidabile · github sierra-research/tau2-bench
 - **RULER + ONERULER + Sequential-NIAH** — long-context eval che ci manca; ONERULER (needle assente) = test diretto dell'astensione/anti-confabulazione · 2404.06654
 - **Over-refusal suite (XSTest/OR-Bench/FalseReject)** — completa la balanced-accuracy sul lato falso-rifiuto (safety↔over-refusal corr. 0.89) · 2308.01263/2405.20947
-- **Judge-robustness (BiasScope/position/self-preference)** — audita il judge PRIMA di usarlo nel reward · 2602.09383[ref?]/2406.07791/2410.21819
+- **Judge-robustness (BiasScope/position/self-preference)** — audita il judge PRIMA di usarlo nel reward · 2602.09383/2406.07791/2410.21819
 - **AURC / Abstain-ECE** — selective-prediction (discriminazione, non solo match) per il gate low-confidence→gather · [ref?]
 
 ## RL-2 — Correzioni critiche alla base (must-fix)
