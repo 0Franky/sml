@@ -58,15 +58,28 @@ ok(vq.getCurr() === `T${N}`, `current aim corretto dopo long-run (T${N})`);
 ok(fullLog.length >= N, `changelog completo conserva l'audit (${fullLog.length} entry ≥ ${N})`);
 ok(memos.length === memosRemembered, `${memosRemembered} memo accumulate senza perdita`);
 
-// PROPRIETÀ CHIAVE: il context NON cresce con la storia (bounded). recent_changes è cap a maxChanges(12).
-const recentChanges = (ctx.match(/<recent_changes>([\s\S]*?)<\/recent_changes>/)?.[1].match(/^    - /gm) || []).length;
+// PROPRIETÀ CHIAVE: il context resta BOUNDED con la storia. recent_changes cap a maxChanges(12) + SEGNALE.
+const rcBlock = ctx.match(/<recent_changes>([\s\S]*?)<\/recent_changes>/)?.[1] ?? "";
+const recentChanges = (rcBlock.match(/^    - \d/gm) || []).length; // solo item-cambio (escl. nota di troncamento)
 ok(recentChanges <= 12, `recent_changes cap a 12 (trovate ${recentChanges}) nonostante ${fullLog.length} cambi totali`);
-// PARTE BOUNDED (rules+aim+task_list+recent_changes, SENZA <vars>): deve restare ~costante con N
+ok(/\(\+altri cambi/.test(rcBlock), "recent_changes SEGNALA che ce ne sono altri (cap/finestra → get_changelog)");
+// FIX (b) VERIFICATO: la lane <vars> ORA è WINDOWED (cap maxVars) + SEGNALA il troncamento → context bounded.
+const varsBlock = ctx.match(/<vars>([\s\S]*?)<\/vars>/)?.[1] ?? "";
+const varsShown = (varsBlock.split("\n").filter((l) => l.startsWith("    - ") && !l.includes("(+"))).length;
+const sharedLate = vq.getSharedView().length;
+ok(varsShown <= 12, `<vars> WINDOWED a ≤12 (mostrate ${varsShown}) su ${sharedLate} shared-vars`);
+ok(sharedLate <= 12 || /\(\+\d+ più vecchie nascoste/.test(varsBlock), "<vars> SEGNALA le shared-vars nascoste (get_shared_view)");
 const ctxNoVarsLate = stripVars(ctx).length;
-ok(ctxNoVarsLate < ctxNoVarsEarly + 200, `context-meno-vars BOUNDED: ${ctxNoVarsEarly}→${ctxNoVarsLate} char (no blow-up lineare su rules/task/changelog)`);
-// FINDING onesto: la lane <vars> (shared) NON è windowed → cresce col n. di shared-vars
-const sharedEarly = Math.floor(COMPACT_EVERY / 5), sharedLate = vq.getSharedView().length;
-console.log(`  [finding] lane <vars> NON windowed: shared-vars ${sharedEarly}→${sharedLate} → +${ctxLenLate - ctxNoVarsLate} char di <vars> (refinement: relevance-window/GC sulle shared-vars o cleanup model-driven)`);
+ok(ctxNoVarsLate < ctxNoVarsEarly + 200, `context-meno-vars BOUNDED: ${ctxNoVarsEarly}→${ctxNoVarsLate} char`);
+ok(ctxLenLate < ctxLenEarly + 400, `context TOTALE ora BOUNDED (anche <vars> cappata): ${ctxLenEarly}→${ctxLenLate} char`);
+// FIX (a) VERIFICATO: le memo NON sono in recent_changes (silent) ma il context SEGNALA che esistono.
+ok(!/lez-/.test(rcBlock), "memo NON trapelano in recent_changes (silent)");
+ok(new RegExp(`<notes count="${memos.length}"`).test(ctx), `context SEGNALA le ${memos.length} memo disponibili (recall_lessons)`);
+// GC delle shared-vars vecchie (fix b: la lane ora prunabile)
+const beforeGcShared = vq.getSharedView().length;
+vq.gcVars(now + 1, { scope: "shared" });
+ok(vq.getSharedView().length < beforeGcShared && vq.listTasks().length === N,
+   `gcVars pota le shared-vars (${beforeGcShared}→${vq.getSharedView().length}) senza toccare i task`);
 
 // GC del changelog: pota l'audit vecchio SENZA toccare lo stato
 const cutoff = fullLog[Math.floor(fullLog.length / 2)].ts;

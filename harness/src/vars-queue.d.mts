@@ -30,6 +30,7 @@ export interface ChangeLogEntry {
   old_value: string | null;
   new_value: string | null;
   decision_ref: string | null;
+  silent?: number;
 }
 
 export interface Proposal {
@@ -53,13 +54,14 @@ export class VarsQueue {
   close(): void;
 
   // change-log
-  getChangeLog(opts?: { since?: number; entity?: string | null; entityId?: string | null; limit?: number }): ChangeLogEntry[];
+  getChangeLog(opts?: { since?: number; entity?: string | null; entityId?: string | null; limit?: number; includeSilent?: boolean }): ChangeLogEntry[];
   gcChangeLog(beforeTs: number): number;
 
   // VARS
   setVar(id: string, value: unknown, opts?: SetVarOpts): VarRecord;
   getVar(id: string): VarRecord | null;
   listVars(opts?: { scope?: string | null; namespace?: string | null }): VarRecord[];
+  gcVars(beforeTs: number, opts?: { scope?: string | null }): number;
 
   // cross-agent
   getSharedView(): VarRecord[];

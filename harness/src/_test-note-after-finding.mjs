@@ -57,8 +57,11 @@ ok(filtered.length === 1 && filtered[0].id === "find-refs-before-rename", "recal
 const ctx = assembleContext(vq, { now: Date.now() });
 const durable = ctx.replace(/<recent_changes>[\s\S]*?<\/recent_changes>/, ""); // tolgo la finestra transiente
 ok(!durable.includes("find-references") && !durable.includes("GEMINI_API_KEY"), "le note NON sono nelle lane durable (rules/vars/tasks); recall esplicito, non always-on");
-const transient = /<recent_changes>[\s\S]*find-refs-before-rename[\s\S]*<\/recent_changes>/.test(ctx);
-console.log(`  [finding] nota-write transiente in recent_changes: ${transient} (refinement: escludere namespace 'memo' dal changelog visibile per non mostrare il testo della lezione finché non richiamata)`);
+// FIX(a) 2026-06-29 VERIFICATO: la nota NON trapela più in recent_changes (silent), MA il context SEGNALA
+// quante note esistono (anti info-loss, msg 388: se nascondi → segnala, altrimenti il modello non le cerca).
+const rcBlock = ctx.match(/<recent_changes>([\s\S]*?)<\/recent_changes>/)?.[1] ?? "";
+ok(!rcBlock.includes("find-refs-before-rename"), "FIX(a): la nota NON trapela in recent_changes (silent)");
+ok(/<notes count="2"/.test(ctx), "FIX(a): il context SEGNALA le 2 note disponibili (recall_lessons)");
 
 // una nuova nota in sessione 2 si accumula senza perdere le precedenti
 remember(vq, "df-before-download", "Verifica spazio disco (df) prima di download voluminosi.", "Disco pieno a metà di un download 80GB.");
