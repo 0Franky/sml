@@ -44,7 +44,11 @@ Scaffold iniziale (2026-06-29). **API pi verificata + extension TYPECHECK-GREEN*
 ## Roadmap
 
 - **Fase 0** (questo scaffold) → walking skeleton + verifier-sandbox.
-- **Fase 1** → **vars-queue** ✅ (`src/vars-queue.mjs` — datastore SQLite 4-lane + CURR + change-log/timestamp + cross-compact + cross-agent view/propose/merge; 24/24 smoke) · **context-assembler** ✅ (`src/context-assembler.mjs` — assembla `<context>` strutturato dalle lane del datastore: rules/aim/task_list/verify_queue/vars/recent_changes, ordine severità, escaping anti-injection; 11/11 smoke) · lora-router (classifier → adapter per-request, gated su vLLM+adapter), MVP TUI.
-  - ⏳ Next: thin pi-extension `.pi/extensions/{vars-queue,context-assembly}.ts` che agganciano datastore+assembler agli hook (`context`/`before_agent_start`) — da fare con `npm install` presente (typecheck-green); l'attuale `context-assembly.ts` è il placeholder Fase-0 statico.
+- **Fase 1** ✅ (state layer + wiring, typecheck-GREEN + tutti gli smoke verdi):
+  - **vars-queue** (`src/vars-queue.mjs`) — datastore SQLite 4-lane + CURR + change-log/timestamp + cross-compact + cross-agent view/propose/merge; **24/24**.
+  - **context-assembler** (`src/context-assembler.mjs`) — assembla `<context>` dalle lane (rules/aim/task_list/verify_queue/vars/recent_changes), ordine severità, escaping anti-injection; **11/11**.
+  - **facts-pre-check** (`src/facts-pre-check.mjs`) — livello-1 deterministico del reward-L (enum↔enum `campi-tipizzati↔facts`, gold 6.2 §2bis); **7/7**.
+  - **pi-extensions wired**: `context-assembly.ts` (assembla via `before_agent_start`), `vars-queue.ts` (tool `set_var`/`get_var`/`set_task_status`) — `.d.mts` types, **typecheck-green** (npm ci 142pkg).
+  - ⏳ gated: **lora-router** (classifier → adapter per-request, su vLLM + adapter), estrattore-facts-fuzzy (formato-lane), Docker sandbox.
 - **Fase 2** → sandbox/verifier completo per i dati RL (Phase-3 gym Docker).
 - **Fase 3** → token-routing, memory layer, contradiction-detection, frontend web.
