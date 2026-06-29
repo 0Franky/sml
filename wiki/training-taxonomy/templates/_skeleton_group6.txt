@@ -1,0 +1,61 @@
+---
+{{FM_NAME}}
+{{FM_DESC}}
+type: gold-example
+{{FM_LEAF}}
+area: area-02-criticality-safety
+{{FM_REWARD_TAG}}
+last_updated: 2026-06-29
+{{FM_STATUS}}
+---
+
+{{H1_TITLE}}
+
+## §0 — Cos'è / perché è gold / la barra / [UNVERIFIED]
+
+{{SEC0_BODY}}
+## §1 — Skill-target (segnale, preciso e falsificabile)
+
+{{SEC1_BODY}}
+{{SEC1BIS_HEADER}}
+
+{{SEC1BIS_BODY}}
+{{SEC1TER_HEADER}}
+
+{{SEC1TER_BODY}}
+---
+
+{{SEC2BIS_HEADER}}
+
+{{SEC2BIS_BODY}}
+---
+
+## §2 — Le 5 classi (istanze di training complete)
+
+{{SEC2_INTRO}}
+---
+
+{{CLASSE1_HEADER}}
+{{CLASSE1_INPUT}}
+{{CLASSE1_OUTPUT}}
+{{CLASSE1_LABEL}}
+---
+
+{{CLASSE2_DELTA}}
+---
+
+{{CLASSE3_DELTA}}
+---
+
+{{CLASSE4_DELTA}}
+---
+
+{{CLASSE5_INTRO}}
+{{CLASSE5A}}
+{{CLASSE5B}}
+{{CLASSE5C}}
+{{CLASSE5D}}
+{{CLASSE5_LABEL}}
+---
+
+{{TAIL_SECTIONS}}
