@@ -44,7 +44,7 @@ Scaffold iniziale (2026-06-29). **API pi verificata + extension TYPECHECK-GREEN*
 ## Roadmap
 
 - **Fase 0** (questo scaffold) → walking skeleton + verifier-sandbox.
-- **Fase 1** → context-assembly completo (lane), **vars-queue** ✅ (`src/vars-queue.mjs` — datastore SQLite 4-lane + CURR + change-log/timestamp + cross-compact + cross-agent view/propose/merge; 24/24 smoke), lora-router (classifier → adapter per-request, gated su vLLM+adapter), MVP TUI.
-  - ⏳ Next: thin pi-extension `.pi/extensions/vars-queue.ts` che aggancia il datastore agli hook (`context`/`before_agent_start`) — da fare con `npm install` presente (typecheck-green).
+- **Fase 1** → **vars-queue** ✅ (`src/vars-queue.mjs` — datastore SQLite 4-lane + CURR + change-log/timestamp + cross-compact + cross-agent view/propose/merge; 24/24 smoke) · **context-assembler** ✅ (`src/context-assembler.mjs` — assembla `<context>` strutturato dalle lane del datastore: rules/aim/task_list/verify_queue/vars/recent_changes, ordine severità, escaping anti-injection; 11/11 smoke) · lora-router (classifier → adapter per-request, gated su vLLM+adapter), MVP TUI.
+  - ⏳ Next: thin pi-extension `.pi/extensions/{vars-queue,context-assembly}.ts` che agganciano datastore+assembler agli hook (`context`/`before_agent_start`) — da fare con `npm install` presente (typecheck-green); l'attuale `context-assembly.ts` è il placeholder Fase-0 statico.
 - **Fase 2** → sandbox/verifier completo per i dati RL (Phase-3 gym Docker).
 - **Fase 3** → token-routing, memory layer, contradiction-detection, frontend web.

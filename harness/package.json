@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test:vars-queue": "node src/vars-queue.test.mjs"
+    "test:vars-queue": "node src/vars-queue.test.mjs",
+    "test:context": "node src/context-assembler.test.mjs",
+    "test": "node src/vars-queue.test.mjs && node src/context-assembler.test.mjs"
   },
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "^0.80.2",
