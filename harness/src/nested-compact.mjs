@@ -205,7 +205,21 @@ export function enterFocus(vq, opts = {}, cfg = DEFAULT_CFG) {
   if (!subset.length && !opts.aimTask) {
     throw new Error("enterFocus: subset vuoto o senza task esistenti (serve ≥1 task valido)");
   }
-  const lead = opts.aimTask ?? subset[0] ?? vq.getCurr() ?? null; // su cosa puntare CURR dentro lo scope
+  // HARD-GATE no-ready (focus-gathering v1, review P0): se il subset esiste ma NESSUN task è ready (deps non
+  // soddisfatte), RIFIUTA invece di degenerare su un lead bloccato → niente focus su lavoro non-eseguibile (il
+  // fallimento che il design previene, msg 506). Il meccanismo F non deve dipendere dalla correttezza della scelta-S.
+  let lead = opts.aimTask ?? null;
+  if (subset.length && !opts.aimTask) {
+    const ready = vq.readyTasks(subset); // [] = nessuno sbloccato (su grafo piatto = tutti ready → mai vuoto)
+    if (!ready.length) {
+      const missing = [...new Set(subset.flatMap((id) => (vq.getTask(id)?.deps ?? []).filter((d) => vq.getTask(d)?.status !== "done")))];
+      const e = new Error(`enterFocus: nessun task READY nel subset (deps non soddisfatte) — missing_deps: [${missing.join(", ")}]`);
+      e.reason = "no-ready-task"; e.missing_deps = missing;
+      throw e;
+    }
+    lead = ready[0].id; // lead = primo READY in execution-order (MAI un task bloccato)
+  }
+  lead = lead ?? subset[0] ?? vq.getCurr() ?? null; // su cosa puntare CURR dentro lo scope
   const parentId = opts.parentScopeId ?? vq.getActiveScope() ?? null;
   const who = parentId ?? vq.agent; // l'enter è una scelta del PADRE
   const sinceSeq = vq.currentChangeSeq();

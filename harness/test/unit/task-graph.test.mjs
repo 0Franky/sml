@@ -3,6 +3,7 @@
  * gate proporzionalità + validazione no-self/no-ciclo.
  */
 import { VarsQueue } from "../../src/vars-queue.mjs";
+import { enterFocus } from "../../src/nested-compact.mjs";
 
 let passed = 0, failed = 0;
 function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error("  ✗ FAIL:", msg); } }
@@ -73,6 +74,19 @@ function throws(fn, msg) { try { fn(); failed++; console.error("  ✗ FAIL (no t
   // U1 NON done → U2,U3 bloccati
   ok(vq.readyTasks(["U2", "U3"]).length === 0, "GATE: subset {U2,U3} tutto bloccato → 0 ready (enter_focus rifiuterà)");
   ok(vq.readyTasks(["U1", "U2"]).map((t) => t.id).includes("U1"), "GATE: subset con U1 → U1 ready");
+  vq.close();
+}
+
+// 6) enter_focus HARD-GATE no-ready (review P0) ---------------------------------------------------
+{
+  const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+  vq.addTask("X1", "x1"); vq.addTask("X2", "x2", { deps: ["X1"] }); vq.addTask("X3", "x3", { deps: ["X1"] });
+  throws(() => enterFocus(vq, { taskSubset: ["X2", "X3"] }), "GATE: enter_focus RIFIUTA subset tutto-bloccato (no-ready)");
+  let err;
+  try { enterFocus(vq, { taskSubset: ["X2", "X3"] }); } catch (e) { err = e; }
+  ok(err && err.reason === "no-ready-task" && err.missing_deps.includes("X1"), "GATE: errore strutturato {reason, missing_deps:[X1]}");
+  const r = enterFocus(vq, { taskSubset: ["X1", "X2"] }); // X1 ready
+  ok(r.scopeId.startsWith("focus-X1-"), "GATE: lead = primo READY (X1), non subset[0]");
   vq.close();
 }
 
