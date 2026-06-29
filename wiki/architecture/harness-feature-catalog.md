@@ -13,6 +13,8 @@ confidence: provisional
 
 > **Scopo di questo documento**: rispondere alla domanda *"come lo andremo a realizzare, quali sono tutte le classi/categorie di feature che introduciamo NOI, con contesto + funzionamento, per capire se siamo allineati"*. È la sintesi navigabile di 28 concept/architecture file. Per il piano operativo fasato vedi [[wrapper-implementation-plan]]; per la decisione di base vedi [[../decisions/2026-06-23-pi-harness-base]].
 
+> 🆕 **Redirezione Strada-2 (2026-06-29)** — vedi [[../decisions/2026-06-29-context-as-first-person-mind]] + [[../decisions/2026-06-29-compaction-coherence]]: il `<context>` è la **mente in prima persona** del modello. Impatto sul catalogo: la lane **`<messages_with_user>`** della classe *Context-Assembly & Memory* diventa **CENTRALE** (non opzionale), serializzata via hook **`context`** (espone i messaggi — **NON** `before_provider_request`, che prende solo `payload`); si aggiungono **conversation-store-by-ID** + **matrioska/nested-compact**; la **compaction nativa di pi va spenta** (`enabled=false`), sostituita da curazione continua del workspace. TODO in [[../todo|todo §NEXT BUILD]].
+
 ---
 
 ## §0 — Inquadramento: i 3 layer + la regola di scope

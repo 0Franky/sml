@@ -23,7 +23,7 @@ last_updated: 2026-06-29
 ## 1. Come funziona DAVVERO la compaction di pi `[EXTRACTED da compaction.js]`
 
 - **Trigger**: `shouldCompact = contextTokens > contextWindow − reserveTokens`. Default: `reserveTokens=16384`, `keepRecentTokens=20000`, `enabled=true`. → compatta quando il contesto arriva a ~16K dal fondo del window.
-- **Cut point** (`findCutPoint`): cammina all'indietro dai messaggi più nuovi accumulando token finché ≥ `keepRecentTokens` (20K); taglia su un confine **user/assistant** (mai su un `toolResult` — deve seguire la sua tool-call). Tiene **verbatim** i ~20K token recenti, **riassume** tutto il più vecchio. Gestisce anche lo **split-turn** (se il taglio cade a metà turno, riassume a parte il prefisso del turno).
+- **Cut point** (`findCutPoint`): cammina all'indietro dai messaggi più nuovi accumulando token finché ≥ `keepRecentTokens` (20K); taglia su un **confine di messaggio valido** (user/assistant e altri tipi user-iniziati come bashExecution/custom; mai su un `toolResult` — deve seguire la sua tool-call, `compaction.js:226-263`). Tiene **verbatim** i ~20K token recenti, **riassume** tutto il più vecchio. Gestisce anche lo **split-turn** (se il taglio cade a metà turno, riassume a parte il prefisso del turno).
 - **Summary** (`generateSummary`): è una chiamata **LLM** con il **modello ATTIVO** della sessione, e un **prompt FISSO strutturato**. Il template di pi:
   ```
   ## Goal
@@ -68,7 +68,7 @@ Il template di summary di pi mappa quasi 1:1 sul nostro modello di stato/handoff
 pi espone esattamente le leve giuste (verificato in `types.d.ts`): hook **`session_before_compact`** (`SessionBeforeCompactEvent` con `preparation`; `SessionBeforeCompactResult` può ritornare un **`compaction?: CompactionResult`** custom → **sostituisce** il summary di default), hook `session_compact` (after), `actions.compact()` (trigger). Quindi:
 
 - **A) Flush handoff PRIMA della compaction** (economico, fai-subito): su `session_before_compact`, garantire che current_aim + task aperti + decisioni-chiave + vars critiche siano nel `vars.db` (la nostra memoria durevole) → nulla di critico dipende dalla qualità del summary. Alimenta anche la lane [[../architecture/harness-request-flow|`<resuming_from>`]].
-- **B) Focalizzare il summary di pi con `customInstructions`** per **non duplicare** ciò che è già stato: *"Lo stato strutturato traccia già goal/task/decisioni/vars; riassumi SOLO il contesto conversazionale, i thread di ragionamento e i finding NON ancora registrati come stato."* → riduce l'incoerenza #1.
+- **B) Focalizzare il summary con `customInstructions`** — ⚠️ **realizzabile SOLO via `/compact` manuale, NON nell'auto-compaction a soglia** (verificato nel sorgente: `SessionBeforeCompactResult` espone solo `{cancel?, compaction?}` senza `customInstructions`, `types.d.ts:780-783`; nel path auto-compaction `customInstructions` è hardcoded `undefined`, `agent-session.js:1531,1564`). Quindi NON è una difesa *automatica* contro l'incoerenza #1: come azione una-tantum si può chiedere *"riassumi SOLO il contesto conversazionale non ancora registrato come stato"*, ma per personalizzare l'**auto-compaction** l'unica via è **C** (custom `CompactionResult` via hook `session_before_compact`).
 - **C) (più forte, train-serve) Sostituire il summary con uno NOSTRO**: ritornare un `CompactionResult` costruito **deterministicamente dal `vars-queue`** (zero chiamata LLM per la parte di stato → niente degrado da modello-piccolo, formato = il nostro), con al più una mini-pass LLM solo per il residuo conversazionale. Dà **train-serve match** e qualità indipendente dalla taglia del modello.
 - **D) Calibrare** `reserveTokens`/`keepRecentTokens` sul window reale dell'SLM (via config pi `settings.jsonl`), tenendo conto che il nostro `<context>` occupa parte del budget.
 - **E) Coordinare le due memorie**: regola "single source" — ciò che conta diventa **stato** (tool nostri); il summary di pi è solo il residuo conversazionale.
@@ -76,7 +76,7 @@ pi espone esattamente le leve giuste (verificato in `types.d.ts`): hook **`sessi
 ## 5. Raccomandazione
 
 **Ibrido, in due tempi:**
-- **Subito (economico, dogfood-validato, indipendente dalla decisione Opzione-B)**: A + B + D — flush handoff su `session_before_compact`, `customInstructions` anti-duplicazione, calibrazione settings. Risolve le incoerenze #1 (parziale), #4, #5 e blinda la perdita-dati.
+- **Subito (economico, dogfood-validato, indipendente dalla decisione Opzione-B)**: A + D — flush handoff su `session_before_compact`, calibrazione settings. Risolve le incoerenze #4, #5 e blinda la perdita-dati. (**B** è solo `/compact` manuale, non automatica → vedi §4-B; non risolve #1 in automatico.) Nota: dato che nella direzione scelta la compaction nativa di pi è **OFF** (ADR Strada 2), tutto §4/§5 nativo è *moot* — il re-wording resta dovuto solo per non lasciare un claim falso sugli internals di pi.
 - **Con la decisione "chi possiede la conversazione" ([[../architecture/harness-request-flow]] §decisione)**: se si va verso **Opzione B**, fare anche **C** (custom `CompactionResult` deterministico) → chiude #2 e #3 (train-serve match). Se si resta su pi-native (A), accettare il summary di pi e **includerlo nella training-distribution** (mitiga #3 dal lato dati).
 
 ## 6. Gate / cosa serve dall'utente

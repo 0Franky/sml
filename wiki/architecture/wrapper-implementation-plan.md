@@ -10,6 +10,8 @@ last_updated: 2026-06-29
 
 > Companion di [[harness-feature-catalog]] (le 6 feature-class) e [[../decisions/2026-06-23-pi-harness-base]] (ADR base). Questo file è il **come si costruisce**; il catalogo è il **cosa**. v3 incorpora le criticità del review-loop 2026-06-27 (§Review-loop sotto).
 
+> 🆕 **Redirezione Strada-2 (2026-06-29, dogfood Sonnet)** — vedi [[../decisions/2026-06-29-context-as-first-person-mind]] + [[../decisions/2026-06-29-compaction-coherence]]: il `<context>` è la **mente in prima persona** del modello (auto-curata), non una chat. Conseguenze sul build: (1) la lane **`<messages_with_user>`** = **pezzo CENTRALE** (non più "lane aggiuntiva opzionale"), finestra ultimi-N verbatim **in coda/zona-volatile**, serializzata via hook **`context`** (vedi Step 0.0: la window è già enforced lì — NON `before_provider_request`); (2) **conversation-store-by-ID** (sopravvive al compact + condivisibile coi subagent); (3) **compaction a matrioska** (nested-vision) per i casi estremi; (4) **pi-compaction nativa OFF** (`CompactionSettings.enabled=false`) — la riduzione di contesto è **curazione continua del workspace**, NON il summarize generico di pi. TODO atomici in [[../todo|todo §NEXT BUILD]].
+
 ## Context — perché ora, e cosa la Fase 0 prova DAVVERO
 
 Il collo di bottiglia **dichiarato** è "harness pi + verifier/sandbox" (`data-volume-estimate.md` §7.2), perché il reward dell'esempio gold ([[../training-taxonomy/gold-example-area02-criticality]]) **È** un verifier deterministico git/python su fixture — senza il runner non possiamo nemmeno validare il nostro training set.
