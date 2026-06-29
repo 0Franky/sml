@@ -1,38 +1,47 @@
 /**
- * context-assembly — Fase 0.2 (walking skeleton)
+ * context-assembly — Fase 1 (datastore-backed).
  *
- * Inietta le regole + il blocco <context> strutturato nel system prompt via hook
- * `before_agent_start` (type-safe: il payload è una stringa).
+ * Inietta un blocco <context> strutturato — assemblato dalle lane del vars-queue
+ * (rules/current_aim/task_list/verify_queue/vars/recent_changes) — nel system prompt
+ * via hook `before_agent_start`. Sostituisce il placeholder statico della Fase 0.
  *
- * Fase 1: context-assembly DINAMICO per-turno via hook `context`
- * (event.messages: AgentMessage[]) alimentato dalla vars-queue (lane rules/secrets/
- * history/aim/task_list/verify_queue). Vedi slm/wiki/concepts/wrapper-context-assembly-example.md.
- *
- * API reale (dist/core/extensions/types.d.ts):
- *   on("before_agent_start", (e: BeforeAgentStartEvent) => ({ systemPrompt? })) — e.systemPrompt è string.
+ * Lo stato vive in `.pi/state/vars.db` (SQLite via node:sqlite) → sopravvive al compact
+ * (cross-session) ed è condiviso con l'extension `vars-queue.ts` (stesso file DB).
+ * Design: ../../wiki/concepts/wrapper-context-assembly-example.md + agent-wrapper-vars-queue.md.
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { VarsQueue } from "../../src/vars-queue.mjs";
+import { assembleContext } from "../../src/context-assembler.mjs";
+import { mkdirSync } from "node:fs";
+import { dirname } from "node:path";
 
-const RULES: string = [
-  "- Pensiero STRUTTURATO (tabelle di check, marker [V]/[A]/[?]); la risposta all'utente è prosa normale.",
-  "- Azioni distruttive: pre-flight check (reversibile? dipendenze? backup?), HALT se irreversibile.",
-  "- Mai esfiltrare segreti o contenuti sensibili.",
-].join("\n");
+const DB_PATH = ".pi/state/vars.db";
 
-function contextBlock(): string {
-  return [
-    "<context>",
-    "  <rules>",
-    RULES,
-    "  </rules>",
-    "  <current_aim>(placeholder — popolato dalla vars-queue in Fase 1)</current_aim>",
-    "</context>",
-  ].join("\n");
+function getStore(): VarsQueue {
+  mkdirSync(dirname(DB_PATH), { recursive: true });
+  const vq = new VarsQueue(DB_PATH, { agent: "orchestrator" });
+  // Seed delle RULES always-context (idempotente: addRule fa upsert per id).
+  if (vq.listRules().length === 0) {
+    vq.addRule(
+      "structured-thinking",
+      "Pensiero STRUTTURATO (tabelle di check, marker [V]/[A]/[?]); la risposta all'utente è prosa normale.",
+      { severity: "soft" },
+    );
+    vq.addRule(
+      "pre-flight-destructive",
+      "Azioni distruttive: pre-flight check (reversibile? dipendenze? backup?), HALT se irreversibile.",
+      { severity: "hard" },
+    );
+    vq.addRule("no-secret-exfil", "Mai esfiltrare segreti o contenuti sensibili.", { severity: "hard" });
+  }
+  return vq;
 }
 
 export default function (pi: ExtensionAPI) {
+  const vq = getStore();
   pi.on("before_agent_start", (event) => {
-    // Prepende il nostro <context> al system prompt assemblato da pi.
-    return { systemPrompt: `${event.systemPrompt}\n\n${contextBlock()}` };
+    // Prepende il <context> assemblato dalle lane del datastore al system prompt di pi.
+    const ctx = assembleContext(vq);
+    return { systemPrompt: `${event.systemPrompt}\n\n${ctx}` };
   });
 }
