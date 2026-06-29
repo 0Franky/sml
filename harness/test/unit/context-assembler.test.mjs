@@ -2,8 +2,8 @@
  * Smoke-test del context-assembler. Esegui: `node src/context-assembler.test.mjs`
  * Zero dipendenze, zero Docker. Assembla un <context> da un vars-queue popolato e verifica le lane.
  */
-import { VarsQueue } from "./vars-queue.mjs";
-import { assembleContext, buildResumeDigest } from "./context-assembler.mjs";
+import { VarsQueue } from "../../src/vars-queue.mjs";
+import { assembleContext, buildResumeDigest } from "../../src/context-assembler.mjs";
 
 let passed = 0, failed = 0;
 function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error("  ✗ FAIL:", msg); } }

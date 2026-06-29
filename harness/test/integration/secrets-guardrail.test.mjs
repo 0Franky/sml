@@ -4,7 +4,7 @@
  * un tool_result, il guardrail lo redige. Testa la logica reale (src/secrets-redact.mjs, la stessa
  * importata da .pi/extensions/secrets-guardrail.ts). NESSUN segreto reale: tutti placeholder finti.
  */
-import { redactText, SECRET_PATTERNS } from "./secrets-redact.mjs";
+import { redactText, SECRET_PATTERNS } from "../../src/secrets-redact.mjs";
 
 let pass = 0, fail = 0;
 const ok = (c, m) => { c ? pass++ : (fail++, console.log("  ✗ FAIL: " + m)); };

@@ -13,11 +13,11 @@
  * lasciando la pipeline di dedup silenziosamente rotta.
  * 3 trial. Legge la key da harness/.env (gitignored, mai stampata).
  */
-import { VarsQueue } from "./vars-queue.mjs";
-import { assembleContext } from "./context-assembler.mjs";
+import { VarsQueue } from "../../src/vars-queue.mjs";
+import { assembleContext } from "../../src/context-assembler.mjs";
 import { readFileSync } from "node:fs";
 
-const env = readFileSync(new URL("../.env", import.meta.url), "utf8");
+const env = readFileSync(new URL("../../.env", import.meta.url), "utf8");
 const KEY = (env.match(/^GEMINI_API_KEY=(.*)$/m)?.[1] ?? "").trim();
 const MODEL = process.argv[2] ?? "gemini-3.5-flash";
 const TRIALS = Number(process.argv[3] ?? 3);

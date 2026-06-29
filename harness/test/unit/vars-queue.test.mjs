@@ -2,7 +2,7 @@
  * Smoke-test del datastore vars-queue. Esegui: `node src/vars-queue.test.mjs`
  * Zero dipendenze, zero Docker. Verifica le proprietà di design ancorate ai concept wiki.
  */
-import { VarsQueue } from "./vars-queue.mjs";
+import { VarsQueue } from "../../src/vars-queue.mjs";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

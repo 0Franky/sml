@@ -4,11 +4,11 @@
  * Le rules del MODO-B sono PRINCIPI GENERALI (forward-compat + conseguenze-fasi-future + dep-check),
  * NON nominano la trappola → testa la FORESIGHT applicata, non il ricordo. Legge key da harness/.env.
  */
-import { VarsQueue } from "./vars-queue.mjs";
-import { assembleContext } from "./context-assembler.mjs";
+import { VarsQueue } from "../../src/vars-queue.mjs";
+import { assembleContext } from "../../src/context-assembler.mjs";
 import { readFileSync } from "node:fs";
 
-const env = readFileSync(new URL("../.env", import.meta.url), "utf8");
+const env = readFileSync(new URL("../../.env", import.meta.url), "utf8");
 const KEY = (env.match(/^GEMINI_API_KEY=(.*)$/m)?.[1] ?? "").trim();
 const MODEL = process.argv[2] ?? "gemini-3.1-flash-lite";
 const ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";

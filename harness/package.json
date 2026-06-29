@@ -6,12 +6,10 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test:vars-queue": "node src/vars-queue.test.mjs",
-    "test:context": "node src/context-assembler.test.mjs",
-    "test:conversation": "node src/conversation-store.test.mjs",
-    "test:facts": "node src/facts-pre-check.test.mjs",
-    "test:sliding": "node src/sliding-var.test.mjs",
-    "test": "node run-tests.mjs"
+    "test": "node run-tests.mjs",
+    "test:unit": "node run-tests.mjs unit",
+    "test:integration": "node run-tests.mjs integration",
+    "test:e2e": "node -e \"console.log('e2e behavioral (API-gated): lancia a mano, es. node test/e2e/dogfood-test.mjs <model> — richiede harness/.env')\""
   },
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "^0.80.2",
