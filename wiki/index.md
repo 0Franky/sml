@@ -2,7 +2,7 @@
 name: wiki-index
 description: Catalogo di tutte le pagine della wiki. Aggiornato a ogni ingest.
 type: index
-last_updated: 2026-06-27
+last_updated: 2026-06-29
 ---
 
 # Index

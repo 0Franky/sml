@@ -21,7 +21,7 @@ La **ricerca** (Tier 1/2/3, training, LoRA) vive nel serving layer; pi la rende 
 
 - **0.1** vLLM provider OpenAI-compatible → `serving/models.json` (`api: "openai-completions"`).
 - **0.2** `context-assembly` — inietta `<context>` strutturato (rules + aim + task_list) via hook `context`.
-- **0.3** `verifier-sandbox` — runner che esegue i verifier dei gold-example (git/python) in sandbox isolata → **valida i gold** (è il bottleneck-buster del rollout gold). **TODO**.
+- **0.3** `verifier-sandbox` — runner che esegue i verifier dei gold-example (git/python) in sandbox isolata → **valida i gold** (è il bottleneck-buster del rollout gold). ✅ **FATTO** (6/6 spec eseguibili PASS via pip-locale 2026-06-29; build Docker gated finché il daemon è giù).
 - **0.4** `secrets-guardrail` (scan su `tool_result`) + `pre-flight` (gate su `tool_call` per azioni distruttive).
 
 ## Setup + Run con il TUO provider (dogfooding del metodo, PRIMA dell'SLM)
