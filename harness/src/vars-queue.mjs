@@ -57,6 +57,15 @@ CREATE TABLE IF NOT EXISTS rules (
   severity TEXT NOT NULL DEFAULT 'soft',                -- soft|strong|hard
   created  INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS decisions (
+  id           TEXT PRIMARY KEY,
+  agent        TEXT NOT NULL,                           -- idAgente che ha preso la scelta (attribuzione)
+  text         TEXT NOT NULL,                           -- la scelta
+  rationale    TEXT,                                    -- perché (catena why->problema->soluzione, opzionale)
+  task_ref     TEXT,                                    -- task a cui la scelta appartiene (opzionale)
+  created      INTEGER NOT NULL,
+  decision_ref TEXT                                     -- ADR/decisione collegata (opzionale)
+);
 CREATE TABLE IF NOT EXISTS meta (
   k TEXT PRIMARY KEY,
   v TEXT
@@ -271,6 +280,52 @@ export class VarsQueue {
   }
 
   listRules() { return this.db.prepare(`SELECT * FROM rules ORDER BY created`).all(); }
+
+  // -- DECISIONS lane (scelte attribuite per agente) --------------------------
+  // Idea utente (TG msg 456/457, 2026-06-29): "ottenere tutte le scelte prese da un determinato agente tramite
+  // idAgente". Il substrato c'era già (changelog.who); qui le decisioni diventano di PRIMA CLASSE (scelta +
+  // razionale + agente) → query per-agente. Doppio uso: (1) floor F del report-to-file al pop matrioska (il report
+  // del figlio è DERIVABILE dalle sue decisioni → mai vuoto, [[../../wiki/concepts/report-to-file-pointer]]);
+  // (2) audit cross-agent "chi ha deciso cosa".
+  recordDecision(id, text, { rationale = null, who = this.agent, taskRef = null, decisionRef = null } = {}) {
+    const now = Date.now();
+    this.db.prepare(
+      `INSERT INTO decisions (id, agent, text, rationale, task_ref, created, decision_ref) VALUES (?,?,?,?,?,?,?)
+       ON CONFLICT(id) DO UPDATE SET agent=excluded.agent, text=excluded.text,
+         rationale=excluded.rationale, task_ref=excluded.task_ref, decision_ref=excluded.decision_ref`
+    ).run(id, who, text, rationale, taskRef, now, decisionRef);
+    this._log("decisions", id, "text", null, text, who, decisionRef);
+    return this.getDecision(id);
+  }
+
+  getDecision(id) {
+    return this.db.prepare(`SELECT * FROM decisions WHERE id = ?`).get(id) ?? null;
+  }
+
+  listDecisions({ agent = null, taskRef = null } = {}) {
+    let q = `SELECT * FROM decisions`; const args = []; const where = [];
+    if (agent)   { where.push("agent = ?");    args.push(agent); }
+    if (taskRef) { where.push("task_ref = ?"); args.push(taskRef); }
+    if (where.length) q += " WHERE " + where.join(" AND ");
+    q += " ORDER BY created";
+    return this.db.prepare(q).all(...args);
+  }
+
+  /** Tutte le scelte/decisioni prese da un agente (per idAgente). Risponde a utente msg 456/457. */
+  getDecisionsByAgent(agent) { return this.listDecisions({ agent }); }
+
+  /**
+   * Vista più ampia delle sole decisioni: TUTTE le mutazioni (change-log) attribuite a un agente per `who`.
+   * Default esclude le silenziose (memo). Per il report-to-file del pop: l'attività completa del figlio.
+   */
+  getChangesByAgent(agent, { since = 0, includeSilent = false, limit = 500 } = {}) {
+    let q = `SELECT seq, ts, who, entity, entity_id, field, old_value, new_value, decision_ref, silent
+             FROM changelog WHERE who = ? AND ts >= ?`;
+    const args = [agent, since];
+    if (!includeSilent) q += " AND silent = 0";
+    q += " ORDER BY seq DESC LIMIT ?"; args.push(limit);
+    return this.db.prepare(q).all(...args);
+  }
 
   // -- CURR pointer (aim corrente) -------------------------------------------
   setCurr(taskId, { who = this.agent } = {}) {

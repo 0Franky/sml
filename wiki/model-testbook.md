@@ -60,6 +60,15 @@ La `Verifica` è sempre **outcome-anchored**: si controlla l'**esito** (il model
 - **Verifica**: probe — task che RICHIEDE un item nascosto → il modello fetcha; task che NON lo richiede → non fetcha. Outcome: fetch correlato al bisogno reale (held-out bilanciato).
 - **Link**: [[concepts/window-aware-fetching]].
 
+### TB-06 — Protocollo di ritorno (pop): report-su-file + summary-pointer + re-align `[voluto]`
+- **Voglio che il modello**: quando uno scope completa e restituisce il controllo verso l'alto (sub-agente che ritorna, sotto-task chiuso, **matrioska-pop** alla cornice madre):
+  - (i) NON riversi un summary inline grande nella cornice padre; scriva un **report completo su FILE** e faccia risalire solo un **summary breve + il PATH**. Lo stato già condiviso (aim/decisioni/vincoli/var `shared`) NON va riportato (già visibile a madre+figlia). Da consumatore, recuperi il report pieno **on-demand**.
+  - (ii) **dopo il pop, RI-ALLINEI il proprio context allo stato ATTUALE** (msg 456): la foto mentale del padre è stantia (lo stato è evoluto durante lo zoom-in) → ri-legge stato durevole, promuove l'esito del figlio in step-fatti/decisioni, pulisce dal watch-list ciò che è chiuso. NON proceda su una visione superata.
+  - (iii) per costruire il report del figlio sfrutti le **decisioni attribuite** (`getDecisionsByAgent(idFiglio)` / `getChangesByAgent`, msg 457) → il report è derivabile, mai vuoto.
+- **Fonte**: TG msg 453/456/457 (2026-06-29). **F/S**: F=meccanismo ritorno {summary, report_path} + re-align (ri-lettura stato) + summary-floor da decisioni-per-agente (**implementato** in `vars-queue.mjs`: `recordDecision`/`getDecisionsByAgent`/`getChangesByAgent`, test unit block-8) → PIENA / S=salienza del summary + quando aprire il report + cosa ri-allineare (DEGRADATA-MA-UTILE col floor).
+- **Verifica**: probe su pop/ritorno completato — (a) esiste il file-report col pieno; (b) il messaggio risalito è **bounded** + path **valido**; (c) il padre **decide correttamente** dal summary (+fetch se serve); (d) **re-align**: held-out dove un vincolo è cambiato durante lo zoom-in → il padre, dopo il pop, decide sulla versione **aggiornata** (NON sulla foto stantia). Outcome = decisione padre corretta / zero perdita di vincoli, **MAI** "ha prodotto un summary/file" o "ha chiamato re-align" come cerimonia. Held-out negativo: scope minuscolo (esito in una riga) → NON scomodare file+pointer (proporzionalità).
+- **Link**: [[concepts/report-to-file-pointer]] · [[decisions/2026-06-29-context-as-first-person-mind]] §principio-5 (nuance #4) · [[concepts/window-aware-fetching]] (lato consumatore) · [[concepts/agent-wrapper-vars-queue]] (lane `decisions` + change-log per-agente).
+
 ---
 
 ## Relazione con la training-taxonomy

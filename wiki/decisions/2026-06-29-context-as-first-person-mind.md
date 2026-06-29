@@ -45,11 +45,11 @@ Su progetti molto grossi le cose-da-tenere-sott'occhio/verificare/fare diventano
 1. **Trigger**: quando passare da riordino-priorità → matrioska? Soglia su #item-in-watch/#task-aperti o su budget-token del workspace. La tua euristica "prima riordino, poi compact" è giusta (proporzionalità).
 2. **Scelta del sottoinsieme**: la cornice esterna deve restare **veritiera** (non un riassunto che droppa vincoli/decisioni critiche) → la cornice si costruisce dallo **stato durevole** (aim/decisioni/vincoli), non da una sintesi lossy.
 3. **Profondità limitata**: la matrioska non deve annidarsi all'infinito (**budget profondità ≤ 3**, come [[../concepts/situational-policy-table]] §budget-profondità).
-4. **Ritorno-risultati**: a sottotask chiuso, il sub-context deve **riconciliare** i risultati nella cornice esterna (altrimenti si perde il lavoro fatto nello zoom-in).
+4. **Ritorno-risultati (pop)** `[EXTRACTED — utente TG msg 453, 2026-06-29]`: quando lo scope figlio finisce, fa **pop** alla cornice madre. Il ritorno **NON** è un summary inline grande riversato nella cornice: regola di sistema = **report completo (anche lungo) su FILE** + risale solo un **summary breve + il PATH al report** ([[../concepts/report-to-file-pointer]]). *"Alcune cose potrebbero essere condivise"* madre/figlia (aim/decisioni/vincoli + var `shared`): lo stato condiviso è già visibile a entrambe e **non va riportato**; il report copre solo lo specifico dello zoom-in. Così la cornice resta snella (anti context-rot) e il pieno è recuperabile per riferimento, non per copia. **Dopo il pop il padre RI-ALLINEA il proprio context allo stato attuale** (msg 456): la sua foto mentale è stantia (lo stato è evoluto durante lo zoom-in) → ri-legge stato durevole + promuove l'esito del figlio + pulisce il watch-list (auto-curazione al confine del pop). Il report del figlio è **derivabile** dalle sue decisioni attribuite (`getDecisionsByAgent(idFiglio)`, msg 457) → floor-F mai vuoto.
 
 → Raccomandazione: **riordino-priorità come default**, **matrioska solo quando il riordino non basta**; cornice esterna derivata dallo stato durevole (veritiera per costruzione); profondità bounded; riconciliazione obbligatoria al ritorno.
 
-→ *Le 4 nuance (trigger-threshold, algoritmo cornice-da-stato-durevole, depth-bound ≤3, meccanismo di riconciliazione) sono **rinviate al build** e tracciate come TODO atomici in [[../todo|todo §NEXT BUILD]] (regola no-half-work); qui restano `[INFERRED]`, da validare empiricamente.*
+→ *3 nuance (trigger-threshold, algoritmo cornice-da-stato-durevole, depth-bound ≤3) restano **rinviate al build** e tracciate come TODO atomici in [[../todo|todo §NEXT BUILD]] (regola no-half-work); qui `[INFERRED]`, da validare empiricamente. La 4ª (meccanismo di ritorno-risultati) è **specificata** dall'utente (msg 453) → [[../concepts/report-to-file-pointer]] (report-su-file + summary-pointer); resta da **implementare** nel build.*
 
 ## Conseguenze / implicazioni sul build
 
@@ -70,6 +70,7 @@ Su progetti molto grossi le cose-da-tenere-sott'occhio/verificare/fare diventano
 - [[../concepts/wrapper-context-assembly-example]] — design delle lane (la lane conversazione qui diventa centrale).
 - [[../concepts/sliding-window-variable-tool]] · [[../concepts/cross-session-state-sharing]] — store-by-ID + finestra + cross-agent (principio 3).
 - [[../concepts/task-decomposition-adhoc-context]] — la matrioska = decomposizione gerarchica del context (principio 5).
+- [[../concepts/report-to-file-pointer]] — protocollo di ritorno (pop): report-su-file + summary-pointer (principio 5, nuance #4).
 - [[../concepts/structured-context-sections]] · [[../concepts/structured-thinking]] — il workspace strutturato (principio 1).
 - [[../concepts/training-vs-harness-classification]] — F (struttura/finestre/store) vs S (politica di curazione) del principio 2.
 - [[../concepts/variable-operations-by-reference]] — data-flow per riferimento (extract_var/interpolazione) sulle var del workspace auto-curato.
