@@ -162,6 +162,74 @@ try {
     vq.close();
   }
 
+  // 8) FIX review-loop 2026-06-29 — LIFO / enter-guard / since_seq-skew / CURR-dangling / routing-who --------
+  {
+    // 8a) LIFO: pop di uno scope NON-top (con figli aperti) → throw; il deepest si pop-a
+    const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+    for (const id of ["A", "B"]) vq.addTask(id, id);
+    const s1 = enterFocus(vq, { taskSubset: ["A"], now: 10 });
+    const s2 = enterFocus(vq, { taskSubset: ["B"], now: 11 }); // figlio di s1 (via active_scope)
+    let threwLifo = false;
+    try { popFocus(vq, s1.scopeId, { reportDir: dir, now: 12 }); } catch { threwLifo = true; }
+    ok(threwLifo, "LIFO: pop di scope non-top con figli aperti → throw");
+    const okPop = popFocus(vq, s2.scopeId, { reportDir: dir, now: 13 });
+    ok(okPop.promotedDecisionId === `pop-${s2.scopeId}`, "LIFO: pop del deepest ok");
+    vq.close();
+  }
+  {
+    // 8b) enter-guard: subset vuoto o solo-ghost → throw; mix valido+ghost → tiene solo i validi
+    const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+    vq.addTask("A", "a");
+    let e1 = false, e2 = false;
+    try { enterFocus(vq, { taskSubset: [] }); } catch { e1 = true; }
+    try { enterFocus(vq, { taskSubset: ["GHOST", "NOPE"] }); } catch { e2 = true; }
+    ok(e1, "ENTER-GUARD: subset vuoto → throw");
+    ok(e2, "ENTER-GUARD: subset di soli ghost-id → throw");
+    const s = enterFocus(vq, { taskSubset: ["A", "GHOST"], now: 5 });
+    ok(vq.getFocusFrame(s.scopeId).task_subset.length === 1, "ENTER-GUARD: filtra i ghost, tiene i validi");
+    vq.close();
+  }
+  {
+    // 8c) since_seq skew-immunity: entered iniettato NEL FUTURO non perde i delta del figlio (delimitazione per seq)
+    const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+    vq.addTask("T", "t");
+    const future = Date.now() + 3_600_000; // frame.entered > ts reali delle mutazioni → il filtro ts li perderebbe
+    const { scopeId } = enterFocus(vq, { taskSubset: ["T"], now: future });
+    vq.setVar("child_v", 1, { who: scopeId, scope: "shared" });
+    vq.setTaskStatus("T", "done", { who: scopeId });
+    const r = popFocus(vq, scopeId, { reportDir: dir, now: future + 1 });
+    ok(r.report_path && readFileSync(r.report_path, "utf-8").includes("child_v"),
+      "SINCE_SEQ: delta del figlio nel report anche con entered nel futuro (seq monotono, no wall-clock)");
+    vq.close();
+  }
+  {
+    // 8d) CURR-dangling: il figlio completa l'aim del padre → CURR non resta su 'done', si ri-punta ad aperto
+    const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+    vq.addTask("AIM", "aim del padre"); vq.addTask("OTHER", "altro task aperto");
+    vq.setCurr("AIM");
+    const { scopeId } = enterFocus(vq, { taskSubset: ["AIM"], now: 100 }); // zoom sull'aim stesso
+    vq.setTaskStatus("AIM", "done", { who: scopeId });
+    const r = popFocus(vq, scopeId, { reportDir: dir, now: 200 });
+    ok(vq.getCurr() !== "AIM", "DANGLING: CURR non resta sul task done");
+    ok(vq.getCurr() === "OTHER" && r.restoredCurr === "OTHER", "DANGLING: CURR ri-puntato al primo task aperto");
+    vq.close();
+  }
+  {
+    // 8e) routing-who PRODUZIONE: mutazioni attribuite via getActiveScope() (come i tool) → report deriva i delta
+    const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+    vq.addTask("T", "t");
+    const { scopeId } = enterFocus(vq, { taskSubset: ["T"], now: 50 });
+    const activeWho = () => vq.getActiveScope() ?? vq.agent; // == vars-queue.ts activeWho()
+    ok(activeWho() === scopeId, "ROUTING: active_scope = scopeId in-scope");
+    vq.recordDecision("D-prod", "deciso via routing", { who: activeWho() });
+    vq.setVar("v-prod", "x", { who: activeWho(), scope: "shared" });
+    const r = popFocus(vq, scopeId, { reportDir: dir, now: 60 });
+    const rep = readFileSync(r.report_path, "utf-8");
+    ok(rep.includes("D-prod") && rep.includes("v-prod"), "ROUTING: il report deriva i delta attribuiti via active_scope");
+    ok(vq.getActiveScope() === null, "ROUTING: active_scope pulito dopo il pop");
+    vq.close();
+  }
+
 } finally {
   rmSync(dir, { recursive: true, force: true });
 }

@@ -10,6 +10,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { VarsQueue } from "../../src/vars-queue.mjs";
+import { getVarsQueue, closeAll } from "../../src/state-db.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
@@ -18,11 +19,12 @@ const MEMO_NS = "memo";
 
 function store(): VarsQueue {
   mkdirSync(dirname(DB_PATH), { recursive: true });
-  return new VarsQueue(DB_PATH, { agent: "orchestrator" });
+  return getVarsQueue(DB_PATH, { agent: "orchestrator" }); // connessione condivisa (no leak)
 }
 
 export default function (pi: ExtensionAPI) {
   const vq = store();
+  pi.on("session_shutdown", () => closeAll()); // rilascia le connessioni DB condivise (fix leak)
 
   pi.registerTool({
     name: "remember_lesson",

@@ -135,7 +135,7 @@ export class VarsQueue {
   getDecision(id: string): DecisionRecord | null;
   listDecisions(opts?: { agent?: string | null; taskRef?: string | null }): DecisionRecord[];
   getDecisionsByAgent(agent: string): DecisionRecord[];
-  getChangesByAgent(agent: string, opts?: { since?: number; includeSilent?: boolean; limit?: number }): ChangeLogEntry[];
+  getChangesByAgent(agent: string, opts?: { since?: number; sinceSeq?: number | null; includeSilent?: boolean; limit?: number }): ChangeLogEntry[];
 
   // INTER-AGENT MESSAGING
   sendMessage(toAgent: string, body: unknown, opts?: { from?: string; topic?: string | null }): number;

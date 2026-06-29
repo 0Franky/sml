@@ -106,4 +106,27 @@ export function buildMessagesLane(store, convId, { n = 6, charCap = 4000 } = {})
   return lines.join("\n");
 }
 
+/**
+ * windowNativeMessages — Strada-2 (full): sopprime la STORIA dei turni precedenti dall'array messaggi NATIVO di pi,
+ * tenendo solo il TURNO CORRENTE (dall'ultimo messaggio 'user' in poi, coi suoi tool_call/tool_result). La
+ * conversazione vive curata nella lane <messages_with_user> (system prompt) → niente doppia-chat né crescita
+ * illimitata (sostituisce la compaction nativa, OFF). I turni precedenti restano in conversations.db.
+ *
+ * Entro UN turno (anche multi-tool) lastUser=0 → ritorna l'array INVARIATO (continuità del tool-loop intatta);
+ * si sopprime SOLO dal 2° turno in poi. Ritorna lo STESSO riferimento se non c'è nulla da togliere (il caller
+ * può confrontare per identità per decidere se rimpiazzare). (ADR 2026-06-29 principio-3.)
+ *
+ * @param {Array<{role?:string}>} messages
+ * @returns {Array} l'array ridotto al turno corrente, o lo stesso `messages` se invariato.
+ */
+export function windowNativeMessages(messages) {
+  if (!Array.isArray(messages) || messages.length < 2) return messages;
+  let lastUser = -1;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i] && messages[i].role === "user") { lastUser = i; break; }
+  }
+  if (lastUser <= 0) return messages; // 0/1 turno user → niente storia da rimuovere
+  return messages.slice(lastUser);
+}
+
 export default ConversationStore;

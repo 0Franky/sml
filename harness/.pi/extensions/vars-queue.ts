@@ -12,6 +12,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { VarsQueue } from "../../src/vars-queue.mjs";
+import { getVarsQueue, closeAll } from "../../src/state-db.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
@@ -19,11 +20,12 @@ const DB_PATH = ".pi/state/vars.db";
 
 function getStore(): VarsQueue {
   mkdirSync(dirname(DB_PATH), { recursive: true });
-  return new VarsQueue(DB_PATH, { agent: "orchestrator" });
+  return getVarsQueue(DB_PATH, { agent: "orchestrator" }); // connessione condivisa (no leak)
 }
 
 export default function (pi: ExtensionAPI) {
   const vq = getStore();
+  pi.on("session_shutdown", () => closeAll()); // rilascia le connessioni DB condivise (fix leak)
 
   // Routing dell'attribuzione: se uno scope-figlio (matrioska) è aperto, le mutazioni sono attribuite allo scope
   // (who=scopeId) → il pop-report deriva i delta del figlio. Altrimenti = l'agente base. Vedi nested-compact.mjs.
@@ -135,7 +137,7 @@ export default function (pi: ExtensionAPI) {
     description: "Imposta il task corrente (CURR pointer) — l'aim che alimenta il <context>.",
     parameters: Type.Object({ task_id: Type.String() }),
     async execute(_t: string, p: any) {
-      vq.setCurr(p.task_id);
+      vq.setCurr(p.task_id, { who: activeWho() });
       return { content: [{ type: "text", text: `CURR = ${p.task_id}` }], details: { ok: true } };
     },
   });

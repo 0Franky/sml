@@ -12,7 +12,7 @@
  * Si appoggia a vars-queue.mjs: getDecisionsByAgent(id) + getChangesByAgent(id).
  * Path emessi OS-agnostic (forward-slash, CLAUDE.md Fase-5).
  */
-import { writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
 const fwd = (p) => String(p).replace(/\\/g, "/");
@@ -33,6 +33,7 @@ export function buildPopReport(vq, childAgentId, opts = {}) {
   const {
     reportDir = ".pi/state/reports",
     since = 0,
+    sinceSeq = null,
     reportId = Date.now(),
     write = true,
     summaryCap = 120,
@@ -41,7 +42,8 @@ export function buildPopReport(vq, childAgentId, opts = {}) {
   const decisions = vq.getDecisionsByAgent(childAgentId);
   // i cambiamenti del change-log ESCLUDONO entity='decisions' (già resi, più ricchi, nella sezione Decisioni)
   // → niente doppio-conteggio. I messaggi (agent_messages) sono già esclusi perché loggati silent. (fix review)
-  const changes = vq.getChangesByAgent(childAgentId, { since }).filter((c) => c.entity !== "decisions");
+  // delimitatore preferito = `sinceSeq` monotono (immune a clock-skew); fallback `since` (epoch ms). (fix review 2026-06-29)
+  const changes = vq.getChangesByAgent(childAgentId, { since, sinceSeq }).filter((c) => c.entity !== "decisions");
 
   // --- report completo (markdown), anche lungo ------------------------------
   const L = [];
@@ -78,7 +80,11 @@ export function buildPopReport(vq, childAgentId, opts = {}) {
   if (write) {
     try {
       mkdirSync(reportDir, { recursive: true });
-      report_path = fwd(join(reportDir, `${sanitize(childAgentId)}-${sanitize(reportId)}.md`));
+      // nome collision-free: se (childAgentId, reportId) collidono (stesso agente+ms), aggiungi un suffisso
+      // monotono invece di sovrascrivere il report precedente. (review-loop 2026-06-29, P2 report-overwrite.)
+      const base = `${sanitize(childAgentId)}-${sanitize(reportId)}`;
+      report_path = fwd(join(reportDir, `${base}.md`));
+      for (let n = 1; existsSync(report_path); n++) report_path = fwd(join(reportDir, `${base}-${n}.md`));
       writeFileSync(report_path, report, "utf-8");
       summary += ` → report: ${report_path}`;
     } catch (e) {

@@ -14,6 +14,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { VarsQueue } from "../../src/vars-queue.mjs";
+import { getVarsQueue, closeAll } from "../../src/state-db.mjs";
 import { extractVar, emitToUser } from "../../src/var-ops.mjs";
 import { getDynamicSecrets } from "../../src/secrets-registry.mjs";
 import { mkdirSync } from "node:fs";
@@ -23,11 +24,12 @@ const DB_PATH = ".pi/state/vars.db";
 
 function getStore(): VarsQueue {
   mkdirSync(dirname(DB_PATH), { recursive: true });
-  return new VarsQueue(DB_PATH, { agent: "orchestrator" });
+  return getVarsQueue(DB_PATH, { agent: "orchestrator" }); // connessione condivisa (no leak)
 }
 
 export default function (pi: ExtensionAPI) {
   const vq = getStore();
+  pi.on("session_shutdown", () => closeAll()); // rilascia le connessioni DB condivise (fix leak)
 
   pi.registerTool({
     name: "extract_var",
@@ -63,5 +65,34 @@ export default function (pi: ExtensionAPI) {
       const out = emitToUser(p.text, vq, { interpolate: true, dynamicSecrets: getDynamicSecrets() });
       return { content: [{ type: "text", text: out.text }], details: { secretHit: out.secretHit } };
     },
+  });
+
+  // Item 4 — CANALE OUTPUT: interpolazione automatica della RISPOSTA FINALE dell'assistant.
+  // Disambiguazione per CANALE (non per delimitatore, msg 437): il canale-output risolve SOLO i {{var:NOME}} di
+  // var ESISTENTI (il resto — {{...}} Jinja/Vue, var inesistenti — resta LETTERALE → niente clobber dell'output),
+  // poi applica la redazione segreti (ordine interpolazione→redazione→invio). Passthrough puro se nulla cambia.
+  // Sostituisce l'opt-in manuale render_template per l'output finale. (review TB-01.)
+  pi.on("message_end", (event) => {
+    const m = event.message as any;
+    if (!m || m.role !== "assistant") return;
+    const dynamicSecrets = getDynamicSecrets();
+    let changed = false;
+    const apply = (s: string): string => {
+      const out = emitToUser(s, vq, { interpolate: true, dynamicSecrets });
+      if (out.text !== s) changed = true;
+      return out.text;
+    };
+    let newContent: any;
+    if (typeof m.content === "string") {
+      newContent = apply(m.content);
+    } else if (Array.isArray(m.content)) {
+      newContent = m.content.map((b: any) =>
+        b && b.type === "text" && typeof b.text === "string" ? { ...b, text: apply(b.text) } : b,
+      );
+    } else {
+      return;
+    }
+    if (!changed) return; // nessun {{var:x}} risolvibile né segreto → passthrough (nessuna sostituzione)
+    return { message: { ...m, content: newContent } };
   });
 }

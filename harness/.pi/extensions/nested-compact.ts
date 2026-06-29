@@ -16,6 +16,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { VarsQueue } from "../../src/vars-queue.mjs";
+import { getVarsQueue, closeAll } from "../../src/state-db.mjs";
 import { enterFocus, popFocus, getFocusStack, currentDepth, evaluateTrigger, DEFAULT_CFG } from "../../src/nested-compact.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
@@ -25,11 +26,12 @@ const REPORT_DIR = ".pi/state/reports";
 
 function getStore(): VarsQueue {
   mkdirSync(dirname(DB_PATH), { recursive: true });
-  return new VarsQueue(DB_PATH, { agent: "orchestrator" });
+  return getVarsQueue(DB_PATH, { agent: "orchestrator" }); // connessione condivisa (no leak)
 }
 
 export default function (pi: ExtensionAPI) {
   const vq = getStore();
+  pi.on("session_shutdown", () => closeAll()); // rilascia le connessioni DB condivise (fix leak)
 
   pi.registerTool({
     name: "enter_focus",
@@ -37,7 +39,7 @@ export default function (pi: ExtensionAPI) {
     description:
       "Apre uno scope a fuoco su un SOTTO-INSIEME di task (zoom-IN): il workspace si restringe al subset, il resto resta come backlog nel <frame>. Usalo quando il contesto è in pressione (vedi <focus_hint>/focus_status) o per isolare un sotto-lavoro. Profondità max 3. Al termine chiama pop_focus.",
     parameters: Type.Object({
-      task_ids: Type.Array(Type.String(), { description: "Gli id dei task da mettere a fuoco (il primo diventa l'aim/CURR)." }),
+      task_ids: Type.Array(Type.String(), { minItems: 1, description: "Gli id (esistenti) dei task da mettere a fuoco — almeno 1; il primo diventa l'aim/CURR." }),
       reason: Type.Optional(Type.String({ description: "Perché entri a fuoco (annotato nella decisione di enter)." })),
     }),
     async execute(_t: string, p: any) {

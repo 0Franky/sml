@@ -128,8 +128,22 @@ export class VarsQueue {
     this.db = new DatabaseSync(dbPath);
     this.db.exec("PRAGMA journal_mode = WAL;"); // concorrenza: lettori non bloccano lo scrittore
     this.db.exec(SCHEMA);
-    // migrazione difensiva per db pre-esistenti: la colonna changelog.silent è stata aggiunta 2026-06-29.
-    try { this.db.exec("ALTER TABLE changelog ADD COLUMN silent INTEGER NOT NULL DEFAULT 0;"); } catch { /* colonna già presente */ }
+    // Migrazione difensiva IDEMPOTENTE per DB pre-esistenti su disco: `CREATE TABLE IF NOT EXISTS` NON aggiunge
+    // colonne a tabelle già create → OGNI colonna aggiunta DOPO la creazione iniziale va ADD-ata qui. Helper
+    // generico via PRAGMA table_info → la prossima colonna futura non crasha i DB esistenti. (review-loop 2026-06-29.)
+    this._ensureColumn("changelog", "silent", "INTEGER NOT NULL DEFAULT 0");
+    this._ensureColumn("changelog", "decision_ref", "TEXT");
+    this._ensureColumn("vars", "decision_ref", "TEXT");
+  }
+
+  /** Aggiunge `column` a `table` se mancante (idempotente). Difesa per i DB .pi/state/*.db già su disco. */
+  _ensureColumn(table, column, decl) {
+    try {
+      const cols = this.db.prepare(`PRAGMA table_info(${table})`).all();
+      if (cols.length && !cols.some((c) => c.name === column)) {
+        this.db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl};`);
+      }
+    } catch { /* tabella inesistente (SCHEMA la crea già) o colonna presente */ }
   }
 
   close() { this.db.close(); }
@@ -341,10 +355,14 @@ export class VarsQueue {
    * Vista più ampia delle sole decisioni: TUTTE le mutazioni (change-log) attribuite a un agente per `who`.
    * Default esclude le silenziose (memo). Per il report-to-file del pop: l'attività completa del figlio.
    */
-  getChangesByAgent(agent, { since = 0, includeSilent = false, limit = 500 } = {}) {
+  getChangesByAgent(agent, { since = 0, sinceSeq = null, includeSilent = false, limit = 500 } = {}) {
+    // `sinceSeq` (seq monotono) è il delimitatore PREFERITO per scopare i delta di uno scope: immune a clock-skew
+    // /NTP-step e deterministico al same-ms. Quando fornito ha precedenza sul filtro temporale `since` (epoch ms).
     let q = `SELECT seq, ts, who, entity, entity_id, field, old_value, new_value, decision_ref, silent
-             FROM changelog WHERE who = ? AND ts >= ?`;
-    const args = [agent, since];
+             FROM changelog WHERE who = ?`;
+    const args = [agent];
+    if (sinceSeq != null) { q += " AND seq > ?"; args.push(sinceSeq); }
+    else { q += " AND ts >= ?"; args.push(since); }
     if (!includeSilent) q += " AND silent = 0";
     q += " ORDER BY seq DESC LIMIT ?"; args.push(limit);
     return this.db.prepare(q).all(...args);

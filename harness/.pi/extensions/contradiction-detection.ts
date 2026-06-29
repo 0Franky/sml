@@ -13,6 +13,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { VarsQueue } from "../../src/vars-queue.mjs";
+import { getVarsQueue, closeAll } from "../../src/state-db.mjs";
 import { checkContradiction } from "../../src/contradiction-check.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
@@ -22,7 +23,7 @@ const NS = "decisions";
 
 function store(): VarsQueue {
   mkdirSync(dirname(DB_PATH), { recursive: true });
-  return new VarsQueue(DB_PATH, { agent: "orchestrator" });
+  return getVarsQueue(DB_PATH, { agent: "orchestrator" }); // connessione condivisa (no leak)
 }
 
 const Predicate = Type.Object({
@@ -33,6 +34,7 @@ const Predicate = Type.Object({
 
 export default function (pi: ExtensionAPI) {
   const vq = store();
+  pi.on("session_shutdown", () => closeAll()); // rilascia le connessioni DB condivise (fix leak)
 
   // NB nome `record_assumptions` (NON `record_decision`): evita la COLLISIONE col tool `record_decision` di
   // vars-queue.ts (la decisione-floor-F: choice+rationale+agente). Questo registra le ASSUNZIONI tipizzate su

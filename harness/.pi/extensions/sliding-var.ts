@@ -7,6 +7,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { VarsQueue } from "../../src/vars-queue.mjs";
+import { getVarsQueue, closeAll } from "../../src/state-db.mjs";
 import { slidingRead, slidingReplace } from "../../src/sliding-var.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
@@ -14,11 +15,12 @@ import { dirname } from "node:path";
 const DB_PATH = ".pi/state/vars.db";
 function store(): VarsQueue {
   mkdirSync(dirname(DB_PATH), { recursive: true });
-  return new VarsQueue(DB_PATH, { agent: "orchestrator" });
+  return getVarsQueue(DB_PATH, { agent: "orchestrator" }); // connessione condivisa (no leak)
 }
 
 export default function (pi: ExtensionAPI) {
   const vq = store();
+  pi.on("session_shutdown", () => closeAll()); // rilascia le connessioni DB condivise (fix leak)
 
   pi.registerTool({
     name: "sliding_var_read",
