@@ -63,6 +63,7 @@ L'unica cosa che richiede TE = l'**auth del provider** (per Claude: `/login anth
 | `pre-flight.ts` | `tool_call` | Blocca azioni distruttive (`rm -rf`, `git reset --hard`, `mkfs`, `dd`…) prima dell'esecuzione. |
 | `verifier-sandbox.ts` | tool `run_verifier` | Esegue i verifier-spec dei gold (setup fixture + assert oracoli) in sandbox, ritorna pass/fail. |
 | `gemini-compat.ts` | `before_provider_request` | **Compat-shim provider**: rimuove dal body i campi OpenAI-only (`store`/`metadata`/`parallel_tool_calls`/`reasoning_effort`) che l'endpoint Gemini OpenAI-compat rifiuta con HTTP 400 (→ risposta vuota silenziosa). Caricala SOLO con Gemini; per Claude/OpenAI non serve. Scoperto+fixato nell'e2e 2026-06-29. |
+| `contradiction-detection.ts` | tool `record_decision`/`check_facts` | **Contradiction-detection layer** (research-gap #2, validato dal Test B): registra decisioni+assunzioni tipizzate (vars-queue) e segnala quando un nuovo fatto NEGA un'assunzione precedente, deterministicamente (logica `src/contradiction-check.mjs`, smoke 18/18; anti-FP conservativo). |
 
 **API pi verificata** (v0.80.2): `before_agent_start` · `tool_call` (gate) · `tool_result` (transform array) · `before_provider_request` (mutate body) · `registerTool` (typebox params). **E2E headless provato** (`src/_e2e-pi-run.mjs`, 2026-06-29): `createAgentSession` + `AuthStorage.inMemory` + `ModelRegistry.registerProvider` + `bindExtensions` → turno reale verde (context iniettato, 15/15 tool, guardrail attivi). `verifier-sandbox` usa una tempdir (Fase 2: Docker).
 
