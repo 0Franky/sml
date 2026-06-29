@@ -15,6 +15,8 @@
  *   <recent_changes>  change-log recente (visibile-finché-serve): chi/quando/cosa
  */
 
+import { buildMessagesLane } from "./conversation-store.mjs";
+
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 /** Timestamp assoluto stabile (ISO-8601 al secondo, UTC). Deterministico: `new Date(ms)` con argomento esplicito. */
@@ -204,6 +206,34 @@ export function assembleContext(vq, opts = {}) {
 
   lines.push("</context>");
   return lines.join("\n");
+}
+
+/**
+ * buildWorkspace — compone la "mente in prima persona" completa (Strada 2, ADR 2026-06-29-context-as-first-person-mind):
+ *   <resuming_from>      (transiente: solo se si riprende dopo un gap — self-gating sul tempo)
+ *   <context>…</context> (workspace: prefisso STABILE + stato VOLATILE in coda)
+ *   <messages_with_user> (la chat: blocco SEPARATO e ULTIMO, zona volatile, DOPO </context>)
+ * È ciò che la pi-extension `context-assembly` antepone al system prompt. La finestra verbatim della chat sta
+ * in fondo (volatile) per NON intaccare il prefisso cache-stable (review-loop 2026-06-29).
+ *
+ * @param {import("./vars-queue.mjs").VarsQueue} vq
+ * @param {{ store?: import("./conversation-store.mjs").ConversationStore, convId?: string, now?: number,
+ *           absoluteTimestamps?: boolean, messagesN?: number, messagesCharCap?: number, includePrivateVars?: boolean,
+ *           sinceMs?: number, maxChanges?: number, maxTasks?: number, maxVars?: number,
+ *           resumeGapMs?: number, forceResume?: boolean }} [opts]
+ * @returns {string} il workspace completo (resume? + context + messages?)
+ */
+export function buildWorkspace(vq, opts = {}) {
+  const now = opts.now ?? Date.now();
+  const parts = [];
+  const resume = buildResumeDigest(vq, { now, resumeGapMs: opts.resumeGapMs, force: opts.forceResume });
+  if (resume) parts.push(resume);
+  parts.push(assembleContext(vq, opts));
+  if (opts.store && opts.convId) {
+    const lane = buildMessagesLane(opts.store, opts.convId, { n: opts.messagesN ?? 6, charCap: opts.messagesCharCap });
+    if (lane) parts.push(lane);
+  }
+  return parts.join("\n");
 }
 
 export default assembleContext;
