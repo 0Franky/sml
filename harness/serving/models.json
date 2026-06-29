@@ -1,7 +1,31 @@
 {
-  "_comment": "Provider OpenAI-compatible verso vLLM locale. Copia/merge in ~/.pi/agent/models.json. API pi verificata: api='openai-completions'.",
+  "_comment": "Provider per pi (API pi verificata: api='openai-completions'). Copia/merge in ~/.pi/agent/models.json. Scegli UN provider e riempi baseUrl + apiKey. Le nostre extension (.pi/extensions/) funzionano con QUALSIASI provider OpenAI-compatible → puoi dogfoodare il metodo PRIMA dell'SLM.",
+
   "providers": {
+
+    "openai-compatible": {
+      "_comment": "Provider GENERICO: OpenAI, OpenRouter, Together, un Anthropic-compat shim, ecc. Imposta $OAI_BASE_URL e $OAI_API_KEY (env), poi metti l'id del modello che vuoi usare.",
+      "baseUrl": "$OAI_BASE_URL",
+      "api": "openai-completions",
+      "apiKey": "$OAI_API_KEY",
+      "models": [
+        { "id": "gpt-4o-mini", "contextWindow": 128000, "maxTokens": 16384 },
+        { "id": "REPLACE-WITH-YOUR-MODEL-ID", "contextWindow": 128000, "maxTokens": 8192 }
+      ]
+    },
+
+    "ollama-local": {
+      "_comment": "Modello locale via Ollama (OpenAI-compatible su :11434). Nessuna API key. Es. `ollama run qwen2.5-coder`.",
+      "baseUrl": "http://localhost:11434/v1",
+      "api": "openai-completions",
+      "apiKey": "ollama",
+      "models": [
+        { "id": "qwen2.5-coder", "contextWindow": 32768, "maxTokens": 4096 }
+      ]
+    },
+
     "vllm-local": {
+      "_comment": "Target finale: il nostro SLM su vLLM locale (post-FFT). Placeholder finché l'adapter non esiste.",
       "baseUrl": "http://localhost:8000/v1",
       "api": "openai-completions",
       "apiKey": "$VLLM_API_KEY",
