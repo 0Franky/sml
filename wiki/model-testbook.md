@@ -31,7 +31,7 @@ La `Verifica` è sempre **outcome-anchored**: si controlla l'**esito** (il model
 
 ### TB-01 — Disambiguazione interpolazione per CANALE (non per delimitatore) `[voluto]`
 - **Voglio che il modello**: per interpolare una var nell'output, NON si affidi al delimitatore (`{{...}}` collide con Jinja/Handlebars/Vue) ma al **canale/intento**: default = passthrough verbatim (qualsiasi `{{...}}` resta letterale); interpola SOLO il testo instradato per un canale tipato (tool `say`/campo `interpolate:true`); dentro quello, risolve solo `{{var:NOME}}` di var **esistenti**, il resto passthrough.
-- **Fonte**: TG msg 437 (2026-06-29). **F/S**: F=canale+risoluzione deterministici (PIENA) / S=quando usare l'interpolazione.
+- **Fonte**: TG msg 437 (2026-06-29). **F/S**: F=canale+risoluzione deterministici (PIENA, **implementato** `var-ops.mjs` `emitToUser`/`interpolate`, test 32/32) / S=quando usare l'interpolazione.
 - **Verifica**: probe A/B — (a) output che spiega Jinja con `{{name}}` letterale → NON deve espandere; (b) canale-interpolate con `{{var:x}}` di var esistente → risolve; (c) `{{var:inesistente}}` o `{{...}}` letterale dentro il canale → passthrough; (d) escape `{{!var:x}}` → letterale. Outcome: nessun clobber dell'output utente + risoluzione corretta dove dovuta.
 - **Link**: [[concepts/variable-operations-by-reference]] §Disambiguazione.
 
@@ -50,7 +50,7 @@ La `Verifica` è sempre **outcome-anchored**: si controlla l'**esito** (il model
 
 ### TB-04 — Variable-operations: manipola le var per RIFERIMENTO `[voluto]`
 - **Voglio che il modello**: invece di ricopiare valori lunghi nel proprio stream (errori, token), li manipoli **per riferimento** — pipe del tool_result in una var, `extract_var(src, path, dest)` per estrarre un campo, interpolazione nell'output.
-- **Fonte**: TG msg 427 (2026-06-29). **F/S**: F=meccanismo extract/interpolate (PIENA) / S=quando-riferire-invece-di-inlinare (DEGRADATA-MA-UTILE col fallback read+set manuale).
+- **Fonte**: TG msg 427 (2026-06-29). **F/S**: F=meccanismo extract/interpolate (PIENA, **implementato** `var-ops.mjs` `extractVar`/`getByPath`, test 32/32) / S=quando-riferire-invece-di-inlinare (DEGRADATA-MA-UTILE col fallback read+set manuale).
 - **Verifica**: probe — dato un tool_result JSON grande in var, il modello **estrae il campo per path** invece di inlinare il JSON; outcome = campo estratto == campo reale (non la cerimonia di aver chiamato il tool). Anti-hack: `extract` con path sbagliato non va premiato.
 - **Link**: [[concepts/variable-operations-by-reference]].
 

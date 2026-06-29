@@ -4,9 +4,10 @@ description: Capability harness (idea utente TG msg 427, 2026-06-29) — il mode
 type: concept
 tags: [harness, variables, vars-queue, dataflow, by-reference, json, dsl, security, small-model, F+S, content-compression]
 sources:
-  - user TG msg 427 (2026-06-29)
-  - harness/src/vars-queue.mjs (datastore esistente — contesto; NON contiene extract_var/getByPath/interpolazione)
-  - extract_var / path-DSL / interpolazione = DESIGN PROPOSTO, non ancora implementato in codice
+  - user TG msg 427/431/437 (2026-06-29)
+  - harness/src/vars-queue.mjs (datastore delle var)
+  - harness/src/var-ops.mjs (IMPLEMENTAZIONE 2026-06-29 — getByPath/extractVar/interpolate/emitToUser)
+  - harness/test/unit/var-ops.test.mjs (32 asserzioni — path-DSL/extract/interpolazione/canale/segreti)
 last_updated: 2026-06-29
 ---
 
@@ -69,6 +70,16 @@ La sintassi `JSON.parse(read_var(x)).status` era **illustrativa**. La grammatica
 
 - **F-harness** (meccanismo, deterministico): `extract_var` (path-access), pipe-tool-result→var, interpolazione-post-redazione. **Stato-senza-training = PIENA** (il meccanismo, quando chiamato, gira sempre). La **capacità complessiva è F+S**: è la **metà-S** (quando riferire-invece-di-inlinare, quale path, quando interpolare) ad avere **stato DEGRADATA-MA-UTILE**, grazie al fallback deterministico `read_var`+`set_var` manuale (il modello ricopia, con più errori; il tool `extract` la rende robusta).
 - **S** (skill, addestrata): *quando* riferire-invece-di-inlinare, *quale* path estrarre, *quando* interpolare. Reward **outcome-anchored** ([[../concepts/wrapper-context-assembly-example|reward design]]): il campo estratto coincide col campo reale? l'output mostra il valore giusto? — MAI premiare la cerimonia (l'aver usato il tool), ma l'esito corretto. Anti reward-hacking: un `extract_var` con path sbagliato che "sembra" usare il pattern non va premiato.
+
+## Implementazione (2026-06-29) `[EXTRACTED dal codice]`
+
+Modulo `harness/src/var-ops.mjs` (F-harness, testato `harness/test/unit/var-ops.test.mjs` 32/32):
+- **`parsePath(path)` / `getByPath(obj, path)`** — sotto-JSONPath dotted+indice; parser lineare (no funzioni/operatori/eval); rifiuta `__proto__`/`prototype`/`constructor`; accede **solo** a own-key (`Object.hasOwn`); cap path 512; errori → `{ok:false,error}` (mai crash). Copre criticità #1+#2.
+- **`extractVar(vq, src, path, dest)`** — JSON.parse la var sorgente (gestisce sia oggetto-già-decodificato sia stringa-JSON da tool_result), estrae per path, salva in `dest` (snapshot, #3) + log nel changelog (#5).
+- **`interpolate(text, vq)`** — risolve `{{var:NOME}}` di var esistenti; `{{!var:NOME}}` escape→letterale; var inesistenti e `{{...}}` non-`var:` passthrough.
+- **`emitToUser(text, vq, {interpolate, dynamicSecrets})`** — il **canale**: default passthrough (zero scansione), interpola solo con `interpolate:true` (disambiguazione-per-canale msg 437); ordine **interpolazione → `redactText` → invio** (#4, verificato dal test: un segreto in una var esce `[REDACTED-SECRET]`).
+
+**Resta (build/review-loop)**: nomi-tool definitivi (`extract` vs `extract_var`, `say`/`emit`), wiring come tool/extension pi (esposizione al modello), auto-cattura `tool_result→var` (converge con content-compression item-2), stress-test injection/proto-pollution nel review-loop. Vedi [[../todo|todo §BUILD Strada-2]].
 
 ## Collegamenti
 - [[sliding-window-variable-tool]] — leggere finestre di var grandi; questa estende il principio alle *operazioni*.
