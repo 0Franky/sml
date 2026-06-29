@@ -29,6 +29,7 @@ La **ricerca** (Tier 1/2/3, training, LoRA) vive nel serving layer; pi la rende 
 ```bash
 npm install            # @earendil-works/pi-coding-agent@^0.80.2 + typebox + typescript
 npm run typecheck      # valida le extension contro i tipi reali di pi
+npm run test:vars-queue  # smoke-test del datastore vars-queue (zero-deps, no Docker, node:sqlite) — 24/24
 
 # avvia vLLM (processo separato) — vedi serving/launch-vllm.md
 # collega il provider: copia/merge serving/models.json in ~/.pi/agent/models.json
@@ -43,6 +44,7 @@ Scaffold iniziale (2026-06-29). **API pi verificata + extension TYPECHECK-GREEN*
 ## Roadmap
 
 - **Fase 0** (questo scaffold) → walking skeleton + verifier-sandbox.
-- **Fase 1** → context-assembly completo (lane), vars-queue, lora-router (classifier → adapter per-request), MVP TUI.
+- **Fase 1** → context-assembly completo (lane), **vars-queue** ✅ (`src/vars-queue.mjs` — datastore SQLite 4-lane + CURR + change-log/timestamp + cross-compact + cross-agent view/propose/merge; 24/24 smoke), lora-router (classifier → adapter per-request, gated su vLLM+adapter), MVP TUI.
+  - ⏳ Next: thin pi-extension `.pi/extensions/vars-queue.ts` che aggancia il datastore agli hook (`context`/`before_agent_start`) — da fare con `npm install` presente (typecheck-green).
 - **Fase 2** → sandbox/verifier completo per i dati RL (Phase-3 gym Docker).
 - **Fase 3** → token-routing, memory layer, contradiction-detection, frontend web.

@@ -5,7 +5,8 @@
   "description": "ITLMv1 harness — wrapper three-tier SLM su pi (extensions) + vLLM serving",
   "type": "module",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:vars-queue": "node src/vars-queue.test.mjs"
   },
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "^0.80.2",
