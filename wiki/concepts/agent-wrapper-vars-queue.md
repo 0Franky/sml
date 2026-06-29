@@ -1,10 +1,10 @@
 ---
 name: agent-wrapper-vars-queue
-description: Struttura runtime del wrapper — queue di TASKS/VERIFICATIONS/RULES/VARS con map O(1) e current pointer.
+description: Struttura runtime del wrapper — datastore SQLite con le lane TASKS/VERIFICATIONS/RULES/VARS (+ CURR, change-log, proposals) e, dal 2026-06-29, le lane DECISIONS e AGENT_MESSAGES. Map O(1) by-id, audit per-agente. È il god-node su cui poggiano report-to-file-pointer, inter-agent-messaging, cross-session-state-sharing.
 type: concept
-tags: [concept, wrapper, runtime, queue, data-structure, vars-registry]
-sources: [user notes 2026-05-21 hand-sketch photo]
-last_updated: 2026-05-21
+tags: [concept, wrapper, runtime, queue, data-structure, vars-registry, decisions, messaging, multi-agent]
+sources: [user notes 2026-05-21 hand-sketch photo, harness/src/vars-queue.mjs]
+last_updated: 2026-06-29
 ---
 
 # Agent Wrapper Runtime — Queue + Vars Registry
@@ -42,6 +42,15 @@ VARS BY SLIDING WINDOW READ:
 ## Cosa rappresenta
 
 Il **runtime state** del wrapper. Non è il context inviato al modello (quello è [[structured-context-sections]]), ma il **datastore interno del wrapper** da cui il context viene costruito dinamicamente.
+
+## Lane implementate (`harness/src/vars-queue.mjs`) `[EXTRACTED dal codice]`
+
+Oltre alle 4 lane originali (TASKS / VERIFICATIONS / RULES / VARS) + **CURR** pointer + **change-log** (chi/quando/cosa, `who`=agente, `silent` per le mutazioni non-context) + **proposals** (cross-agent), dal **2026-06-29** il datastore ha **2 lane nuove** su cui poggiano i concept di coordinamento multi-agente:
+
+- **DECISIONS** (`decisions` table): scelte di prima classe attribuite per agente — `recordDecision(id, text, {rationale, who, taskRef, decisionRef})`, `getDecision`, `listDecisions`, **`getDecisionsByAgent(agent)`** + **`getChangesByAgent(agent)`** (tutte le mutazioni attribuite via `who`). È il **substrato del floor-F** del report-di-ritorno → [[report-to-file-pointer]] §floor-F. (Idea utente msg 456/457.)
+- **AGENT_MESSAGES** (`agent_messages` table): scambio diretto tra agenti — `sendMessage(to, body, {topic})` (broadcast `to='*'`), **`inbox(agent, {unreadOnly, topic})`**, `markRead(seqs)`, `gcMessages`. L'invio è loggato **silent** (audit, non inquina recent_changes). → [[inter-agent-messaging]]. (Idea utente msg 462/465.)
+
+Le altre operazioni cross-agent (VIEW shared + propose/merge single-writer + change-log/timestamp visibili-finché-servono + persistenza cross-compact) sono descritte in [[cross-session-state-sharing]]. Tutto è esposto al modello come tool dalle extension `vars-queue.ts` / `var-ops.ts` / `conversation-capture.ts`.
 
 Quattro "lane" parallele in una queue + un puntatore `CURR` alla riga corrente:
 

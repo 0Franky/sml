@@ -143,7 +143,7 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 - [`concepts/pre-flight-safety-checks.md`](concepts/pre-flight-safety-checks.md) — verifiche pre-azione (git, backup, hard limits)
 
 **Categoria D — Wrapper runtime architecture**:
-- [`concepts/agent-wrapper-vars-queue.md`](concepts/agent-wrapper-vars-queue.md) — datastore interno wrapper: 4 lane (TASKS/VERIFICATIONS/RULES/VARS) + CURR pointer, map O(1)
+- [`concepts/agent-wrapper-vars-queue.md`](concepts/agent-wrapper-vars-queue.md) ✅ — **datastore god-node** del wrapper: lane TASKS/VERIFICATIONS/RULES/VARS + CURR + change-log + proposals **+ DECISIONS + AGENT_MESSAGES** (2026-06-29); map O(1) by-id, audit per-agente. Substrato di report-to-file-pointer / inter-agent-messaging / cross-session-state-sharing
 - [`concepts/sliding-window-variable-tool.md`](concepts/sliding-window-variable-tool.md) — tool char-range read/replace + preview, risparmio token
 - [`concepts/variable-operations-by-reference.md`](concepts/variable-operations-by-reference.md) 🆕🔗✅ — **data-flow per riferimento** (idea utente msg 427): pipe tool_result→var + `extract_var(src,path,dest)` (path-access deterministico, NON eval arbitrario) + interpolazione `{{var:x}}` post-redazione (disambiguazione-per-canale, non per delimitatore). Il modello manipola le var senza ricopiarne i valori → meno errori (SLM piccolo) + meno token. F=meccanismo / S=politica. **IMPLEMENTATO 2026-06-29** (`harness/src/var-ops.mjs`, test 32/32). Converge con content-compression (item-2)
 - [`concepts/explicit-attention-layer.md`](concepts/explicit-attention-layer.md) — attention forzata su current_aim/prev_step/global/rules
