@@ -39,6 +39,7 @@ Ogni `.delta.md` DEVE fornire ESATTAMENTE questi slot, ognuno col **TESTO VERBAT
 | `{{SEC1_BODY}}` | blocco | corpo §1 (skill-target falsificabile + ground-truth) | (git ls-files primaria) |
 | `{{SEC1BIS_BODY}}` | blocco | corpo §1bis (decision-policy d'istanza) | (value-tier/automod/self-versioning 1.1) |
 | `{{SEC2BIS_BODY}}` | blocco | corpo §2bis (sandbox fixture, `H0`, autocrlf false) | (FX-untracked/tracked/cache/dynamic) |
+| `{{CLASSE1_HEADER}}` | blocco | §2 classe 1 — header H3 `### (1) WITH-hint — task "…"` + frase fade-out/scaffolding + `Sandbox = …` (era hardcoded nello scheletro, leakkava il task 1.1 nelle altre foglie → promosso a slot) | (`task "rimuovi utils_helper.py"` / `Sandbox = FX-untracked`) |
 | `{{CLASSE1_INPUT}}` | blocco | §2 classe 1 — blocco `<context>` + task (WITH-hint) | (INPUT 3-livelli) |
 | `{{CLASSE1_HINTS}}` | blocco | §2 classe 1 — i 3 hint (forte/medio/debole) | (hint 1.1) |
 | `{{CLASSE1_OUTPUT}}` | blocco | §2 classe 1 — OUTPUT TARGET per livello (termina con `{{HALT_BLOCK}}` o azione-preserva) | (reso + `<safety_halt>`) |
@@ -57,7 +58,7 @@ Ogni `.delta.md` DEVE fornire ESATTAMENTE questi slot, ognuno col **TESTO VERBAT
 | `{{CLASSE5_LABEL}}` | blocco | §2 classe 5 — LABEL/REWARD (Q) comune | (verifier 5a-5g) |
 | `{{TAIL_SECTIONS}}` | blocco | coda intera §3 + §3bis + (§4 se presente) + Sources — **header inclusi** (P0-2: blocco-sezione esplicito, la struttura della coda diverge tra foglie) | (§3-GOLD + §4-template + Sources 1.1) |
 
-> **Slot derivati/aggregati nominati nelle note**: alcuni nomi del playbook narrativo (`{{HALT_BLOCK}}`, `{{CASO5_COPPIA}}`, `{{CASO5_ADVERSARIALE}}`, `{{ORACOLO_PRESERVAZIONE}}`, `{{ORACOLO_DANNO_FUNZIONALE}}`, `{{TVH_DECISIONE}}`, `{{CHAIN_NON_OVVIA}}`, `{{GROUND_TRUTH_PRIMARIA}}`, `{{HACK_CHECK}}`, ...) **non** sono slot Mustache *separati* dello scheletro: sono **componenti interni** dei blocchi sopra (es. il `<safety_halt>` vive dentro `{{CLASSE1_OUTPUT}}`; la coppia bilanciata è `{{CLASSE5A}}`). Il delta li descrive in prosa nelle "Slot scalari (descrittivi)" per leggibilità/manutenzione, ma ciò che `expand.py` consuma sono i **25 slot della tabella** (testo verbatim). Questo evita lo slot-ridondante e tiene l'espansione non-ambigua.
+> **Slot derivati/aggregati nominati nelle note**: alcuni nomi del playbook narrativo (`{{HALT_BLOCK}}`, `{{CASO5_COPPIA}}`, `{{CASO5_ADVERSARIALE}}`, `{{ORACOLO_PRESERVAZIONE}}`, `{{ORACOLO_DANNO_FUNZIONALE}}`, `{{TVH_DECISIONE}}`, `{{CHAIN_NON_OVVIA}}`, `{{GROUND_TRUTH_PRIMARIA}}`, `{{HACK_CHECK}}`, ...) **non** sono slot Mustache *separati* dello scheletro: sono **componenti interni** dei blocchi sopra (es. il `<safety_halt>` vive dentro `{{CLASSE1_OUTPUT}}`; la coppia bilanciata è `{{CLASSE5A}}`). Il delta li descrive in prosa nelle "Slot scalari (descrittivi)" per leggibilità/manutenzione, ma ciò che `expand.py` consuma sono i **26 slot della tabella** (testo verbatim). Questo evita lo slot-ridondante e tiene l'espansione non-ambigua.
 
 > **`{{REMEDIATION_BLOCK}}` (ex `{{HALT_BLOCK}}`, P1)**: la rimedizione user-facing non è sempre un HALT. Per 1.1 (quasi-binaria) è `<safety_halt>`; per 1.2 è spesso **backup+merge** con segnalazione (HALT solo se la fusione non è ovvia). Il blocco vive dentro `{{CLASSE1_OUTPUT}}` e istanzia la remediation **appropriata alla foglia** (HALT *oppure* backup+merge+segnala).
 
@@ -167,9 +168,7 @@ last_updated: 2026-06-27
 
 ---
 
-### (1) WITH-hint — task "rimuovi `utils_helper.py`" preceduto dall'impalcatura · 3 livelli
-
-Stessa **task family** per i 3 livelli di hint (forte → medio → debole): cambia solo lo scaffolding nel prompt, la skill-target e l'output corretto sono identici. Questo è il fade-out: il modello deve produrre lo *stesso* comportamento man mano che l'hint si assottiglia. Sandbox = `FX-untracked`.
+{{CLASSE1_HEADER}}
 
 {{CLASSE1_INPUT}}
 {{CLASSE1_HINTS}}
