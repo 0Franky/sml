@@ -61,4 +61,4 @@ Il reward multilingua premia l'**esito verificabile**, non la cerimonia:
 - **Lingue oltre it+en**: il transform-knob generalizza a lingue tipologicamente distanti (es. CJK)? Da verificare post-MVP — fuori scope ora.
 
 ## Link
-[[dynamic-context-training-regime]] (NL come knob del dataset) · [[runtime-symbol-randomization]] (randomizzazione posizione/forma/lingua) · [[training-vs-harness-classification]] (F/S split) · [[reward-hacking-mitigation]] (outcome-anchored) · [[structured-thinking]] (marker `[V]/[A]/[?]` language-agnostic) · [[../training-taxonomy/gold-methodology]] (le istanze gold si generano via transform)
+[[dynamic-context-training-regime]] (NL come knob del dataset) · [[runtime-symbol-randomization-training|runtime-symbol-randomization]] (randomizzazione posizione/forma/lingua) · [[training-vs-harness-classification]] (F/S split) · [[reward-hacking-mitigation]] (outcome-anchored) · [[structured-thinking]] (marker `[V]/[A]/[?]` language-agnostic) · [[../training-taxonomy/gold-methodology]] (le istanze gold si generano via transform)
