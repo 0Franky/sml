@@ -63,12 +63,40 @@ ok(cA.indexOf("<rules>") < cA.indexOf("<vars>") && cA.indexOf("<vars>") < cA.ind
 const cRel = assembleContext(vq, { now: NOW, sinceMs: 0 });
 ok(!cRel.includes("<current_time>") && cRel.includes("s fa"), "regime relativo (default) invariato");
 
+// cache-stable con la FINESTRA REALE (default sinceMs, nessun override): il prefisso PRIMA di <recent_changes>
+// resta byte-identico cross-now anche quando recent_changes è volatile attraverso il bordo 15 min.
+const realTs = vq.getChangeLog({ limit: 1 })[0].ts;            // i change hanno ts wall-clock reale
+const cW1 = assembleContext(vq, { now: realTs + 60_000, absoluteTimestamps: true });        // +1min: dentro finestra
+const cW2 = assembleContext(vq, { now: realTs + 20 * 60_000, absoluteTimestamps: true });    // +20min: oltre la finestra
+ok(cW1.includes("  <recent_changes>") && !cW2.includes("  <recent_changes>"),
+  "recent_changes è volatile attraverso il bordo 15 min (presente a +1min, assente a +20min)");
+const headStable = cW1.slice(0, cW1.indexOf("  <recent_changes>"));
+ok(cW2.startsWith(headStable),
+  "cache-stable (finestra reale): il prefisso PRIMA di <recent_changes> è invariato cross-now");
+
 // --- buildResumeDigest: mostra il resume dopo un gap, tace in sessione attiva ---
 const lastTs = vq.getChangeLog({ limit: 1 })[0].ts;
 const resumed = buildResumeDigest(vq, { now: lastTs + 24 * 3600 * 1000 }); // +1 giorno = gap reale
 ok(resumed.includes("<resuming_from") && resumed.includes("T1"), "resume-digest mostra l'aim dopo un gap");
 const active = buildResumeDigest(vq, { now: lastTs + 1000 }); // +1s = sessione attiva
 ok(active === "", "resume-digest tace in sessione attiva (no banner ridondante)");
+
+// --- buildResumeDigest: copertura estesa (escaping, handoff-object, slice>5, force su sessione attiva) ---
+const vq2 = new VarsQueue(":memory:", { agent: "orchestrator" });
+vq2.addTask("X1", "primo", {}); vq2.setCurr("X1"); vq2.setTaskStatus("X1", "in_progress");
+for (let i = 2; i <= 8; i++) vq2.addTask("X" + i, "task " + i, {}); // 8 task aperti → esercita lo slice >5
+vq2.setVar("danger", "<script>&", { scope: "shared", decisionRef: "D<x>&" });                 // payload con metacaratteri
+vq2.setVar("handoff_note", { next_step: "deploy <prod> & verifica" }, { scope: "shared", namespace: "handoff" });
+const rt = vq2.getChangeLog({ limit: 1 })[0].ts;
+const dig = buildResumeDigest(vq2, { now: rt + 24 * 3600 * 1000 });
+ok(dig.includes("&lt;") && dig.includes("&gt;") && dig.includes("&amp;") && !dig.includes("<script>"),
+  "resume-digest: escaping XML su decisioni/handoff");
+ok(dig.includes("prossimo passo: deploy &lt;prod&gt; &amp; verifica"), "resume-digest: handoff-object next_step");
+ok(dig.includes("(primi 5)") && dig.includes("task aperti: 8"), "resume-digest: slice >5 task aperti");
+const digForce = buildResumeDigest(vq2, { now: rt + 1000, force: true });
+ok(digForce.includes("<resuming_from") && digForce.includes("snapshot stato corrente"),
+  "resume-digest: force su sessione attiva → testo neutro (no falso 'ripresa dopo gap')");
+vq2.close();
 
 vq.close();
 console.log(`\ncontext-assembler smoke-test: ${passed} passed, ${failed} failed`);

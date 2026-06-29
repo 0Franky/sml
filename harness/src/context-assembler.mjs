@@ -28,6 +28,10 @@ const isoSec = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
  */
 const fmtAge = (ms, now, absolute) => (absolute ? `@${isoSec(ms)}` : `${Math.round((now - ms) / 1000)}s fa`);
 
+/** Finestra temporale condivisa: <recent_changes> e il self-gating del resume usano la STESSA soglia → niente
+ *  banda di overlap (banner di resume mostrato mentre recent_changes è ancora pieno). */
+const RECENT_WINDOW_MS = 15 * 60 * 1000;
+
 /* ── CONTRATTO stable-prefix (cache-stable-prefix, 2026-06-29) ───────────────────────────────────────────────
  * Per massimizzare gli hit di KV-cache del provider il <context> è ordinato STABILE-in-testa / VOLATILE-in-fondo:
  *   PREFISSO STABILE  : <rules> → <current_aim> → <task_list> → <verify_queue>   (nessun timestamp; cambia SOLO
@@ -66,7 +70,7 @@ function humanAge(ms) {
  */
 export function buildResumeDigest(vq, opts = {}) {
   const now = opts.now ?? Date.now();
-  const resumeGapMs = opts.resumeGapMs ?? 10 * 60 * 1000;
+  const resumeGapMs = opts.resumeGapMs ?? RECENT_WINDOW_MS; // allineato a recent_changes → no banda di overlap
 
   const currId = vq.getCurr();
   const curr = currId ? vq.getTask(currId) : null;
@@ -81,8 +85,8 @@ export function buildResumeDigest(vq, opts = {}) {
   const lastTs = Math.max(handoff?.last_modified ?? 0, last?.ts ?? 0);
   if (!opts.force && lastTs && now - lastTs < resumeGapMs) return "";
 
-  const idle = lastTs ? humanAge(now - lastTs) : "?";
-  const lines = [`  <resuming_from idle="${idle} fa">`];
+  const idleAttr = lastTs ? `${humanAge(now - lastTs)} fa` : "sconosciuto";
+  const lines = [`  <resuming_from idle="${idleAttr}">`];
   if (curr) lines.push(`    - aim: ${esc(curr.id)} (${esc(curr.status)}) ${esc(curr.title)}`);
   if (open.length) {
     const head = open.slice(0, 5).map((t) => `${esc(t.id)} [${t.status}]`).join(", ");
@@ -101,7 +105,10 @@ export function buildResumeDigest(vq, opts = {}) {
     const note = typeof handoff.value === "object" ? (handoff.value.next_step ?? handoff.value.summary ?? JSON.stringify(handoff.value)) : handoff.value;
     if (note) lines.push(`    - prossimo passo: ${esc(note)}`);
   }
-  lines.push(`    (ripresa dopo gap; usa get_changelog/list_tasks per il dettaglio completo)`);
+  const realGap = lastTs && now - lastTs >= resumeGapMs;
+  lines.push(realGap
+    ? `    (ripresa dopo gap; usa get_changelog/list_tasks per il dettaglio completo)`
+    : `    (snapshot stato corrente; usa get_changelog/list_tasks per il dettaglio completo)`);
   lines.push(`  </resuming_from>`);
   return lines.join("\n");
 }
@@ -115,7 +122,7 @@ export function buildResumeDigest(vq, opts = {}) {
  */
 export function assembleContext(vq, opts = {}) {
   const now = opts.now ?? Date.now();
-  const sinceMs = opts.sinceMs ?? (now - 15 * 60 * 1000);
+  const sinceMs = opts.sinceMs ?? (now - RECENT_WINDOW_MS);
   const maxChanges = opts.maxChanges ?? 12;
   const abs = opts.absoluteTimestamps ?? false; // cache-stable-prefix: età assolute @ISO invece di "Ns fa"
 

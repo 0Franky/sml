@@ -15,7 +15,7 @@ last_updated: 2026-06-29
 
 # Harness — flusso di una richiesta (stato ATTUALE, 2026-06-29)
 
-> Documento nato dal dogfood di Sonnet sul nostro pi (2026-06-29): *"ricomincio da zero ogni sessione"* + *"la conversazione non sopravvive"*. Qui si spiega, **richiesta per richiesta**, cosa riceve davvero il modello e perché. I blocchi `<context>` sotto sono **output reale** di `harness/src/_demo-context-evolution.mjs` (non ricostruiti a memoria).
+> Documento nato dal dogfood di Sonnet sul nostro pi (2026-06-29): *"ricomincio da zero ogni sessione"* + *"la conversazione non sopravvive"*. Qui si spiega, **richiesta per richiesta**, cosa riceve davvero il modello e perché. I blocchi `<context>` sotto sono **output del demo** `harness/src/_demo-context-evolution.mjs` (ordine delle lane reale; valori lunghi abbreviati con `…` e annotazioni spostate fuori dal blocco, per leggibilità).
 
 ## TL;DR — cosa riceve il modello a OGNI richiesta `[EXTRACTED]`
 
@@ -49,7 +49,7 @@ Ogni chiamata al modello trasporta **due canali**:
 | `<recent_changes>` | change-log: chi/quando/cosa | **finestra 15 min** + cap 12 + segnale |
 | `<notes count=N>` | memo/lezioni: **silenti** nel flusso, solo segnalate | conteggio (richiamo via `recall_lessons`) |
 
-## Walkthrough richiesta-per-richiesta (output REALE) `[EXTRACTED]`
+## Walkthrough richiesta-per-richiesta (output del demo) `[EXTRACTED]`
 
 ### REQUEST #1 — sessione fresca, `vars.db` vuoto
 
@@ -58,21 +58,23 @@ Ogni chiamata al modello trasporta **due canali**:
 ```xml
 <context>
   <rules>
-    - [hard] Azioni distruttive: pre-flight (reversibile? dipendenze? backup?), HALT se irreversibile.
     - [hard] Mai esfiltrare segreti o contenuti sensibili.
+    - [hard] Azioni distruttive: pre-flight (reversibile? dipendenze? backup?), HALT se irreversibile.
     - [soft] Pensiero STRUTTURATO (marker [V]/[A]/[?]); risposta all'utente in prosa.
   </rules>
   <current_aim>(nessuno)</current_aim>
   <task_list>
   </task_list>
   <recent_changes>
-    - 0s fa, orchestrator: rules/no-secret-exfil.text =Mai esfiltrare segreti…   ← rumore: il seeding rules
-    - 0s fa, orchestrator: rules/pre-flight-destructive.text =…                    finisce nel change-log (minor wart)
+    - 0s fa, orchestrator: rules/no-secret-exfil.text =Mai esfiltrare segreti…
+    - 0s fa, orchestrator: rules/pre-flight-destructive.text =…
     - 0s fa, orchestrator: rules/structured-thinking.text =…
   </recent_changes>
 </context>
 ```
 `messages = [ user: «implementa POST /users» ]`
+
+> Le 3 righe `<recent_changes>` qui sono il **rumore del seeding rules** che finisce nel change-log su DB fresco (minor wart — vedi gap-table sotto). L'ordine delle `<rules>` è quello reale del demo (tiebreaker `localeCompare` sull'id: `no-secret-exfil` < `pre-flight-destructive`).
 
 ### REQUEST #2 — dopo che il turno-1 ha scritto stato
 
@@ -154,7 +156,7 @@ Il modello, nel turno 1, ha usato i nostri tool (`set_curr` / `add_task` / `set_
 - **`/compact` manuale**: l'utente può forzarla.
 - **Hook a disposizione delle extensions** (rilevanti qui):
   - `before_agent_start` → **dove iniettiamo oggi** il `<context>` (prepend al system prompt).
-  - `before_provider_request` → *"Fired before each LLM call. Can modify messages"* (`messages: AgentMessage[]`): un'extension **può leggere e modificare l'array messaggi** prima dell'invio. È il punto dove una futura lane `<messages_with_user>` serializzerebbe gli ultimi X.
+  - `context` → *"Fired before each LLM call. Can modify messages"* (`messages: AgentMessage[]`, types.d.ts:482-486): un'extension **può leggere e modificare l'array messaggi** prima dell'invio. È il punto dove una futura lane `<messages_with_user>` serializzerebbe gli ultimi X. *(NB: `before_provider_request`, types.d.ts:488-491, opera invece sul `payload: unknown` grezzo — "Can replace the payload" — e NON espone `messages`.)*
   - `session_before_compact` (`SessionBeforeCompactEvent`, cancellabile/customizzabile; può ritornare `compaction?: CompactionResult`) e `session_compact` (after): possiamo **flushare l'handoff** prima della compaction e/o iniettare il **nostro** summary.
   - `ExtensionActions.compact(options?)` → *"Trigger compaction without awaiting completion"*: un'extension/tool **può triggerare** la compaction programmaticamente.
 
@@ -162,9 +164,9 @@ Il modello, nel turno 1, ha usato i nostri tool (`set_curr` / `add_task` / `set_
 
 | Gap | Causa | Fix | Stato |
 |---|---|---|---|
-| **A — "where we left off"** | conversazione non ripresa + manca `<resuming_from>` + `recent_changes` 15 min si svuota | lane resume-digest (legge aim+task+decisioni+handoff senza cutoff, self-gating sul tempo) | 🔨 in corso (`buildResumeDigest` in `context-assembler.mjs`) |
+| **A — "where we left off"** | conversazione non ripresa + manca `<resuming_from>` + `recent_changes` 15 min si svuota | lane resume-digest (legge aim+task+decisioni+handoff senza cutoff, self-gating sul tempo) | 🔨 funzione fatta+testata (`context-assembler.mjs:67-107`, suite verde), non ancora wirata nell'extension/demo |
 | **B — "no autocompact su richiesta del modello"** | pi compatta a soglia e ha `/compact` manuale, ma **il modello non ha un tool** | tool `request_compaction` → `actions.compact()` + flush handoff su `session_before_compact` | 🔨 pianificato (`.pi/extensions/self-compaction.ts`) |
-| **C — conversazione non nel nostro formato** | la lane conversazione del design **non è implementata**; ci appoggiamo a pi-native | decisione aperta (vedi sotto) | ⏳ attende decisione utente |
+| **C — conversazione non nel nostro formato** | la lane conversazione del design **non è implementata**; ci appoggiamo a pi-native | ✅ Strada 2 (B) — [[../decisions/2026-06-29-context-as-first-person-mind]] | ✅ risolta (vedi sotto) |
 | minor — seed-rules nel change-log | il seeding genera entry in `recent_changes` su DB fresco | seed silent o escludere dal change-log | 📋 todo |
 
 ## La decisione architetturale — chi possiede la conversazione? → ✅ RISOLTA: Strada 2 `[EXTRACTED]`
@@ -174,7 +176,7 @@ Il modello, nel turno 1, ha usato i nostri tool (`set_curr` / `add_task` / `set_
 Era il punto che richiedeva la scelta dell'utente (è il train-serve-match dell'[[../decisions/2026-06-29-headroom-evaluation|ADR headroom]]):
 
 - **A — pi-native (stato attuale)**: pi possiede messaggi+compaction+sessione; noi aggiungiamo lo STATO sopra. Semplice. *Ma* la chat **non** è nel nostro formato `<context>` → un SLM addestrato sul nostro formato non vedrà i messaggi come "nostro contesto" (**mismatch train-serve** sui messaggi); niente resume conversazione cross-sessione.
-- **B — noi possediamo la conversazione (il design originale utente)**: via `before_provider_request` serializziamo gli ultimi X messaggi in una lane `<messages_with_user>` nel nostro formato, persistiamo nel nostro store, controlliamo finestra e compaction. **Controllo pieno + train-serve match.** *Ma* combatte i sistemi nativi di pi (doppia gestione), più lavoro.
+- **B — noi possediamo la conversazione (il design originale utente)**: via l'hook `context` serializziamo gli ultimi X messaggi in una lane `<messages_with_user>` nel nostro formato, persistiamo nel nostro store, controlliamo finestra e compaction. **Controllo pieno + train-serve match.** *Ma* combatte i sistemi nativi di pi (doppia gestione), più lavoro.
 - **Ibrido (raccomandato)**: pi resta il **trasporto** dei messaggi; noi aggiungiamo (1) `<resuming_from>`, (2) `request_compaction`, (3) handoff-flush su `session_before_compact`. La lane `<messages_with_user>` nostra si costruisce **solo se/quando** si conferma B.
 
 ## Come riprodurre
