@@ -9,7 +9,8 @@
     "test:vars-queue": "node src/vars-queue.test.mjs",
     "test:context": "node src/context-assembler.test.mjs",
     "test:facts": "node src/facts-pre-check.test.mjs",
-    "test": "node src/vars-queue.test.mjs && node src/context-assembler.test.mjs && node src/facts-pre-check.test.mjs"
+    "test:sliding": "node src/sliding-var.test.mjs",
+    "test": "node src/vars-queue.test.mjs && node src/context-assembler.test.mjs && node src/facts-pre-check.test.mjs && node src/sliding-var.test.mjs"
   },
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "^0.80.2",
