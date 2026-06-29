@@ -95,7 +95,16 @@ export default function (pi: ExtensionAPI) {
       const lane = buildMessagesLane(convStore, convId, { n: MESSAGES_WINDOW_N, afterSeq: checkpointSeq });
       workspace = (resume ? `${resume}\n` : "") + base + hint + (lane ? `\n${lane}` : "");
     }
-    return { systemPrompt: `${event.systemPrompt}\n\n${workspace}` };
+    // aim-in-coda (anti position-bias / lost-in-the-middle, msg 518): l'aim corrente è in cima al <context>, ma su
+    // contesti lunghi la coda (lane recente) può "schiacciarlo". Lo ri-ancoriamo in CODA — cheap (1 riga), solo se c'è
+    // un CURR. La salienza dell'obiettivo non deve dipendere dalla posizione. Escape XML (la title è user/model-content).
+    const escTail = (s: string) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const currId = vq.getCurr();
+    const currTask = currId ? vq.getTask(currId) : null;
+    const aimTail = currTask
+      ? `\n<current_aim_reminder>Aim corrente: ${escTail(currTask.id)} — ${escTail(currTask.title ?? "")}</current_aim_reminder>`
+      : "";
+    return { systemPrompt: `${event.systemPrompt}\n\n${workspace}${aimTail}` };
   });
   // NB: la SOPPRESSIONE dell'array messaggi nativo (hook `context`, Strada-2 keepTurns:1) vive nell'extension
   // dedicata `native-window.ts` (responsabilità ortogonale all'assemblaggio del workspace). La lane

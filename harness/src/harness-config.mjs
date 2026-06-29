@@ -41,6 +41,7 @@ const TRIGGER_BOUNDS = {
   watchMatrioska: [1, 100000],
   maxDepth: [1, 16],
   focusK: [1, 1000],
+  outputReservePct: [0, 0.9], // riserva fisica per output+thinking (msg 518)
 };
 
 /** Ritorna `val` se è un numero finito dentro il range di `key`, altrimenti undefined (→ resta il default). */
@@ -74,6 +75,7 @@ const ENV_MAP = {
   HARNESS_WATCH_REORDER: ["trigger", "watchReorder"],
   HARNESS_WATCH_MATRIOSKA: ["trigger", "watchMatrioska"],
   HARNESS_MAX_DEPTH: ["trigger", "maxDepth"],
+  HARNESS_OUTPUT_RESERVE_PCT: ["trigger", "outputReservePct"],
   HARNESS_MESSAGES_WINDOW_N: ["root", "messagesWindowN"],
 };
 

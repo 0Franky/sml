@@ -6,6 +6,7 @@ export interface TriggerConfig {
   watchMatrioska: number;
   maxDepth: number;
   focusK: number;
+  outputReservePct: number;
 }
 export type GatheringMode = "delegated" | "inject" | "require";
 export interface GatheringConfig {

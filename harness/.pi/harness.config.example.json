@@ -12,7 +12,9 @@
     "watchMatrioska": 25,
     "_maxDepth": "profondità massima dello stack di focus annidati. Default 3.",
     "maxDepth": 3,
-    "focusK": 5
+    "focusK": 5,
+    "_outputReservePct": "frazione 0..0.9 di finestra RISERVATA a output+thinking (che condividono la window dell'input). I trigger si calcolano su window*(1-reserve) → scattano PRIMA. È una riserva FISICA, distinta da tokenMatrioskaPct (soglia comportamentale). Default 0 (off). Per un modello con thinking lungo: prova 0.15.",
+    "outputReservePct": 0
   },
   "_messagesWindowN": "quanti turni recenti mostrare VERBATIM nella lane <messages_with_user>. Più alto = più storia verbatim (più token). Default 8.",
   "messagesWindowN": 8,
