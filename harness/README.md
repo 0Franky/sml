@@ -52,7 +52,8 @@ L'unica cosa che serve da te = **il provider (baseUrl + key)**. Tutto il resto Ã
 | Extension | Hook / tool | Cosa fa |
 |---|---|---|
 | `context-assembly.ts` | `before_agent_start` | Assembla il `<context>` strutturato dalle lane del datastore (rules/aim/task_list/verify_queue/vars/recent_changes). |
-| `vars-queue.ts` | tool `set_var`/`get_var`/`set_task_status` | Stato persistente (cross-compact + cross-agent) con change-log. |
+| `vars-queue.ts` | tool `set_var`/`get_var`/`set_task_status`/`set_curr`/`list_tasks` + **shared-vars** (`get_shared_view`/`propose_var`/`merge_proposals`) + `get_changelog` | Stato persistente (cross-compact + cross-agent on-request, single-writer merge) con change-log/timestamp. |
+| `sliding-var.ts` | tool `sliding_var_read`/`sliding_var_replace` | Read/replace di una VAR per **char-range** + preview (edit chirurgici su var grandi senza scaricarle full). |
 | `error-memo.ts` | tool `remember_lesson`/`recall_lessons` | Memoria di lezioni/errori (2 livelli), richiamabile, sopravvive al compact. |
 | `secrets-guardrail.ts` | tool `add_secret` + `tool_result` | Redige output che matchano i pattern statici **+ la secrets-map dinamica** (riferimenti opachi per-sessione, in-memory). |
 | `pre-flight.ts` | `tool_call` | Blocca azioni distruttive (`rm -rf`, `git reset --hard`, `mkfs`, `dd`â€¦) prima dell'esecuzione. |
