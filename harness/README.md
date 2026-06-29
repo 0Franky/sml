@@ -17,6 +17,18 @@ SERVING = vLLM --enable-lora (Qwen3-4B + LoRA hot-swap per-request) — processo
 
 La **ricerca** (Tier 1/2/3, training, LoRA) vive nel serving layer; pi la rende operativa.
 
+## Context engineering — il cuore dell'harness
+
+L'idea centrale: **il context del modello è una mente in prima persona curata**, non la chat grezza. L'harness lo costruisce, lo mantiene bounded su sessioni lunghe, e lo fa scalare col carico — senza compaction lossy. I pezzi (tutti implementati + testati, dettaglio nelle pagine wiki linkate):
+
+- **`<context>` strutturato + Strada-2** — il modello riceve lane curate (`rules` / `current_aim` / `task_list` / `verify_queue` / `vars` / `recent_changes`) con prefisso cache-stabile + escaping anti-injection; la storia nativa di pi è soppressa al solo **turno corrente** (`keepTurns=1`) e la chat vive nella lane `<messages_with_user>` → **niente doppia-chat** (verificabile con `turn-trace`). → [context-as-first-person-mind](../wiki/decisions/2026-06-29-context-as-first-person-mind.md), [wrapper-context-assembly-example](../wiki/concepts/wrapper-context-assembly-example.md)
+- **Matrioska (nested-compact)** — sotto pressione, invece di compattare (lossy) il modello fa **zoom-IN** su un sotto-insieme di task (`enter_focus`) → lavora a fuoco → `pop_focus` scrive un **report-su-file** + risale un summary + ri-allinea il padre. Profondità ≤3. → [matrioska-orchestration-spec](../wiki/architecture/matrioska-orchestration-spec.md)
+- **Focus-gathering v1** — **task-graph** (`priority` + `deps`): `get_execution_order` dà la vista **ready → impatto-a-valle → priority**, così il modello mette a fuoco i task GIUSTI (sbloccati, ad alto impatto), **non "i primi N"**. `enter_focus` ha un **HARD-GATE** che rifiuta i subset senza task ready. `gathering.mode` (delegated/inject/require) regola quanto è forzato il "guarda l'ordine prima del focus". → [focus-task-prioritization](../wiki/concepts/focus-task-prioritization.md)
+- **Anti-cecità sui grandi contesti** — segnale degli item nascosti con **breakdown H/M/L**, **aim-in-coda** (anti lost-in-the-middle), **output-budget-reserve** (riserva per output+thinking), **reorganize_hint** pressure-driven, e **`autofocus.mode`** (off/nudge/`auto`=auto-enter deterministico). → [context-limits-explained](../wiki/concepts/context-limits-explained.md)
+- **Checkpoint** — il NOSTRO "autocompact" **non-lossy** (handoff durevole + segment-boundary), niente modello-che-riassume. **Config opt-in** (`gathering.mode`, `autofocus.mode`, soglie token/watch, `outputReservePct`, finestra messaggi) → ognuno tara per il proprio modello/infra. **turn-trace** = osservabilità per-turno (dev).
+
+> Mappa completa della conoscenza: **[../wiki/index.md](../wiki/index.md)** (+ `model-testbook.md` = desiderata-modello con verifica, `todo.md`, `open-questions.md`).
+
 ## Fase 0 — Walking skeleton (bottleneck-buster)
 
 - **0.1** vLLM provider OpenAI-compatible → `serving/models.json` (`api: "openai-completions"`).
@@ -31,16 +43,17 @@ La **ricerca** (Tier 1/2/3, training, LoRA) vive nel serving layer; pi la rende 
 ```bash
 npm ci                 # @earendil-works/pi-coding-agent + typebox + typescript (da lockfile)
 npm run typecheck      # extension vs tipi reali di pi (GREEN)
-npm test               # smoke unit (24+11+7+12) + test:scenarios (9+13+8+10+17)
+npm test               # 18 file unit+integration (vars-queue/context-assembler/nested-compact/task-graph/harness-config/strada2/secrets/…) — tutti verdi
 
 # --- prova E2E HEADLESS (no TUI): dimostra che gira end-to-end con un provider reale ---
-#   richiede GEMINI_API_KEY in harness/.env (gitignored). VERDE = context iniettato + 15/15 nostri tool + pre-flight blocca rm-rf + secrets redatti.
-node src/_e2e-pi-run.mjs
+#   richiede GEMINI_API_KEY in harness/.env (gitignored). VERDE = context iniettato + tutte le 15 extension (36 tool) + pre-flight blocca rm-rf + secrets redatti.
+node test/e2e/e2e-pi-run.mjs
 
 # --- USO INTERATTIVO (TUI nativa di pi; da questa cartella harness/ pi auto-carica .pi/extensions/) ---
 # A) DOGFOOD CON CLAUDE — col TUO abbonamento, NIENTE API key (Claude è built-in in pi):
 pi                              # TUI: poi  /login anthropic  (OAuth browser, una volta)
-                                #           seleziona un modello Claude (es. claude-sonnet-4-5 — Sonnet=reco per il test, Haiku=solo smoke)
+                                #           seleziona un modello Claude (es. claude-sonnet-4-6 — Sonnet=reco per il test, Haiku=solo smoke)
+                                #   osservabilità: lancia con PI_TRACE=1 → .pi/state/trace/last-turn.md (overlap lane↔native, % contesto)
 #   → chatti con Claude col NOSTRO context attivo sotto.  (fallback esplicito: pi -e ./.pi/extensions/<ognuna>.ts)
 #
 # B) A/B: la stessa sessione SENZA le nostre extension = pi VANILLA → confronti il comportamento.
@@ -49,7 +62,7 @@ pi                              # TUI: poi  /login anthropic  (OAuth browser, un
 #    (toglie il campo `store` che l'endpoint Gemini rifiuta con HTTP 400). Per Claude/OpenAI NON serve.
 ```
 
-L'unica cosa che richiede TE = l'**auth del provider** (per Claude: `/login anthropic` interattivo, una volta — l'OAuth non è automatizzabile). Tutto il resto è già wired. Lo stato vive in `.pi/state/vars.db` (gitignored, sopravvive al compact). E2E provato 2026-06-29 (`src/_e2e-pi-run.mjs`, verde).
+L'unica cosa che richiede TE = l'**auth del provider** (per Claude: `/login anthropic` interattivo, una volta — l'OAuth non è automatizzabile). Tutto il resto è già wired. Lo stato vive in `.pi/state/vars.db` (gitignored, sopravvive al compact). E2E provato 2026-06-29 (`test/e2e/e2e-pi-run.mjs`, verde; incl. auto-validazione di `autofocus.mode=auto` nel runtime reale).
 
 ## Extension attive (`.pi/extensions/`) — tutte typecheck-green
 
@@ -71,7 +84,7 @@ L'unica cosa che richiede TE = l'**auth del provider** (per Claude: `/login anth
 | `native-window.ts` | `context` | **Strada-2**: sopprime l'array messaggi NATIVO di pi al solo TURNO CORRENTE (`windowNativeMessages keepTurns:1`) → la storia vive nella lane `<messages_with_user>` (complementari, no doppia-chat). Estratta da `context-assembly` per coesione (responsabilità ortogonale). Logica in `src/conversation-store.mjs`. |
 | `checkpoint.ts` | tool `checkpoint` | **Il NOSTRO "autocompact"** (NON il compaction nativo di pi, OFF): `checkpoint(note?)` scrive un **handoff durevole** (namespace `handoff` → `<resuming_from>` al riavvio) + marca un **segment-boundary** (`_checkpoint_seq:<convId>`) → la lane riparte leggera (chat pre-checkpoint ripiegata, recuperabile via `get_conversation`). Non-lossy, niente modello-attivo-che-riassume. |
 
-**API pi verificata** (v0.80.2): `before_agent_start` · `tool_call` (gate) · `tool_result` (transform array) · `before_provider_request` (mutate body) · `registerTool` (typebox params). **E2E headless provato** (`src/_e2e-pi-run.mjs`, 2026-06-29): `createAgentSession` + `AuthStorage.inMemory` + `ModelRegistry.registerProvider` + `bindExtensions` → turno reale verde (context iniettato, 15/15 tool, guardrail attivi). `verifier-sandbox` usa una tempdir (Fase 2: Docker).
+**API pi verificata** (v0.80.2): `before_agent_start` · `context` · `tool_call` (gate) · `tool_result` (transform array) · `before_provider_request` (mutate body) · `session_before_compact` (cancellabile) · `registerTool` (typebox params). **E2E headless provato** (`test/e2e/e2e-pi-run.mjs`, 2026-06-29): `createAgentSession` + `AuthStorage.inMemory` + `ModelRegistry.registerProvider` + `bindExtensions` → turno reale verde (context iniettato, **tutte le 15 extension caricate, 36 tool**, guardrail attivi). `verifier-sandbox` usa una tempdir (Fase 2: Docker).
 
 ## Config context-budget (OPT-IN, per modello/infra)
 
@@ -91,8 +104,9 @@ Le soglie di "contesto pieno" (quando compattare/focalizzare) e la finestra mess
   - **vars-queue** (`src/vars-queue.mjs`) — datastore SQLite 4-lane + CURR + change-log/timestamp + cross-compact + cross-agent view/propose/merge; **24/24**.
   - **context-assembler** (`src/context-assembler.mjs`) — assembla `<context>` dalle lane (rules/aim/task_list/verify_queue/vars/recent_changes), ordine severità, escaping anti-injection; **11/11**.
   - **facts-pre-check** (`src/facts-pre-check.mjs`) — livello-1 deterministico del reward-L (enum↔enum `campi-tipizzati↔facts`, gold 6.2 §2bis); **7/7**.
-  - **pi-extensions wired** (6, typecheck-green): `context-assembly` · `vars-queue` · `error-memo` · `secrets-guardrail` (secrets-map dinamica) · `pre-flight` · `verifier-sandbox`.
+  - **pi-extensions wired** (15, typecheck-green): `context-assembly` · `native-window` · `vars-queue` · `nested-compact` · `checkpoint` · `turn-trace` · `error-memo` · `secrets-guardrail` · `pre-flight` · `verifier-sandbox` · `contradiction-detection` · `conversation-capture` · `var-ops` · `sliding-var` · `gemini-compat`.
+  - **Context-engineering completo** (vedi §"Il cuore dell'harness"): Strada-2 (no doppia-chat) · matrioska nested-compact · **focus-gathering v1** (task-graph + hard-gate + `gathering.mode`) · **anti-cecità** (segnale H/M/L + aim-in-coda + output-reserve + reorganize_hint) · **`autofocus.mode`** (off/nudge/auto, validato live) · checkpoint non-lossy · config opt-in. Review-loop 41-agenti → 18 fix; suite 18 file 0-falliti.
   - ✅ **MVP RUNNABILE con un provider OpenAI-compatible** (vedi runbook sopra) → dogfooding del metodo PRIMA dell'SLM.
-  - ⏳ gated: **lora-router** (serve SLM + adapter su vLLM), estrattore-facts-fuzzy (formato-lane), Docker sandbox (riproducibilità).
+  - ⏳ gated: **lora-router** (serve SLM + adapter su vLLM), Docker sandbox (riproducibilità), calibrazione soglie (misurare la curva effective-context del modello).
 - **Fase 2** → sandbox/verifier completo per i dati RL (Phase-3 gym Docker).
-- **Fase 3** → token-routing, memory layer, contradiction-detection, frontend web.
+- **Fase 3** → token-routing, memory layer, frontend web.
