@@ -2,10 +2,12 @@
 name: open-questions
 description: Decisioni da chiudere con l'utente. Status aggiornato + raccomandazioni precompilate.
 type: questions
-last_updated: 2026-05-21
+last_updated: 2026-06-29
 ---
 
 # Open Questions
+
+> ⚠️ Parzialmente superato dagli ADR 2026-06-28 (D1-D6) + msg 266 (compute-access); vedi [[decisions/2026-06-28-decisions-d1-d5]]. Diversi item ancora marcati `open` qui sono stati chiusi o ridefiniti da quelle decisioni. Contenuto storico mantenuto: i pointer indicano dove la decisione è stata superata.
 
 Status dopo grill-me #1 (2026-05-21). Le wrapper-related sono posticipate al grill-me #2.
 
@@ -131,8 +133,10 @@ Ragione: evidence-based. Tier 2 ha costo training reale, va giustificato.
 
 ## Blocco 3 — Training
 
-### #11 Hardware ✅ CLOSED 2026-05-21
-2080 Ti 11GB locale → cloud A100 40GB (Step 2) → cloud H100 80GB / B200 (Step 3).
+### #11 Hardware ✅ CLOSED 2026-05-21 (⚠️ aggiornato 2026-06-28: vedi [[decisions/2026-06-28-compute-access]])
+2080 Ti 11GB locale → cloud **A100-80GB** (Step 2) → cloud H100 80GB / B200 (Step 3).
+
+> ⚠️ **Correzione 2026-06-28 (msg 266)**: serve **A100-80GB** (non 40GB) per il full-FT del Tier 1 — QLoRA ≠ full-FT (il full-FT ha footprint VRAM molto maggiore). Dettagli accesso compute (NVIDIA Inception, spot A100, costi per-run) in [[decisions/2026-06-28-compute-access]].
 
 ### #12 Dataset interni disponibili? — open
 **Raccomandazione precompilata**: **Probabilmente no nel breve termine**. Costruisci da OSS:
@@ -323,17 +327,17 @@ Sotto-domande emerse durante grill-me #1 (da approfondire in grill-me #2):
 |---|-------|--------|-------|
 | 1 | Use case | ✅ closed | Agent autonomo |
 | 2 | Wrapper form | ⏸ deferred grill-me #2 | |
-| 3 | Utenti finali | ⏳ open | rec: solo tu MVP + OSS direction |
+| 3 | Utenti finali | ✅ closed | solo tu MVP → OSS → commerciale (north star) |
 | 4 | Pubblicazione | ⏳ open | rec: paper-worthy + open-weight |
 | 5 | Base orchestratore | ✅ closed | Qwen3-4B → 8B → 3.6-35B-A3B |
 | 6 | Base verticali | ✅ closed | Stessa famiglia |
-| 7 | Routing | ⏳ open | rec: ibrido classifier + token |
-| 8 | Stacking | ⏳ open | rec: composition-aware separate |
-| 9 | Granularità | ⏳ open | rec: 3-5 area larga |
+| 7 | Routing | ✅ closed | ibrido classifier + token speciali (MVP v1 = solo classifier) |
+| 8 | Stacking | ✅ closed | composition-aware training + additive runtime (strategia A) |
+| 9 | Granularità | ✅ closed | 3-5 LoRA area larga, frontend r=64 MVP v1 |
 | 10 | Programming generalist? | ⏳ open | rec: sì Step 1-2, ablation Step 3 |
 | 11 | Hardware | ✅ closed | 2080 Ti + cloud progressivo |
 | 12 | Dataset interni | ⏳ open | rec: no, costruire da OSS |
-| 13 | Replay coding % | ⏳ open | rec: 15% |
+| 13 | Replay coding % | ✅ closed | 10% adaptive (calibrato empiricamente Wave 5) |
 | 14 | Composition-aware | ⏳ open | rec: sì (vedi #8) |
 | 15 | Post-training | ⏳ open | rec: ORPO, skip RLHF classic |
 | 16 | Framework | ⏳ open | rec: Unsloth → Axolotl → TRL+DeepSpeed |
@@ -342,6 +346,6 @@ Sotto-domande emerse durante grill-me #1 (da approfondire in grill-me #2):
 | 19 | Baseline | ⏳ open | rec: Qwen3-4B base Phase 0 |
 | 20 | Timeline | ⏳ open | da chiederti deadline |
 | 21 | Coinvolgimento | ⏳ open | rec: step-by-step strategy + auto training |
-| 22 | MVP | ⏳ open | rec: 1 LoRA frontend prima di Tier 1 |
+| 22 | MVP | ✅ closed | Mini Three-Tier Tier1+3 (la reco "1 LoRA frontend prima di Tier 1" è SUPERATA) |
 | 23 | Claim paper | ⏳ open | rec: "modular > monolithic at <30B" |
 | 24-28 | Context/reasoning | ⏸ deferred grill-me #2 | |
