@@ -103,6 +103,6 @@ La classificazione training-vs-harness è **ortogonale ma complementare** a un p
 - [[../architecture/wrapper-implementation-plan]] (gate di fase 0-A.4 misura-gap; fallback euristici)
 - [[sota-techniques-catalog]] (le tecniche da classificare; §RL-1 Dim-4 metacognizione)
 - [[reward-hacking-mitigation]] (outcome-anchored, scorer≠scored, participation-hack)
-- [[self-analysis-strategy-revision]], [[low-confidence-gather-and-reorg]], [[harness-capabilities-as-files]], [[dependency-aware-error-recovery]], [[situational-policy-table]], [[interruption-robust-reasoning]] (capacità F+S istanze)
+- **Capability F+S classificate con questo playbook** (stato-senza-training DEGRADATA-MA-UTILE, stesso decision-tree F+S — indice esplicito dell'hyperedge, evita N² cross-link tra le foglie): [[low-confidence-gather-and-reorg]] · [[dependency-aware-error-recovery]] · [[situational-policy-table]] · [[interruption-robust-reasoning]] · [[self-analysis-strategy-revision]] · [[harness-capabilities-as-files]]
 
 > **Provenance**: v1 dopo review-loop 3 reviewer (ML-training / wrapper-systems / agnostico, 2026-06-27). Fix applicati: Step-0 scomposizione, split F-serving (stock/custom) + F-harness per il verifier, structured-decoding classificato, soglia-materialità + retro-declass Q3↔Q6, Q4→checklist+pointer, worked example, anti-pattern #4/#5, nota training-spec. **Next**: ✅ CLAUDE.md #11 fatta · ✅ worked-example 2 (low-confidence) aggiunto (2026-06-28). Resta: convertire le decisioni-aperte in ADR datati dopo conferma utente.
