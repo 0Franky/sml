@@ -26,7 +26,7 @@ last_updated: 2026-05-21
   - Multi-repo architecture examples
   - Stack selection con motivazione
   - Code review pairs (buono vs cattivo, con spiegazione)
-- **Training order**: dopo orchestrator (frozen), prima dei verticali. Vedi [[concepts/composition-aware-training]] (TODO).
+- **Training order**: dopo orchestrator (frozen), prima dei verticali. Vedi [[../concepts/lora-stacking]] (copre il composition-aware training).
 
 ## Rischi noti
 

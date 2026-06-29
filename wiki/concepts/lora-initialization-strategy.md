@@ -47,7 +47,7 @@ Un LoRA aggiunge alla matrice di pesi *congelata* del base model `W` una piccola
 
 ## Note di precisione `[INFERRED]`
 - Nel nostro three-tier i LoRA in questione sono **Tier 2/3 (coding)** che vivono **sopra il Tier 1** organization-first. Init B=0 = Tier 2/3 partono come "no-op" → il comportamento org/safety del Tier 1 resta intatto e il coding si aggiunge gradualmente. Esattamente lo scenario che vuoi.
-- Distinto da [[aLoRA]] / Activated-LoRA (briefing 2026-06-28 Decisione 1): quello riguarda il **runtime/KV-cache** (swap senza ricomputo), NON l'inizializzazione dei pesi. Sono due temi diversi.
+- Distinto da aLoRA / Activated-LoRA (spike D1, pagina futura; briefing 2026-06-28 Decisione 1): quello riguarda il **runtime/KV-cache** (swap senza ricomputo), NON l'inizializzazione dei pesi. Sono due temi diversi.
 
 ## Linked
 - [[catastrophic-forgetting]] — il rischio che questa scelta mitiga.

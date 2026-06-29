@@ -9,6 +9,8 @@ last_updated: 2026-05-21
 
 # Staged Curriculum Training (idea utente)
 
+> ⚠️ **Raffinato 2026-06-28** in [[../training-taxonomy/training-curriculum-design]] (design a 5 stadi) + [[../training-taxonomy/curriculum-stages-detail]]. Questa pagina resta la formulazione-idea-utente originale (4 stadi); NON sovrascritta.
+
 ## Trigger utente (2026-05-21)
 
 L'utente, durante la chiusura di open question #15 (post-training), ha aggiunto una proposta originale:

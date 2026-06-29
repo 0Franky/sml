@@ -15,7 +15,7 @@ confidence: provisional
 ## 1. Il problema
 Scrivere codice **senza sapere il livello di qualità richiesto** porta a due fallimenti opposti:
 - **Under-building**: consegni codice sloppy dove serviva production-ready → rischio/security debt.
-- **Over-engineering** (gold-plating): metti test, astrazioni, hardening su un PoC usa-e-getta → **spreco di tempo/token** (anti-pattern tanto quanto lo sloppy — vedi [[code-quality-architecture|Area 6 "other"]]).
+- **Over-engineering** (gold-plating): metti test, astrazioni, hardening su un PoC usa-e-getta → **spreco di tempo/token** (anti-pattern tanto quanto lo sloppy — vedi [[../training-taxonomy/area-06-code-quality-architecture|Area 6 code-quality]]).
 
 → Il livello di qualità è una **criticità implicita** che il modello organization-first deve **inferire o chiedere** PRIMA di scrivere (lega a [[scientific-method-operating-protocol]] passo 2 "orient/goal", e [[pre-flight-safety-checks]]).
 

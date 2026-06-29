@@ -17,6 +17,7 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 - [`sota-techniques-catalog.md`](sota-techniques-catalog.md) 🆕⭐ — **catalogo SOTA esaustivo** delle tecniche da introdurre (9 dimensioni + 7 orizzontali): per ognuna have-already vs NUOVO + classif training-vs-harness (F-pi/F-serving/S/F+S) + fase + rischi. Base mia + **review-loop 10 agenti** (msg 210). Knowledge-transfer SOTA 2024-2026
 - [`todo.md`](todo.md) 🆕📋 — **tracker vivo** del lavoro rinviato/aperto (ADR pendenti, dettagli training, rifiniture, ref-da-verificare, milestone). Regola "tracciamo sempre tutto / mai lavori a metà" (CLAUDE.md #12)
 - [`log.md`](log.md) — ledger cronologico di tutte le operazioni
+- [`_session-summary-2026-05-21.md`](_session-summary-2026-05-21.md) — archivio sintesi sessione bootstrap 2026-05-21
 
 ## Architecture
 

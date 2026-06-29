@@ -265,7 +265,7 @@ Il nostro GRPO/PPO binary-reward **degrada la calibrazione** come side-effect st
 ### [NUOVE skill collegate]
 - **interruption-robust-reasoning** ([[../concepts/interruption-robust-reasoning]]) → si innesta sulla foglia *Update-injection handling*: gestione dell'`<update>` a fine sezione (multi-call MinD); reward = l'update ha migliorato la risposta, coppia bilanciata rilevante/rumore.
 - **dependency-aware-error-recovery** ([[../concepts/dependency-aware-error-recovery]]) → foglia Area 2/4/16: traversare il dep-graph dal nodo-errore + revisione a cascata.
-- **situational-policy-table** ([[../concepts/situational-policy-table]]) → situational-awareness: riconoscere la situazione → azione corretta (eval SAD).
+- **situational-policy-table** ([[../concepts/situational-policy-table]]) → situational-policy: riconoscere la situazione → azione/policy corretta. Eval = **oracolo held-out della situazione** (by-construction: "la regola Y si applica in questo input? sì/no", scorer≠scored); benchmark esterno di confronto = policy-compliance per richiesta (Cisneros-Velarde arXiv 2603.00369; affine CoPriva 2505.15805). ⚠️ **NON** il SAD di Laine (arXiv 2407.04694 = self-AI-awareness, mismatch). Dettaglio in [[../concepts/situational-policy-table]] §Reward.
 
 ### [CROSS-LINK] Adaptive-depth (Area 3) ↔ Area 4 `[INFERRED]`
 Il *think-or-not / adaptive-depth* (Area 3: S-GRPO/DEER/CoT-Valve) è la stessa famiglia "compute-allocation metacognitiva" di degradation/when-to-compact: decidere *quanto computare*. Reward decaying su exit-position (agire prima ma corretto). → reward allineati: mai premiare l'uscita-presto di per sé, solo uscire-presto-**E**-corretto.

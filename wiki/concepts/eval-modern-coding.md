@@ -79,7 +79,7 @@ Numeri → baseline. Ogni LoRA verticale deve battere baseline ≥5% sul domain-
 
 ## Compounding error
 
-Vedi [[concepts/compounding-error]] (TODO). Importante: eval **end-to-end** (con orchestrator + LoRA stack), non solo i singoli componenti. La pipeline ha 3 step, errore composto.
+Vedi [[dependency-aware-error-recovery]] (stesso tema error-propagation lungo le dipendenze). Importante: eval **end-to-end** (con orchestrator + LoRA stack), non solo i singoli componenti. La pipeline ha 3 step, errore composto.
 
 ## Confidence
 
