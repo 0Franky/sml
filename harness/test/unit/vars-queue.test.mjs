@@ -111,6 +111,37 @@ try {
     q.close();
   }
 
+  // 8) DECISIONS lane + query per idAgente (utente msg 456/457) ----------------
+  {
+    const q = new VarsQueue(":memory:", { agent: "orchestrator" });
+    // l'orchestratore e un sotto-agente (who esplicito = sua identità) registrano scelte sullo stesso store
+    q.recordDecision("D1", "usa RS256", { rationale: "asimmetrico, rotazione chiavi", taskRef: "T1" });
+    q.recordDecision("D2", "estrarre token via header", { who: "sub-auth", taskRef: "T1" });
+    q.recordDecision("D3", "rollback se test rossi", { who: "sub-auth" });
+
+    const d1 = q.getDecision("D1");
+    ok(d1 && d1.text === "usa RS256" && d1.agent === "orchestrator", "DECISION: record/get + attribuzione agente");
+    ok(d1.rationale === "asimmetrico, rotazione chiavi", "DECISION: razionale (why) persistito");
+
+    // query per idAgente — il cuore della richiesta utente
+    const bySubAuth = q.getDecisionsByAgent("sub-auth");
+    ok(bySubAuth.length === 2 && bySubAuth.every(d => d.agent === "sub-auth"),
+       "DECISION: getDecisionsByAgent ritorna SOLO le scelte di quell'agente");
+    ok(q.getDecisionsByAgent("orchestrator").length === 1, "DECISION: filtro per agente è esatto");
+    ok(q.listDecisions({ taskRef: "T1" }).length === 2, "DECISION: filtro per task_ref");
+
+    // vista più ampia: tutte le mutazioni attribuite (change-log by who) — floor del report-to-file
+    const changes = q.getChangesByAgent("sub-auth");
+    ok(changes.length >= 2 && changes.every(c => c.who === "sub-auth"),
+       "DECISION: getChangesByAgent attribuisce le mutazioni per agente (report floor)");
+
+    // upsert idempotente
+    q.recordDecision("D1", "usa RS256 (confermato)", { rationale: "+EST512 in futuro" });
+    ok(q.getDecisionsByAgent("orchestrator").length === 1, "DECISION: upsert su id non duplica");
+    ok(q.getDecision("D1").text.includes("confermato"), "DECISION: upsert aggiorna il testo");
+    q.close();
+  }
+
 } finally {
   rmSync(dir, { recursive: true, force: true });
 }
