@@ -7,10 +7,17 @@ export interface TriggerConfig {
   maxDepth: number;
   focusK: number;
 }
+export type GatheringMode = "delegated" | "inject" | "require";
+export interface GatheringConfig {
+  mode: GatheringMode;
+  minTasksForForce: number;
+}
 export interface HarnessConfig {
   trigger: TriggerConfig;
   messagesWindowN: number;
+  gathering: GatheringConfig;
 }
+export const GATHERING_MODES: GatheringMode[];
 export const DEFAULT_HARNESS_CONFIG: HarnessConfig;
 export function loadHarnessConfig(path?: string, opts?: { env?: Record<string, string | undefined> }): HarnessConfig;
 declare const _default: { loadHarnessConfig: typeof loadHarnessConfig; DEFAULT_HARNESS_CONFIG: HarnessConfig };

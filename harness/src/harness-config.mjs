@@ -17,10 +17,18 @@
 import { readFileSync, existsSync } from "node:fs";
 import { DEFAULT_CFG } from "./nested-compact.mjs";
 
-/** Config di default = soglie trigger (DEFAULT_CFG) + finestra lane messaggi. */
+/** Modalità di enforcement del gathering pre-focus (msg 528/531). */
+export const GATHERING_MODES = ["delegated", "inject", "require"];
+
+/** Config di default = soglie trigger (DEFAULT_CFG) + finestra lane messaggi + enforcement gathering. */
 export const DEFAULT_HARNESS_CONFIG = {
   trigger: { ...DEFAULT_CFG }, // tokenReorderPct, tokenMatrioskaPct, watchReorder, watchMatrioska, maxDepth, focusK
   messagesWindowN: 8, // turni verbatim mostrati nella lane <messages_with_user>
+  // gathering (focus-gathering v1): QUANTO è forzato il "guarda l'ordine dei task prima di entrare a fuoco".
+  //   delegated = il modello decide (default, lean/anti-cerimonia); inject = l'harness inietta la vista ordinata nel
+  //   focus_hint (anti-cecità, low-ceremony); require = enter_focus è bloccato finché non chiami get_execution_order.
+  // minTasksForForce = gate proporzionalità: inject/require agiscono SOLO con ≥ N task open (sotto → no-op).
+  gathering: { mode: "delegated", minTasksForForce: 5 },
 };
 
 const DEFAULT_PATH = ".pi/harness.config.json";
@@ -51,6 +59,15 @@ function applyTrigger(dst, src) {
   }
 }
 
+/** Applica i campi `gathering` validi da `src` su `dst` (in place). mode fuori-enum / minTasks <1 → ignorati. */
+function applyGathering(dst, src) {
+  if (!src || typeof src !== "object") return;
+  if (typeof src.mode === "string" && GATHERING_MODES.includes(src.mode)) dst.mode = src.mode;
+  if (typeof src.minTasksForForce === "number" && Number.isFinite(src.minTasksForForce) && src.minTasksForForce >= 1) {
+    dst.minTasksForForce = Math.floor(src.minTasksForForce);
+  }
+}
+
 const ENV_MAP = {
   HARNESS_TOKEN_REORDER_PCT: ["trigger", "tokenReorderPct"],
   HARNESS_TOKEN_MATRIOSKA_PCT: ["trigger", "tokenMatrioskaPct"],
@@ -67,12 +84,17 @@ const ENV_MAP = {
  * @returns {{ trigger: typeof DEFAULT_CFG, messagesWindowN: number }}
  */
 export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
-  const cfg = { trigger: { ...DEFAULT_HARNESS_CONFIG.trigger }, messagesWindowN: DEFAULT_HARNESS_CONFIG.messagesWindowN };
+  const cfg = {
+    trigger: { ...DEFAULT_HARNESS_CONFIG.trigger },
+    messagesWindowN: DEFAULT_HARNESS_CONFIG.messagesWindowN,
+    gathering: { ...DEFAULT_HARNESS_CONFIG.gathering },
+  };
   // 2) file opt-in
   try {
     if (existsSync(path)) {
       const f = JSON.parse(readFileSync(path, "utf-8"));
       applyTrigger(cfg.trigger, f && f.trigger);
+      applyGathering(cfg.gathering, f && f.gathering);
       if (typeof f?.messagesWindowN === "number" && Number.isFinite(f.messagesWindowN) && f.messagesWindowN >= 1) {
         cfg.messagesWindowN = Math.floor(f.messagesWindowN);
       }
@@ -94,6 +116,12 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
       cfg.messagesWindowN = Math.floor(n);
     }
   }
+  // gathering env (mode = stringa-enum, fuori dallo schema numerico di ENV_MAP)
+  if (typeof env.HARNESS_GATHERING_MODE === "string" && GATHERING_MODES.includes(env.HARNESS_GATHERING_MODE)) {
+    cfg.gathering.mode = env.HARNESS_GATHERING_MODE;
+  }
+  const minT = Number(env.HARNESS_GATHERING_MIN_TASKS);
+  if (Number.isFinite(minT) && minT >= 1) cfg.gathering.minTasksForForce = Math.floor(minT);
   return cfg;
 }
 

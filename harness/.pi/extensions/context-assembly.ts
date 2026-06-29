@@ -77,6 +77,19 @@ export default function (pi: ExtensionAPI) {
       let hint = "";
       if (trig.recommend === "matrioska" && shouldEmitFocusHint(vq)) {
         hint = `\n<focus_hint watch="${trig.metrics.watchCount}"${trig.metrics.percent != null ? ` ctx="${Math.round(trig.metrics.percent * 100)}%"` : ""}>Contesto in pressione: valuta enter_focus su un sotto-insieme di task per lavorare a fuoco (pop_focus al termine).</focus_hint>`;
+        // gathering.mode=inject (msg 531): allega INLINE la vista ordinata, così quando l'harness nudga il focus il
+        // modello non sceglie il subset alla cieca. Low-ceremony (niente focus dedicato). Gate proporzionalità: solo
+        // con ≥ minTasksForForce task open. Vedi wiki/concepts/focus-task-prioritization.md §gathering-enforcement.
+        if (HARNESS_CFG.gathering.mode === "inject") {
+          const { structured, tasks } = vq.listTasksOrdered();
+          if (tasks.length >= HARNESS_CFG.gathering.minTasksForForce) {
+            const lines = tasks.map(
+              (t: any) =>
+                `  - ${t.id} [${t.status}]${structured ? ` ready=${t.ready} unblocks=${t.unblocks} prio=${t.priority}` : ""} : ${t.title}`,
+            );
+            hint += `\n<execution_order note="ready-first then downstream-impact then priority">\n${lines.join("\n")}\n</execution_order>`;
+          }
+        }
         markFocusHintEmitted(vq); // commit del cooldown solo dopo aver deciso di emettere (query/command separati)
       }
       const lane = buildMessagesLane(convStore, convId, { n: MESSAGES_WINDOW_N, afterSeq: checkpointSeq });

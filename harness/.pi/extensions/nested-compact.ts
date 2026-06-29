@@ -47,8 +47,22 @@ export default function (pi: ExtensionAPI) {
     }),
     async execute(_t: string, p: any) {
       try {
+        // gathering.mode=require (msg 531): se ci sono ≥ minTasksForForce task open, il focus è BLOCCATO finché il
+        // modello non ha consultato get_execution_order (marker _gather_token). Anti-cecità senza cerimonia: una
+        // gather → un focus (il token viene consumato sotto). Sotto-soglia → no-op (gate proporzionalità).
+        const g = HARNESS_CFG.gathering;
+        if (g.mode === "require") {
+          const openCount = vq.listTasks({ status: "pending" }).length + vq.listTasks({ status: "in_progress" }).length;
+          if (openCount >= g.minTasksForForce && !vq.getMeta("_gather_token")) {
+            return {
+              content: [{ type: "text", text: "enter_focus bloccato (gathering.mode=require): chiama prima get_execution_order per valutare ready/ordine/priorità del backlog, poi rientra a fuoco." }],
+              details: { ok: false },
+            };
+          }
+        }
         const parentScopeId = vq.getActiveScope();
         const r = enterFocus(vq, { taskSubset: p.task_ids ?? [], parentScopeId }, HARNESS_CFG.trigger); // maxDepth configurabile
+        if (g.mode === "require") vq.setMeta("_gather_token", ""); // consuma il token: il prossimo focus richiede una nuova gather
         return {
           content: [{ type: "text", text: JSON.stringify({ scope_id: r.scopeId, depth: r.depth, focus: p.task_ids }) }],
           details: { ok: true },
