@@ -167,6 +167,35 @@ export function requireGateBlocks(vq, cfg = {}) {
 }
 
 /**
+ * maybeAutoFocus — autofocus.mode='auto' (OQ-A, msg 551): se la pressione è MATRIOSKA e NON c'è già uno scope
+ * aperto, l'harness ENTRA in focus DA SOLO sui task ready (top focusK in execution-order), in modo deterministico —
+ * rete di sicurezza per un modello che non si auto-organizza (es. SLM piccolo). NO-OP (ritorna null) se: già in
+ * focus, pressione insufficiente, cooldown non passato (anti-thrash, riusa il cooldown del focus_hint), nessun task
+ * ready, o enterFocus rifiuta (depth/hard-gate). Node-pure → testabile.
+ * @param {import("./vars-queue.mjs").VarsQueue} vq
+ * @param {{ tokens?: number|null, contextWindow?: number|null, now?: number }} [usage]
+ * @param {typeof DEFAULT_CFG} [cfg] soglie trigger (focusK, cooldownMs, ...)
+ * @returns {{scopeId: string, depth: number, sinceSeq: number}|null}
+ */
+export function maybeAutoFocus(vq, usage = {}, cfg = DEFAULT_CFG) {
+  const c = { ...DEFAULT_CFG, ...cfg };
+  if (getFocusStack(vq).length > 0) return null; // già a fuoco
+  const trig = evaluateTrigger(vq, { tokens: usage.tokens ?? null, contextWindow: usage.contextWindow ?? null, now: usage.now }, c);
+  if (trig.recommend !== "matrioska") return null; // pressione insufficiente (o depth-saturo → degradato a reorder)
+  if (!shouldEmitFocusHint(vq, { now: usage.now, cooldownMs: c.cooldownMs })) return null; // anti-thrash (cooldown condiviso)
+  const ready = vq.readyTasks(); // ready in execution-order
+  if (!ready.length) return null; // niente di eseguibile → non forzare un focus vuoto
+  const subset = ready.slice(0, c.focusK).map((t) => String(t.id));
+  try {
+    const r = enterFocus(vq, { taskSubset: subset, now: usage.now }, c);
+    markFocusHintEmitted(vq, { now: usage.now }); // consuma il cooldown: un auto-enter per finestra (anti-thrash)
+    return r;
+  } catch {
+    return null; // depth-bound / hard-gate → silenzioso (la diagnostica non deve mai rompere il turno)
+  }
+}
+
+/**
  * Frame (zoom-OUT) — truthful by construction, no summarization. Letture DIRETTE dallo stato durevole.
  * @returns {{ aim, decisions, constraints, sharedState, backlog, depth, frameTs }}
  */

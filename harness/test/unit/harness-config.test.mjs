@@ -85,6 +85,18 @@ const noFile = join(dir, "assente.json");
   ok(c5.gathering.mode === "delegated", "GATHERING: env mode fuori-enum scartato");
 }
 
+// 7) AUTOFOCUS (OQ-A, msg 551): default nudge, file/env override, enum-guard --------------------
+{
+  const c = loadHarnessConfig(noFile, { env: {} });
+  ok(c.autofocus.mode === "nudge", "AUTOFOCUS: default mode = nudge (invariato)");
+  writeFileSync(cfgPath, JSON.stringify({ autofocus: { mode: "auto" } }));
+  ok(loadHarnessConfig(cfgPath, { env: {} }).autofocus.mode === "auto", "AUTOFOCUS: file override mode=auto");
+  ok(loadHarnessConfig(cfgPath, { env: { HARNESS_AUTOFOCUS_MODE: "off" } }).autofocus.mode === "off", "AUTOFOCUS: env override mode=off");
+  writeFileSync(cfgPath, JSON.stringify({ autofocus: { mode: "nonsense" } }));
+  ok(loadHarnessConfig(cfgPath, { env: {} }).autofocus.mode === "nudge", "AUTOFOCUS: mode fuori-enum scartato (resta nudge)");
+  ok(loadHarnessConfig(noFile, { env: { HARNESS_AUTOFOCUS_MODE: "bogus" } }).autofocus.mode === "nudge", "AUTOFOCUS: env fuori-enum scartato");
+}
+
 rmSync(dir, { recursive: true, force: true });
 console.log(`\nharness-config test: ${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);

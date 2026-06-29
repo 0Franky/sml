@@ -22,5 +22,9 @@
   "gathering": {
     "mode": "delegated",
     "minTasksForForce": 5
+  },
+  "_autofocus": "CHI decide di entrare in focus sotto pressione (OQ-A). mode: 'off' (nessun segnale, il modello fa di testa sua), 'nudge' (DEFAULT, l'harness suggerisce col focus_hint e decide il modello — invariato), 'auto' (l'harness ENTRA in focus DA SOLO sui task ready quando la pressione è matrioska, deterministico, con cooldown anti-thrash). 'auto' = rete di sicurezza per un modello che non si auto-organizza (es. SLM 4B); per Sonnet 'nudge' va bene.",
+  "autofocus": {
+    "mode": "nudge"
   }
 }
