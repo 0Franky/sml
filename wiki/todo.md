@@ -10,6 +10,17 @@ last_updated: 2026-06-29
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
 
 ## 🔥 SESSIONE 2026-06-29 (post-compact) — stato corrente
+
+### ⭐ NEXT BUILD (utente msg 415, 2026-06-29) — "la NOSTRA versione di headroom / data-compress"
+> Mandato: costruire la nostra context-compression (no import di headroom; nostra implementazione TS, lane-safe). graphify AUTORIZZATO quando serve ("se lo necessiti anche adesso procedi"). Compact concordato (warn-prima fatto). HEAD pre-compact = **e7fda77**.
+**Piano (dall'ADR `decisions/2026-06-29-headroom-evaluation.md` §import-selettivo, ora come BUILD nostro):**
+1. **Cache-stable-prefix (PRIMO, non-lossy)**: il `<context>` deve avere il PREFISSO STABILE (rules, aim) byte-identico cross-turno e le parti VOLATILI (recent_changes, vars, timestamp) IN FONDO → massimizza gli hit di KV-cache del provider. Refinement di `context-assembler.mjs` (ordinamento stable-first / volatile-last + niente timestamp nel prefisso) + eventuale extension `before_provider_request` per garantire la stabilità del prefisso. + **misura** (spike: delta cache-hit/token). Equivalente nostro del CacheAligner. **Zero rischio (non comprime contenuto).**
+2. **Reversible content-compression (CCR nostro, lane CONTENT only)**: nuova logica `src/content-compress.mjs` + extension `content-compress.ts` su hook `tool_result`: se un tool_result è grande (> soglia), salva l'originale come VAR (vars-queue) e in-context lascia una forma COMPRESSA (head+tail+summary) + marker `(compresso → usa sliding_var_read 'X' per il pieno)` → il modello recupera on-demand. **Riusa** `sliding-var` + il pattern `window-aware-fetching`. **MAI** su rules/secrets/decision-state/aim. Ordine vs `secrets-guardrail` (redazione efficace sul compresso E sull'originale). Gate train-serve-match. Smoke + typecheck verdi.
+3. **Gate bloccanti**: lane safety/decisione escluse per costruzione; secrets-guardrail su compresso+originale; misura riduzione-token reale + tenuta-qualità prima di default-on.
+→ Costruire 1 poi 2 (1 è il quick-win sicuro). Test deterministici (no-API) + e2e se serve. Commit incrementale.
+> **Dopo il build**: aggiornare graph (autorizzato) + eventuale closing. L'utente sta dogfoodando Sonnet in parallelo (feedback = priorità #1 se arriva).
+
+
 - [x] **Update roadmap su TG** (msg 304): progetto + harness + cosa-manca-decidere + compact/variabili-context (msg 305-306).
 - [x] **graphify --update FATTO**: 646 nodi / 1144 edge / 36 community (potati 9 raw .graphifyignore, +130 nodi). Path normalizzati repo-relative. **Pushato** (`0c1babf`, gitleaks ok). manifest escluso.
 - [x] **Risposta msg 307** (variable-sharing/train-vs-harness/timestamp/file-db) inviata (msg 311) + **FILED-BACK**: creato nuovo concept `wiki/concepts/cross-session-state-sharing.md` (scope cross-compact+cross-agent on-request, change-log+timestamp, difesa-in-profondità train+harness, persistenza MIX file/DB, open-questions GC/merge-conflict). → ✅ **WIRING FATTO 2026-06-29**: (a) voce in `index.md` §Categoria-D Wrapper-runtime; (b) back-link da `wrapper-context-assembly-example.md` (Collega) + `agent-wrapper-vars-queue.md` (chiude open-q concorrenza/GC) + `external-update-injection.md` (lane-F difesa-in-profondità); (c) commit nel batch corrente.
