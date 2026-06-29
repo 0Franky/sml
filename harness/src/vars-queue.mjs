@@ -38,8 +38,10 @@ CREATE TABLE IF NOT EXISTS vars (
 CREATE TABLE IF NOT EXISTS tasks (
   id         TEXT PRIMARY KEY,
   title      TEXT,
-  status     TEXT NOT NULL DEFAULT 'pending',           -- pending|in_progress|done|blocked
+  status     TEXT NOT NULL DEFAULT 'pending',           -- pending|in_progress|done|blocked (status MANUALE; ≠ 'ready' DERIVATO dalle deps)
   payload    TEXT,
+  priority   INTEGER NOT NULL DEFAULT 0,                 -- routing-metadata (più alto = più urgente); MAI reward-target (anti reward-hacking)
+  deps       TEXT NOT NULL DEFAULT '[]',                 -- JSON array di task-id che DEVONO essere 'done' prima (HARD)
   created    INTEGER NOT NULL,
   updated    INTEGER NOT NULL,
   updated_by TEXT
@@ -128,7 +130,15 @@ const SILENT_NAMESPACES = new Set(["memo"]);
 const EXPECTED_COLUMNS = {
   changelog: [["silent", "INTEGER NOT NULL DEFAULT 0"], ["decision_ref", "TEXT"]],
   vars: [["decision_ref", "TEXT"]],
+  tasks: [["priority", "INTEGER NOT NULL DEFAULT 0"], ["deps", "TEXT NOT NULL DEFAULT '[]'"]], // focus-gathering v1 (migrazione DB esistenti)
 };
+
+/** Parse difensivo del campo `deps` (JSON array di task-id). Ritorna SEMPRE un array di stringhe. */
+function parseDeps(raw) {
+  if (Array.isArray(raw)) return raw.map(String);
+  if (typeof raw !== "string" || !raw) return [];
+  try { const a = JSON.parse(raw); return Array.isArray(a) ? a.map(String) : []; } catch { return []; }
+}
 
 export class VarsQueue {
   /**
@@ -271,10 +281,15 @@ export class VarsQueue {
   }
 
   // -- TASKS ------------------------------------------------------------------
-  addTask(id, title, { payload = null, who = this.agent } = {}) {
+  // priority/deps (focus-gathering v1): priority=routing-metadata (più alto=più urgente, MAI reward-target);
+  // deps=task-id che DEVONO essere 'done' prima (HARD). Validazione no-self/no-ciclo via _checkDeps (throw se invalido).
+  addTask(id, title, { payload = null, priority = 0, deps = [], who = this.agent } = {}) {
     const now = Date.now();
-    this.db.prepare(`INSERT INTO tasks (id,title,status,payload,created,updated,updated_by) VALUES (?,?,?,?,?,?,?)`)
-      .run(id, title, "pending", payload == null ? null : JSON.stringify(payload), now, now, who);
+    const chk = this._checkDeps(id, deps);
+    if (!chk.ok) throw new Error(`addTask(${id}): deps invalide — ${chk.error}`);
+    this.db.prepare(`INSERT INTO tasks (id,title,status,payload,priority,deps,created,updated,updated_by) VALUES (?,?,?,?,?,?,?,?,?)`)
+      .run(id, title, "pending", payload == null ? null : JSON.stringify(payload),
+           Number.isFinite(priority) ? Math.trunc(priority) : 0, JSON.stringify(chk.deps), now, now, who);
     this._log("tasks", id, "status", null, "pending", who);
     return this.getTask(id);
   }
@@ -282,7 +297,57 @@ export class VarsQueue {
   getTask(id) {
     const r = this.db.prepare(`SELECT * FROM tasks WHERE id = ?`).get(id);
     if (!r) return null;
-    return { ...r, payload: r.payload == null ? null : JSON.parse(r.payload) };
+    return { ...r, payload: r.payload == null ? null : JSON.parse(r.payload), deps: parseDeps(r.deps), priority: r.priority ?? 0 };
+  }
+
+  /**
+   * setTaskMeta — aggiorna priority e/o deps di un task (focus-gathering v1). Valida no-self/no-ciclo.
+   * @param {string} id
+   * @param {{priority?: number, deps?: string[], who?: string}} opts
+   * @returns {object} il task aggiornato
+   */
+  setTaskMeta(id, { priority = undefined, deps = undefined, who = this.agent } = {}) {
+    const cur = this.getTask(id);
+    if (!cur) throw new Error(`setTaskMeta(${id}): task inesistente`);
+    let newDeps = cur.deps;
+    if (deps !== undefined) {
+      const chk = this._checkDeps(id, deps);
+      if (!chk.ok) throw new Error(`setTaskMeta(${id}): deps invalide — ${chk.error}`);
+      newDeps = chk.deps;
+    }
+    const newPrio = priority !== undefined && Number.isFinite(priority) ? Math.trunc(priority) : cur.priority;
+    this.db.prepare(`UPDATE tasks SET priority = ?, deps = ?, updated = ?, updated_by = ? WHERE id = ?`)
+      .run(newPrio, JSON.stringify(newDeps), Date.now(), who, id);
+    if (newPrio !== cur.priority) this._log("tasks", id, "priority", cur.priority, newPrio, who);
+    if (deps !== undefined) this._log("tasks", id, "deps", JSON.stringify(cur.deps), JSON.stringify(newDeps), who);
+    return this.getTask(id);
+  }
+
+  /**
+   * _checkDeps — normalizza + valida le deps di `id`: array di id-stringa unici, no self-dep, no CICLO
+   * (DFS sul dep-graph dei task ESISTENTI + il nuovo arco id→deps). Forward-ref (dep su task non ancora creato)
+   * è ammesso (resterà non-ready finché quel task non esiste+done). @returns {{ok:boolean, error?:string, deps?:string[]}}
+   */
+  _checkDeps(id, deps) {
+    if (!Array.isArray(deps)) return { ok: false, error: "deps non è un array" };
+    const norm = [...new Set(deps.map((d) => String(d)).filter(Boolean))];
+    if (norm.includes(String(id))) return { ok: false, error: "self-dependency" };
+    // mappa deps esistenti (id → deps[]), col nuovo arco id→norm sovrascritto
+    const rows = this.db.prepare(`SELECT id, deps FROM tasks`).all();
+    const graph = new Map(rows.map((r) => [String(r.id), parseDeps(r.deps)]));
+    graph.set(String(id), norm);
+    // DFS per ciclo a partire da id
+    const seen = new Set(), stack = new Set();
+    const hasCycle = (node) => {
+      if (stack.has(node)) return true;
+      if (seen.has(node)) return false;
+      seen.add(node); stack.add(node);
+      for (const d of graph.get(node) ?? []) if (graph.has(d) && hasCycle(d)) return true;
+      stack.delete(node);
+      return false;
+    };
+    if (hasCycle(String(id))) return { ok: false, error: "introduce un ciclo nel dep-graph" };
+    return { ok: true, deps: norm };
   }
 
   setTaskStatus(id, status, { who = this.agent } = {}) {
@@ -297,7 +362,52 @@ export class VarsQueue {
     let q = `SELECT * FROM tasks`; const args = [];
     if (status) { q += " WHERE status = ?"; args.push(status); }
     q += " ORDER BY created";
-    return this.db.prepare(q).all(...args).map(r => ({ ...r, payload: r.payload == null ? null : JSON.parse(r.payload) }));
+    return this.db.prepare(q).all(...args).map(r => ({ ...r, payload: r.payload == null ? null : JSON.parse(r.payload), deps: parseDeps(r.deps), priority: r.priority ?? 0 }));
+  }
+
+  /**
+   * listTasksOrdered — vista "gathering" del focus (focus-gathering v1, review-validato). Sui task OPEN-LOOP
+   * (pending+in_progress) calcola: `ready` (tutte le deps sono `done`), `unblocks` (downstream-impact: #task open
+   * che dipendono TRANSITIVAMENTE da questo) e `order` (ready-first → unblocks desc → priority desc → created asc).
+   * GATE PROPORZIONALITÀ (regola #8): se NESSUN task ha deps non-vuote E nessuno ha priority≠0 → ritorna la vista
+   * SEMPLICE (come `listTasks` open), senza ready/unblocks/order → su grafi piatti non si impone struttura inutile.
+   * @returns {{ structured: boolean, tasks: object[] }}
+   */
+  listTasksOrdered() {
+    const pool = [...this.listTasks({ status: "in_progress" }), ...this.listTasks({ status: "pending" })];
+    const hasStructure = pool.some((t) => (t.deps && t.deps.length) || (t.priority && t.priority !== 0));
+    if (!hasStructure) return { structured: false, tasks: pool };
+    const doneSet = new Set(this.listTasks({ status: "done" }).map((t) => String(t.id)));
+    const ready = (t) => (t.deps ?? []).every((d) => doneSet.has(String(d)));
+    // downstream-impact: # task open che dipendono (transitivo) da `id`
+    const dependents = new Map();
+    for (const t of pool) for (const d of (t.deps ?? [])) { const k = String(d); (dependents.get(k) ?? dependents.set(k, []).get(k)).push(String(t.id)); }
+    const unblocks = (id, seen = new Set()) => {
+      let n = 0;
+      for (const dep of dependents.get(String(id)) ?? []) { if (seen.has(dep)) continue; seen.add(dep); n += 1 + unblocks(dep, seen); }
+      return n;
+    };
+    const enriched = pool.map((t) => ({ ...t, ready: ready(t), unblocks: unblocks(t.id) }));
+    enriched.sort((a, b) =>
+      (Number(b.ready) - Number(a.ready)) ||   // ready-first
+      (b.unblocks - a.unblocks) ||             // downstream-impact desc (foundational prima delle foglie)
+      (b.priority - a.priority) ||             // priority desc
+      (a.created - b.created));                // created asc (stabile)
+    enriched.forEach((t, i) => { t.order = i; });
+    return { structured: true, tasks: enriched };
+  }
+
+  /**
+   * readyTasks — i task OPEN sbloccati (deps tutte done) in execution-order, opzionalmente ristretti a `subsetIds`.
+   * Su grafo piatto (no struttura) tutti gli open sono ready. Usato da `enterFocus` per lead + hard-gate no-ready.
+   * @param {string[]|null} [subsetIds]
+   * @returns {object[]}
+   */
+  readyTasks(subsetIds = null) {
+    const { structured, tasks } = this.listTasksOrdered();
+    const set = subsetIds ? new Set(subsetIds.map(String)) : null;
+    const pool = set ? tasks.filter((t) => set.has(String(t.id))) : tasks;
+    return structured ? pool.filter((t) => t.ready) : pool;
   }
 
   // -- VERIFICATIONS ----------------------------------------------------------

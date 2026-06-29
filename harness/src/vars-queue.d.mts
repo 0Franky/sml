@@ -15,9 +15,18 @@ export interface TaskRecord {
   title: string;
   status: string;
   payload: unknown;
+  priority: number;
+  deps: string[];
   created: number;
   updated: number;
   updated_by: string | null;
+}
+
+/** TaskRecord arricchito dalla vista gathering (listTasksOrdered, quando structured). */
+export interface OrderedTask extends TaskRecord {
+  ready: boolean;
+  unblocks: number;
+  order: number;
 }
 
 export interface ChangeLogEntry {
@@ -101,10 +110,13 @@ export class VarsQueue {
   mergeProposals(resolve?: (prop: Proposal, current: VarRecord | null) => boolean): number;
 
   // TASKS
-  addTask(id: string, title: string, opts?: { payload?: unknown; who?: string }): TaskRecord;
+  addTask(id: string, title: string, opts?: { payload?: unknown; priority?: number; deps?: string[]; who?: string }): TaskRecord;
   getTask(id: string): TaskRecord | null;
   setTaskStatus(id: string, status: string, opts?: WhoOpt): TaskRecord;
+  setTaskMeta(id: string, opts?: { priority?: number; deps?: string[]; who?: string }): TaskRecord;
   listTasks(opts?: { status?: string | null }): TaskRecord[];
+  listTasksOrdered(): { structured: boolean; tasks: TaskRecord[] | OrderedTask[] };
+  readyTasks(subsetIds?: string[] | null): TaskRecord[];
 
   // VERIFICATIONS
   addVerification(id: string, taskId: string, opts?: { detail?: string | null; who?: string }): string;
