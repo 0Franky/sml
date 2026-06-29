@@ -194,6 +194,7 @@ Non ogni contraddizione richiede stop. Severità decide priority:
 - [[agent-constitution]] — principio 13 (su contraddizione: fermati e segnala) formalizza questo layer come codice di condotta
 - [[scientific-method-operating-protocol]] — passo 4 (interconnections) + verify-loop usano questo detector; [[_user-notes-2026-06-23]] note 4+5 lo estendono a skill metacognitiva interna
 - [[../architecture/wrapper]] — implementazione layer (extension di [[../decisions/2026-06-23-pi-harness-base|pi]])
+- [[harness-elicitation-vs-execution]] — **validazione sperimentale 2026-06-29** (Test B, dogfood Gemini reale): il `<context>` con decisione D1 strutturata + regola `contradiction-check` fa **rilevare il conflitto 3/3** vs vanilla 2/3 (caso reale dedup-per-email vs SSO multi-email). Caveat: prompt corto co-locato sotto-rappresenta il valore → test long-horizon (oltre compaction) ancora gated
 
 ## Sources
 
