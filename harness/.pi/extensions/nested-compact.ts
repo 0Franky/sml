@@ -17,7 +17,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { VarsQueue } from "../../src/vars-queue.mjs";
 import { getVarsQueue, closeAll } from "../../src/state-db.mjs";
-import { enterFocus, popFocus, getFocusStack, currentDepth, evaluateTrigger } from "../../src/nested-compact.mjs";
+import { enterFocus, popFocus, getFocusStack, currentDepth, evaluateTrigger, requireGateBlocks } from "../../src/nested-compact.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
@@ -49,16 +49,13 @@ export default function (pi: ExtensionAPI) {
       try {
         // gathering.mode=require (msg 531): se ci sono ≥ minTasksForForce task open, il focus è BLOCCATO finché il
         // modello non ha consultato get_execution_order (marker _gather_token). Anti-cecità senza cerimonia: una
-        // gather → un focus (il token viene consumato sotto). Sotto-soglia → no-op (gate proporzionalità).
+        // gather → un focus (token consumato sotto + azzerato a inizio sessione). Predicato node-pure testabile.
         const g = HARNESS_CFG.gathering;
-        if (g.mode === "require") {
-          const openCount = vq.listTasks({ status: "pending" }).length + vq.listTasks({ status: "in_progress" }).length;
-          if (openCount >= g.minTasksForForce && !vq.getMeta("_gather_token")) {
-            return {
-              content: [{ type: "text", text: "enter_focus bloccato (gathering.mode=require): chiama prima get_execution_order per valutare ready/ordine/priorità del backlog, poi rientra a fuoco." }],
-              details: { ok: false },
-            };
-          }
+        if (requireGateBlocks(vq, g)) {
+          return {
+            content: [{ type: "text", text: "enter_focus bloccato (gathering.mode=require): chiama prima get_execution_order per valutare ready/ordine/priorità del backlog, poi rientra a fuoco." }],
+            details: { ok: false },
+          };
         }
         const parentScopeId = vq.getActiveScope();
         const r = enterFocus(vq, { taskSubset: p.task_ids ?? [], parentScopeId }, HARNESS_CFG.trigger); // maxDepth configurabile

@@ -150,6 +150,23 @@ export function markReorgEmitted(vq, opts = {}) {
 }
 
 /**
+ * requireGateBlocks — predicato NODE-PURE per `gathering.mode='require'` (review P1 test-gap #16): true se
+ * `enter_focus` va BLOCCATO perché manca una gather. Blocca SOLO se mode==='require' AND open-tasks ≥
+ * minTasksForForce (gate proporzionalità) AND non c'è il marker `_gather_token` (scritto da get_execution_order,
+ * azzerato all'inizio sessione e consumato dopo l'enter → "una gather, un focus, fresca per-sessione"). Estratto
+ * dalla extension per renderlo testabile node-pure.
+ * @param {import("./vars-queue.mjs").VarsQueue} vq
+ * @param {{ mode?: string, minTasksForForce?: number }} [cfg]
+ * @returns {boolean}
+ */
+export function requireGateBlocks(vq, cfg = {}) {
+  if (cfg.mode !== "require") return false;
+  const open = vq.listTasks({ status: "pending" }).length + vq.listTasks({ status: "in_progress" }).length;
+  if (open < (cfg.minTasksForForce ?? Infinity)) return false;
+  return !vq.getMeta("_gather_token");
+}
+
+/**
  * Frame (zoom-OUT) — truthful by construction, no summarization. Letture DIRETTE dallo stato durevole.
  * @returns {{ aim, decisions, constraints, sharedState, backlog, depth, frameTs }}
  */
@@ -232,18 +249,32 @@ export function enterFocus(vq, opts = {}, cfg = DEFAULT_CFG) {
   if (!subset.length && !opts.aimTask) {
     throw new Error("enterFocus: subset vuoto o senza task esistenti (serve ≥1 task valido)");
   }
-  // HARD-GATE no-ready (focus-gathering v1, review P0): se il subset esiste ma NESSUN task è ready (deps non
-  // soddisfatte), RIFIUTA invece di degenerare su un lead bloccato → niente focus su lavoro non-eseguibile (il
-  // fallimento che il design previene, msg 506). Il meccanismo F non deve dipendere dalla correttezza della scelta-S.
-  let lead = opts.aimTask ?? null;
-  if (subset.length && !opts.aimTask) {
-    const ready = vq.readyTasks(subset); // [] = nessuno sbloccato (su grafo piatto = tutti ready → mai vuoto)
-    if (!ready.length) {
-      const missing = [...new Set(subset.flatMap((id) => (vq.getTask(id)?.deps ?? []).filter((d) => vq.getTask(d)?.status !== "done")))];
-      const e = new Error(`enterFocus: nessun task READY nel subset (deps non soddisfatte) — missing_deps: [${missing.join(", ")}]`);
-      e.reason = "no-ready-task"; e.missing_deps = missing;
+  // HARD-GATE no-lead (focus-gathering v1, review P0/P2): se non c'è alcun task su cui appoggiare il lead, RIFIUTA
+  // invece di degenerare su un task non-eseguibile (il fallimento che il design previene, msg 506). Diagnostica
+  // DISTINTA (review P2 #2/#12): `no-open-task` = tutti done/blocked (nessuna dep mancante da riportare) vs
+  // `no-ready-task` = open ma deps non soddisfatte (→ missing_deps). Il meccanismo F non dipende dalla scelta-S.
+  const isOpen = (id) => { const s = vq.getTask(id)?.status; return s === "pending" || s === "in_progress"; };
+  const throwNoLead = (ids) => {
+    const open = ids.filter(isOpen);
+    if (!open.length) {
+      const e = new Error("enterFocus: nessun task OPEN nel subset (tutti già done/blocked)");
+      e.reason = "no-open-task"; e.missing_deps = [];
       throw e;
     }
+    const missing = [...new Set(open.flatMap((id) => (vq.getTask(id)?.deps ?? []).filter((d) => vq.getTask(d)?.status !== "done")))];
+    const e = new Error(`enterFocus: nessun task READY nel subset (deps non soddisfatte) — missing_deps: [${missing.join(", ")}]`);
+    e.reason = "no-ready-task"; e.missing_deps = missing;
+    throw e;
+  };
+  let lead = null;
+  if (opts.aimTask) {
+    // l'aimTask esplicito NON bypassa il gate (review P3 #7): dev'essere ready (su grafo piatto = open). Altrimenti
+    // si rientrerebbe nel fallimento "lead bloccato" dal lato del caller invece che dal subset.
+    if (!vq.readyTasks([opts.aimTask]).length) throwNoLead([opts.aimTask]);
+    lead = opts.aimTask;
+  } else if (subset.length) {
+    const ready = vq.readyTasks(subset); // [] = nessuno sbloccato (su grafo piatto = tutti gli open → mai vuoto)
+    if (!ready.length) throwNoLead(subset);
     lead = ready[0].id; // lead = primo READY in execution-order (MAI un task bloccato)
   }
   lead = lead ?? subset[0] ?? vq.getCurr() ?? null; // su cosa puntare CURR dentro lo scope

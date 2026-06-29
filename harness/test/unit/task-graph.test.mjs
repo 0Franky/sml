@@ -90,5 +90,61 @@ function throws(fn, msg) { try { fn(); failed++; console.error("  ✗ FAIL (no t
   vq.close();
 }
 
+// 7) ciclo a 3 nodi (review P3 #13): la DFS chiude cicli transitivi, non solo A<->B -------------------
+{
+  const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+  vq.addTask("A", "a"); vq.addTask("B", "b", { deps: ["A"] }); vq.addTask("C", "c", { deps: ["B"] });
+  throws(() => vq.setTaskMeta("A", { deps: ["C"] }), "CICLO-3: A->B->C->A rifiutato (DFS transitiva)");
+  vq.addTask("D", "d", { deps: ["C"] });
+  throws(() => vq.addTask("E", "e", { deps: ["D"] }) && vq.setTaskMeta("C", { deps: ["E"] }), "CICLO-3: chiusura ciclo via add+setMeta rifiutata");
+  vq.close();
+}
+
+// 8) forward-ref ready-transition (review P3 #18): dep su task inesistente → non-ready finché non esiste+done
+{
+  const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+  vq.addTask("W", "w", { deps: ["GHOST"] });
+  ok(vq.listTasksOrdered().tasks.find((t) => t.id === "W").ready === false, "FWD: dep su task inesistente → ready=false");
+  ok(vq.readyTasks(["W"]).length === 0, "FWD: W non è ready (GHOST non esiste)");
+  vq.addTask("GHOST", "ghost"); vq.setTaskStatus("GHOST", "done");
+  ok(vq.listTasksOrdered().tasks.find((t) => t.id === "W").ready === true, "FWD: creato+done GHOST → W diventa ready (retroattivo)");
+  vq.close();
+}
+
+// 9) lead = vincitore in execution-order, NON subset[0] (review P2 #14) -----------------------------
+{
+  const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+  vq.addTask("LEAF", "leaf", { priority: 9 });          // ready, alta priority, unblocks=0
+  vq.addTask("FOUND", "foundational");                   // ready, unblocks=1 (DOWN dipende)
+  vq.addTask("DOWN", "downstream", { deps: ["FOUND"] }); // bloccato
+  // subset con LEAF prima di FOUND nell'array: il lead deve essere FOUND (unblocks batte priority), non subset[0]
+  const r = enterFocus(vq, { taskSubset: ["LEAF", "FOUND"] });
+  ok(r.scopeId.startsWith("focus-FOUND-"), "LEAD: vincitore execution-order (FOUND, unblocks=1) non subset[0]=LEAF");
+  vq.close();
+}
+
+// 10) hard-gate: no-open vs no-ready distinti (review P2 #2/#12) ------------------------------------
+{
+  const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+  vq.addTask("M1", "m1"); vq.setTaskStatus("M1", "done");
+  vq.addTask("M2", "m2", { deps: ["M1"] }); vq.setTaskStatus("M2", "blocked"); // open=no (blocked), deps done
+  let e1; try { enterFocus(vq, { taskSubset: ["M1", "M2"] }); } catch (e) { e1 = e; }
+  ok(e1 && e1.reason === "no-open-task" && e1.missing_deps.length === 0, "GATE: subset tutto done/blocked → reason='no-open-task' (no missing_deps fuorvianti)");
+  vq.addTask("M3", "m3", { deps: ["M9-inesistente"] });
+  let e2; try { enterFocus(vq, { taskSubset: ["M3"] }); } catch (e) { e2 = e; }
+  ok(e2 && e2.reason === "no-ready-task" && e2.missing_deps.includes("M9-inesistente"), "GATE: open ma deps non soddisfatte → reason='no-ready-task' + missing_deps");
+  vq.close();
+}
+
+// 11) aimTask NON bypassa il gate (review P3 #7) ---------------------------------------------------
+{
+  const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+  vq.addTask("P", "p"); vq.addTask("Q", "q", { deps: ["P"] }); // Q bloccato (P non done)
+  throws(() => enterFocus(vq, { taskSubset: ["P"], aimTask: "Q" }), "AIM: aimTask bloccato → rifiutato (no bypass del gate)");
+  const r = enterFocus(vq, { taskSubset: ["P"], aimTask: "P" }); // P ready
+  ok(r.scopeId.startsWith("focus-P-"), "AIM: aimTask ready → accettato come lead");
+  vq.close();
+}
+
 console.log(`\ntask-graph test: ${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);

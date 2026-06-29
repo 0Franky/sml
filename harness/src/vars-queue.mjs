@@ -361,7 +361,7 @@ export class VarsQueue {
   listTasks({ status = null } = {}) {
     let q = `SELECT * FROM tasks`; const args = [];
     if (status) { q += " WHERE status = ?"; args.push(status); }
-    q += " ORDER BY created";
+    q += " ORDER BY created, id"; // tiebreaker per id → ordine d'ingresso deterministico anche su created uguale
     return this.db.prepare(q).all(...args).map(r => ({ ...r, payload: r.payload == null ? null : JSON.parse(r.payload), deps: parseDeps(r.deps), priority: r.priority ?? 0 }));
   }
 
@@ -392,7 +392,8 @@ export class VarsQueue {
       (Number(b.ready) - Number(a.ready)) ||   // ready-first
       (b.unblocks - a.unblocks) ||             // downstream-impact desc (foundational prima delle foglie)
       (b.priority - a.priority) ||             // priority desc
-      (a.created - b.created));                // created asc (stabile)
+      (a.created - b.created) ||               // created asc
+      String(a.id).localeCompare(String(b.id))); // tiebreaker totale per id → ordine DETERMINISTICO (anche su created ==)
     enriched.forEach((t, i) => { t.order = i; });
     return { structured: true, tasks: enriched };
   }

@@ -158,8 +158,10 @@ export function assembleContext(vq, opts = {}) {
   const bucket = (p) => (p >= 1 ? "H" : p <= -1 ? "L" : "M"); // H=priority>0, M=default(0), L=priority<0
   lines.push(focusSet ? `  <task_list focus="${open.length}">` : "  <task_list>");
   for (const t of open) {
+    // 'waiting-deps' (non 'blocked') per il flag derivato: 'blocked' è riservato allo STATUS manuale → niente
+    // collisione terminologica (review P2: ready=deps-done ≠ blocked-status).
     const meta = ordered.structured
-      ? ` ${t.ready ? "ready" : "blocked"}${t.priority ? ` prio=${t.priority}` : ""}${t.unblocks ? ` unblocks=${t.unblocks}` : ""}`
+      ? ` ${t.ready ? "ready" : "waiting-deps"}${t.priority ? ` prio=${t.priority}` : ""}${t.unblocks ? ` unblocks=${t.unblocks}` : ""}`
       : "";
     lines.push(`    - [${t.status}]${meta} ${esc(t.id)}: ${esc(t.title)}`);
   }
@@ -255,6 +257,31 @@ export function buildWorkspace(vq, opts = {}) {
     if (lane) parts.push(lane);
   }
   return parts.join("\n");
+}
+
+/**
+ * buildAimTail — il blocco `<current_aim_reminder>` (aim-in-coda, anti position-bias) come funzione NODE-PURE,
+ * così l'escape XML (anti prompt-injection: id/title sono user/model-content) è centralizzato e testabile.
+ * Ritorna "" se non c'è un CURR. @param {import("./vars-queue.mjs").VarsQueue} vq @returns {string}
+ */
+export function buildAimTail(vq) {
+  const currId = vq.getCurr();
+  const curr = currId ? vq.getTask(currId) : null;
+  if (!curr) return "";
+  return `\n<current_aim_reminder>Aim corrente: ${esc(curr.id)} — ${esc(curr.title ?? "")}</current_aim_reminder>`;
+}
+
+/**
+ * buildExecutionOrderLines — le righe della vista `<execution_order>` (inject-mode) come funzione NODE-PURE.
+ * id/status/title (user/model-content) sono XML-escaped (review P1: era l'unico path d'iniezione non escapato);
+ * ready/unblocks/priority sono numeri/boolean → sicuri. @param {object[]} tasks @param {boolean} structured
+ * @returns {string[]}
+ */
+export function buildExecutionOrderLines(tasks, structured) {
+  return tasks.map(
+    (t) =>
+      `  - ${esc(t.id)} [${esc(t.status)}]${structured ? ` ready=${t.ready} unblocks=${t.unblocks} prio=${t.priority}` : ""} : ${esc(t.title ?? "")}`,
+  );
 }
 
 export default assembleContext;
