@@ -9,6 +9,7 @@
 import {
   DEFAULT_CFG, collectMetrics, classifyPressure, currentDepth, canEnter, evaluateTrigger,
   buildFrame, serializeFrame, getFocusStack, enterFocus, popFocus, realignParent, buildNestedWorkspace,
+  shouldEmitReorgHint, markReorgEmitted,
 } from "../../src/nested-compact.mjs";
 import { VarsQueue } from "../../src/vars-queue.mjs";
 import { ConversationStore } from "../../src/conversation-store.mjs";
@@ -54,6 +55,16 @@ try {
     ok(mClamp.percent != null && mClamp.percent > 0, "RESERVE: reserve fuori-range clampata (no divisione per ~0)");
     const trigR = evaluateTrigger(vq, { tokens: 7000, contextWindow: 10000, currentDepth: 0 }, { ...DEFAULT_CFG, outputReservePct: 0.3 });
     ok(trigR.metrics.percent != null && trigR.metrics.percent >= 1.0, "RESERVE: evaluateTrigger propaga outputReservePct (7000/7000=1.0)");
+    vq.close();
+  }
+
+  // 2b) reorg-hint cooldown (anti-cecità, msg 515) ----------------------------
+  {
+    const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+    ok(shouldEmitReorgHint(vq, { now: 1_000_000 }) === true, "REORG: primo hint emettibile (nessun ts)");
+    markReorgEmitted(vq, { now: 1_000_000 });
+    ok(shouldEmitReorgHint(vq, { now: 1_000_000 + 1000 }) === false, "REORG: entro cooldown → soppresso");
+    ok(shouldEmitReorgHint(vq, { now: 1_000_000 + DEFAULT_CFG.cooldownMs + 1 }) === true, "REORG: oltre cooldown → riemettibile");
     vq.close();
   }
 

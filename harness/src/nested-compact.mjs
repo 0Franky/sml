@@ -130,6 +130,26 @@ export function markFocusHintEmitted(vq, opts = {}) {
 }
 
 /**
+ * Gating del <reorganize_hint> (anti-cecità, msg 515). Mirror di shouldEmitFocusHint ma con cooldown PROPRIO
+ * (`reorg_hint_ts`): il reminder "riorganizza/consolida i task" è EVENT-DRIVEN dalla PRESSIONE (livello reorder),
+ * non dal wall-clock — fire esattamente nella banda dove il contesto si accumula e il modello rischia di diventare
+ * cieco sul backlog. Predicato PURO (nessuna scrittura); il commit è separato → markReorgEmitted.
+ * @param {import("./vars-queue.mjs").VarsQueue} vq
+ * @param {{ now?: number, cooldownMs?: number }} [opts]
+ */
+export function shouldEmitReorgHint(vq, opts = {}) {
+  const now = opts.now ?? Date.now();
+  const cooldownMs = opts.cooldownMs ?? DEFAULT_CFG.cooldownMs;
+  const lastTs = Number(vq.getMeta("reorg_hint_ts")) || 0;
+  return now - lastTs >= cooldownMs;
+}
+
+/** Registra che il <reorganize_hint> è stato EMESSO ora (commit del cooldown). */
+export function markReorgEmitted(vq, opts = {}) {
+  vq.setMeta("reorg_hint_ts", opts.now ?? Date.now()); // silent (strutturale, fuori da recent_changes)
+}
+
+/**
  * Frame (zoom-OUT) — truthful by construction, no summarization. Letture DIRETTE dallo stato durevole.
  * @returns {{ aim, decisions, constraints, sharedState, backlog, depth, frameTs }}
  */

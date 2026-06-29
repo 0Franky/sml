@@ -15,7 +15,7 @@ import { getVarsQueue, getConversationStore, closeAll } from "../../src/state-db
 import { assembleContext, buildResumeDigest } from "../../src/context-assembler.mjs";
 import { buildMessagesLane } from "../../src/conversation-store.mjs";
 import { getConvId } from "../../src/session-context.mjs";
-import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint, markFocusHintEmitted } from "../../src/nested-compact.mjs";
+import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint, markFocusHintEmitted, shouldEmitReorgHint, markReorgEmitted } from "../../src/nested-compact.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
@@ -91,6 +91,11 @@ export default function (pi: ExtensionAPI) {
           }
         }
         markFocusHintEmitted(vq); // commit del cooldown solo dopo aver deciso di emettere (query/command separati)
+      } else if (trig.recommend === "reorder" && shouldEmitReorgHint(vq)) {
+        // anti-cecità (msg 515): nella banda di pressione REORDER (contesto in accumulo, non ancora da matrioska) nudga
+        // il modello a CONSOLIDARE il backlog. Event-driven dalla pressione, non wall-clock. Cooldown proprio.
+        hint = `\n<reorganize_hint watch="${trig.metrics.watchCount}"${trig.metrics.percent != null ? ` ctx="${Math.round(trig.metrics.percent * 100)}%"` : ""}>Contesto in accumulo: consolida il backlog — chiudi i task 'done', raggruppa i simili, e ri-verifica priorità/dipendenze (set_task_deps) così l'ordine di esecuzione resta corretto.</reorganize_hint>`;
+        markReorgEmitted(vq);
       }
       const lane = buildMessagesLane(convStore, convId, { n: MESSAGES_WINDOW_N, afterSeq: checkpointSeq });
       workspace = (resume ? `${resume}\n` : "") + base + hint + (lane ? `\n${lane}` : "");
