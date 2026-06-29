@@ -322,7 +322,7 @@ export function buildNestedWorkspace(vq, opts = {}) {
   parts.push(assembleContext(vq, { now, focusTaskIds, absoluteTimestamps: opts.absoluteTimestamps }));
 
   if (opts.store && opts.convId) {
-    const lane = buildMessagesLane(opts.store, opts.convId, { n: opts.messagesN ?? 6, charCap: opts.messagesCharCap });
+    const lane = buildMessagesLane(opts.store, opts.convId, { n: opts.messagesN ?? 6, charCap: opts.messagesCharCap, afterSeq: opts.afterSeq });
     if (lane) parts.push(lane);
   }
   return parts.join("\n");

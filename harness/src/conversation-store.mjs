@@ -49,17 +49,23 @@ export class ConversationStore {
     return Number(r.lastInsertRowid);
   }
 
-  /** Numero totale di turni della conversazione. */
-  count(convId) {
-    return this.db.prepare(`SELECT COUNT(*) AS c FROM conversations WHERE conv_id = ?`).get(convId).c;
+  /** Numero di turni della conversazione (con `afterSeq` > 0: solo quelli DOPO un checkpoint/segment-boundary). */
+  count(convId, { afterSeq = 0 } = {}) {
+    return this.db.prepare(`SELECT COUNT(*) AS c FROM conversations WHERE conv_id = ? AND seq > ?`).get(convId, afterSeq).c;
   }
 
-  /** Ultimi N turni in ordine cronologico (oldest→newest), VERBATIM. È la vista mostrata nel workspace. */
-  window(convId, n = 6) {
+  /** Ultimi N turni in ordine cronologico (oldest→newest), VERBATIM. `afterSeq` limita al segmento post-checkpoint. */
+  window(convId, n = 6, { afterSeq = 0 } = {}) {
     const rows = this.db.prepare(
-      `SELECT seq, role, text, ts FROM conversations WHERE conv_id = ? ORDER BY seq DESC LIMIT ?`
-    ).all(convId, n);
+      `SELECT seq, role, text, ts FROM conversations WHERE conv_id = ? AND seq > ? ORDER BY seq DESC LIMIT ?`
+    ).all(convId, afterSeq, n);
     return rows.reverse();
+  }
+
+  /** Max seq della conversazione (0 se vuota) — il confine che un `checkpoint` registra come segment-boundary. */
+  lastSeq(convId) {
+    const r = this.db.prepare(`SELECT MAX(seq) AS s FROM conversations WHERE conv_id = ?`).get(convId);
+    return r && r.s != null ? Number(r.s) : 0;
   }
 
   /** Turni per range di `seq` (inclusivo) — è il recupero-per-ID che un subagent chiama (passa conv_id + range). */
@@ -89,10 +95,10 @@ export class ConversationStore {
  * @param {{ n?: number, charCap?: number }} [opts]
  * @returns {string} blocco "<messages_with_user …>…</messages_with_user>" oppure "" (conversazione vuota)
  */
-export function buildMessagesLane(store, convId, { n = 6, charCap = 4000 } = {}) {
-  const total = store.count(convId);
+export function buildMessagesLane(store, convId, { n = 6, charCap = 4000, afterSeq = 0 } = {}) {
+  const total = store.count(convId, { afterSeq });
   if (!total) return "";
-  let win = store.window(convId, n);
+  let win = store.window(convId, n, { afterSeq });
   const sizeOf = (rows) => rows.reduce((a, r) => a + r.text.length, 0);
   while (win.length > 1 && sizeOf(win) > charCap) win = win.slice(1); // droppa i più vecchi, tieni i recenti verbatim
   // se l'UNICO messaggio rimasto eccede ancora il cap (paste enorme in un solo turno), tronca il suo testo →
@@ -101,12 +107,17 @@ export function buildMessagesLane(store, convId, { n = 6, charCap = 4000 } = {})
     const t = win[0];
     win = [{ ...t, text: t.text.slice(0, charCap) + `…[+${t.text.length - charCap} char — usa get_conversation]` }];
   }
-  const shownFrom = win.length ? win[0].seq : total + 1;
-  const olderHidden = total - win.length;
-  const lines = [`<messages_with_user conv="${esc(convId)}" shown="${win.length}/${total}">`];
+  const shownFrom = win.length ? win[0].seq : afterSeq + total + 1;
+  const olderHidden = total - win.length; // più vecchi DENTRO il segmento post-checkpoint
+  const ckptAttr = afterSeq > 0 ? ` checkpoint="${afterSeq}"` : "";
+  const lines = [`<messages_with_user conv="${esc(convId)}" shown="${win.length}/${total}"${ckptAttr}>`];
   for (const t of win) lines.push(`  [${esc(t.role)}] ${esc(t.text)}`);
   if (olderHidden > 0) {
-    lines.push(`  (+${olderHidden} messaggi più vecchi — usa get_conversation conv="${esc(convId)}" range=1..${shownFrom - 1} per il pieno)`);
+    lines.push(`  (+${olderHidden} messaggi più vecchi nel segmento — usa get_conversation conv="${esc(convId)}" range=${afterSeq + 1}..${shownFrom - 1})`);
+  }
+  // dopo un checkpoint: la chat PRE-checkpoint è ripiegata (sintetizzata in <resuming_from>), recuperabile per ID.
+  if (afterSeq > 0) {
+    lines.push(`  (ripiegato a checkpoint @${afterSeq}: i messaggi precedenti sono nel digest <resuming_from> + get_conversation range=1..${afterSeq})`);
   }
   lines.push(`</messages_with_user>`);
   return lines.join("\n");
