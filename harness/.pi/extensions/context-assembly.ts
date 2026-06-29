@@ -13,7 +13,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { VarsQueue } from "../../src/vars-queue.mjs";
 import { getVarsQueue, getConversationStore, closeAll } from "../../src/state-db.mjs";
 import { assembleContext, buildResumeDigest } from "../../src/context-assembler.mjs";
-import { buildMessagesLane, windowNativeMessages } from "../../src/conversation-store.mjs";
+import { buildMessagesLane } from "../../src/conversation-store.mjs";
 import { getConvId } from "../../src/session-context.mjs";
 import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint, markFocusHintEmitted } from "../../src/nested-compact.mjs";
 import { mkdirSync } from "node:fs";
@@ -76,16 +76,8 @@ export default function (pi: ExtensionAPI) {
     }
     return { systemPrompt: `${event.systemPrompt}\n\n${workspace}` };
   });
-
-  // Strada-2 (full): la conversazione è il NOSTRO artefatto. L'array messaggi NATIVO di pi viene SOPPRESSO al
-  // solo TURNO CORRENTE (keepTurns:1, dall'ultimo 'user' in poi, coi suoi tool_call/tool_result) → la continuità
-  // del tool-loop in corso è intatta, la storia dei turni precedenti NO. Quella storia vive UNA volta sola, curata
-  // come testo verbatim nella lane <messages_with_user> (assemblata sopra, n=MESSAGES_WINDOW_N). COMPLEMENTARITÀ:
-  // native=turno corrente · lane=storia → niente "doppia-chat" (i due NON si sovrappongono). Sostituisce la
-  // compaction nativa (OFF). I turni soppressi restano in conversations.db, recuperabili via get_conversation.
-  // (ADR principio-3. review-loop #3 2026-06-29: keepTurns era 4 e si sovrapponeva alla lane → ripristinato a 1.)
-  pi.on("context", (event) => {
-    const windowed = windowNativeMessages(event.messages as any[], { keepTurns: 1 });
-    if (windowed !== (event.messages as any[])) return { messages: windowed };
-  });
+  // NB: la SOPPRESSIONE dell'array messaggi nativo (hook `context`, Strada-2 keepTurns:1) vive nell'extension
+  // dedicata `native-window.ts` (responsabilità ortogonale all'assemblaggio del workspace). La lane
+  // <messages_with_user> qui (n=MESSAGES_WINDOW_N) e quella finestra sono COMPLEMENTARI: native=turno corrente,
+  // lane=storia → niente doppia-chat. (review-loop #3 2026-06-29, P3 cohesion.)
 }

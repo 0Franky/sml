@@ -18,23 +18,28 @@ export function getConvId() { return _convId; }
 
 /**
  * resolveConvId — decide il convId (e se PERSISTERLO) per una session_start.
- *  - startup/reload/resume con convId persistito → RIUSA (la conversazione sopravvive, la lane non va a vuoto).
- *  - prima sessione (niente persistito) → NUOVO convId, da PERSISTERE (continuità su reload/resume della stessa).
- *  - /new e /fork → conversazione genuinamente NUOVA: convId effimero da NON persistere → così non SOVRASCRIVE
- *    lo slot globale `_conv_id` (un solo slot per progetto): un successivo /resume verso la sessione "principale"
- *    riusa il convId giusto invece dell'ultimo /new. (review-loop #3 2026-06-29, P2 convId-cross-sessione.)
  *
- * LIMITE MVP (single-active-conversation, documentato): lo storage è uno slot globale, non per-session-file
- * (pi non espone il file della sessione corrente su session_start, solo `previousSessionFile` = quella che si
- * LASCIA). Residuo noto: il /resume verso una sessione NON-principale, o il reload di una sessione aperta con
- * /new, può non recuperare la conversazione esatta. Multi-sessione interlacciata = post-MVP (model-testbook TB).
+ * MODO PER-SESSIONE (`opts.perSession=true`, quando pi espone `getSessionId()`): lo slot è keyato per-sessione
+ * (`_conv_id:<sessionId>`), quindi `persisted` = il convId DI QUESTA sessione. Se presente → RIUSA (reload/resume
+ * della stessa sessione); assente (prima volta, incl. /new e /fork che hanno un sessionId nuovo) → NUOVO + PERSISTI
+ * (sotto la propria chiave). Ogni sessione è isolata → /new B poi /resume A NON si mischiano. (review-loop #3 P2.)
+ *
+ * MODO FALLBACK (slot globale, `getSessionId` non disponibile es. SDK headless): /new,/fork = conversazione nuova
+ * EFFIMERA (non clobbera lo slot condiviso, così un /resume verso la sessione principale riusa il convId giusto);
+ * startup/reload/resume riusano il persistito; la prima sessione lo persiste.
  *
  * @param {string} reason  startup|reload|new|resume|fork
- * @param {string|null|undefined} persisted  convId persistito (vars.db meta) o assente
+ * @param {string|null|undefined} persisted  convId persistito (per la chiave pertinente) o assente
  * @param {number|string} stamp  timestamp per il nuovo id (iniettato per i test)
+ * @param {{ perSession?: boolean }} [opts]
  * @returns {{ convId: string, isNew: boolean, persist: boolean }}
  */
-export function resolveConvId(reason, persisted, stamp) {
+export function resolveConvId(reason, persisted, stamp, opts = {}) {
+  if (opts.perSession === true) {
+    if (persisted) return { convId: String(persisted), isNew: false, persist: false }; // sessione già vista → riusa
+    return { convId: `sess-${stamp}-${reason}`, isNew: true, persist: true }; // nuova per QUESTA sessione → persisti
+  }
+  // fallback slot-globale:
   if (reason === "new" || reason === "fork") {
     return { convId: `sess-${stamp}-${reason}`, isNew: true, persist: false }; // effimero: NON clobbera lo slot
   }

@@ -105,6 +105,14 @@ function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error(
   ok(!newB.persist, "CONVID: /new non persiste → lo slot globale resta sulla conversazione principale");
   const resumeAfterNew = resolveConvId("resume", A, 7000); // lo slot è ancora A perché /new non l'ha sovrascritto
   ok(resumeAfterNew.convId === A, "CONVID: /resume dopo /new → riusa la conversazione principale (no mix A/B)");
+
+  // MODO PER-SESSIONE (getSessionId disponibile): slot keyato per-sessione → isolamento totale.
+  const psNew = resolveConvId("new", null, 8000, { perSession: true }); // sessionId nuovo → nessun persistito
+  ok(psNew.isNew && psNew.persist && psNew.convId === "sess-8000-new", "CONVID[perSession]: sessione nuova → nuovo + PERSISTI (sotto la propria chiave)");
+  const psReload = resolveConvId("reload", "conv-X", 9000, { perSession: true }); // QUESTA sessione già vista
+  ok(!psReload.isNew && !psReload.persist && psReload.convId === "conv-X", "CONVID[perSession]: reload della stessa sessione → riusa il suo convId");
+  const psStartup = resolveConvId("startup", null, 9100, { perSession: true });
+  ok(psStartup.isNew && psStartup.persist, "CONVID[perSession]: prima apparizione di una sessione → persiste sotto la sua chiave");
 }
 
 // 5) buildMessagesLane — cap sul singolo messaggio gigante ----------------------------------------

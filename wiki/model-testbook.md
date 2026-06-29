@@ -34,6 +34,7 @@ La `Verifica` è sempre **outcome-anchored**: si controlla l'**esito** (il model
 - **Fonte**: TG msg 437 (2026-06-29). **F/S**: F=canale+risoluzione deterministici (PIENA, **implementato** `var-ops.mjs` `emitToUser`/`interpolate`, test 32/32) / S=quando usare l'interpolazione.
 - **Verifica**: probe A/B — (a) output che spiega Jinja con `{{name}}` letterale → NON deve espandere; (b) canale-interpolate con `{{var:x}}` di var esistente → risolve; (c) `{{var:inesistente}}` o `{{...}}` letterale dentro il canale → passthrough; (d) escape `{{!var:x}}` → letterale. Outcome: nessun clobber dell'output utente + risoluzione corretta dove dovuta.
 - **Link**: [[concepts/variable-operations-by-reference]] §Disambiguazione.
+- **Stato (2026-06-29)**: implementato come canale **OPT-IN `render_template`** (non `say`); l'**AUTO-interpolazione nell'output è stata RIMOSSA** (review #2 security: interpolare qualsiasi var nell'output finale era un canale di esfiltrazione) → `message_end` è redazione-difensiva pura. `render_template` reso **SCOPRIBILE** via `promptSnippet`+`promptGuidelines` (review #3 P2 E): senza, non comparirebbe nella sezione "Available tools" e il modello — ignaro che l'interpolazione non è più automatica — scriverebbe `{{var:X}}` letterale all'utente.
 
 ### TB-02 — Graph-aware / impact-review dopo cambiamento strutturale (con CATENA causale) `[voluto]`
 - **Voglio che il modello CAPISCA** (non memorizzi la regola): la **catena causale** dei 3 stati e ne deduca la sequenza.
@@ -47,6 +48,7 @@ La `Verifica` è sempre **outcome-anchored**: si controlla l'**esito** (il model
 - **Fonte**: TG msg 422/424 (2026-06-29). **F/S**: F=struttura/finestre/floor-deterministico (cap+sort+GC, PIENA) / S=politica di curazione.
 - **Verifica**: long-run probe — su sessione lunga + compaction, il modello mantiene lo stato **durevole** (tool) invece di lasciarlo in prosa; lo stato resta bounded e veritiero. Outcome: dopo N turni il workspace riflette lo stato reale senza drift.
 - **Link**: [[decisions/2026-06-29-context-as-first-person-mind]].
+- **Stato (2026-06-29)**: **full Strada-2 IMPLEMENTATA** — l'array messaggi nativo è soppresso al **TURNO CORRENTE** (`native-window.ts`, `windowNativeMessages keepTurns:1`); la storia vive UNA volta sola nella lane `<messages_with_user>` (testo verbatim) + nello stato curato → native(turno) e lane(storia) **COMPLEMENTARI, niente doppia-chat**; compaction nativa di pi **OFF**. **Invariante VERIFICABILE a runtime** con `turn-trace.ts` (metrica `overlap lane↔native` ≤1 + `turni-utente nativi`=1) — non un desiderato-modello ma una proprietà dell'harness, misurata empiricamente (e2e: overlap=0). convId keyato per-sessione (`getSessionId`) → sessioni isolate.
 
 ### TB-04 — Variable-operations: manipola le var per RIFERIMENTO `[voluto]`
 - **Voglio che il modello**: invece di ricopiare valori lunghi nel proprio stream (errori, token), li manipoli **per riferimento** — pipe del tool_result in una var, `extract_var(src, path, dest)` per estrarre un campo, interpolazione nell'output.

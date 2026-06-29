@@ -53,18 +53,21 @@ function messageText(message: any): string {
 export default function (pi: ExtensionAPI) {
   const store = getStore();
   pi.on("session_shutdown", () => closeAll()); // rilascia le connessioni DB condivise (fix leak)
-  // convId per-sessione PERSISTITO: nuovo SOLO per conversazioni genuinamente nuove (new/fork); per
-  // startup/reload/resume RIUSA il convId persistito in vars.db meta → la lane <messages_with_user> NON va a vuoto
-  // dopo un reload/resume (la conversazione sopravvive, ADR principio-3). Condiviso con context-assembly via
-  // session-context. (review-loop #2 2026-06-29, P1 convId-reload.)
-  pi.on("session_start", (event) => {
+  // convId PERSISTITO e keyato PER-SESSIONE: lo slot meta è `_conv_id:<sessionId>` (ctx.sessionManager.getSessionId)
+  // → ogni sessione pi ha il suo convId isolato. Reload/resume della STESSA sessione riusano il suo convId (la lane
+  // <messages_with_user> non va a vuoto, ADR principio-3); /new e /fork (sessionId nuovo) ottengono una conversazione
+  // nuova SENZA mischiarsi con le altre. Fallback a slot globale se getSessionId non è disponibile (SDK headless).
+  // Condiviso con context-assembly via session-context. (review-loop #3 2026-06-29, P2 convId-cross-sessione — fix pieno.)
+  pi.on("session_start", (event, ctx) => {
     const reason = (event as any).reason ?? "startup";
     // STESSO path+opts delle altre 7 extension → il singleton vars.db non nasce mai con agent='main' per via di
     // questa call-site, qualunque sia l'ordine di load (review-loop #3 2026-06-29, P2 singleton-agent).
     const meta = getVarsQueue(VARS_DB_PATH, { agent: "orchestrator" });
-    const { convId, persist } = resolveConvId(reason, meta.getMeta(META_CONV), Date.now());
+    const sessionId = (ctx as any)?.sessionManager?.getSessionId?.() ?? null;
+    const metaKey = sessionId ? `${META_CONV}:${sessionId}` : META_CONV;
+    const { convId, persist } = resolveConvId(reason, meta.getMeta(metaKey), Date.now(), { perSession: !!sessionId });
     setConvId(convId);
-    if (persist) meta.setMeta(META_CONV, convId); // persisti SOLO la prima sessione; /new,/fork effimeri (no clobber)
+    if (persist) meta.setMeta(metaKey, convId);
   });
 
   // utente → store. SOLO input utente GENUINO: `input` fa fire anche per steer/followUp (mid-turn) e per
