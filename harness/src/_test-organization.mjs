@@ -61,10 +61,11 @@ ok(ctx.includes("T2: implementare feature X") && !ctx.includes("T1: setup"), "ta
 ok(/<recent_changes>/.test(ctx), "recent_changes presente (chi/quando/cosa)");
 const varsBlock = ctx.match(/<vars>([\s\S]*?)<\/vars>/)?.[1] ?? "";
 ok(ctx.includes("api_base") && !varsBlock.includes("lesson"), "vars shared in context; memo NON nella lane durable <vars> (recall on-demand)");
-// FINDING onesto: la CREAZIONE della memo appare TRANSITORIAMENTE in <recent_changes> (il changelog logga
-// ogni mutazione, incl. namespace memo) finché non age-out (finestra 15min / cap 12). Non durable, ma osservabile.
-const memoTransient = /<recent_changes>[\s\S]*lez-1[\s\S]*<\/recent_changes>/.test(ctx);
-console.log(`  [finding] memo-write transiente in recent_changes: ${memoTransient} (refinement: escludere namespace 'memo' dal changelog visibile)`);
+// FIX(a) 2026-06-29 VERIFICATO: la creazione della memo NON trapela più in <recent_changes> (namespace 'memo'
+// = silent nel changelog), MA il context SEGNALA che esiste una memo richiamabile (anti info-loss, msg 388).
+const rcBlock = ctx.match(/<recent_changes>([\s\S]*?)<\/recent_changes>/)?.[1] ?? "";
+ok(!rcBlock.includes("lez-1"), "FIX(a): la memo NON trapela in recent_changes (silent)");
+ok(/<notes count="1"/.test(ctx), "FIX(a): il context SEGNALA la memo disponibile (recall_lessons), non la nasconde in silenzio");
 
 console.log(`\n===== <context> assemblato dopo compaction (ispezione visiva) =====\n${ctx}\n`);
 console.log(`organization smoke-test: ${pass} passed, ${fail} failed`);

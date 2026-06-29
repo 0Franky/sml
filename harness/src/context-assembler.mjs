@@ -45,10 +45,13 @@ export function assembleContext(vq, opts = {}) {
     ? `  <current_aim id="${esc(curr.id)}" status="${esc(curr.status)}">${esc(curr.title)}</current_aim>`
     : `  <current_aim>(nessuno)</current_aim>`);
 
-  // --- task_list (open-loop: pending + in_progress) ---
-  const open = [...vq.listTasks({ status: "in_progress" }), ...vq.listTasks({ status: "pending" })];
+  // --- task_list (open-loop: pending + in_progress) — cap + SEGNALA se ce ne sono altri ---
+  const maxTasks = opts.maxTasks ?? 20;
+  const openAll = [...vq.listTasks({ status: "in_progress" }), ...vq.listTasks({ status: "pending" })];
+  const open = openAll.slice(0, maxTasks);
   lines.push("  <task_list>");
   for (const t of open) lines.push(`    - [${t.status}] ${esc(t.id)}: ${esc(t.title)}`);
+  if (openAll.length > open.length) lines.push(`    - (+${openAll.length - open.length} task aperti non mostrati — usa list_tasks per l'elenco completo)`);
   lines.push("  </task_list>");
 
   // --- verify_queue (pendenti) ---
@@ -59,21 +62,29 @@ export function assembleContext(vq, opts = {}) {
     lines.push("  </verify_queue>");
   }
 
-  // --- vars (shared + opzionalmente private dell'agente) ---
+  // --- vars (shared + opzionalmente private dell'agente) — WINDOWED: cap alle più recenti (lane bounded
+  //     anche su sessioni lunghe; le più vecchie restano nel datastore, richiamabili con get_shared_view) ---
+  const maxVars = opts.maxVars ?? 12;
   const shared = vq.getSharedView();
   const priv = opts.includePrivateVars ? vq.listVars({ scope: "private", namespace: vq.agent }) : [];
-  const vars = [...shared, ...priv];
+  const allVars = [...shared, ...priv].sort((a, b) => b.last_modified - a.last_modified);
+  const vars = allVars.slice(0, maxVars);
   if (vars.length) {
     lines.push("  <vars>");
     for (const v of vars) {
       const ageS = Math.round((now - v.last_modified) / 1000);
       lines.push(`    - ${esc(v.id)}=${esc(JSON.stringify(v.value))} (scope=${v.scope}, ${ageS}s fa${v.decision_ref ? `, per ${esc(v.decision_ref)}` : ""})`);
     }
+    if (allVars.length > vars.length) {
+      lines.push(`    - (+${allVars.length - vars.length} più vecchie nascoste — usa get_shared_view per l'elenco completo)`);
+    }
     lines.push("  </vars>");
   }
 
-  // --- recent_changes (visibile-finché-serve) ---
-  const changes = vq.getChangeLog({ since: sinceMs, limit: maxChanges });
+  // --- recent_changes (visibile-finché-serve) — finestra temporale + cap, con SEGNALE se troncato ---
+  //     fetch maxChanges+1 per sapere se ce ne sono altri oltre il cap (le memo silenziose sono già escluse). ---
+  const changesPlus = vq.getChangeLog({ since: sinceMs, limit: maxChanges + 1 });
+  const changes = changesPlus.slice(0, maxChanges);
   if (changes.length) {
     lines.push("  <recent_changes>");
     for (const c of changes) {
@@ -81,8 +92,14 @@ export function assembleContext(vq, opts = {}) {
       const what = c.old_value != null ? `${esc(c.old_value)}→${esc(c.new_value)}` : `=${esc(c.new_value)}`;
       lines.push(`    - ${ageS}s fa, ${esc(c.who)}: ${esc(c.entity)}/${esc(c.entity_id)}.${esc(c.field)} ${what}${c.decision_ref ? ` (${esc(c.decision_ref)})` : ""}`);
     }
+    if (changesPlus.length > changes.length) lines.push(`    - (+altri cambi più vecchi o oltre la finestra — usa get_changelog per la storia completa)`);
     lines.push("  </recent_changes>");
   }
+
+  // --- notes/memo: ESCLUSE dal flusso (silent) per non inquinare → ma SEGNALA che esistono, altrimenti
+  //     il modello non sa di poterle richiamare. (memo namespace = convenzione condivisa con error-memo.) ---
+  const memoCount = vq.listVars({ namespace: "memo" }).length;
+  if (memoCount) lines.push(`  <notes count="${memoCount}">${memoCount} lezione/i-memo disponibile/i (non mostrate qui) — usa recall_lessons per richiamarle</notes>`);
 
   lines.push("</context>");
   return lines.join("\n");

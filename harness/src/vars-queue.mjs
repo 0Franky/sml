@@ -70,7 +70,8 @@ CREATE TABLE IF NOT EXISTS changelog (
   field       TEXT,
   old_value   TEXT,
   new_value   TEXT,
-  decision_ref TEXT
+  decision_ref TEXT,
+  silent      INTEGER NOT NULL DEFAULT 0                 -- mutazioni "silenziose" (es. namespace memo): nel log per audit, ESCLUSE da recent_changes
 );
 CREATE TABLE IF NOT EXISTS proposals (
   seq     INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,6 +83,13 @@ CREATE TABLE IF NOT EXISTS proposals (
 );
 `;
 
+/**
+ * Namespace le cui mutazioni sono "silenziose" nel change-log visibile: restano nel log per l'audit
+ * (recall on-demand con includeSilent) ma NON compaiono in `recent_changes` del <context> → una nota/memo
+ * non inquina il contesto finché non è esplicitamente richiamata. (fix 2026-06-29, finding test-suite.)
+ */
+const SILENT_NAMESPACES = new Set(["memo"]);
+
 export class VarsQueue {
   /**
    * @param {string} dbPath  ":memory:" oppure un path file (es. ".pi/state/vars.db").
@@ -92,24 +100,31 @@ export class VarsQueue {
     this.db = new DatabaseSync(dbPath);
     this.db.exec("PRAGMA journal_mode = WAL;"); // concorrenza: lettori non bloccano lo scrittore
     this.db.exec(SCHEMA);
+    // migrazione difensiva per db pre-esistenti: la colonna changelog.silent è stata aggiunta 2026-06-29.
+    try { this.db.exec("ALTER TABLE changelog ADD COLUMN silent INTEGER NOT NULL DEFAULT 0;"); } catch { /* colonna già presente */ }
   }
 
   close() { this.db.close(); }
 
   // -- change-log (interno) ---------------------------------------------------
-  _log(entity, id, field, oldV, newV, who, decisionRef = null) {
+  _log(entity, id, field, oldV, newV, who, decisionRef = null, silent = 0) {
     this.db.prepare(
-      `INSERT INTO changelog (ts, who, entity, entity_id, field, old_value, new_value, decision_ref)
-       VALUES (?,?,?,?,?,?,?,?)`
+      `INSERT INTO changelog (ts, who, entity, entity_id, field, old_value, new_value, decision_ref, silent)
+       VALUES (?,?,?,?,?,?,?,?,?)`
     ).run(Date.now(), who ?? this.agent, entity, id, field,
-          oldV == null ? null : String(oldV), newV == null ? null : String(newV), decisionRef);
+          oldV == null ? null : String(oldV), newV == null ? null : String(newV), decisionRef, silent ? 1 : 0);
   }
 
-  /** Change-log osservabile dal modello. `since` = epoch ms (default: tutto). */
-  getChangeLog({ since = 0, entity = null, entityId = null, limit = 200 } = {}) {
-    let q = `SELECT seq, ts, who, entity, entity_id, field, old_value, new_value, decision_ref
+  /**
+   * Change-log osservabile dal modello. `since` = epoch ms (default: tutto).
+   * Di default ESCLUDE le mutazioni silenziose (namespace memo): è ciò che alimenta `recent_changes`.
+   * `includeSilent:true` per l'audit completo (recall on-demand).
+   */
+  getChangeLog({ since = 0, entity = null, entityId = null, limit = 200, includeSilent = false } = {}) {
+    let q = `SELECT seq, ts, who, entity, entity_id, field, old_value, new_value, decision_ref, silent
              FROM changelog WHERE ts >= ?`;
     const args = [since];
+    if (!includeSilent) q += " AND silent = 0";
     if (entity)   { q += " AND entity = ?";    args.push(entity); }
     if (entityId) { q += " AND entity_id = ?"; args.push(entityId); }
     q += " ORDER BY seq DESC LIMIT ?"; args.push(limit);
@@ -133,8 +148,19 @@ export class VarsQueue {
          last_modified=excluded.last_modified, last_modified_by=excluded.last_modified_by,
          decision_ref=excluded.decision_ref`
     ).run(id, json, scope, namespace, Date.now(), who, decisionRef);
-    this._log("vars", id, "value", prev?.value ?? null, json, who, decisionRef);
+    this._log("vars", id, "value", prev?.value ?? null, json, who, decisionRef, SILENT_NAMESPACES.has(namespace) ? 1 : 0);
     return this.getVar(id);
+  }
+
+  /**
+   * "Visibile finché serve" per le VARS: pruna le var più vecchie di `beforeTs` (default: solo `shared`,
+   * che è la lane non-windowed mostrata nel <context>). Le `memo`/private restano. (fix 2026-06-29.)
+   */
+  gcVars(beforeTs, { scope = "shared" } = {}) {
+    let q = `DELETE FROM vars WHERE last_modified < ?`;
+    const args = [beforeTs];
+    if (scope) { q += " AND scope = ?"; args.push(scope); }
+    return this.db.prepare(q).run(...args).changes;
   }
 
   /** Lookup O(1) by id (PK). Ritorna {id,value,scope,namespace,last_modified,...} o null. */

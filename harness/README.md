@@ -31,7 +31,7 @@ Le extension sono **provider-agnostiche** (pi parla OpenAI-compatible) → puoi 
 ```bash
 npm ci                 # dipendenze da lockfile (@earendil-works/pi-coding-agent + typebox + typescript)
 npm run typecheck      # valida le extension contro i tipi reali di pi (GREEN)
-npm test               # smoke unit (vars-queue 24 + context 11 + facts 7 + sliding 12) + test:scenarios (secrets-guardrail 9 + organization 11 + note-after-finding 6 + temp-read 10 + long-run 10)
+npm test               # smoke unit (vars-queue 24 + context 11 + facts 7 + sliding 12) + test:scenarios (secrets-guardrail 9 + organization 13 + note-after-finding 8 + temp-read 10 + long-run 17)
 
 # 1) scegli un provider in serving/models.json e imposta le env. Es. provider GENERICO:
 export OAI_BASE_URL="https://api.openai.com/v1"   # o OpenRouter / Together / shim Anthropic-compat / vLLM remoto
@@ -51,7 +51,7 @@ L'unica cosa che serve da te = **il provider (baseUrl + key)**. Tutto il resto �
 
 | Extension | Hook / tool | Cosa fa |
 |---|---|---|
-| `context-assembly.ts` | `before_agent_start` | Assembla il `<context>` strutturato dalle lane del datastore (rules/aim/task_list/verify_queue/vars/recent_changes). |
+| `context-assembly.ts` | `before_agent_start` | Assembla il `<context>` strutturato dalle lane del datastore (rules/aim/task_list/verify_queue/vars/recent_changes). **Lane WINDOWED + sempre segnalate**: vars/task_list/recent_changes cappate alle più recenti con nota `(+N nascosti → usa <tool>)`; le memo sono escluse dal flusso ma segnalate via `<notes count=N>` → il modello sa SEMPRE che c'è altro e come recuperarlo (context bounded su sessioni lunghe, niente info-loss). |
 | `vars-queue.ts` | tool `set_var`/`get_var`/`set_task_status`/`set_curr`/`list_tasks` + **shared-vars** (`get_shared_view`/`propose_var`/`merge_proposals`) + `get_changelog` | Stato persistente (cross-compact + cross-agent on-request, single-writer merge) con change-log/timestamp. |
 | `sliding-var.ts` | tool `sliding_var_read`/`sliding_var_replace` | Read/replace di una VAR per **char-range** + preview (edit chirurgici su var grandi senza scaricarle full). |
 | `error-memo.ts` | tool `remember_lesson`/`recall_lessons` | Memoria di lezioni/errori (2 livelli), richiamabile, sopravvive al compact. |
