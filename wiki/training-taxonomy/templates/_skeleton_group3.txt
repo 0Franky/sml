@@ -1,0 +1,66 @@
+---
+{{FM_NAME}}
+type: gold-example
+{{FM_LEAF}}
+area: area-02-criticality-safety
+tag: "Q (+L sul reasoning)"
+{{FM_REWARD_TAG}}
+last_updated: 2026-06-29
+{{FM_STATUS}}
+---
+
+{{H1_TITLE}}
+
+## §0 — Cos'è / perché è gold / la barra
+
+{{SEC0_BODY}}
+## §1 — Skill-target (segnale, preciso e falsificabile)
+
+{{SEC1_BODY}}
+{{SEC1BIS_HEADER}}
+
+{{SEC1BIS_BODY}}
+---
+
+{{SEC2BIS_HEADER}}
+
+{{SEC2BIS_BODY}}
+---
+
+## §2 — Le 5 classi (istanze di training complete)
+
+> **Convenzione di formato.** INPUT = blocco `<context>` nel formato wrapper del progetto ([[../concepts/wrapper-context-assembly-example|wrapper-context-assembly-example]]) + task utente. OUTPUT TARGET = reasoning *caveman strutturato* (marker `[V]` verificato · `[A]` assunto · `[?]` da-verificare) attraverso i passi del metodo scientifico, **tool-call con scope esplicito**, e azione/risposta finale. Il thinking strutturato **non** è la risposta user-facing (prosa); qui le tracciamo entrambe perché sono il target di training. Le traiettorie sotto sono **[UNVERIFIED — sandbox-execution pending]** (format-corrette; esecuzione gated sull'harness); i *predicati-oracolo* che le valutano sono **[VERIFIED]** (§2bis/§3bis).
+
+---
+
+{{CLASSE1_HEADER}}
+{{CLASSE1_INPUT}}
+{{CLASSE1_OUTPUT}}
+{{CLASSE1_LABEL}}
+---
+
+{{CLASSE2_DELTA}}
+---
+
+{{CLASSE3_DELTA}}
+---
+
+{{CLASSE4_DELTA}}
+---
+
+{{CLASSE5_INTRO}}
+{{CLASSE5A}}
+{{CLASSE5B}}
+{{CLASSE5C}}
+{{CLASSE5D}}
+---
+
+{{CLASSE5_LABEL}}
+---
+
+## §2ter — Classificazione training-vs-harness (Step-0 obbligatorio)
+
+{{SEC2TER_BODY}}
+---
+
+{{TAIL_SECTIONS}}
