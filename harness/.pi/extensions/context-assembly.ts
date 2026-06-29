@@ -11,7 +11,7 @@
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { VarsQueue } from "../../src/vars-queue.mjs";
-import { assembleContext } from "../../src/context-assembler.mjs";
+import { assembleContext, buildResumeDigest } from "../../src/context-assembler.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
@@ -40,8 +40,12 @@ function getStore(): VarsQueue {
 export default function (pi: ExtensionAPI) {
   const vq = getStore();
   pi.on("before_agent_start", (event) => {
-    // Prepende il <context> assemblato dalle lane del datastore al system prompt di pi.
+    // Prepende il workspace (resume? + <context>) assemblato dalle lane del datastore al system prompt di pi.
+    // buildResumeDigest si auto-gate sul tempo: emette <resuming_from> SOLO se si riprende dopo un gap
+    // (nuova sessione / lunga inattività), altrimenti "" (fix gap "where we left off", dogfood Sonnet 2026-06-29).
+    const resume = buildResumeDigest(vq);
     const ctx = assembleContext(vq);
-    return { systemPrompt: `${event.systemPrompt}\n\n${ctx}` };
+    const workspace = resume ? `${resume}\n${ctx}` : ctx;
+    return { systemPrompt: `${event.systemPrompt}\n\n${workspace}` };
   });
 }
