@@ -32,6 +32,10 @@ export const DEFAULT_CFG = {
   focusK: 5,               // display-cap del reorder (priority-sort top-K)
   maxDepth: 3,             // depth-bound dello stack
   cooldownMs: 90_000,      // hysteresis anti-thrash del <focus_hint> (consumato da shouldEmitFocusHint, vedi sotto)
+  // output-budget-reserve (msg 518): frazione 0..1 di finestra riservata a OUTPUT+THINKING (che condividono la
+  // stessa window dell'input). È una RISERVA FISICA, distinta dalla soglia *comportamentale* tokenMatrioskaPct:
+  // il `percent` è calcolato su contextWindow*(1-reserve) → i trigger scattano PRIMA. Default 0 = off (invariato).
+  outputReservePct: 0,
 };
 
 const RANK = { none: 0, reorder: 1, matrioska: 2 };
@@ -51,8 +55,11 @@ export function collectMetrics(vq, opts = {}) {
   const sharedVars = vq.getSharedView().length;
   const recentChanges = vq.getChangeLog({ since: now - 15 * 60 * 1000, limit: 1000 }).length;
   const watchCount = openTasks + pendingVerifs;
-  // frazione 0..1 calcolata da noi (no ambiguità su 0..100 vs 0..1 del `percent` di pi).
-  const percent = tokens != null && contextWindow ? tokens / contextWindow : null;
+  // output-budget-reserve: la finestra EFFETTIVA per l'input è contextWindow*(1-reserve) (il resto è per output+thinking).
+  // reserve clampata a [0, 0.9] (oltre non avrebbe senso). frazione 0..1 calcolata da noi (no ambiguità 0..100 vs 0..1 di pi).
+  const reserve = Math.min(Math.max(opts.outputReservePct ?? 0, 0), 0.9);
+  const effectiveWindow = contextWindow ? contextWindow * (1 - reserve) : null;
+  const percent = tokens != null && effectiveWindow ? tokens / effectiveWindow : null;
   return { openTasks, pendingVerifs, sharedVars, recentChanges, watchCount, percent };
 }
 
@@ -90,7 +97,7 @@ export function canEnter(vq, cfg = DEFAULT_CFG) {
 export function evaluateTrigger(vq, opts = {}, cfg = DEFAULT_CFG) {
   const c = { ...DEFAULT_CFG, ...cfg };
   const now = opts.now ?? Date.now();
-  const metrics = collectMetrics(vq, { now, tokens: opts.tokens ?? null, contextWindow: opts.contextWindow ?? null });
+  const metrics = collectMetrics(vq, { now, tokens: opts.tokens ?? null, contextWindow: opts.contextWindow ?? null, outputReservePct: c.outputReservePct });
   const level = classifyPressure(metrics, c);
   const depth = opts.currentDepth ?? currentDepth(vq);
   const depthSaturated = depth >= c.maxDepth;

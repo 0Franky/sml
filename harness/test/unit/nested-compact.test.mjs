@@ -47,6 +47,13 @@ try {
     ok(trig2.recommend === "matrioska", "NON-SAT: recommend = matrioska");
     const m = collectMetrics(vq, { tokens: 8000, contextWindow: 10000 });
     ok(Math.abs(m.percent - 0.8) < 1e-9 && m.watchCount === 30, "METRICS: percent=tokens/window + watchCount");
+    // output-budget-reserve (msg 518): reserve 0.2 → finestra effettiva 8000 → percent = 8000/8000 = 1.0
+    const mR = collectMetrics(vq, { tokens: 8000, contextWindow: 10000, outputReservePct: 0.2 });
+    ok(Math.abs(mR.percent - 1.0) < 1e-9, "RESERVE: percent su finestra effettiva (window*(1-reserve))");
+    const mClamp = collectMetrics(vq, { tokens: 100, contextWindow: 10000, outputReservePct: 5 });
+    ok(mClamp.percent != null && mClamp.percent > 0, "RESERVE: reserve fuori-range clampata (no divisione per ~0)");
+    const trigR = evaluateTrigger(vq, { tokens: 7000, contextWindow: 10000, currentDepth: 0 }, { ...DEFAULT_CFG, outputReservePct: 0.3 });
+    ok(trigR.metrics.percent != null && trigR.metrics.percent >= 1.0, "RESERVE: evaluateTrigger propaga outputReservePct (7000/7000=1.0)");
     vq.close();
   }
 
