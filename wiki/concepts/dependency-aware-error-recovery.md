@@ -62,5 +62,6 @@ Applico il decision-tree di [[training-vs-harness-classification]] (Step-0 scomp
 - [[error-memo-system]] — la lezione del fix-a-cascata alimenta la memo (non ripetere l'errore + ricordare di propagare).
 - [[scientific-method-operating-protocol]] — il verify-loop deve verificare il downstream, non solo il sintomo.
 - [[reward-hacking-mitigation]] — outcome-anchored (coerenza end-to-end), anti participation-hack, scorer≠scored.
+- [[graph-aware-impact-review]] — stessa famiglia: ragionare sulla **struttura ri-derivata** (dep-graph/grafo) non sul diff locale; lì = review dopo cambiamento cross-cutting, qui = propagazione del fix ai dipendenti.
 
 > **Next**: foglia di training (Area 2/4/16) con example-space; ablare PALADIN/AgentDebug-style label-gen. Ref VERIFICATI 2026-06-29 (PALADIN 2509.25238, AgentDebug 2509.25370).
