@@ -197,6 +197,7 @@ Più sub-agent del wrapper potrebbero leggere/scrivere VARS in parallelo. Lockin
 - [[sliding-window-variable-tool]] — tool che modello chiama per leggere VARS slice
 - [[explicit-attention-layer]] — quali sezioni del context ricevono attention forzata
 - [[wrapper-context-assembly-example]] — esempio concreto: le lane serializzate via `ctx.getContext()`, `add_secret`, `close_stream_file`
+- [[cross-session-state-sharing]] — propagazione delle VARS tra sessioni (cross-compact) e tra agenti (cross-agent) on-request + persistenza MIX file/DB + change-log/timestamp; chiude le open-question concorrenza/GC di questa pagina
 - [[../architecture/wrapper]] — implementazione (come extension di [[../decisions/2026-06-23-pi-harness-base|pi]])
 
 ## Sources

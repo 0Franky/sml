@@ -200,4 +200,4 @@ Tre comportamenti che agiscono SUL context-assembly, ora formalizzati come conce
 
 ## Sources
 - User notes 2026-06-23, nota 5 + 3 iterazioni esempio (Telegram msg 44/46/51/54 + sessione).
-- Collega: [[agent-wrapper-vars-queue]], [[structured-context-sections]], [[task-decomposition-adhoc-context]], [[temporal-awareness-timestamps]], [[scientific-method-operating-protocol]], [[secret-section-exfiltration-defense]], [[_user-notes-2026-06-23]].
+- Collega: [[agent-wrapper-vars-queue]], [[structured-context-sections]], [[task-decomposition-adhoc-context]], [[temporal-awareness-timestamps]], [[scientific-method-operating-protocol]], [[secret-section-exfiltration-defense]], [[cross-session-state-sharing]] (sharing/propagazione stato cross-session+cross-agent — estende §7 e la history-compression §5), [[_user-notes-2026-06-23]].

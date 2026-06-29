@@ -111,6 +111,7 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 - [`concepts/dependency-aware-error-recovery.md`](concepts/dependency-aware-error-recovery.md) 🆕 — errore a T1 → root-cause (delta concettuale) + ripercorri + propaga il fix a TUTTE le decisioni dipendenti (truth-maintenance sul dep-graph). FEATURE=dep-graph esistente, SKILL=traversal. Idea utente msg 197
 - [`concepts/situational-policy-table.md`](concepts/situational-policy-table.md) 🆕 — router "SE situazione X → azione Y": FEATURE lane lookup O(1) + SKILL recognition (addestra il COMPORTAMENTO non il file-path) + governance a 4 tier. Training goldmine. Idea utente msg 200-202 (pattern generico PII-free)
 - [`concepts/interruption-robust-reasoning.md`](concepts/interruption-robust-reasoning.md) 🆕 — skill (pesi) di mantenere accuratezza se interrotto a fine-sezione per un update esterno (−60% senza training, 2510.11713); il meccanismo MinD multi-call dà l'aggancio, il valore è gated sul training. Decisione utente msg 193
+- [`concepts/multilingual-strategy.md`](concepts/multilingual-strategy.md) 🆕🌐 — **strategia multilingua**: la lingua naturale è un **asse trasversale**, NON una dimensione della tassonomia (categorie/foglie restano language-AGNOSTIC). Output in lingua-utente ma codice/identifier/termini-tecnici in inglese; reasoning Tier-1 in lingua-utente con marker `[V]/[A]/[?]` language-agnostic; NL via transform-knob del dataset; programming-lang via verticali Tier-3. MVP it+en. Reward outcome-anchored (NL-detect + identifier-EN check). Risponde a msg 316, decisione msg 320
 
 **Categoria A — Reasoning structure** (come pensa il modello):
 - [`concepts/structured-thinking.md`](concepts/structured-thinking.md) — "caveman thinking" strutturato, marker `[V]/[A]/[?]`, no discorsivo
@@ -134,6 +135,7 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 - [`concepts/agent-wrapper-vars-queue.md`](concepts/agent-wrapper-vars-queue.md) — datastore interno wrapper: 4 lane (TASKS/VERIFICATIONS/RULES/VARS) + CURR pointer, map O(1)
 - [`concepts/sliding-window-variable-tool.md`](concepts/sliding-window-variable-tool.md) — tool char-range read/replace + preview, risparmio token
 - [`concepts/explicit-attention-layer.md`](concepts/explicit-attention-layer.md) — attention forzata su current_aim/prev_step/global/rules
+- [`concepts/cross-session-state-sharing.md`](concepts/cross-session-state-sharing.md) 🆕🔗 — **condivisione/propagazione stato** (VARS/decisioni/change-log) tra sessioni (cross-compact) e tra agenti (cross-agent), **on-request** e per-riferimento + change-log/timestamp visibili-finché-servono + difesa-in-profondità train(skill)+harness(esplicita) + persistenza MIX file/DB. Risponde a msg 307
 
 **Categoria E — Training philosophy & data regime** (appunti utente 2026-05-21 post grill-me):
 - [`concepts/scuola-learning-philosophy.md`](concepts/scuola-learning-philosophy.md) — filosofia "come la scuola": copiare → capire → allenarsi → migliorare. Analogia bambini per design pipeline
@@ -178,6 +180,7 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 - [`decisions/2026-06-28-open-decisions-briefing.md`](decisions/2026-06-28-open-decisions-briefing.md) 🆕⭐ — **briefing decisioni aperte** (per utente non-tecnico): glossario (GRPO-calibrazione/XGrammar/inoculation/mini-SWE-agent/GiGPO/OSS-Instruct) + 6 decisioni con contesto+come-funziona+reco + **ricerca dataset & licensing**
 - [`decisions/2026-06-28-decisions-d1-d5.md`](decisions/2026-06-28-decisions-d1-d5.md) 🆕✅ — **ADR: decisioni D1-D6 CONFERMATE** (msg 245): LoRA-init(B=0+MiLoRA) · tokenizer+XGrammar · 2080Ti-fp16 · marker-espliciti(+Coconut-ibrido futuro) · judge DSv4-su-DS4 structured-contract · data-licensing commercial-clean
 - [`decisions/2026-06-28-compute-access.md`](decisions/2026-06-28-compute-access.md) 🆕💻 — **accesso compute per full-FT/RL Tier1**: NVIDIA no-free-self-serve; via pratica = A100-80GB spot (~$10-55/run); Inception worth-apply (~$10-25K partner-credits); QLoRA≠full-FT (msg 266)
+- [`decisions/2026-06-29-monorepo-itlmv1.md`](decisions/2026-06-29-monorepo-itlmv1.md) 🆕🏗️ — **monorepo `ITLMv1`** (reversal "repo separati"): subdir piani `wiki/` (SSOT conoscenza di ENTRAMBI i sub) + `lm/` + `harness/` + un grafo unico. Alternative considerate (2-repo, submodule). Migrazione `slm-wrapper`→`harness/` fatta. Decisione utente msg 319/323
 
 ## Da popolare (placeholder)
 
