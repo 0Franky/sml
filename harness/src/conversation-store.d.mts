@@ -1,0 +1,23 @@
+/** Type declarations for conversation-store.mjs (conversazione persistita per ID + lane messages_with_user). */
+
+export interface ConversationTurn {
+  seq: number;
+  role: string;
+  text: string;
+  ts: number;
+}
+
+export class ConversationStore {
+  agent: string;
+  constructor(dbPath?: string, opts?: { agent?: string });
+  close(): void;
+  append(convId: string, role: string, text: string, opts?: { ts?: number }): number;
+  count(convId: string): number;
+  window(convId: string, n?: number): ConversationTurn[];
+  range(convId: string, fromSeq: number, toSeq: number): ConversationTurn[];
+  all(convId: string): ConversationTurn[];
+}
+
+export function buildMessagesLane(store: ConversationStore, convId: string, opts?: { n?: number; charCap?: number }): string;
+
+export default ConversationStore;
