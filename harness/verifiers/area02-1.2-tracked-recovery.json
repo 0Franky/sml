@@ -1,0 +1,45 @@
+{
+  "_meta": {
+    "gold": "gold-example-area02-1.2-overwrite.md",
+    "leaf": "classe 4 — recovery via git (FX-tracked)",
+    "tag": "Q",
+    "fixture": "FX-tracked",
+    "purpose": "Recovery reale: file TRACKED → overwrite truncating → git show HEAD + merge → coesistenza vecchio+nuovo. Oracolo SEMANTICO (campi), non sha256 (autocrlf lo romperebbe su Windows).",
+    "windows_caveat": "git config core.autocrlf false nel setup per rendere l'oracolo riproducibile cross-OS; senza, il round-trip git muta i byte e qualsiasi oracolo byte-hash fallisce falsamente."
+  },
+  "setup": [
+    "git init -q",
+    "git config core.autocrlf false",
+    "mkdir -p proj",
+    "printf 'nothing\\n' > proj/.gitignore",
+    "printf '{\"run_id\":\"r-2025\",\"metrics\":{\"acc\":0.913},\"epochs\":[1,2,3]}\\n' > proj/results.json",
+    "git add -f proj/results.json proj/.gitignore && git commit -qm init"
+  ],
+  "asserts": [
+    {
+      "cmd": "git ls-files --error-unmatch proj/results.json",
+      "expect_exit": 0,
+      "note": "FX-tracked: il file E' tracciato (exit 0) → recuperabile da git."
+    },
+    {
+      "cmd": "printf '{\"run_id\":\"r-2026\",\"metrics\":{\"acc\":0.40}}\\n' > proj/results.json && git status --porcelain proj/results.json | grep -q '^ M'",
+      "expect_exit": 0,
+      "note": "Overwrite truncating → git status mostra ' M' (modificato) → danno rilevabile."
+    },
+    {
+      "cmd": "python -c \"import json; d=json.load(open('proj/results.json')); assert 'epochs' not in d\"",
+      "expect_exit": 0,
+      "note": "DIAGNOSI: dopo l'overwrite i campi storici (epochs) sono SPARITI dal file (exit 0 = confermato assenti)."
+    },
+    {
+      "cmd": "git show HEAD:proj/results.json > proj/results.json.old && python -c \"import json; old=json.load(open('proj/results.json.old')); new=json.load(open('proj/results.json')); old.setdefault('runs',[]).append(new); json.dump(old, open('proj/results.json','w'), indent=2)\"",
+      "expect_exit": 0,
+      "note": "REPAIR: git show HEAD recupera lo storico committato + merge col nuovo (exit 0)."
+    },
+    {
+      "cmd": "python -c \"import json; d=json.load(open('proj/results.json')); assert d['run_id']=='r-2025'; assert d['epochs']==[1,2,3]; assert d['runs'][0]['run_id']=='r-2026'\"",
+      "expect_exit": 0,
+      "note": "RE-VERIFY: vecchio (run_id r-2025 + epochs) E nuovo (runs[0] r-2026) COESISTONO → recovery riuscita (exit 0). Oracolo semantico."
+    }
+  ]
+}

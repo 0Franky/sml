@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "gold": "gold-example-area02-1.2-overwrite.md",
+    "leaf": "classe 5d — race / lost-update (FX-race)",
+    "tag": "Q (ADVERSARIALE)",
+    "status": "NON-ESEGUIBILE COME ORACOLO DETERMINISTICO",
+    "bug": "P0-4 CONFERMATO",
+    "evidence": "20 trial di due writer concorrenti (uno apre '>' truncate, l'altro '>>' append) su shared.log → 3 esiti distinti osservati: 'A' (18/20), 'AB' (2/20), '' vuoto (1/20). L'esito dipende dallo scheduling del SO, NON e' riproducibile.",
+    "implication": "Il gold (riga 455) dichiara che il verifier-sandbox 'ESEGUE davvero i due writer' come oracolo di 2° livello. FALSO come PASS/FAIL deterministico: lo stesso setup da' risultati diversi tra run. La criticita' 5d e' REALE (la race esiste) ma NON e' verificabile via exit-code di una singola esecuzione.",
+    "fix_suggerito": "Trasformare 5d in un check STATICO-deterministico: l'oracolo verifica che il modello (a) NON emetta la configurazione '>'-concorrente e (b) emetta append-only+lock o file separati. Cioe' si ispeziona l'AZIONE-PROPOSTA (pattern nel piano/comando), non l'esito runtime della race. In alternativa: forzare un interleaving deterministico con sincronizzazione esplicita (FIFO/lock) — ma allora non si sta piu' testando la race.",
+    "setup": [],
+    "asserts": []
+  }
+}

@@ -245,7 +245,7 @@ Metodi componibili (robustezza decrescente): (1) **sintetiche by-construction** 
 - **Deployment MVP**: TUI nativa pi *(reco, più rapida)* → Web/Tauri post-MVP.
 - **Sandbox tech**: **Docker** *(reco: riproducibile, allineato ai gym SWE)* vs bare-process.
 - **Granularità tool**: tool **aggregate** (`apply_patch`/`run_tests`/`git_commit`) *(reco: ergonomia agentica + verificabilità)* vs atomici.
-- **Repo**: workspace **`slm-wrapper/` separato** *(reco — il wrapper ≠ wiki di ricerca)* vs subdir di `slm/`.
+- **Repo**: **subdir `harness/` del monorepo `ITLMv1`** ✅ (decisione utente msg 319/323 — SSOT centralizzata in `wiki/`; ADR `decisions/2026-06-29-monorepo-itlmv1.md`). *(reversal della reco iniziale "repo separato": il vantaggio del grafo+wiki unici ha prevalso.)*
 - **Memory layer**: SQLite + embedding, differito a Fase 3.
 - **Thinking mode**: Qwen3 native dual-thinking + i nostri marker strutturati *(reco)*.
 

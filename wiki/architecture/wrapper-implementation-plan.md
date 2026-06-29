@@ -145,7 +145,7 @@ Zero dipendenza da pi e dal modello. Valida i **dati gold**, che è metà del va
 
 ## File/struttura da creare
 
-Workspace **`slm-wrapper/`** (repo separato — wrapper ≠ wiki di ricerca):
+Sub-progetto **`harness/`** del monorepo `ITLMv1` (ADR `decisions/2026-06-29-monorepo-itlmv1.md` — SSOT in `wiki/`):
 - `sandbox/` — Dockerfile + **fixture materializzate** (FX-untracked/tracked prima) + trace JSON di esempio (0-A)
 - `verifiers/` — verifier standalone (criticality primo), spec del formato-trace
 - `serving/` — script lancio vLLM `--enable-lora` (quantizzato) + `models.json` (un model-entry per adapter)
@@ -153,7 +153,7 @@ Workspace **`slm-wrapper/`** (repo separato — wrapper ≠ wiki di ricerca):
 - `SYSTEM.md` — constitution; `README.md` — runbook
 
 ## Decisioni di prodotto (default — accettati dall'utente 2026-06-27)
-TUI nativa pi → Web/Tauri post-MVP ✅ · Sandbox **Docker** ✅ · tool **aggregate** ✅ · repo **`slm-wrapper` separato** ✅ · Qwen3 dual-thinking + marker `[V]/[A]/[?]` ✅ · memory SQLite differito a Fase 3 ✅.
+TUI nativa pi → Web/Tauri post-MVP ✅ · Sandbox **Docker** ✅ · tool **aggregate** ✅ · repo **subdir `harness/` del monorepo `ITLMv1`** ✅ (reversal → SSOT centralizzata, msg 319/323) · Qwen3 dual-thinking + marker `[V]/[A]/[?]` ✅ · memory SQLite differito a Fase 3 ✅.
 
 ## Verifica (acceptance per gate)
 - **0-A**: verifier verde/rosso su classi 1/2/3 da trace fixturizzati + gap base-model registrato.

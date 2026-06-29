@@ -1,0 +1,10 @@
+node_modules/
+dist/
+*.log
+.env
+.env.*
+# sandbox runtime artifacts
+sandbox/_run/
+# OS
+.DS_Store
+Thumbs.db

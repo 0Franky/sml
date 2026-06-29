@@ -1,0 +1,13 @@
+{
+  "_comment": "Provider OpenAI-compatible verso vLLM locale. Copia/merge in ~/.pi/agent/models.json. API pi verificata: api='openai-completions'.",
+  "providers": {
+    "vllm-local": {
+      "baseUrl": "http://localhost:8000/v1",
+      "api": "openai-completions",
+      "apiKey": "$VLLM_API_KEY",
+      "models": [
+        { "id": "qwen3-4b-tier1", "contextWindow": 32768, "maxTokens": 4096 }
+      ]
+    }
+  }
+}
