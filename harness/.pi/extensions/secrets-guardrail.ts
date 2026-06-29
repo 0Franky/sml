@@ -15,35 +15,12 @@
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
-
-const SECRET_PATTERNS: RegExp[] = [
-  /sk-[A-Za-z0-9]{20,}/g, // generic API key
-  /ghp_[A-Za-z0-9]{36}/g, // GitHub PAT
-  /AKIA[0-9A-Z]{16}/g, // AWS access key id
-  /-----BEGIN (?:RSA |EC )?PRIVATE KEY-----/g,
-];
+// Logica di redazione condivisa e testabile (src/secrets-redact.mjs, smoke-test dedicato).
+// Pattern statici (incl. Google AIza / GEMINI_API_KEY) + dynamic-secrets per literal match.
+import { redactText } from "../../src/secrets-redact.mjs";
 
 /** secrets-map DINAMICA: valori per-sessione, in-memory (NON persistiti su disco). */
 const DYNAMIC_SECRETS = new Set<string>();
-
-function redactText(text: string): { redacted: string; hit: boolean } {
-  let hit = false;
-  let out = text;
-  for (const re of SECRET_PATTERNS) {
-    if (re.test(out)) {
-      hit = true;
-      out = out.replace(re, "[REDACTED-SECRET]");
-    }
-  }
-  // secrets dinamici (literal match, non-regex) — redatti per primi i più lunghi (evita match parziali)
-  for (const s of [...DYNAMIC_SECRETS].sort((a, b) => b.length - a.length)) {
-    if (s && out.includes(s)) {
-      hit = true;
-      out = out.split(s).join("[REDACTED-SECRET]");
-    }
-  }
-  return { redacted: out, hit };
-}
 
 export default function (pi: ExtensionAPI) {
   pi.registerTool({
@@ -65,7 +42,7 @@ export default function (pi: ExtensionAPI) {
     let anyHit = false;
     const content = event.content.map((block) => {
       if (block.type === "text") {
-        const { redacted, hit } = redactText(block.text);
+        const { redacted, hit } = redactText(block.text, DYNAMIC_SECRETS);
         if (hit) {
           anyHit = true;
           return { ...block, text: redacted };
