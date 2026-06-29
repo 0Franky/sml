@@ -77,6 +77,7 @@ last_updated: 2026-06-28
   - [x] ✅ **Sync discrepanza spec d'area FATTA**: `area-02-criticality-safety.md:160-161` aggiornata (7→3 file-che-importano + NameError→**ImportError**, con nota esecuzione-sandbox). Wirato gold in index.
   - [ ] 🔧 **Residuo F6 (P2 opzionale)**: edge multi-import `from .parser import parse, helper` (rename atomico su riga multi-import) non coperto — completezza-scenario, non buco-ancoraggio. Aggiungere in templatizzazione 3.x se utile.
   - [ ] ⏳ poi: **templatizzazione famiglia 3.x** (factor 3.2 → template + delta + byte-verify, + sibling 3.1/3.3...) → poi 2.x/4.x/5.x/6.x.
+- [ ] ⏳ **Gold 6.2 defer (L) — author IN CORSO 2026-06-29** (agente a90fcb): primo gold L del rollout (reward_tag L = scelta-di-valore). Valida il pattern L: NIENTE reward-sul-ramo + coherence-2-livelli (esterna campi↔env_facts deterministica + interna razionale↔campi L) + held-out bilanciato defer/procedi + judge OPEN-council scorer≠scored. → al ritorno: review agnostico + integra. Broadens la copertura gold da Q-only a Q+L.
 
 ## 🔧 Scaffold harness (Fase-0 base FATTA 2026-06-29) — subdir `harness/` del monorepo `ITLMv1`
 > **MIGRATO 2026-06-29**: era `../slm-wrapper` (repo separato), ora `harness/` nel monorepo. `../slm-wrapper` resta come **backup** con la sua history (cancellabile dopo verifica push). ADR `decisions/2026-06-29-monorepo-itlmv1.md`.
