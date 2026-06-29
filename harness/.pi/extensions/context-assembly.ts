@@ -12,6 +12,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { VarsQueue } from "../../src/vars-queue.mjs";
 import { assembleContext, buildResumeDigest } from "../../src/context-assembler.mjs";
+import { getFocusStack, buildNestedWorkspace, evaluateTrigger } from "../../src/nested-compact.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
@@ -39,13 +40,31 @@ function getStore(): VarsQueue {
 
 export default function (pi: ExtensionAPI) {
   const vq = getStore();
-  pi.on("before_agent_start", (event) => {
-    // Prepende il workspace (resume? + <context>) assemblato dalle lane del datastore al system prompt di pi.
-    // buildResumeDigest si auto-gate sul tempo: emette <resuming_from> SOLO se si riprende dopo un gap
-    // (nuova sessione / lunga inattività), altrimenti "" (fix gap "where we left off", dogfood Sonnet 2026-06-29).
-    const resume = buildResumeDigest(vq);
-    const ctx = assembleContext(vq);
-    const workspace = resume ? `${resume}\n${ctx}` : ctx;
+  // UNICO injector del workspace (no chaining ambiguo): è anche matrioska-aware.
+  pi.on("before_agent_start", (event, ctx) => {
+    const usage = ctx?.getContextUsage?.();
+    const tokens = usage?.tokens ?? null;
+    const contextWindow = usage?.contextWindow ?? null;
+
+    const stack = getFocusStack(vq);
+    let workspace: string;
+    if (stack.length > 0) {
+      // Uno scope è aperto → workspace NESTED: <frame> (zoom-OUT durevole) + <context> FILTRATO al subset a fuoco.
+      const top = stack[stack.length - 1];
+      workspace = buildNestedWorkspace(vq, { focusScopeId: top.scope_id });
+    } else {
+      // Nessuno scope → workspace normale. buildResumeDigest si auto-gate sul tempo (<resuming_from> solo dopo un gap).
+      const resume = buildResumeDigest(vq);
+      const base = assembleContext(vq);
+      // <focus_hint>: se la pressione (token-budget reale + #item-in-watch) raccomanda matrioska e nessuno scope è
+      // aperto, suggerisci enter_focus (auto-suggest = floor-S graceful; la decisione resta del modello).
+      const trig = evaluateTrigger(vq, { tokens, contextWindow });
+      const hint =
+        trig.recommend === "matrioska"
+          ? `\n<focus_hint watch="${trig.metrics.watchCount}"${trig.metrics.percent != null ? ` ctx="${Math.round(trig.metrics.percent * 100)}%"` : ""}>Contesto in pressione: valuta enter_focus su un sotto-insieme di task per lavorare a fuoco (pop_focus al termine).</focus_hint>`
+          : "";
+      workspace = (resume ? `${resume}\n` : "") + base + hint;
+    }
     return { systemPrompt: `${event.systemPrompt}\n\n${workspace}` };
   });
 }

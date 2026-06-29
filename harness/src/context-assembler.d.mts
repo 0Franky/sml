@@ -10,6 +10,8 @@ export interface AssembleOpts {
   absoluteTimestamps?: boolean;
   maxTasks?: number;
   maxVars?: number;
+  /** matrioska/nested-compact: se presente, la <task_list> è filtrata a questo subset di task id. */
+  focusTaskIds?: (string | number)[] | null;
 }
 
 export function assembleContext(vq: VarsQueue, opts?: AssembleOpts): string;

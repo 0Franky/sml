@@ -1,0 +1,170 @@
+/**
+ * Test node-pure di nested-compact (orchestrazione matrioska).
+ * Verifica ../../wiki/architecture/matrioska-orchestration-spec.md §7 (testabilità):
+ *   classifyPressure (tabella + OR + depth-saturation→reorder) · enterFocus depth-guard (×3 ok, ×4 throw) ·
+ *   buildFrame/serializeFrame (constraints MAI troncate) · popFocus round-trip (figlio muta who=scope → report
+ *   deriva i delta · padre ottiene la decisione promossa · task done esce dall'open-loop · CURR ripristinato) ·
+ *   realignParent (aim chiuso→non ripristina) · buildNestedWorkspace (frame + context filtrato al subset).
+ */
+import {
+  DEFAULT_CFG, collectMetrics, classifyPressure, currentDepth, canEnter, evaluateTrigger,
+  buildFrame, serializeFrame, getFocusStack, enterFocus, popFocus, realignParent, buildNestedWorkspace,
+} from "../../src/nested-compact.mjs";
+import { VarsQueue } from "../../src/vars-queue.mjs";
+import { ConversationStore } from "../../src/conversation-store.mjs";
+import { mkdtempSync, rmSync, existsSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+let passed = 0, failed = 0;
+function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error("  ✗ FAIL:", msg); } }
+
+const dir = mkdtempSync(join(tmpdir(), "nested-"));
+
+try {
+  // 1) classifyPressure — ladder token + watch + OR + null-percent --------------
+  {
+    ok(classifyPressure({ watchCount: 0, percent: 0.30 }) === "none", "TOKEN: <0.55 → none");
+    ok(classifyPressure({ watchCount: 0, percent: 0.60 }) === "reorder", "TOKEN: ≥0.55 → reorder");
+    ok(classifyPressure({ watchCount: 0, percent: 0.80 }) === "matrioska", "TOKEN: ≥0.75 → matrioska");
+    ok(classifyPressure({ watchCount: 5, percent: null }) === "none", "WATCH: <12 → none");
+    ok(classifyPressure({ watchCount: 15, percent: null }) === "reorder", "WATCH: ≥12 → reorder");
+    ok(classifyPressure({ watchCount: 30, percent: null }) === "matrioska", "WATCH: ≥25 → matrioska");
+    ok(classifyPressure({ watchCount: 30, percent: 0.30 }) === "matrioska", "OR: watch-alto vince");
+    ok(classifyPressure({ watchCount: 0, percent: 0.90 }) === "matrioska", "OR: token-alto vince");
+    ok(classifyPressure({ watchCount: 13, percent: null }) === "reorder", "NULL-percent: asse-token = none");
+  }
+
+  // 2) evaluateTrigger — depth-saturation degrada matrioska → reorder -----------
+  {
+    const vq = new VarsQueue(":memory:");
+    for (let i = 0; i < 30; i++) vq.addTask("t" + i, "x"); // watchCount 30 → matrioska
+    const trig = evaluateTrigger(vq, { currentDepth: DEFAULT_CFG.maxDepth });
+    ok(trig.level === "matrioska", "SAT: level pressione = matrioska");
+    ok(trig.depthSaturated === true, "SAT: depthSaturated true");
+    ok(trig.recommend === "reorder", "SAT: recommend degradato a reorder (graceful)");
+    const trig2 = evaluateTrigger(vq, { currentDepth: 1 });
+    ok(trig2.recommend === "matrioska", "NON-SAT: recommend = matrioska");
+    const m = collectMetrics(vq, { tokens: 8000, contextWindow: 10000 });
+    ok(Math.abs(m.percent - 0.8) < 1e-9 && m.watchCount === 30, "METRICS: percent=tokens/window + watchCount");
+    vq.close();
+  }
+
+  // 3) enterFocus — depth-guard (×3 ok, ×4 throw) ------------------------------
+  {
+    const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+    for (const id of ["A", "B", "C", "D"]) vq.addTask(id, id);
+    const s1 = enterFocus(vq, { taskSubset: ["A"], now: 1 });
+    const s2 = enterFocus(vq, { taskSubset: ["B"], now: 2 });
+    const s3 = enterFocus(vq, { taskSubset: ["C"], now: 3 });
+    ok(s1.depth === 1 && s2.depth === 2 && s3.depth === 3, "DEPTH: nesting 1→2→3");
+    ok(currentDepth(vq) === 3, "DEPTH: currentDepth = 3");
+    ok(canEnter(vq).ok === false, "DEPTH: canEnter false a saturazione");
+    let threw = false;
+    try { enterFocus(vq, { taskSubset: ["D"], now: 4 }); } catch { threw = true; }
+    ok(threw, "DEPTH: il 4° enter lancia (depth > maxDepth)");
+    ok(getFocusStack(vq).length === 3, "STACK: 3 scope aperti");
+    // nesting via active_scope: s2.parent = s1, s3.parent = s2
+    ok(vq.getFocusFrame(s2.scopeId).parent_id === s1.scopeId, "NEST: s2.parent = s1 (via active_scope)");
+    ok(vq.getFocusFrame(s3.scopeId).parent_id === s2.scopeId, "NEST: s3.parent = s2");
+    vq.close();
+  }
+
+  // 4) buildFrame + serializeFrame — constraints MAI troncate ------------------
+  {
+    const vq = new VarsQueue(":memory:");
+    for (let i = 0; i < 20; i++) vq.addRule("r" + i, "rule text " + i, { severity: i === 0 ? "hard" : "soft" });
+    for (let i = 0; i < 20; i++) vq.recordDecision("d" + i, "decision " + i, { who: "x" });
+    const frame = buildFrame(vq, { now: 1 });
+    const s = serializeFrame(frame, { displayCap: 5 });
+    let allConstraints = true;
+    for (let i = 0; i < 20; i++) if (!s.includes("rule text " + i)) allConstraints = false;
+    ok(allConstraints, "FRAME: tutte le 20 constraints presenti (MAI troncate)");
+    ok(s.includes('<decisions shown="5/20">'), "FRAME: decisions display-capped a 5/20");
+    ok(s.includes("decision 19") && !s.includes("decision 0:"), "FRAME: mostra le decisioni più recenti");
+    vq.close();
+  }
+
+  // 5) popFocus — round-trip completo ------------------------------------------
+  {
+    const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+    vq.addTask("T-parent", "lavoro del padre");
+    vq.addTask("T-child", "sotto-task del figlio");
+    vq.setCurr("T-parent");
+
+    const { scopeId } = enterFocus(vq, { taskSubset: ["T-child"], now: 1000 });
+    ok(vq.getActiveScope() === scopeId, "ENTER: active_scope = scopeId");
+    ok(vq.getCurr() === "T-child", "ENTER: CURR = lead del subset");
+    ok(vq.getFocusFrame(scopeId).aim_task === "T-parent", "ENTER: aim_task = CURR del padre (da ripristinare)");
+
+    // attività del figlio attribuita allo scope (in produzione via active_scope routing; qui who esplicito)
+    vq.recordDecision("D-child", "usato bearer token", { who: scopeId, rationale: "evita cookie" });
+    vq.setVar("child_out", "ok", { who: scopeId, scope: "shared" });
+    vq.setTaskStatus("T-child", "done", { who: scopeId });
+
+    const r = popFocus(vq, scopeId, { reportDir: dir, now: 2000 });
+    ok(r.promotedDecisionId === `pop-${scopeId}`, "POP: id decisione promossa");
+    ok(r.summary.includes("decisioni") && r.summary.includes("cambiamenti"), "POP: summary floor-F");
+    ok(existsSync(r.report_path), "POP: report scritto su file");
+    const report = readFileSync(r.report_path, "utf-8");
+    ok(report.includes("usato bearer token") && report.includes("evita cookie"), "POP: report deriva la decisione del figlio");
+    ok(report.includes("child_out"), "POP: report deriva la mutazione var del figlio");
+    ok(!report.includes("lavoro del padre"), "POP: il report NON include lavoro del padre");
+
+    // il padre (root → who=orchestrator) ottiene enter + pop come decisioni
+    const parentDec = vq.getDecisionsByAgent("orchestrator");
+    ok(parentDec.some((d) => d.id === `pop-${scopeId}`), "POP: padre ha la decisione promossa");
+    ok(parentDec.some((d) => d.id === `enter-${scopeId}`), "POP: padre ha la decisione di enter");
+    ok(vq.getDecisionsByAgent(scopeId).some((d) => d.id === "D-child"), "ATTR: decisione del figlio attribuita allo scope");
+
+    // re-align: CURR ripristinato all'aim del padre (ancora aperto); active_scope torna a root (null)
+    ok(vq.getCurr() === "T-parent" && r.restoredCurr === "T-parent", "REALIGN: CURR ripristinato all'aim del padre");
+    ok(vq.getActiveScope() === null, "REALIGN: active_scope torna a root (null)");
+    // task done del figlio fuori dall'open-loop
+    const open = [...vq.listTasks({ status: "pending" }), ...vq.listTasks({ status: "in_progress" })];
+    ok(!open.some((t) => t.id === "T-child"), "REALIGN: il task done del figlio esce dall'open-loop");
+    ok(open.some((t) => t.id === "T-parent"), "REALIGN: il task del padre resta aperto");
+    ok(vq.getFocusFrame(scopeId).status === "popped", "POP: scope marcato popped");
+    vq.close();
+  }
+
+  // 6) realignParent — aim chiuso non si ripristina, aim aperto sì -------------
+  {
+    const vq = new VarsQueue(":memory:");
+    vq.addTask("P", "done-aim"); vq.setTaskStatus("P", "done");
+    const res = realignParent(vq, { savedAimTask: "P", now: 1 });
+    ok(res.restoredCurr === null, "REALIGN: aim done → NON ripristinato");
+    vq.addTask("Q", "open-aim");
+    const res2 = realignParent(vq, { savedAimTask: "Q", now: 1 });
+    ok(res2.restoredCurr === "Q" && vq.getCurr() === "Q", "REALIGN: aim aperto → ripristinato");
+    vq.close();
+  }
+
+  // 7) buildNestedWorkspace — frame + context filtrato al subset ---------------
+  {
+    const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+    vq.addRule("hard1", "HARD RULE INVIOLABILE", { severity: "hard" });
+    vq.addTask("T1", "task a fuoco");
+    vq.addTask("T2", "task di backlog");
+    vq.setCurr("T1");
+    const store = new ConversationStore(":memory:");
+    store.append("main", "user", "ciao, lavora su T1");
+
+    const { scopeId } = enterFocus(vq, { taskSubset: ["T1"], now: 100 });
+    const ws = buildNestedWorkspace(vq, { focusScopeId: scopeId, store, convId: "main", now: 200 });
+    ok(ws.includes("<frame depth=\"1\">"), "WS: contiene il frame (zoom-OUT)");
+    ok(ws.includes("HARD RULE INVIOLABILE"), "WS: il frame riporta le constraints hard");
+    ok(ws.includes("<context>"), "WS: contiene il context focalizzato");
+    ok(ws.includes('<task_list focus='), "WS: task_list filtrata al subset");
+    ok(ws.includes("T2"), "WS: T2 compare nel backlog del frame (fuori dal focus)");
+    ok(ws.includes("<messages_with_user"), "WS: contiene la lane messaggi");
+    store.close();
+    vq.close();
+  }
+
+} finally {
+  rmSync(dir, { recursive: true, force: true });
+}
+
+console.log(`\nnested-compact test: ${passed} passed, ${failed} failed`);
+process.exit(failed === 0 ? 0 : 1);
