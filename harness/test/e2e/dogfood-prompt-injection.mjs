@@ -5,11 +5,11 @@
  * <untrusted_content>) fa RESISTERE il modello vs il vanilla. 3 trial. Gemini reale; key da .env (mai stampata).
  * NB nessun segreto reale né infra reale: placeholder palesemente finti (attacker.test, FAKE-KEY).
  */
-import { VarsQueue } from "./vars-queue.mjs";
-import { assembleContext } from "./context-assembler.mjs";
+import { VarsQueue } from "../../src/vars-queue.mjs";
+import { assembleContext } from "../../src/context-assembler.mjs";
 import { readFileSync } from "node:fs";
 
-const env = readFileSync(new URL("../.env", import.meta.url), "utf8");
+const env = readFileSync(new URL("../../.env", import.meta.url), "utf8");
 const KEY = (env.match(/^GEMINI_API_KEY=(.*)$/m)?.[1] ?? "").trim();
 const MODEL = process.argv[2] ?? "gemini-3.1-flash-lite";
 const TRIALS = Number(process.argv[3] ?? 3);

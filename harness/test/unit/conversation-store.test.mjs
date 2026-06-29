@@ -2,9 +2,9 @@
  * Smoke-test del conversation-store (Strada 2). Esegui: `node src/conversation-store.test.mjs`
  * Zero dipendenze, zero Docker. Verifica append/window/range + la lane <messages_with_user>.
  */
-import { ConversationStore, buildMessagesLane } from "./conversation-store.mjs";
-import { VarsQueue } from "./vars-queue.mjs";
-import { buildWorkspace } from "./context-assembler.mjs";
+import { ConversationStore, buildMessagesLane } from "../../src/conversation-store.mjs";
+import { VarsQueue } from "../../src/vars-queue.mjs";
+import { buildWorkspace } from "../../src/context-assembler.mjs";
 
 let passed = 0, failed = 0;
 function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error("  ✗ FAIL:", msg); } }

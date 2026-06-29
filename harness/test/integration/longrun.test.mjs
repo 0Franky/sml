@@ -5,8 +5,8 @@
  * e il <context> resta BOUNDED (O(1) rispetto al numero di step) — niente blow-up del contesto su
  * sessioni lunghe, che è la ragione d'essere del vars-queue. Deterministico (no API).
  */
-import { VarsQueue } from "./vars-queue.mjs";
-import { assembleContext } from "./context-assembler.mjs";
+import { VarsQueue } from "../../src/vars-queue.mjs";
+import { assembleContext } from "../../src/context-assembler.mjs";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

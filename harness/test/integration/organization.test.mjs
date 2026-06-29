@@ -4,8 +4,8 @@
  * ("verificare che l'organizzazione venga mantenuta bene"). Deterministico (no API).
  * Usa vars-queue.mjs + context-assembler.mjs (gli stessi moduli delle extension pi).
  */
-import { VarsQueue } from "./vars-queue.mjs";
-import { assembleContext } from "./context-assembler.mjs";
+import { VarsQueue } from "../../src/vars-queue.mjs";
+import { assembleContext } from "../../src/context-assembler.mjs";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

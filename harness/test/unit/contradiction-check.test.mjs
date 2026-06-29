@@ -2,8 +2,8 @@
  * smoke-test di contradiction-check.mjs — include lo scenario del Test B (dedup-per-email vs SSO)
  * + casi di controllo anti falso-positivo (la difesa anti-cry-wolf richiede ZERO falsi conflitti).
  */
-import { contradicts, checkContradiction } from "./contradiction-check.mjs";
-import { VarsQueue } from "./vars-queue.mjs";
+import { contradicts, checkContradiction } from "../../src/contradiction-check.mjs";
+import { VarsQueue } from "../../src/vars-queue.mjs";
 
 let pass = 0, fail = 0;
 const ok = (c, m) => { c ? pass++ : (fail++, console.log("  ✗ FAIL: " + m)); };

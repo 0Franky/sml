@@ -4,8 +4,8 @@
  * tutta nel context, usarla, e "chiudere" → economia di contesto. Modella sliding-window-variable-tool
  * (sliding-var.mjs) + harness-capabilities-as-files. Deterministico (no API).
  */
-import { VarsQueue } from "./vars-queue.mjs";
-import { slidingRead, slidingReplace } from "./sliding-var.mjs";
+import { VarsQueue } from "../../src/vars-queue.mjs";
+import { slidingRead, slidingReplace } from "../../src/sliding-var.mjs";
 
 let pass = 0, fail = 0;
 const ok = (c, m) => { c ? pass++ : (fail++, console.log("  ✗ FAIL: " + m)); };

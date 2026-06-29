@@ -5,8 +5,8 @@
  * (lezione generica + esempio concreto); la nota SOPRAVVIVE alla compaction; è RICHIAMABILE on-demand
  * (con filtro) e NON inquina il <context> finché non serve. Deterministico (no API).
  */
-import { VarsQueue } from "./vars-queue.mjs";
-import { assembleContext } from "./context-assembler.mjs";
+import { VarsQueue } from "../../src/vars-queue.mjs";
+import { assembleContext } from "../../src/context-assembler.mjs";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

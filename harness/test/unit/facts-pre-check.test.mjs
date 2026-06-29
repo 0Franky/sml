@@ -2,7 +2,7 @@
  * Smoke-test del facts-pre-check (livello-1 deterministico reward-L). `node src/facts-pre-check.test.mjs`
  * Verifica i 3 predicati enum↔enum del gold 6.2 §2bis + well-formedness. Zero-deps.
  */
-import { checkContractCoherence } from "./facts-pre-check.mjs";
+import { checkContractCoherence } from "../../src/facts-pre-check.mjs";
 
 let passed = 0, failed = 0;
 function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error("  ✗ FAIL:", msg); } }

@@ -20,7 +20,7 @@ import {
 } from "@earendil-works/pi-coding-agent";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const HARNESS_DIR = resolve(__dirname, ".."); // .../harness
+const HARNESS_DIR = resolve(__dirname, "../.."); // .../harness
 const ENV_PATH = join(HARNESS_DIR, ".env");
 const MODELS_JSON = join(HARNESS_DIR, "serving", "models.json");
 

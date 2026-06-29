@@ -4,11 +4,11 @@
  * Poi chiede al modello come si trova. Legge la key da harness/.env. NON committare la key (gitignored).
  * Eseguito una-tantum per valutare il metodo prima dell'SLM (richiesta utente 2026-06-29).
  */
-import { VarsQueue } from "./vars-queue.mjs";
-import { assembleContext } from "./context-assembler.mjs";
+import { VarsQueue } from "../../src/vars-queue.mjs";
+import { assembleContext } from "../../src/context-assembler.mjs";
 import { readFileSync } from "node:fs";
 
-const env = readFileSync(new URL("../.env", import.meta.url), "utf8");
+const env = readFileSync(new URL("../../.env", import.meta.url), "utf8");
 const KEY = (env.match(/^GEMINI_API_KEY=(.*)$/m)?.[1] ?? "").trim();
 const MODEL = process.argv[2] ?? "gemini-3.5-flash";
 const ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";

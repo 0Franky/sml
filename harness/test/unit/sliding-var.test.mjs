@@ -1,6 +1,6 @@
 /** Smoke-test sliding-var (read/replace per char-range + preview). `node src/sliding-var.test.mjs` */
-import { VarsQueue } from "./vars-queue.mjs";
-import { slidingRead, slidingReplace } from "./sliding-var.mjs";
+import { VarsQueue } from "../../src/vars-queue.mjs";
+import { slidingRead, slidingReplace } from "../../src/sliding-var.mjs";
 
 let passed = 0, failed = 0;
 function ok(c, m) { if (c) passed++; else { failed++; console.error("  ✗ FAIL:", m); } }
