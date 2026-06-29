@@ -136,25 +136,31 @@ Una volta raccolte le risposte a tutti i blocchi:
 
 Il progetto usa il pattern [Karpathy LLM-Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f): tre layer (raw / wiki / schema). Questo file **è lo schema**. La wiki sta in `wiki/`. I raw sources stanno nella root e in `raw/`.
 
-### Layout fisso
+### Layout fisso — monorepo `ITLMv1`
+
+> **Decisione 2026-06-29** (utente msg 319/323, ADR `wiki/decisions/2026-06-29-monorepo-itlmv1.md`): repo unico **`ITLMv1`** (la cartella locale è ancora `slm/`; il repo GitHub `0Franky/sml` è rinominabile a `ITLMv1` senza toccare i contenuti). **SSOT centralizzata**: TUTTA la conoscenza dei sub-progetti (`lm/`, `harness/`) vive in `wiki/`. I sub-progetti contengono solo codice/config/artefatti, mai design-knowledge. Subdir piani (non submodule) → grafo unico + un solo push. I subrepo indipendenti per `lm/`/`harness/` si creeranno **dopo**, se serviranno (vedi ADR).
 
 ```
-slm/
+ITLMv1/  (cartella locale: slm/)
 ├── CLAUDE.md            # questo file (schema)
-├── transcript.md        # raw — sessione AI precedente, immutable
-├── HANDOFF.md           # raw — handoff sessione, immutable
+├── transcript.md        # raw — sessione AI precedente, immutable (gitignored)
+├── HANDOFF.md           # raw — handoff sessione, immutable (gitignored)
 ├── docs/                # raw — design v1.0 e futuri spec
 ├── raw/                 # raw — ingest futuri (paper, articoli, screenshot, web clippings)
-├── wiki/                # LLM-maintained, mai modificato a mano dall'utente
+├── wiki/                # SSOT — LLM-maintained, conoscenza di ENTRAMBI i sub-progetti
 │   ├── README.md        # entry point + synthesis
 │   ├── index.md         # catalogo content-oriented
 │   ├── log.md           # ledger cronologico (## [YYYY-MM-DD] action | title)
 │   ├── open-questions.md
+│   ├── todo.md          # tracker forward-looking
 │   ├── architecture/
 │   ├── entities/        # paper, modelli, framework, persone
 │   ├── concepts/        # tecniche, idee, principi, trade-off
-│   └── decisions/       # ADR datati (2026-MM-DD-slug.md)
-└── graphify-out/        # knowledge graph artifacts (graph.html, graph.json, GRAPH_REPORT.md)
+│   ├── decisions/       # ADR datati (2026-MM-DD-slug.md)
+│   └── training-taxonomy/  # tassonomia training + gold-example + foglie
+├── lm/                  # sub-progetto LM: training + eval + data-pipeline + configs (codice, no knowledge)
+├── harness/             # sub-progetto HARNESS: wrapper pi (extensions) + serving vLLM + verifiers + sandbox
+└── graphify-out/        # knowledge graph artifacts UNICO (graph.html, graph.json, GRAPH_REPORT.md)
 ```
 
 ### Operazioni

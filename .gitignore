@@ -118,3 +118,8 @@ wiki/_private/
 # Hook pre-push: denylist PII locale + audit log dei bypass (mai pushare)
 .githooks/denylist.local
 .githooks/bypass.log
+
+# Monorepo sub-progetti (belt-and-suspenders; harness/.gitignore copre già node_modules/dist)
+harness/node_modules/
+harness/dist/
+harness/sandbox/_run/
