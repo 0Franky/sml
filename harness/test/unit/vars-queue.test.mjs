@@ -142,6 +142,38 @@ try {
     q.close();
   }
 
+  // 9) INTER-AGENT MESSAGING (utente msg 462) ----------------------------------
+  {
+    const q = new VarsQueue(":memory:", { agent: "orchestrator" });
+    const seq1 = q.sendMessage("sub-frontend", { task: "implementa login form" }, { topic: "assignment" });
+    ok(typeof seq1 === "number" && seq1 > 0, "MSG: sendMessage ritorna seq");
+    q.sendMessage("*", { note: "deadline spostata" }, { from: "orchestrator", topic: "announce" }); // broadcast
+
+    // inbox del destinatario: diretto + broadcast, col mittente + body deserializzato
+    const inbox = q.inbox("sub-frontend");
+    ok(inbox.length === 2, "MSG: inbox vede diretto + broadcast");
+    ok(inbox.some(m => m.body.task === "implementa login form" && m.from_agent === "orchestrator"),
+       "MSG: messaggio diretto consegnato (mittente + body JSON)");
+    ok(inbox.some(m => m.to_agent === "*"), "MSG: broadcast consegnato");
+
+    // isolamento: un altro agente NON vede il diretto altrui, ma vede il broadcast
+    const other = q.inbox("sub-auth");
+    ok(other.length === 1 && other[0].to_agent === "*", "MSG: diretto isolato per destinatario; broadcast per tutti");
+
+    // filtro per topic
+    ok(q.inbox("sub-frontend", { topic: "assignment" }).length === 1, "MSG: filtro per topic");
+
+    // markRead → unreadOnly nasconde i letti
+    const toMark = q.inbox("sub-frontend", { topic: "assignment" }).map(m => m.seq);
+    ok(q.markRead(toMark) === 1, "MSG: markRead marca 1");
+    ok(q.inbox("sub-frontend", { topic: "assignment" }).length === 0, "MSG: unreadOnly nasconde i letti");
+    ok(q.inbox("sub-frontend", { topic: "assignment", unreadOnly: false }).length === 1, "MSG: unreadOnly:false li rivede");
+
+    // audit nel change-log
+    ok(q.getChangeLog({ entity: "agent_messages" }).length >= 2, "MSG: invii loggati (audit)");
+    q.close();
+  }
+
 } finally {
   rmSync(dir, { recursive: true, force: true });
 }
