@@ -3,7 +3,7 @@
  * Zero dipendenze, zero Docker. Assembla un <context> da un vars-queue popolato e verifica le lane.
  */
 import { VarsQueue } from "./vars-queue.mjs";
-import { assembleContext } from "./context-assembler.mjs";
+import { assembleContext, buildResumeDigest } from "./context-assembler.mjs";
 
 let passed = 0, failed = 0;
 function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error("  ✗ FAIL:", msg); } }
@@ -49,6 +49,26 @@ ok(ctx2.includes("scratch="), "includePrivateVars opt-in mostra le private");
 vq.addRule("xml-escape", "usa < e > e &", { severity: "soft" });
 const ctx3 = assembleContext(vq, { now: NOW });
 ok(ctx3.includes("&lt;") && ctx3.includes("&gt;") && ctx3.includes("&amp;"), "escaping XML dei contenuti");
+
+// --- cache-stable-prefix: regime absoluteTimestamps ---
+const cA = assembleContext(vq, { now: NOW, sinceMs: 0, absoluteTimestamps: true });
+const cB = assembleContext(vq, { now: NOW + 3_600_000, sinceMs: 0, absoluteTimestamps: true });
+const stripTime = (s) => s.replace(/ {2}<current_time>[^<]*<\/current_time>\n?/g, "");
+ok(stripTime(cA) === stripTime(cB), "cache-stable: tutto tranne <current_time> è byte-identico cross-now");
+ok(cA.includes("<current_time>") && /@\d{4}-\d\d-\d\dT/.test(cA), "absoluteTimestamps: anchor + @ISO");
+ok(!cA.includes("s fa"), "absoluteTimestamps: nessuna età relativa");
+ok(cA.indexOf("<rules>") < cA.indexOf("<vars>") && cA.indexOf("<vars>") < cA.indexOf("<current_time>"),
+  "ordine stabile-prefix → volatile → anchor");
+// regime relativo (default) invariato: niente anchor, età "Ns fa"
+const cRel = assembleContext(vq, { now: NOW, sinceMs: 0 });
+ok(!cRel.includes("<current_time>") && cRel.includes("s fa"), "regime relativo (default) invariato");
+
+// --- buildResumeDigest: mostra il resume dopo un gap, tace in sessione attiva ---
+const lastTs = vq.getChangeLog({ limit: 1 })[0].ts;
+const resumed = buildResumeDigest(vq, { now: lastTs + 24 * 3600 * 1000 }); // +1 giorno = gap reale
+ok(resumed.includes("<resuming_from") && resumed.includes("T1"), "resume-digest mostra l'aim dopo un gap");
+const active = buildResumeDigest(vq, { now: lastTs + 1000 }); // +1s = sessione attiva
+ok(active === "", "resume-digest tace in sessione attiva (no banner ridondante)");
 
 vq.close();
 console.log(`\ncontext-assembler smoke-test: ${passed} passed, ${failed} failed`);
