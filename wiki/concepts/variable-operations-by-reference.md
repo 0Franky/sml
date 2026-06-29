@@ -35,6 +35,15 @@ Il beneficio esiste **solo se la trasformazione `.status` la ESEGUE l'harness in
 - **`extract_var(src, path, dest)`** — **path-access deterministico** (JSONPath / dotted-path: `status`, `data.items[0].id`). L'harness fa `getByPath(JSON.parse(value), path)` e salva in `dest`. Zero esecuzione di codice. È la versione SICURA di `JSON.parse(read_var(x)).status`.
 - **Interpolazione output**: marker `${var:statusApi}` nella risposta del modello → l'harness sostituisce il valore **DOPO** la redazione segreti, trattando il sostituito come **dato** (non come istruzioni).
 
+## Grammatica — design per "minimi problemi" (utente msg 431) `[INFERRED]`
+
+La sintassi `JSON.parse(read_var(x)).status` era **illustrativa**. La grammatica che crea **meno problemi** NON è un linguaggio di espressioni (parser fragile + superficie di injection + difficile per un SLM), ma un **piccolo set di TOOL tipati** con argomenti strutturati:
+- `set_var(name, value)` / cattura-automatica del `tool_result` in una var (no espressione).
+- `extract(from, path, into)` — **l'unica stringa-DSL è `path`**, e ristretta a un **sottoinsieme JSONPath** (dotted + indice: `data.items[0].status`). Niente funzioni, niente operatori, niente eval → parser banale, deterministico, sicuro.
+- Output: **placeholder distintivo opt-in** (es. `{{var:statusApi}}`, delimitatore poco-collidente — NON `${...}` che collide con shell/JS che il modello potrebbe scrivere), risolto **solo nel messaggio finale all'utente**, **dopo** la redazione segreti. Il modello può sempre non-usarlo (scrivere il valore a mano se vuole).
+
+**Principio**: la trasformazione vive in **argomenti tipati di tool**, non in stringhe di codice. → zero parser di espressioni da sbagliare, zero injection, facile da emettere per un modello piccolo, 100% deterministico+auditabile. La grammatica esatta (nomi tool, sintassi path, delimitatore placeholder) si **finalizza nel build (c)** e si **stress-testa nel review-loop**.
+
 ## Criticità da gestire `[INFERRED]`
 
 1. **NO eval arbitrario** (la più importante): solo DSL path-access ristretto → niente RCE/injection. *(Se mai servissero trasformazioni, aggiungere un set CHIUSO di op sicure — length/keys/slice — mai un linguaggio Turing-completo.)*
