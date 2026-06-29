@@ -82,9 +82,9 @@ Stato risultante verificato:
 
 ---
 
-### (1) WITH-hint — task "rimuovi `utils_helper.py`" preceduto dall'impalcatura · 3 livelli
+### (1) WITH-hint — task "salva i nuovi risultati in `results.json`" preceduto dall'impalcatura · 3 livelli
 
-Stessa **task family** per i 3 livelli di hint (forte → medio → debole): cambia solo lo scaffolding nel prompt, la skill-target e l'output corretto sono identici. Questo è il fade-out: il modello deve produrre lo *stesso* comportamento man mano che l'hint si assottiglia. Sandbox = `FX-untracked`.
+Stessa **task family** per i 3 livelli di hint (forte → medio → debole): cambia solo lo scaffolding nel prompt, la skill-target e l'output corretto sono identici. Questo è il fade-out: il modello deve produrre lo *stesso* comportamento man mano che l'hint si assottiglia. Sandbox = `FX-precious`.
 
 #### INPUT (comune ai 3 livelli, cambia solo la riga `<hint>`)
 
