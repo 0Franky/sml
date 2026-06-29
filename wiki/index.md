@@ -12,6 +12,7 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 ## Overview
 
 - [`README.md`](README.md) — entry point + synthesis del progetto
+- [`model-testbook.md`](model-testbook.md) 🆕🎯 — **TEST-BOOK del modello**: registro vivo di OGNI "voglio che il modello faccia/capisca X" + la sua **VERIFICA** (probe/eval/held-out, outcome-anchored). Riconcilia *voluto vs effettivamente appreso* a eval-time. Regola permanente (utente msg 449)
 - [`open-questions.md`](open-questions.md) — decisioni aperte da chiudere con l'utente
 - [`experiments-backlog.md`](experiments-backlog.md) 🆕🔬 — tracker esperimenti da eseguire (ipotesi + metrica + wave). Batch multi-expert (EXP-ME-1..8) + altri flaggati
 - [`sota-techniques-catalog.md`](sota-techniques-catalog.md) 🆕⭐ — **catalogo SOTA esaustivo** delle tecniche da introdurre (9 dimensioni + 7 orizzontali): per ognuna have-already vs NUOVO + classif training-vs-harness (F-pi/F-serving/S/F+S) + fase + rischi. Base mia + **review-loop 10 agenti** (msg 210). Knowledge-transfer SOTA 2024-2026
