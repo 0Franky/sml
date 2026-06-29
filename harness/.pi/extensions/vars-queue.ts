@@ -85,6 +85,64 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
+  // --- TASK-GRAPH (focus-gathering v1, msg 506): priority + deps → ordine di esecuzione ----------------
+  pi.registerTool({
+    name: "add_task",
+    label: "Add a task (priority + dependencies)",
+    description:
+      "Crea un task. 'priority' (intero, più alto = più urgente; default 0) e 'deps' (id di task che devono essere 'done' PRIMA, vincolo HARD; default []) sono opzionali. Le deps sono validate: niente auto-dipendenza, niente ciclo (altrimenti il task viene rifiutato).",
+    parameters: Type.Object({
+      id: Type.String(),
+      title: Type.String(),
+      priority: Type.Optional(Type.Integer({ description: "Più alto = più urgente (default 0). È metadata di routing, non un punteggio." })),
+      deps: Type.Optional(Type.Array(Type.String(), { description: "id dei task prerequisito (devono essere 'done' prima)." })),
+    }),
+    async execute(_t: string, p: any) {
+      try {
+        const t = vq.addTask(p.id, p.title, { priority: p.priority ?? 0, deps: p.deps ?? [], who: activeWho() });
+        return { content: [{ type: "text", text: JSON.stringify(t) }], details: { ok: true } };
+      } catch (e: any) {
+        return { content: [{ type: "text", text: `add_task rifiutato: ${e?.message ?? e}` }], details: { ok: false } };
+      }
+    },
+  });
+  pi.registerTool({
+    name: "set_task_deps",
+    label: "Set task priority/dependencies",
+    description:
+      "Aggiorna priority e/o deps di un task ESISTENTE. Le deps sono validate (no ciclo). Usalo durante il GATHERING per stabilire prerequisiti e urgenza PRIMA di scegliere su cosa fare enter_focus.",
+    parameters: Type.Object({
+      id: Type.String(),
+      priority: Type.Optional(Type.Integer({ description: "Nuova priorità (intero)." })),
+      deps: Type.Optional(Type.Array(Type.String(), { description: "Nuova lista di prerequisiti (sostituisce la precedente)." })),
+    }),
+    async execute(_t: string, p: any) {
+      try {
+        const t = vq.setTaskMeta(p.id, { priority: p.priority, deps: p.deps, who: activeWho() });
+        return { content: [{ type: "text", text: JSON.stringify(t) }], details: { ok: true } };
+      } catch (e: any) {
+        return { content: [{ type: "text", text: `set_task_deps rifiutato: ${e?.message ?? e}` }], details: { ok: false } };
+      }
+    },
+  });
+  pi.registerTool({
+    name: "get_execution_order",
+    label: "Gathering: open tasks in execution order (read-only)",
+    description:
+      "VISTA READ-ONLY per il GATHERING: i task open (pending+in_progress) in ordine di esecuzione (ready→impatto-a-valle→priority→età) con i flag 'ready' (deps tutte done) e 'unblocks' (#task che sblocca), SENZA payload. Consultala PRIMA di enter_focus per decidere QUALI task mettere a fuoco e in CHE ORDINE. Su backlog piatto (niente deps/priority) ritorna la lista semplice.",
+    parameters: Type.Object({}),
+    async execute() {
+      const { structured, tasks } = vq.listTasksOrdered();
+      const order = tasks.map((t: any) => ({
+        id: t.id, title: t.title, status: t.status, ready: t.ready ?? true,
+        unblocks: t.unblocks ?? 0, priority: t.priority ?? 0, deps: t.deps ?? [],
+      }));
+      // marker per gathering.mode='require': segna che il gathering è stato fatto (consumato da enter_focus).
+      vq.setMeta("_gather_token", String(vq.currentChangeSeq()));
+      return { content: [{ type: "text", text: JSON.stringify({ structured, order }, null, 2) }], details: { count: order.length, structured } };
+    },
+  });
+
   // --- shared-vars cross-agent (gathering 2026-06-29: anticipa cross-session-state-sharing) ---
   pi.registerTool({
     name: "get_shared_view",
@@ -144,11 +202,16 @@ export default function (pi: ExtensionAPI) {
   pi.registerTool({
     name: "list_tasks",
     label: "List tasks",
-    description: "Elenca i task (filtro opzionale per status: pending|in_progress|done|blocked).",
+    description:
+      "Elenca i task. Con 'status' → filtro semplice (pending|in_progress|done|blocked). SENZA status → vista ORDINATA del backlog open (ready→impatto→priority→età) con i flag ready/unblocks; su backlog piatto ricade sulla lista semplice (gate proporzionalità).",
     parameters: Type.Object({ status: Type.Optional(Type.String()) }),
     async execute(_t: string, p: any) {
-      const tasks = vq.listTasks({ status: p.status ?? null });
-      return { content: [{ type: "text", text: JSON.stringify(tasks, null, 2) }], details: { count: tasks.length } };
+      if (p.status) {
+        const tasks = vq.listTasks({ status: p.status });
+        return { content: [{ type: "text", text: JSON.stringify(tasks, null, 2) }], details: { count: tasks.length, structured: false } };
+      }
+      const { structured, tasks } = vq.listTasksOrdered();
+      return { content: [{ type: "text", text: JSON.stringify({ structured, tasks }, null, 2) }], details: { count: tasks.length, structured } };
     },
   });
 
