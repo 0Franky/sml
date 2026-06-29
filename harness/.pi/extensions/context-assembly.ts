@@ -55,12 +55,16 @@ export default function (pi: ExtensionAPI) {
     const contextWindow = usage?.contextWindow ?? null;
     const convId = getConvId();
 
+    // segment-boundary del checkpoint (scritto dal tool `checkpoint`, vedi checkpoint.ts): la lane mostra SOLO i
+    // messaggi DOPO l'ultimo checkpoint per questa conversazione (la chat pre-checkpoint è ripiegata nel digest).
+    const checkpointSeq = Number(vq.getMeta(`_checkpoint_seq:${convId}`)) || 0;
+
     const stack = getFocusStack(vq);
     let workspace: string;
     if (stack.length > 0) {
       // Uno scope è aperto → workspace NESTED: <frame> (zoom-OUT) + <context> FILTRATO + lane <messages_with_user>.
       const top = stack[stack.length - 1];
-      workspace = buildNestedWorkspace(vq, { focusScopeId: top.scope_id, store: convStore, convId, messagesN: MESSAGES_WINDOW_N });
+      workspace = buildNestedWorkspace(vq, { focusScopeId: top.scope_id, store: convStore, convId, messagesN: MESSAGES_WINDOW_N, afterSeq: checkpointSeq });
     } else {
       // Nessuno scope → resume? + <context> + <focus_hint>? + lane <messages_with_user>.
       const resume = buildResumeDigest(vq);
@@ -71,7 +75,7 @@ export default function (pi: ExtensionAPI) {
         hint = `\n<focus_hint watch="${trig.metrics.watchCount}"${trig.metrics.percent != null ? ` ctx="${Math.round(trig.metrics.percent * 100)}%"` : ""}>Contesto in pressione: valuta enter_focus su un sotto-insieme di task per lavorare a fuoco (pop_focus al termine).</focus_hint>`;
         markFocusHintEmitted(vq); // commit del cooldown solo dopo aver deciso di emettere (query/command separati)
       }
-      const lane = buildMessagesLane(convStore, convId, { n: MESSAGES_WINDOW_N });
+      const lane = buildMessagesLane(convStore, convId, { n: MESSAGES_WINDOW_N, afterSeq: checkpointSeq });
       workspace = (resume ? `${resume}\n` : "") + base + hint + (lane ? `\n${lane}` : "");
     }
     return { systemPrompt: `${event.systemPrompt}\n\n${workspace}` };

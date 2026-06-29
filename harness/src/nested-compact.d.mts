@@ -78,5 +78,6 @@ export function buildNestedWorkspace(
     absoluteTimestamps?: boolean;
     messagesN?: number;
     messagesCharCap?: number;
+    afterSeq?: number;
   },
 ): string;

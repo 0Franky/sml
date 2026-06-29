@@ -125,6 +125,25 @@ function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error(
   store.close();
 }
 
+// 5b) checkpoint segment-boundary: lastSeq + count/window afterSeq + lane ripiegata ----------------
+{
+  const store = new ConversationStore(":memory:");
+  for (let i = 1; i <= 6; i++) store.append("k", i % 2 ? "user" : "assistant", "m" + i);
+  ok(store.lastSeq("k") === 6, "CKPT: lastSeq = max seq della conversazione");
+  ok(store.lastSeq("vuota") === 0, "CKPT: lastSeq di conversazione vuota = 0");
+  ok(store.count("k") === 6 && store.count("k", { afterSeq: 4 }) === 2, "CKPT: count afterSeq conta solo il segmento post-checkpoint");
+  const w = store.window("k", 10, { afterSeq: 4 });
+  ok(w.length === 2 && w[0].text === "m5" && w[1].text === "m6", "CKPT: window afterSeq = solo post-boundary (ordine cronologico)");
+  const lane = buildMessagesLane(store, "k", { n: 10, afterSeq: 4 });
+  ok(lane.includes('checkpoint="4"') && lane.includes("m5") && lane.includes("m6") && !lane.includes("[user] m1"),
+     "CKPT-LANE: lane mostra solo il segmento post-checkpoint + attributo checkpoint");
+  ok(lane.includes("ripiegato a checkpoint @4") && lane.includes("range=1..4"),
+     "CKPT-LANE: marker — chat pre-checkpoint ripiegata, recuperabile via get_conversation");
+  ok(buildMessagesLane(store, "k", { n: 10 }).includes('shown="6/6"'),
+     "CKPT-LANE: senza afterSeq (default 0) → comportamento invariato (tutta la conversazione)");
+  store.close();
+}
+
 // 6) state-db singleton + closeAll ----------------------------------------------------------------
 {
   const a = getVarsQueue(":memory:");

@@ -12,13 +12,14 @@ export class ConversationStore {
   constructor(dbPath?: string, opts?: { agent?: string });
   close(): void;
   append(convId: string, role: string, text: string, opts?: { ts?: number }): number;
-  count(convId: string): number;
-  window(convId: string, n?: number): ConversationTurn[];
+  count(convId: string, opts?: { afterSeq?: number }): number;
+  window(convId: string, n?: number, opts?: { afterSeq?: number }): ConversationTurn[];
+  lastSeq(convId: string): number;
   range(convId: string, fromSeq: number, toSeq: number): ConversationTurn[];
   all(convId: string): ConversationTurn[];
 }
 
-export function buildMessagesLane(store: ConversationStore, convId: string, opts?: { n?: number; charCap?: number }): string;
+export function buildMessagesLane(store: ConversationStore, convId: string, opts?: { n?: number; charCap?: number; afterSeq?: number }): string;
 
 export function windowNativeMessages<T extends { role?: string }>(messages: T[], opts?: { keepTurns?: number }): T[];
 
