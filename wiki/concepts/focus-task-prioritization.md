@@ -13,7 +13,26 @@ last_updated: 2026-06-29
 
 # Focus task-prioritization — gathering prima dell'enter_focus
 
-> **STATUS: design-draft DA VALIDARE** (review-loop agnostico+verticale + simulazioni realistiche ad alto contesto, msg 510/511 "altrimenti parliamo del nulla"). NON ancora implementato.
+> **STATUS: VALIDATO via review-loop (25 agenti, 19/22 confermati) + simulazione realistica.** Design v1 implementabile sotto. (Anti-cecità/context-budget: 2ª review in corso.) NON ancora implementato.
+
+## ✅ SINTESI REVIEW-LOOP → DESIGN v1 IMPLEMENTABILE (decisioni validate)
+
+La review (agentic-systems + ml-training/reward + agnostico, verify per-finding) ha confermato il valore MA imposto correzioni importanti. **Design v1 risultante**:
+
+1. **SSOT-first (P1 #14)**: definire lo schema `deps`/`priority` **una volta** (ADR) — è condiviso da 3 concept (questo + [[dependency-aware-error-recovery]] + reorder). `priority INTEGER DEFAULT 0` + `deps TEXT JSON DEFAULT '[]'`; **deps = HARD** (bloccanti); validazione no-self-dep + **no-ciclo (DFS che ritorna il path del ciclo all'inserimento)**.
+2. **🔒 v1: priority/deps sono HARNESS/USER-set, il modello LI LEGGE ma NON LI SCRIVE (P0 #8/#13/#16)**. Chiude il **reward-hacking loop** (il modello non può autorare il grafo E essere premiato per rispettarlo): lo scorer-dell'ordine ≠ chi-dichiara (CLAUDE.md #10). priority/deps = **metadati di routing, MAI termini di reward**; il reward viene SOLO dall'esecuzione reale su grafo-oracolo. (Fase-2: se il modello propone priority/deps, stesso schema anti-hacking + `deps_source`.)
+3. **Campo derivato = `ready` (NON `blocked`) (P0 #1)**: `blocked` è già uno **status manuale** in tabella → collisione. `ready = status∈{pending,in_progress} AND tutte le deps done`; `status=blocked` manuale ha **precedenza** → non-ready. Riconciliare collectMetrics/realignParent (un dep-non-ready NON deve finire CURR-fallback).
+4. **`list_tasks` arricchito**: `priority` + `deps` + `ready` + `unblocks` (descendants count) + `order` (ready-first → `unblocks` desc → priority desc → created asc). I `done` escono.
+5. **GATE proporzionalità DETERMINISTICO (P1 #5/#15)**: se **nessun** task ha deps non-vuote **E** nessuno ha priority≠0 → `list_tasks` emette la **vista odierna semplice** (niente colonne ready/order/unblocks, niente hint di gathering). La struttura appare **SOLO quando esiste**. (No over-engineering su grafi piatti — regola #8.)
+6. **enter_focus HARD-GATE (P0 #2)**: se il subset non ha **alcun task ready** → **rifiuto** `{reason:"no-ready-task", missing_deps:[...]}` (gemello del rifiuto subset-vuoto). `lead = primo ready in order`; **mai lead su non-ready**. Marker `[blocca Tx]` nel backlog del frame. (Opz. preferito: auto-expand della chiusura-deps.)
+7. **Gathering = PROIEZIONE read-only, NON un focus annidato (P1 #4 / P2 #17)**: il "gathering-in-focus" (msg 509) come vero `enter_focus` è **cerimonia** (brucia 1 depth + pop-report degenere = participation-surface). → **TAGLIATO dal design implementabile**; il gathering è una **vista read-only** `get_execution_order`/`list_tasks` planning (`{id,title,status,ready,order,unblocks,deps}` senza payload), zero stack/pop. (msg 509 resta open-question DEFERRED.)
+8. **S ri-classificata (P0 #9)**: "scegliere ready-in-dep-order quando il grafo è esplicito" = **COPERTO dal sort deterministico → stato PIENA**, non DEGRADATA generica. La S vera (training) = (a) **quando** gatherare (proporzionalità), (b) raggruppare per coerenza oltre l'ordine, (c) gestire grafi impliciti. Confine F/S dichiarato esplicito.
+9. **Label/anti-over-gather (P1 #10/#11)**: oracolo **by-construction** sul task-graph (grafo noto → ordine giusto verificabile) + **twin-pair** (Twin-A grafo strutturato→gathering paga / Twin-B piatto→gathering=spreco) riusando il pattern di [[low-confidence-gather-and-reorg]].
+10. **Ordering — critical-path = refinement aperto (P1 #3)**: `unblocks` (descendants) adottato e validato dalla simulazione; ma `unblocks` ≠ critical-path (un task su catena lunga ha CP alto, count basso) → su grafi a catene lunghe valutare **critical-path-length** come tie-break primario (validare con grafo NON-degenere; quello simulato aveva cp=1 ovunque). Open-question, non v1-blocker.
+11. **Doc reorder/focusK (P2 #19)**: oggi promette un priority-sort su un campo inesistente → `priority` è il **prerequisito condiviso**, implementarlo per primo + allineare la doc.
+12. **Casi alto-contesto da testare (P2 #18)**: deps cross-subset, blocked-DURANTE-il-focus (ri-derivare `ready` ad ogni `buildFrame`, non fidarsi di un flag salvato), deadlock, raccordo re-align.
+
+> **Refutati (3, fumo)**: order/blocked-stantii-a-runtime (il re-derive ad ogni buildFrame lo risolve); F/S-divergono-su-critical-path; "taglia l'80%/over-engineering" (il gate di proporzionalità #5/#15 già lo indirizza senza tagliare il valore).
 
 ## Problema (osservato nel dogfood live 2026-06-29)
 
