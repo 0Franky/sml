@@ -27,6 +27,9 @@ import { redactText } from "./secrets-redact.mjs";
 /** Chiavi vietate nel path-walk (criticità #1b: anti prototype-pollution). */
 const FORBIDDEN_KEYS = new Set(["__proto__", "prototype", "constructor"]);
 const MAX_PATH_LEN = 512;
+/** Cap dimensione-valore (criticità #1d): la var può contenere contenuto ostile da un'API. */
+const MAX_VALUE_BYTES = 256 * 1024; // 256KB: oltre, JSON.parse sincrono bloccherebbe l'event-loop
+const MAX_INTERP_CHARS = 8 * 1024; // cap dell'amplificazione: un {{var:big}} non deve gonfiare l'output
 
 /**
  * Parser del sotto-JSONPath ristretto: dotted + indice `[N]`. Es. `data.items[0].status`.
@@ -70,11 +73,13 @@ export function getByPath(obj, path) {
       }
       cur = cur[idx];
     } else {
-      // SOLO own-key enumerable: mai la catena prototipale
-      if (!Object.hasOwn(cur, part)) {
-        return { ok: false, error: `path '${path}': chiave '${part}' assente` };
-      }
-      cur = cur[part];
+      // SOLO own-key, lette via descriptor (mai la catena prototipale, mai invocare un getter):
+      // se la chiave è un accessor (get/set) NON la si valuta → l'invariante "solo dati JSON-plain"
+      // diventa enforced anche se un chiamante passa un oggetto live (non solo output di JSON.parse).
+      const desc = Object.getOwnPropertyDescriptor(cur, part);
+      if (!desc) return { ok: false, error: `path '${path}': chiave '${part}' assente` };
+      if (desc.get || desc.set) return { ok: false, error: `path '${path}': '${part}' è un accessor (getter/setter), non valutato` };
+      cur = desc.value;
     }
   }
   return { ok: true, value: cur };
@@ -92,6 +97,7 @@ export function extractVar(vq, src, path, dest, opts = {}) {
 
   let data = v.value;
   if (typeof data === "string") {
+    if (data.length > MAX_VALUE_BYTES) return { ok: false, error: `var '${src}' troppo grande (${data.length} > ${MAX_VALUE_BYTES} byte)` };
     try { data = JSON.parse(data); }
     catch (e) { return { ok: false, error: `var '${src}' non è JSON valido: ${e.message}` }; }
   }
@@ -103,7 +109,9 @@ export function extractVar(vq, src, path, dest, opts = {}) {
   if (!r.ok) return r;
 
   vq.setVar(dest, r.value, {
-    scope: opts.scope ?? v.scope ?? "private",
+    // NON ereditare lo scope del src: un campo estratto da una var `shared` NON deve diventare
+    // `shared` di default (least-privilege: eviterebbe un widening silenzioso della visibilità segreti).
+    scope: opts.scope ?? "private",
     namespace: opts.namespace ?? v.namespace,
     who: opts.who ?? vq.agent,
     decisionRef: opts.decisionRef ?? null,
@@ -116,7 +124,9 @@ const VAR_MARKER = /\{\{(!?)var:([A-Za-z0-9_$]+)\}\}/g;
 
 function valueToString(value) {
   if (value == null) return "";
-  return typeof value === "string" ? value : JSON.stringify(value);
+  const s = typeof value === "string" ? value : JSON.stringify(value);
+  // cap dell'amplificazione: un singolo {{var:big}} non deve gonfiare l'output oltre il limite.
+  return s.length > MAX_INTERP_CHARS ? s.slice(0, MAX_INTERP_CHARS) + "…[troncato]" : s;
 }
 
 /**

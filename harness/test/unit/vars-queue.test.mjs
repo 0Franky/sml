@@ -64,6 +64,9 @@ try {
     sub.proposeVar("api_base", "https://api.staging", { agent: "sub-frontend" });
     ok(sub.getVar("api_base").value === "https://api.local", "CROSS-AGENT: la proposta NON muta subito (single-writer)");
     ok(orch.pendingProposals().length === 1, "CROSS-AGENT: proposta in coda");
+    // la proposta è LOGGATA + attribuita all'agente → un figlio che solo-propone ha un report-floor NON vuoto
+    ok(sub.getChangesByAgent("sub-frontend").some((c) => c.entity === "proposals"),
+       "CROSS-AGENT: proposeVar è loggato (attribuito all'agente, floor-F non vuoto)");
 
     // l'orchestratore fa il MERGE (qui: accetta)
     const applied = orch.mergeProposals(() => true);
@@ -169,8 +172,14 @@ try {
     ok(q.inbox("sub-frontend", { topic: "assignment" }).length === 0, "MSG: unreadOnly nasconde i letti");
     ok(q.inbox("sub-frontend", { topic: "assignment", unreadOnly: false }).length === 1, "MSG: unreadOnly:false li rivede");
 
-    // audit nel change-log
-    ok(q.getChangeLog({ entity: "agent_messages" }).length >= 2, "MSG: invii loggati (audit)");
+    // audit nel change-log: SILENT → presente con includeSilent, ASSENTE da recent_changes (no inquinamento)
+    ok(q.getChangeLog({ entity: "agent_messages", includeSilent: true }).length >= 2, "MSG: invii loggati (audit, silent)");
+    ok(q.getChangeLog({ entity: "agent_messages" }).length === 0, "MSG: gli invii NON inquinano recent_changes (silent)");
+
+    // GC dei messaggi letti
+    const pruned = q.gcMessages(Date.now() + 1, { readOnly: true });
+    ok(pruned >= 1, "MSG: gcMessages pruna i letti");
+    ok(q.inbox("sub-frontend", { topic: "assignment", unreadOnly: false }).length === 0, "MSG: il messaggio letto è stato prunato");
     q.close();
   }
 

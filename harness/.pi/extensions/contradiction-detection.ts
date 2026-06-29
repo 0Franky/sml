@@ -34,13 +34,17 @@ const Predicate = Type.Object({
 export default function (pi: ExtensionAPI) {
   const vq = store();
 
+  // NB nome `record_assumptions` (NON `record_decision`): evita la COLLISIONE col tool `record_decision` di
+  // vars-queue.ts (la decisione-floor-F: choice+rationale+agente). Questo registra le ASSUNZIONI tipizzate su
+  // cui una decisione poggia, per il contradiction-check. (fix review 2026-06-29 — prima il runner ne scartava
+  // uno in silenzio per ordine di caricamento.)
   pi.registerTool({
-    name: "record_decision",
-    label: "Record a decision + its assumptions",
+    name: "record_assumptions",
+    label: "Record a decision's assumptions (contradiction layer)",
     description:
-      "Registra una DECISIONE con le sue ASSUNZIONI tipizzate {key,op,value}. Un nuovo fatto che NEGA un'assunzione verrà segnalato da check_facts. Sopravvive al compact. Registra le decisioni che poggiano su assunzioni non banali.",
+      "Registra le ASSUNZIONI tipizzate {key,op,value} su cui poggia una decisione (id condiviso con record_decision). Un nuovo fatto che NEGA un'assunzione verrà segnalato da check_facts. Sopravvive al compact. Usalo dopo record_decision quando la decisione poggia su assunzioni non banali.",
     parameters: Type.Object({
-      id: Type.String({ description: "Slug della decisione (es. 'D1-dedup-email')." }),
+      id: Type.String({ description: "Slug della decisione (stesso id usato con record_decision, es. 'D1-dedup-email')." }),
       statement: Type.Optional(Type.String({ description: "La decisione in una frase." })),
       assumptions: Type.Array(Predicate, { description: "Le assunzioni su cui poggia, come predicati {key,op,value}." }),
     }),

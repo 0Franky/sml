@@ -202,8 +202,12 @@ export class VarsQueue {
 
   /** Un sotto-agente PROPONE una scrittura su una var condivisa (non scrive diretto → niente race). */
   proposeVar(varId, value, { agent = this.agent } = {}) {
-    this.db.prepare(`INSERT INTO proposals (ts, agent, var_id, value) VALUES (?,?,?,?)`)
+    const r = this.db.prepare(`INSERT INTO proposals (ts, agent, var_id, value) VALUES (?,?,?,?)`)
       .run(Date.now(), agent, varId, JSON.stringify(value));
+    // logga la proposta attribuita all'agente → getChangesByAgent(figlio) la vede anche se non ancora
+    // mergiata (il merge poi logga who='merge<-agent'). Senza questo, un figlio che SOLO propone
+    // produrrebbe un report-di-ritorno VUOTO (rompe il floor-F "mai vuoto"). Fix review 2026-06-29.
+    this._log("proposals", String(Number(r.lastInsertRowid)), "propose", null, varId, agent);
   }
 
   pendingProposals() {
@@ -346,7 +350,9 @@ export class VarsQueue {
       `INSERT INTO agent_messages (ts, from_agent, to_agent, topic, body, read) VALUES (?,?,?,?,?,0)`
     ).run(Date.now(), from, toAgent, topic, JSON.stringify(body ?? null));
     const seq = Number(r.lastInsertRowid);
-    this._log("agent_messages", String(seq), "send", from, toAgent, from);
+    // silent=1: l'audit dell'invio resta nel log (recall con includeSilent) ma NON inquina recent_changes
+    // né il pop-report (il messaging è una lane separata dallo stato durevole). Fix review 2026-06-29.
+    this._log("agent_messages", String(seq), "send", from, toAgent, from, null, 1);
     return seq;
   }
 
@@ -372,6 +378,14 @@ export class VarsQueue {
     let n = 0;
     for (const s of list) n += this.db.prepare(`UPDATE agent_messages SET read = 1 WHERE seq = ?`).run(s).changes;
     return n;
+  }
+
+  /** "Visibile finché serve" per i messaggi: pruna quelli più vecchi di `beforeTs` (default: solo i letti). */
+  gcMessages(beforeTs, { readOnly = true } = {}) {
+    let q = `DELETE FROM agent_messages WHERE ts < ?`;
+    const args = [beforeTs];
+    if (readOnly) q += " AND read = 1";
+    return this.db.prepare(q).run(...args).changes;
   }
 
   // -- CURR pointer (aim corrente) -------------------------------------------
