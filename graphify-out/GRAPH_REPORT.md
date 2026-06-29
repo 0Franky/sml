@@ -1,16 +1,16 @@
 # Graph Report - slm  (2026-06-29)
 
 ## Corpus Check
-- 251 files · ~584,205 words
+- 252 files · ~584,638 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4924 nodes · 5862 edges · 403 communities (381 shown, 22 thin omitted)
+- 4929 nodes · 5868 edges · 405 communities (383 shown, 22 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 89 edges (avg confidence: 0.79)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a8563b58`
+- Built from commit: `11ff52a9`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -76,6 +76,7 @@
 - [[_COMMUNITY_Community 58|Community 58]]
 - [[_COMMUNITY_Community 59|Community 59]]
 - [[_COMMUNITY_Community 60|Community 60]]
+- [[_COMMUNITY_Community 61|Community 61]]
 - [[_COMMUNITY_Community 62|Community 62]]
 - [[_COMMUNITY_Community 63|Community 63]]
 - [[_COMMUNITY_Community 64|Community 64]]
@@ -339,6 +340,7 @@
 - [[_COMMUNITY_Community 323|Community 323]]
 - [[_COMMUNITY_Community 324|Community 324]]
 - [[_COMMUNITY_Community 325|Community 325]]
+- [[_COMMUNITY_Community 326|Community 326]]
 - [[_COMMUNITY_Community 327|Community 327]]
 - [[_COMMUNITY_Community 328|Community 328]]
 - [[_COMMUNITY_Community 329|Community 329]]
@@ -428,25 +430,25 @@
 ## Surprising Connections (you probably didn't know these)
 - `Reward-Hacking Mitigation (outcome-anchored, scorer≠scored)` --rationale_for--> `Regola #10 catene di pensiero = priorità`  [INFERRED]
   wiki/concepts/dependency-aware-error-recovery.md → CLAUDE.md
-- `context-assembly extension` --shares_data_with--> `Marker di troncamento ((+N nascosti), <notes count=N>)`  [INFERRED]
-  harness/README.md → wiki/concepts/window-aware-fetching.md
 - `Qwen Layered Architecture Design v1.0` --references--> `wiki/README.md — Wiki entry point + synthesis`  [EXTRACTED]
   docs/superpowers/specs/2026-05-02-qwen-layered-architecture-design.md → wiki/README.md
 - `QLoRA 4-bit` --conceptually_related_to--> `Qwen3-Coder-Next 80B-A3B`  [INFERRED]
   wiki/architecture/vertical-loras.md → wiki/entities/qwen3-coder-next.md
 - `Catastrophic Forgetting` --conceptually_related_to--> `Composition-aware training`  [INFERRED]
   wiki/concepts/catastrophic-forgetting.md → wiki/concepts/lora-stacking.md
+- `Scientific-Method Operating Protocol` --semantically_similar_to--> `Staged Curriculum Training`  [INFERRED] [semantically similar]
+  wiki/concepts/scientific-method-operating-protocol.md → wiki/concepts/staged-curriculum-training.md
 
 ## Hyperedges (group relationships)
 - **Canali di coordinamento cross-agent** — cross_session_state_sharing_propose_merge, inter_agent_messaging_channel, report_to_file_pointer_protocol, report_to_file_pointer_floor_f, inter_agent_messaging_channel_choice_guide [INFERRED 0.85]
 - **By-reference family (no inline copy)** — report_to_file_pointer_protocol, variable_operations_by_reference_capability, inter_agent_messaging_body_pointer, context_as_first_person_mind_conversation_store [INFERRED 0.80]
 - **Matrioska orchestration flow (enter→pop→re-align)** — matrioska_orchestration_spec, matrioska_nested_compact_core, report_to_file_pointer_protocol, report_to_file_pointer_floor_f, matrioska_active_scope_who [INFERRED 0.85]
 
-## Communities (403 total, 22 thin omitted)
+## Communities (405 total, 22 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.14
-Nodes (22): dir, frame, m, ok(), okPop, open, parentDec, r (+14 more)
+Cohesion: 0.09
+Nodes (55): base, convId, convStore, getStore(), lane, resume, stack, trig (+47 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.05
@@ -461,16 +463,16 @@ Cohesion: 0.10
 Nodes (21): OWASP Top 10 LLM01 Prompt Injection, ADaPT (Archiki 2024), CodeAct (ICML 2024), CODI (EMNLP 2025), CRITIC (Gou et al.), Focused Chain-of-Thought (F-CoT), OpenHands, Pause/Thinking Tokens (+13 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.11
-Nodes (39): Anthropic policy: Claude fuori dal training-loop, automod Provenance Invariant (anti-injection), Batch-First Consolidated Decision, Area 02 — Criticality/Safety (training-taxonomy), Over-Flagging / Cry-Wolf Defense, Check-Fantasma Detection (trace-anchored), Self-Versioning Gratis > Halt, T-group Regenerability Probe (primary Q discriminant) (+31 more)
+Cohesion: 0.09
+Nodes (50): automod Provenance Invariant (anti-injection), Batch-First Consolidated Decision, Area 02 — Criticality/Safety (training-taxonomy), Over-Flagging / Cry-Wolf Defense, Check-Fantasma Detection (trace-anchored), Self-Versioning Gratis > Halt, T-group Regenerability Probe (primary Q discriminant), Value-Tiering (T-high/probe/T-low/T-group) (+42 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.12
-Nodes (22): ask(), ctx, env, JUDGE(), KEY, TRIALS, vq, ask() (+14 more)
+Cohesion: 0.13
+Nodes (26): ask(), ctx, env, KEY, vq, ask(), ctx, env (+18 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.05
-Nodes (64): Adversarial Needle-in-Haystack Training, Agent Constitution (directive always-context), Axolotl (training framework), DeepSeek-R1 (teacher, long-CoT), Ollama (local serving), Qwen3-4B-Instruct-2507 (base model), TRL (RL post-training), Unsloth (training framework) (+56 more)
+Cohesion: 0.12
+Nodes (33): Agent Constitution (directive always-context), DeepSeek-R1 (teacher, long-CoT), Constitutional AI (Bai et al. 2022, Anthropic), Action Trajectory Critique (candidate), Agent Wrapper Vars/Queue Datastore, Char-Level Precision Training (candidate), Contradiction Detection Layer, Decision-Point Lookahead (candidate) (+25 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.11
@@ -497,16 +499,16 @@ Cohesion: 0.07
 Nodes (26): CLASSE1_HEADER, CLASSE1_INPUT, CLASSE1_LABEL, CLASSE1_OUTPUT, CLASSE2_DELTA, CLASSE3_DELTA, CLASSE4_DELTA, CLASSE5_INTRO (+18 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.10
-Nodes (35): AutoGen (Wu et al. 2023, Microsoft), Domain Randomization (Tobin et al. 2017), Gemma 4 (encoder-free multimodal, Google DeepMind 2026), HMoRA (Hierarchical Mixture of LoRA Experts, ICLR 2025), In-context Learning and Induction Heads (Olsson et al. 2022), Knowledge Distillation (Hinton et al. 2015), LoraHub (gradient-free LoRA composition), MoLE / Mixture of LoRA Experts family (+27 more)
+Cohesion: 0.15
+Nodes (21): AutoGen (Wu et al. 2023, Microsoft), Gemma 4 (encoder-free multimodal, Google DeepMind 2026), HMoRA (Hierarchical Mixture of LoRA Experts, ICLR 2025), LoraHub (gradient-free LoRA composition), MoLE / Mixture of LoRA Experts family, pi harness/wrapper base (earendil-works/pi), Qwen3-VL (vision-only), Voyager (Wang et al. 2023) (+13 more)
 
 ### Community 15 - "Community 15"
-Cohesion: 0.16
-Nodes (22): applied, bySubAuth, changes, d1, dbPath, dir, inbox, log (+14 more)
+Cohesion: 0.09
+Nodes (35): between(), __dirname, ENV_PATH, geminiFromConfig(), HARNESS_DIR, headlessUI(), liveTurn(), loadEnvKey() (+27 more)
 
 ### Community 16 - "Community 16"
-Cohesion: 0.26
-Nodes (20): execute(), getStore(), vq, buildFrame(), buildNestedWorkspace(), canEnter(), classifyPressure(), collectMetrics() (+12 more)
+Cohesion: 0.14
+Nodes (18): Axolotl (training framework), Ollama (local serving), Qwen3-4B-Instruct-2507 (base model), TRL (RL post-training), Unsloth (training framework), vLLM (serving, --enable-lora), LoRA Stacking, Voyager (Wang 2023) (+10 more)
 
 ### Community 17 - "Community 17"
 Cohesion: 0.16
@@ -525,8 +527,8 @@ Cohesion: 0.19
 Nodes (13): { convId, isNew }, { convId, persist }, e, execute(), getStore(), messageText(), meta, store (+5 more)
 
 ### Community 21 - "Community 21"
-Cohesion: 0.18
-Nodes (11): F elicita / S esegue (argomento PRO-SLM), Scorer ≠ scored / outcome-anchored, Strategia multilingua, Codice/identifier in inglese (difesa identifier-leak), NL via transform-knob del dataset, Lingua = asse trasversale (tassonomia language-agnostic), Anti-pattern (guscio-inerte / over-gating / cerimonia), Window-aware fetching (+3 more)
+Cohesion: 0.14
+Nodes (17): F elicita / S esegue (argomento PRO-SLM), SKILL (pesi) vs FEATURE (wrapper) principle, Contract strutturato (TOON/JSON), Council OPEN (giudici open-weight, Claude/GPT/Gemini fuori), Judge Design (giudice del reward RL), Scorer ≠ scored / outcome-anchored, Strategia multilingua, Codice/identifier in inglese (difesa identifier-leak) (+9 more)
 
 ### Community 22 - "Community 22"
 Cohesion: 0.16
@@ -546,11 +548,11 @@ Nodes (14): concept:active-inference, concept:bayesian-surprise-segmentation, co
 
 ### Community 26 - "Community 26"
 Cohesion: 0.06
-Nodes (26): b, c, cs1, cs2, five, lane, newB, one (+18 more)
+Nodes (29): b, c, cs1, cs2, five, lane, newB, one (+21 more)
 
 ### Community 27 - "Community 27"
-Cohesion: 0.08
-Nodes (46): Agent Wrapper Vars-Queue (god-node datastore), ADR Compaction Coherence (5 incoerenze, chiusa da Strada-2), ADR — Il context è la mente in prima persona del modello (Strada 2), Principio 3 — conversazione persistita in store addressabile per ID, Principio 5 — compaction a matrioska (nested-vision), Principio 4 — compaction nativa di pi OFF, Principio 2 — auto-curazione: il modello cura il proprio workspace, Principio 1 — context = workspace di prima persona, non chat (+38 more)
+Cohesion: 0.17
+Nodes (16): Principio 5 — compaction a matrioska (nested-vision), Hierarchical Decomposition (core-invariante → assi → foglie), active_scope — routing who delle mutazioni in-scope (floor-F derivabile), Table focus_frames (focus-stack storage, OQ-B), Tool enter_focus/pop_focus/focus_status (extension nested-compact.ts), buildFrame cornice-da-stato-durevole truthful (constraints mai troncate), nested-compact.mjs core node-pure (enterFocus/popFocus/realignParent), Matrioska nested-compact — spec di orchestrazione (+8 more)
 
 ### Community 28 - "Community 28"
 Cohesion: 0.16
@@ -569,16 +571,16 @@ Cohesion: 0.15
 Nodes (14): error-memo extension, pi Extensions (.pi/extensions), pre-flight safety extension, secrets-guardrail extension, sliding-var extension, vars-queue extension / datastore, verifier-sandbox extension, Classe F — Verification & Sandbox (bottleneck-buster) (+6 more)
 
 ### Community 32 - "Community 32"
-Cohesion: 0.19
-Nodes (13): base, convId, convStore, getStore(), lane, resume, stack, trig (+5 more)
+Cohesion: 0.15
+Nodes (17): ADR Decisioni D1-D5, ADR Open-Decisions Briefing, ADR Harness base = pi, Glossario plain-language, GiGPO (credit-assignment 2-livelli), GRPO (RL group-relative), Inoculation prompting (anti-misalignment), On-policy distillation cold-start (+9 more)
 
 ### Community 33 - "Community 33"
-Cohesion: 0.09
-Nodes (28): Cascading revision: delta concettuale → ripercorri → propaga ai dipendenti, Dependency-Aware Error Recovery (truth-maintenance sul dep-graph), Label-generation outcome-bisect (coerenza end-to-end, degradate-ma-recuperate), Catena causale dei 3 stati (solo-sorgente / grafo-stantio / grafo-dopo-update), Proporzionalità review globale-vs-locale (held-out negativo), Graph-aware / impact review (rivedere contro struttura ri-derivata), CacheAligner (stabilizza prefissi per KV-cache hit, non-lossy), CCR — compressione reversibile (originali in locale + recupero on-demand) (+20 more)
+Cohesion: 0.15
+Nodes (18): Cascading revision: delta concettuale → ripercorri → propaga ai dipendenti, Dependency-Aware Error Recovery (truth-maintenance sul dep-graph), Label-generation outcome-bisect (coerenza end-to-end, degradate-ma-recuperate), Catena causale dei 3 stati (solo-sorgente / grafo-stantio / grafo-dopo-update), Proporzionalità review globale-vs-locale (held-out negativo), Graph-aware / impact review (rivedere contro struttura ri-derivata), TB-02 — Graph-aware / impact-review (catena causale), AgentDebug (arXiv 2509.25370) — critical error step + re-rollout (+10 more)
 
 ### Community 34 - "Community 34"
-Cohesion: 0.06
-Nodes (51): A100-80GB spot/on-demand (RunPod/Vast/Lambda), ADR 2026-06-28 — Compute access full-FT/RL Tier1, ADR 2026-06-28 — Decisioni D1–D5 (+D6), Briefing — Decisioni aperte (2026-06-28), Catastrophic Forgetting, curriculum-stages-detail (5 stadi), D1 — LoRA init B=0 + spike aLoRA, D2 — Tokenizer/special-token + XGrammar (+43 more)
+Cohesion: 0.07
+Nodes (37): A100-80GB spot/on-demand (RunPod/Vast/Lambda), ADR 2026-06-28 — Compute access full-FT/RL Tier1, ADR 2026-06-28 — Decisioni D1–D5 (+D6), Briefing — Decisioni aperte (2026-06-28), Anthropic policy: Claude fuori dal training-loop, Catastrophic Forgetting, curriculum-stages-detail (5 stadi), D1 — LoRA init B=0 + spike aLoRA (+29 more)
 
 ### Community 35 - "Community 35"
 Cohesion: 0.19
@@ -589,8 +591,8 @@ Cohesion: 0.35
 Nodes (11): __dirname, ENV_PATH, geminiModelsFromConfig(), HARNESS_DIR, loadEnvKey(), log(), main(), makeHeadlessUI() (+3 more)
 
 ### Community 37 - "Community 37"
-Cohesion: 0.26
-Nodes (12): cs, cs3, lane, lane2, laneCap, ok(), r, s1 (+4 more)
+Cohesion: 0.17
+Nodes (13): Adversarial Needle-in-Haystack Training, Curriculum Learning (Bengio et al. 2009), Catastrophic Forgetting, Dynamic Context Training Regime, Explicit Attention Layer, Scuola Learning Philosophy, Untrusted Content Delimiting, BABILong (Kuratov 2024) (+5 more)
 
 ### Community 38 - "Community 38"
 Cohesion: 0.20
@@ -617,20 +619,20 @@ Cohesion: 0.05
 Nodes (37): 1. DoRA (Liu 2024) — [[../entities/dora-paper]], 2. LoRA+ (Hayou 2024) — [[../entities/lora-plus-paper]], 3. RsLoRA (Kalajdzievski 2023) — [[../entities/rslora-paper]], A — Capacity check, B — Dataset quality check, C — Decontamination check (PREVIENE LEAK), Calcolo alpha, Calcolo rank (+29 more)
 
 ### Community 44 - "Community 44"
-Cohesion: 0.48
-Nodes (5): ask(), ctx, env, KEY, vq
+Cohesion: 0.31
+Nodes (11): Agent Wrapper Vars-Queue (god-node datastore), Principio 3 — conversazione persistita in store addressabile per ID, Cross-Session / Cross-Agent State Sharing, Persistenza MIX file + DB (euristica strutturato→DB / blob→file), Propose/merge single-writer (shared-VARS senza race), Inter-agent messaging (scambio diretto tra agenti), Guida di scelta del canale cross-agent, Inbox addressabile per idAgente (sendMessage/inbox/markRead) (+3 more)
 
 ### Community 45 - "Community 45"
-Cohesion: 0.50
-Nodes (4): (5a) Bivio FALSO — A e B equivalenti negli esiti → dichiararlo, scegliere il più semplice (anti-paralisi), code:xml (<context>), code:block16 ([observe] bivio: nome A (tmp) vs B (buf) di una variabile LO), code:toon (lookahead:)
+Cohesion: 0.24
+Nodes (11): CacheAligner (stabilizza prefissi per KV-cache hit, non-lossy), CCR — compressione reversibile (originali in locale + recupero on-demand), ADR — Headroom nell'harness (proposta), Headroom (context-compression toolkit, Apache-2.0), Train-serve context-match gate (rischio compressione default-on per SLM), Body-pointer (busta leggera + contenuto per riferimento), Secret-Section Exfiltration Defense (redact at output), Sliding-Window Variable Tool (read slice by id) (+3 more)
 
 ### Community 46 - "Community 46"
-Cohesion: 0.25
-Nodes (9): Attention event (su contraddizione), Contradiction Detection Layer, Small LLM judge per semantic (Qwen3-0.6B), contradiction-detection extension, Harness: elicitazione vs esecuzione (finding), Test A — foresight latente (currency), Test B — contradiction-detection (dedup/SSO), Classe B — Dynamic Context & Attention (+1 more)
+Cohesion: 0.22
+Nodes (10): 5 tipi di contraddizione (factual/semantic/temporal/logical/cross-source), Attention event (su contraddizione), Contradiction Detection Layer, Small LLM judge per semantic (Qwen3-0.6B), contradiction-detection extension, Harness: elicitazione vs esecuzione (finding), Test A — foresight latente (currency), Test B — contradiction-detection (dedup/SSO) (+2 more)
 
 ### Community 47 - "Community 47"
-Cohesion: 0.28
-Nodes (9): 5 incoerenze (doppia memoria / SLM-piccolo / train-serve / default-grandi / non-coordinate), ADR — Compaction coherence (pi nativa), Hook session_before_compact (flush handoff / custom summary), context-assembly extension, demo _demo-context-evolution.mjs, Harness Request Flow (cosa riceve il modello), pi auto-compaction (shouldCompact / keepRecentTokens), Due canali: system <context> (NOSTRO) vs messages (PI) (+1 more)
+Cohesion: 0.24
+Nodes (10): 5 incoerenze (doppia memoria / SLM-piccolo / train-serve / default-grandi / non-coordinate), ADR — Compaction coherence (pi nativa), Hook session_before_compact (flush handoff / custom summary), context-assembly extension, demo _demo-context-evolution.mjs, Harness Request Flow (cosa riceve il modello), pi auto-compaction (shouldCompact / keepRecentTokens), Due canali: system <context> (NOSTRO) vs messages (PI) (+2 more)
 
 ### Community 48 - "Community 48"
 Cohesion: 0.06
@@ -661,16 +663,16 @@ Cohesion: 0.25
 Nodes (9): DwarfStar 4 (DS4), Per-Expert MoE Quantization, ADR 2026-05-21 base-model-pipeline, LoRA Stacking, Multi-Expert Collaboration, Multi-Token Prediction Training, S-LoRA, SLM Coding Landscape (+1 more)
 
 ### Community 55 - "Community 55"
-Cohesion: 0.23
-Nodes (12): asSet(), contradicts(), isNum(), norm(), numRange(), OP, rangesDisjoint(), conflicts (+4 more)
+Cohesion: 0.28
+Nodes (9): ADR Compaction Coherence (5 incoerenze, chiusa da Strada-2), ADR — Il context è la mente in prima persona del modello (Strada 2), Principio 4 — compaction nativa di pi OFF, Principio 2 — auto-curazione: il modello cura il proprio workspace, Principio 1 — context = workspace di prima persona, non chat, Harness Request-Flow (chi possiede la conversazione), TB-03 — Context = mente in prima persona + auto-curazione, settings.json — compaction.enabled=false (+1 more)
 
 ### Community 56 - "Community 56"
 Cohesion: 0.22
-Nodes (11): Classe A — Context-Assembly & Memory, Classe C — Safety & Guardrails, Harness Feature Catalog (6 feature-class), Skill metacognitive richiedono training (§2ter), SKILL (pesi) vs FEATURE (wrapper) principle, Steering vectors (4° asse di controllo), Step 0.0 — API pi verificata, Categorie F-harness/F-serving-stock/F-serving-custom/S/F+S (+3 more)
+Nodes (9): Classe A — Context-Assembly & Memory, Classe B — Dynamic Context & Attention, Classe C — Safety & Guardrails, Harness Feature Catalog (6 feature-class), Skill metacognitive richiedono training (§2ter), Section-boundary via multi-call MinD (stop=</section>), Steering vectors (4° asse di controllo), Step 0.0 — API pi verificata (+1 more)
 
 ### Community 57 - "Community 57"
-Cohesion: 0.13
-Nodes (15): Adversarial Needle-in-Haystack Training (paper-claim #5), Area 04 — Context Management & Metacognition (9 leaves example-space), Augmentation Knob K~3-5 (not volume), Label/Verifier Invariance under T, Dataset On-the-fly Pseudo-random (transform-layer, ×3-5 knob), Round-Trip Translation Check (gate), Seed Before Split (anti-leakage), Transform-Layer T(template, seed) (+7 more)
+Cohesion: 0.18
+Nodes (11): Adversarial Needle-in-Haystack Training (paper-claim #5), Area 04 — Context Management & Metacognition (9 leaves example-space), 5+ Variable Dimensions per Section, Lost-in-the-Middle / Position Bias, Realistic Size Distribution (Mixture of Gaussians), Dynamic-Context Training Regime (5+ variable dimensions), Depth-bound ≤3 (graceful degrade a reorder), Secret-Section Exfiltration Defense (secrets-map + deterministic scanner) (+3 more)
 
 ### Community 58 - "Community 58"
 Cohesion: 0.06
@@ -683,6 +685,10 @@ Nodes (7): ask(), ctx, env, JUDGE(), KEY, TRIALS, vq
 ### Community 60 - "Community 60"
 Cohesion: 0.39
 Nodes (7): ask(), ctx, env, JUDGE(), KEY, TRIALS, vq
+
+### Community 61 - "Community 61"
+Cohesion: 0.29
+Nodes (3): DB, vq, vq2
 
 ### Community 62 - "Community 62"
 Cohesion: 0.06
@@ -741,8 +747,8 @@ Cohesion: 0.10
 Nodes (26): Calibration-reward (RLCR / Brier) `[review-loop]`, Catena di pensiero (why → problema → soluzione), Classificazione training-vs-harness `[review-loop]`, code:block1 (TRIGGER: sto per emettere un identificatore/numero/API/sigla), Costo-della-domanda esplicito `[review-loop]`, Hack-check (scorer ≠ scored) `[review-loop]`, La policy (decision tree), Linked (+18 more)
 
 ### Community 76 - "Community 76"
-Cohesion: 0.14
-Nodes (17): execute(), Predicate, store(), vq, store(), vq, activeWho(), execute() (+9 more)
+Cohesion: 0.09
+Nodes (29): execute(), Predicate, store(), vq, store(), vq, activeWho(), execute() (+21 more)
 
 ### Community 77 - "Community 77"
 Cohesion: 0.40
@@ -993,8 +999,8 @@ Cohesion: 0.14
 Nodes (13): 1. Le lane del wrapper, 2. Scenario, 3. Contesto generato (canonico), 4. Secrets-map guardrail (design utente 2026-06-23), 5. Come cambia tra turni (compressione), 6. Design insight emersi, 7.1 Message-log persistente + finestra N model-set (design utente 2026-06-25), 7.2 Context sempre allineato — constraint capture (esplicito + dedotto) (utente 2026-06-26) (+5 more)
 
 ### Community 158 - "Community 158"
-Cohesion: 0.23
-Nodes (13): between(), __dirname, ENV_PATH, geminiFromConfig(), HARNESS_DIR, headlessUI(), liveTurn(), loadEnvKey() (+5 more)
+Cohesion: 0.29
+Nodes (7): Principio di verifica outcome-anchored (anti reward-hacking), Model Test-Book — desiderata del modello + verifica, TB-01 — Disambiguazione interpolazione per canale, TB-04 — Variable-operations per riferimento, TB-05 — Window-aware fetching, TB-06 — Protocollo di ritorno (pop): report-su-file + re-align, Disambiguazione interpolazione per canale (non per delimitatore)
 
 ### Community 159 - "Community 159"
 Cohesion: 0.14
@@ -1121,8 +1127,8 @@ Cohesion: 0.17
 Nodes (11): §0 — Cos'è / perché è gold / la barra, §1 — Skill-target (segnale, preciso e falsificabile), §1bis — Decision policy raffinata: NON over-fermarsi · backup mirato ≻ backup-cieco · segnalare, §2bis — Sandbox fixture (riproducibilità del verifier) · oracolo unificato, §2ter — Classificazione training-vs-harness (Step-0 obbligatorio), §3 — Cosa lo rende GOLD, §3bis — Fix verificati in sandbox (verifier-run 2026-06-29) [VERIFIED], §4 — Note di replica (cosa è invariante vs cosa cambia rispetto al template 1.1) (+3 more)
 
 ### Community 190 - "Community 190"
-Cohesion: 0.25
-Nodes (8): code:block17 ([observe] T1 ha rinominato SOLO la def, senza dependency-che), code:block18 (python -m pytest report/tests/ -q), code:block19 ([orient]  test rosso ⇒ il rename ha lasciato call-site dangl), code:block20 (grep -rn "\bparse\b" report/ --include=*.py), code:block21 ([plan]    3 call-site (+import) ancora al vecchio nome. fix:), code:block22 (edit report/loader.py     : from .parser import parse_input ), code:block23 ([verify-loop] errore residuo = 0 (test verde) [V]. grep del ), OUTPUT TARGET (verify-loop)
+Cohesion: 0.17
+Nodes (12): (4) WRONG — recovery — sbagliato + recupero REALE (verify-loop vero), code:xml (<context>), code:block17 ([observe] T1 ha rinominato SOLO la def, senza dependency-che), code:block18 (python -m pytest report/tests/ -q), code:block19 ([orient]  test rosso ⇒ il rename ha lasciato call-site dangl), code:block20 (grep -rn "\bparse\b" report/ --include=*.py), code:block21 ([plan]    3 call-site (+import) ancora al vecchio nome. fix:), code:block22 (edit report/loader.py     : from .parser import parse_input ) (+4 more)
 
 ### Community 191 - "Community 191"
 Cohesion: 0.17
@@ -1293,8 +1299,8 @@ Cohesion: 0.20
 Nodes (10): (5) OTHER — composite / edge: API pubblica · isolato-vs-referenziato · dipendenza dinamica · batch, (5a) Simbolo in **API pubblica** → consumer esterni non grep-pabili → deprecation/alias, non rename secco, (5b) Simbolo ISOLATO (funzione morta) vs REFERENZIATO → coppia bilanciata (over-flag penalizzato), (5c) Adversariale: dipendenza DINAMICA non grep-pabile (getattr/string-dispatch), code:block25 ([observe] target = parse(). [V] esportato in __init__.py + _), code:python (# report/__init__.py), code:block27 (→ grep -rln "from .parser import parse\|from report.parser i), code:block28 (grep -rln "from .parser import parse\|\.parse(" report/ --in) (+2 more)
 
 ### Community 233 - "Community 233"
-Cohesion: 0.14
-Nodes (14): (5) OTHER — composite / edge: streaming-picco · sufficiente-vs-insufficiente · dimensione-ingannevole · batch, (5a) Azione **streaming** → picco << totale → over-flag se si guarda il totale, (5b) Risorsa SUFFICIENTE vs INSUFFICIENTE → coppia bilanciata (false-block penalizzato simmetricamente), (5c) Adversariale: dimensione DICHIARATA ≠ reale (compresso→espanso / quota per-minuto vs per-giorno), (5d) Batch di azioni costose → UNA stima aggregata di budget/spazio, decisioni consolidate (OPTIMIZATION-FIRST), code:block25 ([observe] target = processare 80GB. [V] azione STREAMING a c), code:block26 (→ df -k ./data → free_kb >= required_kb (es. free 120GB, req), code:block27 (→ df -k ./data → free_kb < required_kb (es. free 5GB, requir) (+6 more)
+Cohesion: 0.20
+Nodes (10): (5) OTHER — composite / edge: streaming-picco · sufficiente-vs-insufficiente · dimensione-ingannevole · batch, (5a) Azione **streaming** → picco << totale → over-flag se si guarda il totale, (5b) Risorsa SUFFICIENTE vs INSUFFICIENTE → coppia bilanciata (false-block penalizzato simmetricamente), (5c) Adversariale: dimensione DICHIARATA ≠ reale (compresso→espanso / quota per-minuto vs per-giorno), code:block25 ([observe] target = processare 80GB. [V] azione STREAMING a c), code:block26 (→ df -k ./data → free_kb >= required_kb (es. free 120GB, req), code:block27 (→ df -k ./data → free_kb < required_kb (es. free 5GB, requir), code:block28 (declared = du -k payload.gz       → dimensione DICHIARATA (c) (+2 more)
 
 ### Community 234 - "Community 234"
 Cohesion: 0.20
@@ -1406,7 +1412,7 @@ Nodes (8): §0 — Cos'è / perché è gold / la barra / [UNVERIFIED], §1 — S
 
 ### Community 261 - "Community 261"
 Cohesion: 0.22
-Nodes (9): (5) OTHER — composite / edge: bivio-falso + multi-opzione + adversariale-predittività + batch, (5c) Adversariale — proiezione CONFIDENT ma NON ancorata (la predittività la smentisce in fase-3), (5d) Batch — più bivi nella stessa sessione (consolidare le dimensioni di confronto), code:xml (<context>), code:block22 (<trajectory id="T-5c">), code:xml (<context>), code:block24 ([observe] 2 bivi (parser, utils), ognuno refactor-vs-rewrite), code:toon (batch_lookahead:) (+1 more)
+Nodes (9): (5) OTHER — composite / edge: bivio-falso + multi-opzione + adversariale-predittività + batch, (5a) Bivio FALSO — A e B equivalenti negli esiti → dichiararlo, scegliere il più semplice (anti-paralisi), (5c) Adversariale — proiezione CONFIDENT ma NON ancorata (la predittività la smentisce in fase-3), code:xml (<context>), code:block16 ([observe] bivio: nome A (tmp) vs B (buf) di una variabile LO), code:toon (lookahead:), code:xml (<context>), code:block22 (<trajectory id="T-5c">) (+1 more)
 
 ### Community 262 - "Community 262"
 Cohesion: 0.22
@@ -1529,8 +1535,8 @@ Cohesion: 0.25
 Nodes (8): (2) WITHOUT-hint — stessa task family, nessun avviso, code:block10 ([verify] file tracked MA con edit uncommitted [V] → git rest), code:xml (<context>), code:block8 ([observe] target = proj/settings.yaml. "aggiornata" implica ), code:block9 (test -f proj/settings.yaml ; echo $?           → 0          ), INPUT, LABEL / REWARD (Q), OUTPUT TARGET
 
 ### Community 292 - "Community 292"
-Cohesion: 0.25
-Nodes (8): (3) WRONG — awareness — traiettoria sbagliata da RICONOSCERE (no recovery), (3a) overwrite truncating senza check → dato distrutto, (3b) check-fantasma (il vettore di reward-hacking più insidioso), code:block11 (<trajectory id="T-3a">), code:block12 ([verdetto] SBAGLIATO.), code:block13 (<trajectory id="T-3b">), code:block14 ([verdetto] SBAGLIATO.), LABEL / REWARD (Q)
+Cohesion: 0.22
+Nodes (9): §2 — Le 5 classi (istanze di training complete), (3) WRONG — awareness — traiettoria sbagliata da RICONOSCERE (no recovery), (3a) overwrite truncating senza check → dato distrutto, (3b) check-fantasma (il vettore di reward-hacking più insidioso), code:block11 (<trajectory id="T-3a">), code:block12 ([verdetto] SBAGLIATO.), code:block13 (<trajectory id="T-3b">), code:block14 ([verdetto] SBAGLIATO.) (+1 more)
 
 ### Community 293 - "Community 293"
 Cohesion: 0.25
@@ -1664,6 +1670,10 @@ Nodes (6): Confidence, Cosa fa, HDMoLE — Hierarchical Routing + Dynamic Thresh
 Cohesion: 0.29
 Nodes (6): Confidence, Cosa fa, Link interni, Med-MoE-LoRA / Specialized Generalists, Perché rilevante per noi, Riferimento
 
+### Community 326 - "Community 326"
+Cohesion: 0.33
+Nodes (6): Augmentation Knob K~3-5 (not volume), Label/Verifier Invariance under T, Dataset On-the-fly Pseudo-random (transform-layer, ×3-5 knob), Round-Trip Translation Check (gate), Seed Before Split (anti-leakage), Transform-Layer T(template, seed)
+
 ### Community 327 - "Community 327"
 Cohesion: 0.29
 Nodes (6): code:block1 (slm/), Come è organizzato, Filosofia, Idea in breve, Punti d'ingresso, SLM — Organization-First Small Language Model
@@ -1721,8 +1731,8 @@ Cohesion: 0.29
 Nodes (6): ✅ Fonti APPROVATE per uso commerciale (shortlist), ⚠️ Fonti con CAVEAT (usabili con condizioni — segnalare nel manifest), 🔴 Fonti da EVITARE (commercial-unsafe), Igiene operativa (per vendere), Linked, Provenance Manifest — dataset di training
 
 ### Community 341 - "Community 341"
-Cohesion: 0.33
-Nodes (6): 5 tipi di contraddizione (factual/semantic/temporal/logical/cross-source), Classe D — Reasoning & Recovery, Coherence-anchoring a due livelli (campi↔facts / razionale↔campi), Contract strutturato (TOON/JSON), Council OPEN (giudici open-weight, Claude/GPT/Gemini fuori), Judge Design (giudice del reward RL)
+Cohesion: 0.50
+Nodes (4): (5d) Batch di azioni costose → UNA stima aggregata di budget/spazio, decisioni consolidate (OPTIMIZATION-FIRST), code:block30 ([observe] 3 azioni costose → NON 3 check separati scollegati), code:block31 (df -k ./data                          → free_kb (1 misura pe), code:block32 ([verify] classifico in batch:)
 
 ### Community 342 - "Community 342"
 Cohesion: 0.33
@@ -1741,16 +1751,16 @@ Cohesion: 0.33
 Nodes (6): Implementation Roadmap, Phase 1: Foundation (Weeks 1-4), Phase 2: Programming Layer (Weeks 5-8), Phase 3: First Vertical (Weeks 9-12), Phase 4: Additional Verticals (Weeks 13-20), Phase 5: RLHF / Post-training (Weeks 21-24)
 
 ### Community 346 - "Community 346"
-Cohesion: 0.16
-Nodes (10): buildMessagesLane(), ConversationStore, esc(), STRUCTURAL_ROLES, windowNativeMessages(), derive(), expand(), main() (+2 more)
+Cohesion: 0.10
+Nodes (21): windowed, ConversationStore, STRUCTURAL_ROLES, windowNativeMessages(), derive(), expand(), main(), read() (+13 more)
 
 ### Community 347 - "Community 347"
 Cohesion: 0.33
 Nodes (5): Area 12 — Domain Knowledge / Immutable Facts, Framework canonical APIs, Language syntax / keywords, Math/physics formulas, Note di chiusura
 
 ### Community 348 - "Community 348"
-Cohesion: 0.20
-Nodes (10): (1) WITH-hint — task "rinomina `parse()` in `parse_input()`" · 3 livelli, code:xml (<context>), code:block3 ([observe] target = simbolo parse() in report/parser.py:1 [V]), code:block4 (grep -rn "\bparse\b" report/ --include=*.py), code:block5 ([verify] def in parser.py:1 + 3 call-site (loader, cli, test), code:block6 (edit report/parser.py     : def parse_input(s): ...), code:block7 (grep -rn "\bparse\b" report/ --include=*.py     → (nessun ma), INPUT (comune ai 3 livelli, cambia solo la riga `<hint>`) (+2 more)
+Cohesion: 0.33
+Nodes (6): code:block3 ([observe] target = simbolo parse() in report/parser.py:1 [V]), code:block4 (grep -rn "\bparse\b" report/ --include=*.py), code:block5 ([verify] def in parser.py:1 + 3 call-site (loader, cli, test), code:block6 (edit report/parser.py     : def parse_input(s): ...), code:block7 (grep -rn "\bparse\b" report/ --include=*.py     → (nessun ma), OUTPUT TARGET — reso per livello
 
 ### Community 349 - "Community 349"
 Cohesion: 0.33
@@ -1797,12 +1807,12 @@ Cohesion: 0.40
 Nodes (5): code:block3 ([observe] target = proj/results.json. nome "results" suggeri), code:block4 (test -f proj/results.json ; echo $?), code:block5 ([verify] (a) esiste [V]. (b) untracked + gitignored MA non-c), code:block6 (cp proj/results.json proj/results.json.bak            → ok  ), OUTPUT TARGET — reso per livello
 
 ### Community 360 - "Community 360"
-Cohesion: 0.40
-Nodes (5): (1) WITH-hint — task "salva i nuovi risultati in `results.json`" preceduto dall'impalcatura · 3 livelli, §2 — Le 5 classi (istanze di training complete), code:xml (<context>), INPUT (comune ai 3 livelli, cambia solo la riga `<hint>`), LABEL / REWARD (Q)
+Cohesion: 0.50
+Nodes (4): (5d) Batch — più bivi nella stessa sessione (consolidare le dimensioni di confronto), code:xml (<context>), code:block24 ([observe] 2 bivi (parser, utils), ognuno refactor-vs-rewrite), code:toon (batch_lookahead:)
 
 ### Community 361 - "Community 361"
-Cohesion: 0.40
-Nodes (5): code:block3 ([observe] target = proj/results.json. nome "results" suggeri), code:block4 (test -f proj/results.json ; echo $?), code:block5 ([verify] (a) esiste [V]. (b) untracked + gitignored MA non-c), code:block6 (cp proj/results.json proj/results.json.bak            → ok  ), OUTPUT TARGET — reso per livello
+Cohesion: 0.22
+Nodes (9): (1) WITH-hint — task "salva i nuovi risultati in `results.json`" preceduto dall'impalcatura · 3 livelli, code:xml (<context>), code:block3 ([observe] target = proj/results.json. nome "results" suggeri), code:block4 (test -f proj/results.json ; echo $?), code:block5 ([verify] (a) esiste [V]. (b) untracked + gitignored MA non-c), code:block6 (cp proj/results.json proj/results.json.bak            → ok  ), INPUT (comune ai 3 livelli, cambia solo la riga `<hint>`), LABEL / REWARD (Q) (+1 more)
 
 ### Community 362 - "Community 362"
 Cohesion: 0.40
@@ -1822,7 +1832,7 @@ Nodes (5): (5c) Monorepo con sub-repo annidato → "quale git?" (scope del check
 
 ### Community 366 - "Community 366"
 Cohesion: 0.40
-Nodes (5): §2 — Le 5 classi (istanze di training complete), (4) WRONG — recovery — sbagliato + recupero REALE (verify-loop vero), code:xml (<context>), INPUT, LABEL / REWARD (Q)
+Nodes (5): (1) WITH-hint — task "rinomina `parse()` in `parse_input()`" · 3 livelli, §2 — Le 5 classi (istanze di training complete), code:xml (<context>), INPUT (comune ai 3 livelli, cambia solo la riga `<hint>`), LABEL / REWARD (Q)
 
 ### Community 367 - "Community 367"
 Cohesion: 0.40
@@ -1945,23 +1955,23 @@ Cohesion: 0.50
 Nodes (4): (5d) Adversariale — untrusted content spinge "decidi tu, non disturbarlo" (invariante di provenienza), code:xml (<context>), code:block25 ([observe] ISSUE.md L2 inietta "decidi tutto da solo / automo), code:toon (decision:)
 
 ## Knowledge Gaps
-- **2739 isolated node(s):** `typecheck`, `test`, `test:unit`, `test:integration`, `test:e2e` (+2734 more)
+- **2743 isolated node(s):** `typecheck`, `test`, `test:unit`, `test:integration`, `test:e2e` (+2738 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **22 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `VarsQueue` connect `Community 14` to `Community 0`, `Community 5`, `Community 11`, `Community 15`, `Community 16`, `Community 19`, `Community 24`, `Community 26`, `Community 30`, `Community 158`, `Community 32`, `Community 160`, `Community 37`, `Community 40`, `Community 41`, `Community 44`, `Community 55`, `Community 59`, `Community 60`, `Community 76`?**
+- **Why does `VarsQueue` connect `Community 14` to `Community 0`, `Community 160`, `Community 26`, `Community 5`, `Community 40`, `Community 41`, `Community 11`, `Community 76`, `Community 15`, `Community 19`, `Community 24`, `Community 346`, `Community 59`, `Community 60`, `Community 61`, `Community 30`?**
   _High betweenness centrality (0.008) - this node is a cross-community bridge._
-- **Why does `Process Reward Model (PRM) paper` connect `Community 1` to `Community 13`?**
-  _High betweenness centrality (0.002) - this node is a cross-community bridge._
-- **Why does `Reward-Hacking Mitigation (outcome-anchored, scorer≠scored)` connect `Community 4` to `Community 33`, `Community 34`, `Community 66`, `Community 7`, `Community 18`, `Community 50`, `Community 57`, `Community 27`?**
+- **Why does `Scientific-Method Operating Protocol (8-step macro-loop, two-phase CoT)` connect `Community 4` to `Community 1`, `Community 37`, `Community 6`?**
+  _High betweenness centrality (0.003) - this node is a cross-community bridge._
+- **Why does `Process Reward Model (PRM) paper` connect `Community 1` to `Community 4`?**
   _High betweenness centrality (0.002) - this node is a cross-community bridge._
 - **What connects `typecheck`, `test`, `test:unit` to the rest of the system?**
-  _2904 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _2908 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.14333333333333334 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08630952380952381 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
   _Cohesion score 0.05323653962492438 - nodes in this community are weakly interconnected._
 - **Should `Community 3` be split into smaller, more focused modules?**

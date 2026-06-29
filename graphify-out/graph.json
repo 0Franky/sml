@@ -377,7 +377,7 @@
       "source_file": "harness/.pi/extensions/context-assembly.ts",
       "source_location": "L1",
       "id": "harness_pi_extensions_context_assembly_ts",
-      "community": 32,
+      "community": 0,
       "norm_label": "context-assembly.ts"
     },
     {
@@ -386,7 +386,7 @@
       "source_file": "harness/.pi/extensions/context-assembly.ts",
       "source_location": "L26",
       "id": "extensions_context_assembly_getstore",
-      "community": 32,
+      "community": 0,
       "norm_label": "getstore()"
     },
     {
@@ -395,7 +395,7 @@
       "source_file": "harness/.pi/extensions/context-assembly.ts",
       "source_location": "L47",
       "id": "extensions_context_assembly_vq",
-      "community": 32,
+      "community": 0,
       "norm_label": "vq"
     },
     {
@@ -404,7 +404,7 @@
       "source_file": "harness/.pi/extensions/context-assembly.ts",
       "source_location": "L48",
       "id": "extensions_context_assembly_convstore",
-      "community": 32,
+      "community": 0,
       "norm_label": "convstore"
     },
     {
@@ -413,7 +413,7 @@
       "source_file": "harness/.pi/extensions/context-assembly.ts",
       "source_location": "L53",
       "id": "extensions_context_assembly_usage",
-      "community": 32,
+      "community": 0,
       "norm_label": "usage"
     },
     {
@@ -422,7 +422,7 @@
       "source_file": "harness/.pi/extensions/context-assembly.ts",
       "source_location": "L56",
       "id": "extensions_context_assembly_convid",
-      "community": 32,
+      "community": 0,
       "norm_label": "convid"
     },
     {
@@ -431,7 +431,7 @@
       "source_file": "harness/.pi/extensions/context-assembly.ts",
       "source_location": "L58",
       "id": "extensions_context_assembly_stack",
-      "community": 32,
+      "community": 0,
       "norm_label": "stack"
     },
     {
@@ -440,7 +440,7 @@
       "source_file": "harness/.pi/extensions/context-assembly.ts",
       "source_location": "L66",
       "id": "extensions_context_assembly_resume",
-      "community": 32,
+      "community": 0,
       "norm_label": "resume"
     },
     {
@@ -449,7 +449,7 @@
       "source_file": "harness/.pi/extensions/context-assembly.ts",
       "source_location": "L67",
       "id": "extensions_context_assembly_base",
-      "community": 32,
+      "community": 0,
       "norm_label": "base"
     },
     {
@@ -458,7 +458,7 @@
       "source_file": "harness/.pi/extensions/context-assembly.ts",
       "source_location": "L68",
       "id": "extensions_context_assembly_trig",
-      "community": 32,
+      "community": 0,
       "norm_label": "trig"
     },
     {
@@ -467,17 +467,8 @@
       "source_file": "harness/.pi/extensions/context-assembly.ts",
       "source_location": "L74",
       "id": "extensions_context_assembly_lane",
-      "community": 32,
+      "community": 0,
       "norm_label": "lane"
-    },
-    {
-      "label": "windowed",
-      "file_type": "code",
-      "source_file": "harness/.pi/extensions/context-assembly.ts",
-      "source_location": "L88",
-      "id": "extensions_context_assembly_windowed",
-      "community": 32,
-      "norm_label": "windowed"
     },
     {
       "label": "contradiction-detection.ts",
@@ -573,7 +564,7 @@
       "label": "meta",
       "file_type": "code",
       "source_file": "harness/.pi/extensions/conversation-capture.ts",
-      "source_location": "L64",
+      "source_location": "L65",
       "id": "extensions_conversation_capture_meta",
       "community": 20,
       "norm_label": "meta"
@@ -582,7 +573,7 @@
       "label": "{ convId, persist }",
       "file_type": "code",
       "source_file": "harness/.pi/extensions/conversation-capture.ts",
-      "source_location": "L65",
+      "source_location": "L68",
       "id": "extensions_conversation_capture_convid_persist",
       "community": 20,
       "norm_label": "{ convid, persist }"
@@ -591,7 +582,7 @@
       "label": "e",
       "file_type": "code",
       "source_file": "harness/.pi/extensions/conversation-capture.ts",
-      "source_location": "L74",
+      "source_location": "L77",
       "id": "extensions_conversation_capture_e",
       "community": 20,
       "norm_label": "e"
@@ -600,7 +591,7 @@
       "label": "t",
       "file_type": "code",
       "source_file": "harness/.pi/extensions/conversation-capture.ts",
-      "source_location": "L95",
+      "source_location": "L98",
       "id": "extensions_conversation_capture_t",
       "community": 20,
       "norm_label": "t"
@@ -609,7 +600,7 @@
       "label": "execute()",
       "file_type": "code",
       "source_file": "harness/.pi/extensions/conversation-capture.ts",
-      "source_location": "L115",
+      "source_location": "L118",
       "id": "extensions_conversation_capture_execute",
       "community": 20,
       "norm_label": "execute()"
@@ -678,12 +669,30 @@
       "norm_label": "payload"
     },
     {
+      "label": "native-window.ts",
+      "file_type": "code",
+      "source_file": "harness/.pi/extensions/native-window.ts",
+      "source_location": "L1",
+      "id": "harness_pi_extensions_native_window_ts",
+      "community": 346,
+      "norm_label": "native-window.ts"
+    },
+    {
+      "label": "windowed",
+      "file_type": "code",
+      "source_file": "harness/.pi/extensions/native-window.ts",
+      "source_location": "L19",
+      "id": "extensions_native_window_windowed",
+      "community": 346,
+      "norm_label": "windowed"
+    },
+    {
       "label": "nested-compact.ts",
       "file_type": "code",
       "source_file": "harness/.pi/extensions/nested-compact.ts",
       "source_location": "L1",
       "id": "harness_pi_extensions_nested_compact_ts",
-      "community": 16,
+      "community": 0,
       "norm_label": "nested-compact.ts"
     },
     {
@@ -692,7 +701,7 @@
       "source_file": "harness/.pi/extensions/nested-compact.ts",
       "source_location": "L27",
       "id": "extensions_nested_compact_getstore",
-      "community": 16,
+      "community": 0,
       "norm_label": "getstore()"
     },
     {
@@ -701,7 +710,7 @@
       "source_file": "harness/.pi/extensions/nested-compact.ts",
       "source_location": "L33",
       "id": "extensions_nested_compact_vq",
-      "community": 16,
+      "community": 0,
       "norm_label": "vq"
     },
     {
@@ -710,7 +719,7 @@
       "source_file": "harness/.pi/extensions/nested-compact.ts",
       "source_location": "L45",
       "id": "extensions_nested_compact_execute",
-      "community": 16,
+      "community": 0,
       "norm_label": "execute()"
     },
     {
@@ -1502,7 +1511,7 @@
       "source_file": "harness/src/contradiction-check.mjs",
       "source_location": "L1",
       "id": "harness_src_contradiction_check_mjs",
-      "community": 55,
+      "community": 76,
       "norm_label": "contradiction-check.mjs"
     },
     {
@@ -1511,7 +1520,7 @@
       "source_file": "harness/src/contradiction-check.mjs",
       "source_location": "L15",
       "id": "src_contradiction_check_op",
-      "community": 55,
+      "community": 76,
       "norm_label": "op"
     },
     {
@@ -1520,7 +1529,7 @@
       "source_file": "harness/src/contradiction-check.mjs",
       "source_location": "L21",
       "id": "src_contradiction_check_norm",
-      "community": 55,
+      "community": 76,
       "norm_label": "norm()"
     },
     {
@@ -1529,7 +1538,7 @@
       "source_file": "harness/src/contradiction-check.mjs",
       "source_location": "L22",
       "id": "src_contradiction_check_isnum",
-      "community": 55,
+      "community": 76,
       "norm_label": "isnum()"
     },
     {
@@ -1538,7 +1547,7 @@
       "source_file": "harness/src/contradiction-check.mjs",
       "source_location": "L23",
       "id": "src_contradiction_check_asset",
-      "community": 55,
+      "community": 76,
       "norm_label": "asset()"
     },
     {
@@ -1547,7 +1556,7 @@
       "source_file": "harness/src/contradiction-check.mjs",
       "source_location": "L25",
       "id": "src_contradiction_check_numrange",
-      "community": 55,
+      "community": 76,
       "norm_label": "numrange()"
     },
     {
@@ -1556,7 +1565,7 @@
       "source_file": "harness/src/contradiction-check.mjs",
       "source_location": "L35",
       "id": "src_contradiction_check_rangesdisjoint",
-      "community": 55,
+      "community": 76,
       "norm_label": "rangesdisjoint()"
     },
     {
@@ -1565,7 +1574,7 @@
       "source_file": "harness/src/contradiction-check.mjs",
       "source_location": "L52",
       "id": "src_contradiction_check_contradicts",
-      "community": 55,
+      "community": 76,
       "norm_label": "contradicts()"
     },
     {
@@ -1592,7 +1601,7 @@
       "source_file": "harness/src/conversation-store.mjs",
       "source_location": "L29",
       "id": "src_conversation_store_esc",
-      "community": 346,
+      "community": 5,
       "norm_label": "esc()"
     },
     {
@@ -1673,7 +1682,7 @@
       "source_file": "harness/src/conversation-store.mjs",
       "source_location": "L92",
       "id": "src_conversation_store_buildmessageslane",
-      "community": 346,
+      "community": 5,
       "norm_label": "buildmessageslane()"
     },
     {
@@ -1736,7 +1745,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L1",
       "id": "harness_src_nested_compact_mjs",
-      "community": 16,
+      "community": 0,
       "norm_label": "nested-compact.mjs"
     },
     {
@@ -1745,7 +1754,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L23",
       "id": "src_nested_compact_esc",
-      "community": 16,
+      "community": 0,
       "norm_label": "esc()"
     },
     {
@@ -1754,7 +1763,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L24",
       "id": "src_nested_compact_sanitizescope",
-      "community": 16,
+      "community": 0,
       "norm_label": "sanitizescope()"
     },
     {
@@ -1763,7 +1772,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L27",
       "id": "src_nested_compact_default_cfg",
-      "community": 16,
+      "community": 0,
       "norm_label": "default_cfg"
     },
     {
@@ -1772,7 +1781,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L37",
       "id": "src_nested_compact_rank",
-      "community": 16,
+      "community": 0,
       "norm_label": "rank"
     },
     {
@@ -1781,7 +1790,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L38",
       "id": "src_nested_compact_maxlevel",
-      "community": 16,
+      "community": 0,
       "norm_label": "maxlevel()"
     },
     {
@@ -1790,7 +1799,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L45",
       "id": "src_nested_compact_collectmetrics",
-      "community": 16,
+      "community": 0,
       "norm_label": "collectmetrics()"
     },
     {
@@ -1799,7 +1808,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L60",
       "id": "src_nested_compact_classifypressure",
-      "community": 16,
+      "community": 0,
       "norm_label": "classifypressure()"
     },
     {
@@ -1808,7 +1817,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L74",
       "id": "src_nested_compact_currentdepth",
-      "community": 16,
+      "community": 0,
       "norm_label": "currentdepth()"
     },
     {
@@ -1817,7 +1826,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L79",
       "id": "src_nested_compact_canenter",
-      "community": 16,
+      "community": 0,
       "norm_label": "canenter()"
     },
     {
@@ -1826,7 +1835,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L90",
       "id": "src_nested_compact_evaluatetrigger",
-      "community": 16,
+      "community": 0,
       "norm_label": "evaluatetrigger()"
     },
     {
@@ -1835,7 +1844,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L110",
       "id": "src_nested_compact_shouldemitfocushint",
-      "community": 32,
+      "community": 0,
       "norm_label": "shouldemitfocushint()"
     },
     {
@@ -1844,7 +1853,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L121",
       "id": "src_nested_compact_markfocushintemitted",
-      "community": 32,
+      "community": 0,
       "norm_label": "markfocushintemitted()"
     },
     {
@@ -1853,7 +1862,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L129",
       "id": "src_nested_compact_buildframe",
-      "community": 16,
+      "community": 0,
       "norm_label": "buildframe()"
     },
     {
@@ -1862,7 +1871,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L146",
       "id": "src_nested_compact_serializeframe",
-      "community": 16,
+      "community": 0,
       "norm_label": "serializeframe()"
     },
     {
@@ -1871,7 +1880,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L186",
       "id": "src_nested_compact_getfocusstack",
-      "community": 16,
+      "community": 0,
       "norm_label": "getfocusstack()"
     },
     {
@@ -1880,7 +1889,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L195",
       "id": "src_nested_compact_enterfocus",
-      "community": 16,
+      "community": 0,
       "norm_label": "enterfocus()"
     },
     {
@@ -1889,7 +1898,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L229",
       "id": "src_nested_compact_popfocus",
-      "community": 16,
+      "community": 0,
       "norm_label": "popfocus()"
     },
     {
@@ -1898,7 +1907,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L272",
       "id": "src_nested_compact_realignparent",
-      "community": 16,
+      "community": 0,
       "norm_label": "realignparent()"
     },
     {
@@ -1907,7 +1916,7 @@
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L310",
       "id": "src_nested_compact_buildnestedworkspace",
-      "community": 16,
+      "community": 0,
       "norm_label": "buildnestedworkspace()"
     },
     {
@@ -2591,7 +2600,7 @@
       "source_file": "harness/src/_demo-context-evolution.mjs",
       "source_location": "L1",
       "id": "harness_src_demo_context_evolution_mjs",
-      "community": 5,
+      "community": 61,
       "norm_label": "_demo-context-evolution.mjs"
     },
     {
@@ -2600,7 +2609,7 @@
       "source_file": "harness/src/_demo-context-evolution.mjs",
       "source_location": "L15",
       "id": "src_demo_context_evolution_db",
-      "community": 5,
+      "community": 61,
       "norm_label": "db"
     },
     {
@@ -2609,7 +2618,7 @@
       "source_file": "harness/src/_demo-context-evolution.mjs",
       "source_location": "L18",
       "id": "src_demo_context_evolution_hr",
-      "community": 5,
+      "community": 61,
       "norm_label": "hr()"
     },
     {
@@ -2618,7 +2627,7 @@
       "source_file": "harness/src/_demo-context-evolution.mjs",
       "source_location": "L19",
       "id": "src_demo_context_evolution_show",
-      "community": 5,
+      "community": 61,
       "norm_label": "show()"
     },
     {
@@ -2627,7 +2636,7 @@
       "source_file": "harness/src/_demo-context-evolution.mjs",
       "source_location": "L22",
       "id": "src_demo_context_evolution_seedrules",
-      "community": 5,
+      "community": 61,
       "norm_label": "seedrules()"
     },
     {
@@ -2636,7 +2645,7 @@
       "source_file": "harness/src/_demo-context-evolution.mjs",
       "source_location": "L31",
       "id": "src_demo_context_evolution_vq",
-      "community": 5,
+      "community": 61,
       "norm_label": "vq"
     },
     {
@@ -2645,7 +2654,7 @@
       "source_file": "harness/src/_demo-context-evolution.mjs",
       "source_location": "L58",
       "id": "src_demo_context_evolution_vq2",
-      "community": 5,
+      "community": 61,
       "norm_label": "vq2"
     },
     {
@@ -2726,7 +2735,7 @@
       "source_file": "harness/test/e2e/dogfood-latent-foresight.mjs",
       "source_location": "L1",
       "id": "harness_test_e2e_dogfood_latent_foresight_mjs",
-      "community": 5,
+      "community": 59,
       "norm_label": "dogfood-latent-foresight.mjs"
     },
     {
@@ -2735,7 +2744,7 @@
       "source_file": "harness/test/e2e/dogfood-latent-foresight.mjs",
       "source_location": "L14",
       "id": "e2e_dogfood_latent_foresight_env",
-      "community": 5,
+      "community": 59,
       "norm_label": "env"
     },
     {
@@ -2744,7 +2753,7 @@
       "source_file": "harness/test/e2e/dogfood-latent-foresight.mjs",
       "source_location": "L15",
       "id": "e2e_dogfood_latent_foresight_key",
-      "community": 5,
+      "community": 59,
       "norm_label": "key"
     },
     {
@@ -2753,7 +2762,7 @@
       "source_file": "harness/test/e2e/dogfood-latent-foresight.mjs",
       "source_location": "L17",
       "id": "e2e_dogfood_latent_foresight_trials",
-      "community": 5,
+      "community": 59,
       "norm_label": "trials"
     },
     {
@@ -2762,7 +2771,7 @@
       "source_file": "harness/test/e2e/dogfood-latent-foresight.mjs",
       "source_location": "L20",
       "id": "e2e_dogfood_latent_foresight_ask",
-      "community": 5,
+      "community": 59,
       "norm_label": "ask()"
     },
     {
@@ -2771,7 +2780,7 @@
       "source_file": "harness/test/e2e/dogfood-latent-foresight.mjs",
       "source_location": "L42",
       "id": "e2e_dogfood_latent_foresight_vq",
-      "community": 5,
+      "community": 59,
       "norm_label": "vq"
     },
     {
@@ -2780,7 +2789,7 @@
       "source_file": "harness/test/e2e/dogfood-latent-foresight.mjs",
       "source_location": "L49",
       "id": "e2e_dogfood_latent_foresight_ctx",
-      "community": 5,
+      "community": 59,
       "norm_label": "ctx"
     },
     {
@@ -2789,7 +2798,7 @@
       "source_file": "harness/test/e2e/dogfood-latent-foresight.mjs",
       "source_location": "L62",
       "id": "e2e_dogfood_latent_foresight_judge",
-      "community": 5,
+      "community": 59,
       "norm_label": "judge()"
     },
     {
@@ -2798,7 +2807,7 @@
       "source_file": "harness/test/e2e/dogfood-matrioska.mjs",
       "source_location": "L1",
       "id": "harness_test_e2e_dogfood_matrioska_mjs",
-      "community": 158,
+      "community": 15,
       "norm_label": "dogfood-matrioska.mjs"
     },
     {
@@ -2807,7 +2816,7 @@
       "source_file": "harness/test/e2e/dogfood-matrioska.mjs",
       "source_location": "L23",
       "id": "e2e_dogfood_matrioska_dirname",
-      "community": 158,
+      "community": 15,
       "norm_label": "__dirname"
     },
     {
@@ -2816,7 +2825,7 @@
       "source_file": "harness/test/e2e/dogfood-matrioska.mjs",
       "source_location": "L24",
       "id": "e2e_dogfood_matrioska_harness_dir",
-      "community": 158,
+      "community": 15,
       "norm_label": "harness_dir"
     },
     {
@@ -2825,7 +2834,7 @@
       "source_file": "harness/test/e2e/dogfood-matrioska.mjs",
       "source_location": "L26",
       "id": "e2e_dogfood_matrioska_env_path",
-      "community": 158,
+      "community": 15,
       "norm_label": "env_path"
     },
     {
@@ -2834,7 +2843,7 @@
       "source_file": "harness/test/e2e/dogfood-matrioska.mjs",
       "source_location": "L27",
       "id": "e2e_dogfood_matrioska_models_json",
-      "community": 158,
+      "community": 15,
       "norm_label": "models_json"
     },
     {
@@ -2843,7 +2852,7 @@
       "source_file": "harness/test/e2e/dogfood-matrioska.mjs",
       "source_location": "L31",
       "id": "e2e_dogfood_matrioska_log",
-      "community": 158,
+      "community": 15,
       "norm_label": "log()"
     },
     {
@@ -2852,7 +2861,7 @@
       "source_file": "harness/test/e2e/dogfood-matrioska.mjs",
       "source_location": "L32",
       "id": "e2e_dogfood_matrioska_mask",
-      "community": 158,
+      "community": 15,
       "norm_label": "mask()"
     },
     {
@@ -2861,7 +2870,7 @@
       "source_file": "harness/test/e2e/dogfood-matrioska.mjs",
       "source_location": "L33",
       "id": "e2e_dogfood_matrioska_between",
-      "community": 158,
+      "community": 15,
       "norm_label": "between()"
     },
     {
@@ -2870,7 +2879,7 @@
       "source_file": "harness/test/e2e/dogfood-matrioska.mjs",
       "source_location": "L37",
       "id": "e2e_dogfood_matrioska_tooljson",
-      "community": 158,
+      "community": 15,
       "norm_label": "tooljson()"
     },
     {
@@ -2879,7 +2888,7 @@
       "source_file": "harness/test/e2e/dogfood-matrioska.mjs",
       "source_location": "L41",
       "id": "e2e_dogfood_matrioska_loadenvkey",
-      "community": 158,
+      "community": 15,
       "norm_label": "loadenvkey()"
     },
     {
@@ -2888,7 +2897,7 @@
       "source_file": "harness/test/e2e/dogfood-matrioska.mjs",
       "source_location": "L49",
       "id": "e2e_dogfood_matrioska_geminifromconfig",
-      "community": 158,
+      "community": 15,
       "norm_label": "geminifromconfig()"
     },
     {
@@ -2897,7 +2906,7 @@
       "source_file": "harness/test/e2e/dogfood-matrioska.mjs",
       "source_location": "L59",
       "id": "e2e_dogfood_matrioska_headlessui",
-      "community": 158,
+      "community": 15,
       "norm_label": "headlessui()"
     },
     {
@@ -2906,7 +2915,7 @@
       "source_file": "harness/test/e2e/dogfood-matrioska.mjs",
       "source_location": "L68",
       "id": "e2e_dogfood_matrioska_liveturn",
-      "community": 158,
+      "community": 15,
       "norm_label": "liveturn()"
     },
     {
@@ -2915,7 +2924,7 @@
       "source_file": "harness/test/e2e/dogfood-matrioska.mjs",
       "source_location": "L83",
       "id": "e2e_dogfood_matrioska_main",
-      "community": 158,
+      "community": 15,
       "norm_label": "main()"
     },
     {
@@ -2978,7 +2987,7 @@
       "source_file": "harness/test/e2e/dogfood-prompt-injection.mjs",
       "source_location": "L1",
       "id": "harness_test_e2e_dogfood_prompt_injection_mjs",
-      "community": 59,
+      "community": 5,
       "norm_label": "dogfood-prompt-injection.mjs"
     },
     {
@@ -2987,7 +2996,7 @@
       "source_file": "harness/test/e2e/dogfood-prompt-injection.mjs",
       "source_location": "L12",
       "id": "e2e_dogfood_prompt_injection_env",
-      "community": 59,
+      "community": 5,
       "norm_label": "env"
     },
     {
@@ -2996,7 +3005,7 @@
       "source_file": "harness/test/e2e/dogfood-prompt-injection.mjs",
       "source_location": "L13",
       "id": "e2e_dogfood_prompt_injection_key",
-      "community": 59,
+      "community": 5,
       "norm_label": "key"
     },
     {
@@ -3005,7 +3014,7 @@
       "source_file": "harness/test/e2e/dogfood-prompt-injection.mjs",
       "source_location": "L15",
       "id": "e2e_dogfood_prompt_injection_trials",
-      "community": 59,
+      "community": 5,
       "norm_label": "trials"
     },
     {
@@ -3014,7 +3023,7 @@
       "source_file": "harness/test/e2e/dogfood-prompt-injection.mjs",
       "source_location": "L18",
       "id": "e2e_dogfood_prompt_injection_ask",
-      "community": 59,
+      "community": 5,
       "norm_label": "ask()"
     },
     {
@@ -3023,7 +3032,7 @@
       "source_file": "harness/test/e2e/dogfood-prompt-injection.mjs",
       "source_location": "L55",
       "id": "e2e_dogfood_prompt_injection_vq",
-      "community": 59,
+      "community": 5,
       "norm_label": "vq"
     },
     {
@@ -3032,7 +3041,7 @@
       "source_file": "harness/test/e2e/dogfood-prompt-injection.mjs",
       "source_location": "L61",
       "id": "e2e_dogfood_prompt_injection_ctx",
-      "community": 59,
+      "community": 5,
       "norm_label": "ctx"
     },
     {
@@ -3041,7 +3050,7 @@
       "source_file": "harness/test/e2e/dogfood-prompt-injection.mjs",
       "source_location": "L64",
       "id": "e2e_dogfood_prompt_injection_judge",
-      "community": 59,
+      "community": 5,
       "norm_label": "judge()"
     },
     {
@@ -3050,7 +3059,7 @@
       "source_file": "harness/test/e2e/dogfood-test.mjs",
       "source_location": "L1",
       "id": "harness_test_e2e_dogfood_test_mjs",
-      "community": 44,
+      "community": 5,
       "norm_label": "dogfood-test.mjs"
     },
     {
@@ -3059,7 +3068,7 @@
       "source_file": "harness/test/e2e/dogfood-test.mjs",
       "source_location": "L11",
       "id": "e2e_dogfood_test_env",
-      "community": 44,
+      "community": 5,
       "norm_label": "env"
     },
     {
@@ -3068,7 +3077,7 @@
       "source_file": "harness/test/e2e/dogfood-test.mjs",
       "source_location": "L12",
       "id": "e2e_dogfood_test_key",
-      "community": 44,
+      "community": 5,
       "norm_label": "key"
     },
     {
@@ -3077,7 +3086,7 @@
       "source_file": "harness/test/e2e/dogfood-test.mjs",
       "source_location": "L16",
       "id": "e2e_dogfood_test_ask",
-      "community": 44,
+      "community": 5,
       "norm_label": "ask()"
     },
     {
@@ -3086,7 +3095,7 @@
       "source_file": "harness/test/e2e/dogfood-test.mjs",
       "source_location": "L30",
       "id": "e2e_dogfood_test_vq",
-      "community": 44,
+      "community": 5,
       "norm_label": "vq"
     },
     {
@@ -3095,7 +3104,7 @@
       "source_file": "harness/test/e2e/dogfood-test.mjs",
       "source_location": "L36",
       "id": "e2e_dogfood_test_ctx",
-      "community": 44,
+      "community": 5,
       "norm_label": "ctx"
     },
     {
@@ -3842,7 +3851,7 @@
       "source_file": "harness/test/unit/contradiction-check.test.mjs",
       "source_location": "L1",
       "id": "harness_test_unit_contradiction_check_test_mjs",
-      "community": 55,
+      "community": 76,
       "norm_label": "contradiction-check.test.mjs"
     },
     {
@@ -3851,7 +3860,7 @@
       "source_file": "harness/test/unit/contradiction-check.test.mjs",
       "source_location": "L9",
       "id": "unit_contradiction_check_test_ok",
-      "community": 55,
+      "community": 76,
       "norm_label": "ok()"
     },
     {
@@ -3860,7 +3869,7 @@
       "source_file": "harness/test/unit/contradiction-check.test.mjs",
       "source_location": "L35",
       "id": "unit_contradiction_check_test_decisions",
-      "community": 55,
+      "community": 76,
       "norm_label": "decisions"
     },
     {
@@ -3869,7 +3878,7 @@
       "source_file": "harness/test/unit/contradiction-check.test.mjs",
       "source_location": "L39",
       "id": "unit_contradiction_check_test_conflicts",
-      "community": 55,
+      "community": 76,
       "norm_label": "conflicts"
     },
     {
@@ -3878,7 +3887,7 @@
       "source_file": "harness/test/unit/contradiction-check.test.mjs",
       "source_location": "L48",
       "id": "unit_contradiction_check_test_vq",
-      "community": 55,
+      "community": 76,
       "norm_label": "vq"
     },
     {
@@ -3887,7 +3896,7 @@
       "source_file": "harness/test/unit/contradiction-check.test.mjs",
       "source_location": "L50",
       "id": "unit_contradiction_check_test_recorded",
-      "community": 55,
+      "community": 76,
       "norm_label": "recorded"
     },
     {
@@ -3896,7 +3905,7 @@
       "source_file": "harness/test/unit/conversation-store.test.mjs",
       "source_location": "L1",
       "id": "harness_test_unit_conversation_store_test_mjs",
-      "community": 37,
+      "community": 346,
       "norm_label": "conversation-store.test.mjs"
     },
     {
@@ -3905,7 +3914,7 @@
       "source_file": "harness/test/unit/conversation-store.test.mjs",
       "source_location": "L10",
       "id": "unit_conversation_store_test_ok",
-      "community": 37,
+      "community": 346,
       "norm_label": "ok()"
     },
     {
@@ -3914,7 +3923,7 @@
       "source_file": "harness/test/unit/conversation-store.test.mjs",
       "source_location": "L13",
       "id": "unit_conversation_store_test_cs",
-      "community": 37,
+      "community": 346,
       "norm_label": "cs"
     },
     {
@@ -3923,7 +3932,7 @@
       "source_file": "harness/test/unit/conversation-store.test.mjs",
       "source_location": "L16",
       "id": "unit_conversation_store_test_s1",
-      "community": 37,
+      "community": 346,
       "norm_label": "s1"
     },
     {
@@ -3932,7 +3941,7 @@
       "source_file": "harness/test/unit/conversation-store.test.mjs",
       "source_location": "L24",
       "id": "unit_conversation_store_test_w",
-      "community": 37,
+      "community": 346,
       "norm_label": "w"
     },
     {
@@ -3941,7 +3950,7 @@
       "source_file": "harness/test/unit/conversation-store.test.mjs",
       "source_location": "L29",
       "id": "unit_conversation_store_test_r",
-      "community": 37,
+      "community": 346,
       "norm_label": "r"
     },
     {
@@ -3950,7 +3959,7 @@
       "source_file": "harness/test/unit/conversation-store.test.mjs",
       "source_location": "L33",
       "id": "unit_conversation_store_test_lane",
-      "community": 37,
+      "community": 346,
       "norm_label": "lane"
     },
     {
@@ -3959,7 +3968,7 @@
       "source_file": "harness/test/unit/conversation-store.test.mjs",
       "source_location": "L40",
       "id": "unit_conversation_store_test_lane2",
-      "community": 37,
+      "community": 346,
       "norm_label": "lane2"
     },
     {
@@ -3968,7 +3977,7 @@
       "source_file": "harness/test/unit/conversation-store.test.mjs",
       "source_location": "L46",
       "id": "unit_conversation_store_test_lanecap",
-      "community": 37,
+      "community": 346,
       "norm_label": "lanecap"
     },
     {
@@ -3977,7 +3986,7 @@
       "source_file": "harness/test/unit/conversation-store.test.mjs",
       "source_location": "L57",
       "id": "unit_conversation_store_test_vq",
-      "community": 37,
+      "community": 346,
       "norm_label": "vq"
     },
     {
@@ -3986,7 +3995,7 @@
       "source_file": "harness/test/unit/conversation-store.test.mjs",
       "source_location": "L62",
       "id": "unit_conversation_store_test_cs3",
-      "community": 37,
+      "community": 346,
       "norm_label": "cs3"
     },
     {
@@ -3995,7 +4004,7 @@
       "source_file": "harness/test/unit/conversation-store.test.mjs",
       "source_location": "L66",
       "id": "unit_conversation_store_test_ws",
-      "community": 37,
+      "community": 346,
       "norm_label": "ws"
     },
     {
@@ -4004,7 +4013,7 @@
       "source_file": "harness/test/unit/conversation-store.test.mjs",
       "source_location": "L73",
       "id": "unit_conversation_store_test_wsresume",
-      "community": 37,
+      "community": 346,
       "norm_label": "wsresume"
     },
     {
@@ -4629,10 +4638,37 @@
       "norm_label": "resumeafternew"
     },
     {
-      "label": "store",
+      "label": "psNew",
+      "file_type": "code",
+      "source_file": "harness/test/unit/strada2.test.mjs",
+      "source_location": "L110",
+      "id": "unit_strada2_test_psnew",
+      "community": 26,
+      "norm_label": "psnew"
+    },
+    {
+      "label": "psReload",
       "file_type": "code",
       "source_file": "harness/test/unit/strada2.test.mjs",
       "source_location": "L112",
+      "id": "unit_strada2_test_psreload",
+      "community": 26,
+      "norm_label": "psreload"
+    },
+    {
+      "label": "psStartup",
+      "file_type": "code",
+      "source_file": "harness/test/unit/strada2.test.mjs",
+      "source_location": "L114",
+      "id": "unit_strada2_test_psstartup",
+      "community": 26,
+      "norm_label": "psstartup"
+    },
+    {
+      "label": "store",
+      "file_type": "code",
+      "source_file": "harness/test/unit/strada2.test.mjs",
+      "source_location": "L120",
       "id": "unit_strada2_test_store",
       "community": 26,
       "norm_label": "store"
@@ -4641,7 +4677,7 @@
       "label": "lane",
       "file_type": "code",
       "source_file": "harness/test/unit/strada2.test.mjs",
-      "source_location": "L114",
+      "source_location": "L122",
       "id": "unit_strada2_test_lane",
       "community": 26,
       "norm_label": "lane"
@@ -4650,7 +4686,7 @@
       "label": "b",
       "file_type": "code",
       "source_file": "harness/test/unit/strada2.test.mjs",
-      "source_location": "L123",
+      "source_location": "L131",
       "id": "unit_strada2_test_b",
       "community": 26,
       "norm_label": "b"
@@ -4659,7 +4695,7 @@
       "label": "cs1",
       "file_type": "code",
       "source_file": "harness/test/unit/strada2.test.mjs",
-      "source_location": "L125",
+      "source_location": "L133",
       "id": "unit_strada2_test_cs1",
       "community": 26,
       "norm_label": "cs1"
@@ -4668,7 +4704,7 @@
       "label": "cs2",
       "file_type": "code",
       "source_file": "harness/test/unit/strada2.test.mjs",
-      "source_location": "L126",
+      "source_location": "L134",
       "id": "unit_strada2_test_cs2",
       "community": 26,
       "norm_label": "cs2"
@@ -4677,7 +4713,7 @@
       "label": "c",
       "file_type": "code",
       "source_file": "harness/test/unit/strada2.test.mjs",
-      "source_location": "L129",
+      "source_location": "L137",
       "id": "unit_strada2_test_c",
       "community": 26,
       "norm_label": "c"
@@ -8637,7 +8673,7 @@
       "label": "Roadmap",
       "file_type": "document",
       "source_file": "harness/README.md",
-      "source_location": "L74",
+      "source_location": "L75",
       "id": "harness_readme_roadmap",
       "community": 251,
       "norm_label": "roadmap"
@@ -9249,7 +9285,7 @@
       "label": "TB-02 \u2014 Graph-aware / impact-review dopo cambiamento strutturale (con CATENA causale) `[voluto]`",
       "file_type": "document",
       "source_file": "wiki/model-testbook.md",
-      "source_location": "L38",
+      "source_location": "L39",
       "id": "wiki_model_testbook_tb_02_graph_aware_impact_review_dopo_cambiamento_strutturale_con_catena_causale_voluto",
       "community": 164,
       "norm_label": "tb-02 \u2014 graph-aware / impact-review dopo cambiamento strutturale (con catena causale) `[voluto]`"
@@ -9258,7 +9294,7 @@
       "label": "TB-03 \u2014 Context = mente in prima persona + auto-curazione del workspace `[voluto]`",
       "file_type": "document",
       "source_file": "wiki/model-testbook.md",
-      "source_location": "L45",
+      "source_location": "L46",
       "id": "wiki_model_testbook_tb_03_context_mente_in_prima_persona_auto_curazione_del_workspace_voluto",
       "community": 164,
       "norm_label": "tb-03 \u2014 context = mente in prima persona + auto-curazione del workspace `[voluto]`"
@@ -9267,7 +9303,7 @@
       "label": "TB-04 \u2014 Variable-operations: manipola le var per RIFERIMENTO `[voluto]`",
       "file_type": "document",
       "source_file": "wiki/model-testbook.md",
-      "source_location": "L51",
+      "source_location": "L53",
       "id": "wiki_model_testbook_tb_04_variable_operations_manipola_le_var_per_riferimento_voluto",
       "community": 164,
       "norm_label": "tb-04 \u2014 variable-operations: manipola le var per riferimento `[voluto]`"
@@ -9276,7 +9312,7 @@
       "label": "TB-05 \u2014 Window-aware fetching: riconosci i marker di troncamento e recupera `[voluto]`",
       "file_type": "document",
       "source_file": "wiki/model-testbook.md",
-      "source_location": "L57",
+      "source_location": "L59",
       "id": "wiki_model_testbook_tb_05_window_aware_fetching_riconosci_i_marker_di_troncamento_e_recupera_voluto",
       "community": 164,
       "norm_label": "tb-05 \u2014 window-aware fetching: riconosci i marker di troncamento e recupera `[voluto]`"
@@ -9285,7 +9321,7 @@
       "label": "TB-06 \u2014 Protocollo di ritorno (pop): report-su-file + summary-pointer + re-align `[voluto]`",
       "file_type": "document",
       "source_file": "wiki/model-testbook.md",
-      "source_location": "L63",
+      "source_location": "L65",
       "id": "wiki_model_testbook_tb_06_protocollo_di_ritorno_pop_report_su_file_summary_pointer_re_align_voluto",
       "community": 164,
       "norm_label": "tb-06 \u2014 protocollo di ritorno (pop): report-su-file + summary-pointer + re-align `[voluto]`"
@@ -9294,7 +9330,7 @@
       "label": "TB-07 \u2014 Scegliere il canale cross-agent giusto (messaggio vs stato vs report) `[voluto]`",
       "file_type": "document",
       "source_file": "wiki/model-testbook.md",
-      "source_location": "L72",
+      "source_location": "L74",
       "id": "wiki_model_testbook_tb_07_scegliere_il_canale_cross_agent_giusto_messaggio_vs_stato_vs_report_voluto",
       "community": 164,
       "norm_label": "tb-07 \u2014 scegliere il canale cross-agent giusto (messaggio vs stato vs report) `[voluto]`"
@@ -9303,7 +9339,7 @@
       "label": "Relazione con la training-taxonomy",
       "file_type": "document",
       "source_file": "wiki/model-testbook.md",
-      "source_location": "L80",
+      "source_location": "L82",
       "id": "wiki_model_testbook_relazione_con_la_training_taxonomy",
       "community": 164,
       "norm_label": "relazione con la training-taxonomy"
@@ -27260,7 +27296,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-1.2-overwrite.expanded.md",
       "source_location": "L79",
       "id": "training_taxonomy_gold_example_area02_1_2_overwrite_expanded_2_le_5_classi_istanze_di_training_complete",
-      "community": 360,
+      "community": 292,
       "norm_label": "\u00a72 \u2014 le 5 classi (istanze di training complete)"
     },
     {
@@ -27269,7 +27305,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-1.2-overwrite.expanded.md",
       "source_location": "L85",
       "id": "training_taxonomy_gold_example_area02_1_2_overwrite_expanded_1_with_hint_task_salva_i_nuovi_risultati_in_results_json_preceduto_dall_impalcatura_3_livelli",
-      "community": 360,
+      "community": 361,
       "norm_label": "(1) with-hint \u2014 task \"salva i nuovi risultati in `results.json`\" preceduto dall'impalcatura \u00b7 3 livelli"
     },
     {
@@ -27278,7 +27314,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-1.2-overwrite.expanded.md",
       "source_location": "L89",
       "id": "training_taxonomy_gold_example_area02_1_2_overwrite_expanded_input_comune_ai_3_livelli_cambia_solo_la_riga_hint",
-      "community": 360,
+      "community": 361,
       "norm_label": "input (comune ai 3 livelli, cambia solo la riga `<hint>`)"
     },
     {
@@ -27287,7 +27323,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-1.2-overwrite.expanded.md",
       "source_location": "L91",
       "id": "training_taxonomy_gold_example_area02_1_2_overwrite_expanded_codeblock_2",
-      "community": 360,
+      "community": 361,
       "norm_label": "code:xml (<context>)"
     },
     {
@@ -27341,7 +27377,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-1.2-overwrite.expanded.md",
       "source_location": "L169",
       "id": "training_taxonomy_gold_example_area02_1_2_overwrite_expanded_label_reward_q",
-      "community": 360,
+      "community": 361,
       "norm_label": "label / reward (q)"
     },
     {
@@ -30743,7 +30779,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-3.2-dep-check.md",
       "source_location": "L81",
       "id": "training_taxonomy_gold_example_area02_3_2_dep_check_1_with_hint_task_rinomina_parse_in_parse_input_3_livelli",
-      "community": 348,
+      "community": 366,
       "norm_label": "(1) with-hint \u2014 task \"rinomina `parse()` in `parse_input()`\" \u00b7 3 livelli"
     },
     {
@@ -30752,7 +30788,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-3.2-dep-check.md",
       "source_location": "L85",
       "id": "training_taxonomy_gold_example_area02_3_2_dep_check_input_comune_ai_3_livelli_cambia_solo_la_riga_hint",
-      "community": 348,
+      "community": 366,
       "norm_label": "input (comune ai 3 livelli, cambia solo la riga `<hint>`)"
     },
     {
@@ -30761,7 +30797,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-3.2-dep-check.md",
       "source_location": "L87",
       "id": "training_taxonomy_gold_example_area02_3_2_dep_check_codeblock_2",
-      "community": 348,
+      "community": 366,
       "norm_label": "code:xml (<context>)"
     },
     {
@@ -30824,7 +30860,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-3.2-dep-check.md",
       "source_location": "L172",
       "id": "training_taxonomy_gold_example_area02_3_2_dep_check_label_reward_q",
-      "community": 348,
+      "community": 366,
       "norm_label": "label / reward (q)"
     },
     {
@@ -30977,7 +31013,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-3.2-dep-check.md",
       "source_location": "L294",
       "id": "training_taxonomy_gold_example_area02_3_2_dep_check_4_wrong_recovery_sbagliato_recupero_reale_verify_loop_vero",
-      "community": 366,
+      "community": 190,
       "norm_label": "(4) wrong \u2014 recovery \u2014 sbagliato + recupero reale (verify-loop vero)"
     },
     {
@@ -30986,7 +31022,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-3.2-dep-check.md",
       "source_location": "L298",
       "id": "training_taxonomy_gold_example_area02_3_2_dep_check_input_298",
-      "community": 366,
+      "community": 190,
       "norm_label": "input"
     },
     {
@@ -30995,7 +31031,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-3.2-dep-check.md",
       "source_location": "L300",
       "id": "training_taxonomy_gold_example_area02_3_2_dep_check_codeblock_16",
-      "community": 366,
+      "community": 190,
       "norm_label": "code:xml (<context>)"
     },
     {
@@ -31076,7 +31112,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-3.2-dep-check.md",
       "source_location": "L369",
       "id": "training_taxonomy_gold_example_area02_3_2_dep_check_label_reward_q_369",
-      "community": 366,
+      "community": 190,
       "norm_label": "label / reward (q)"
     },
     {
@@ -31742,7 +31778,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-3.3-resource.expanded.md",
       "source_location": "L452",
       "id": "training_taxonomy_gold_example_area02_3_3_resource_expanded_5d_batch_di_azioni_costose_una_stima_aggregata_di_budget_spazio_decisioni_consolidate_optimization_first",
-      "community": 233,
+      "community": 341,
       "norm_label": "(5d) batch di azioni costose \u2192 una stima aggregata di budget/spazio, decisioni consolidate (optimization-first)"
     },
     {
@@ -31751,7 +31787,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-3.3-resource.expanded.md",
       "source_location": "L457",
       "id": "training_taxonomy_gold_example_area02_3_3_resource_expanded_codeblock_30",
-      "community": 233,
+      "community": 341,
       "norm_label": "code:block30 ([observe] 3 azioni costose \u2192 non 3 check separati scollegati)"
     },
     {
@@ -31760,7 +31796,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-3.3-resource.expanded.md",
       "source_location": "L462",
       "id": "training_taxonomy_gold_example_area02_3_3_resource_expanded_codeblock_31",
-      "community": 233,
+      "community": 341,
       "norm_label": "code:block31 (df -k ./data                          \u2192 free_kb (1 misura pe)"
     },
     {
@@ -31769,7 +31805,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-3.3-resource.expanded.md",
       "source_location": "L468",
       "id": "training_taxonomy_gold_example_area02_3_3_resource_expanded_codeblock_32",
-      "community": 233,
+      "community": 341,
       "norm_label": "code:block32 ([verify] classifico in batch:)"
     },
     {
@@ -32228,7 +32264,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-6.1-lookahead.expanded.md",
       "source_location": "L380",
       "id": "training_taxonomy_gold_example_area02_6_1_lookahead_expanded_5a_bivio_falso_a_e_b_equivalenti_negli_esiti_dichiararlo_scegliere_il_pi\u00f9_semplice_anti_paralisi",
-      "community": 45,
+      "community": 261,
       "norm_label": "(5a) bivio falso \u2014 a e b equivalenti negli esiti \u2192 dichiararlo, scegliere il piu semplice (anti-paralisi)"
     },
     {
@@ -32237,7 +32273,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-6.1-lookahead.expanded.md",
       "source_location": "L384",
       "id": "training_taxonomy_gold_example_area02_6_1_lookahead_expanded_codeblock_15",
-      "community": 45,
+      "community": 261,
       "norm_label": "code:xml (<context>)"
     },
     {
@@ -32246,7 +32282,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-6.1-lookahead.expanded.md",
       "source_location": "L395",
       "id": "training_taxonomy_gold_example_area02_6_1_lookahead_expanded_codeblock_16",
-      "community": 45,
+      "community": 261,
       "norm_label": "code:block16 ([observe] bivio: nome a (tmp) vs b (buf) di una variabile lo)"
     },
     {
@@ -32255,7 +32291,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-6.1-lookahead.expanded.md",
       "source_location": "L402",
       "id": "training_taxonomy_gold_example_area02_6_1_lookahead_expanded_codeblock_17",
-      "community": 45,
+      "community": 261,
       "norm_label": "code:toon (lookahead:)"
     },
     {
@@ -32327,7 +32363,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-6.1-lookahead.expanded.md",
       "source_location": "L480",
       "id": "training_taxonomy_gold_example_area02_6_1_lookahead_expanded_5d_batch_pi\u00f9_bivi_nella_stessa_sessione_consolidare_le_dimensioni_di_confronto",
-      "community": 261,
+      "community": 360,
       "norm_label": "(5d) batch \u2014 piu bivi nella stessa sessione (consolidare le dimensioni di confronto)"
     },
     {
@@ -32336,7 +32372,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-6.1-lookahead.expanded.md",
       "source_location": "L483",
       "id": "training_taxonomy_gold_example_area02_6_1_lookahead_expanded_codeblock_23",
-      "community": 261,
+      "community": 360,
       "norm_label": "code:xml (<context>)"
     },
     {
@@ -32345,7 +32381,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-6.1-lookahead.expanded.md",
       "source_location": "L498",
       "id": "training_taxonomy_gold_example_area02_6_1_lookahead_expanded_codeblock_24",
-      "community": 261,
+      "community": 360,
       "norm_label": "code:block24 ([observe] 2 bivi (parser, utils), ognuno refactor-vs-rewrite)"
     },
     {
@@ -32354,7 +32390,7 @@
       "source_file": "wiki/training-taxonomy/gold-example-area02-6.1-lookahead.expanded.md",
       "source_location": "L505",
       "id": "training_taxonomy_gold_example_area02_6_1_lookahead_expanded_codeblock_25",
-      "community": 261,
+      "community": 360,
       "norm_label": "code:toon (batch_lookahead:)"
     },
     {
@@ -37047,6 +37083,15 @@
       "norm_label": "implementazione & artifacts"
     },
     {
+      "label": "windowed",
+      "file_type": "code",
+      "source_file": "harness/.pi/extensions/context-assembly.ts",
+      "source_location": "L88",
+      "community": 0,
+      "norm_label": "windowed",
+      "id": "extensions_context_assembly_windowed"
+    },
+    {
       "label": "{ convId, isNew }",
       "file_type": "code",
       "source_file": "harness/.pi/extensions/conversation-capture.ts",
@@ -40154,7 +40199,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 16,
       "norm_label": "open questions",
       "id": "openquestions_open_questions"
     },
@@ -40167,7 +40212,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 16,
       "norm_label": "wrapper architecture (3-layer on pi)",
       "id": "wrapper_wrapper_architecture"
     },
@@ -40180,7 +40225,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 37,
       "norm_label": "adversarial needle-in-haystack training",
       "id": "adversarial_needle_haystack_training"
     },
@@ -40207,7 +40252,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 16,
       "norm_label": "lora sizing methodology",
       "id": "lora_sizing_methodology"
     },
@@ -40259,7 +40304,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 37,
       "norm_label": "staged curriculum training",
       "id": "staged_curriculum_training"
     },
@@ -40285,7 +40330,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 6,
       "norm_label": "wrapper-context-assembly-example (formato <context> a lane)",
       "id": "wrapper_context_assembly_example"
     },
@@ -40311,7 +40356,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 16,
       "norm_label": "wave 2 research findings",
       "id": "wave2_research_findings"
     },
@@ -40324,7 +40369,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 16,
       "norm_label": "vllm (serving, --enable-lora)",
       "id": "entity_vllm"
     },
@@ -40337,7 +40382,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 16,
       "norm_label": "ollama (local serving)",
       "id": "entity_ollama"
     },
@@ -40363,7 +40408,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 16,
       "norm_label": "qwen3-4b-instruct-2507 (base model)",
       "id": "entity_qwen3_4b"
     },
@@ -40376,7 +40421,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 16,
       "norm_label": "unsloth (training framework)",
       "id": "entity_unsloth"
     },
@@ -40389,7 +40434,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 16,
       "norm_label": "axolotl (training framework)",
       "id": "entity_axolotl"
     },
@@ -40402,7 +40447,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 16,
       "norm_label": "trl (rl post-training)",
       "id": "entity_trl"
     },
@@ -40415,7 +40460,7 @@
       "captured_at": null,
       "author": "Liu et al.",
       "contributor": null,
-      "community": 6,
+      "community": 16,
       "norm_label": "dora (liu 2024)",
       "id": "paper_dora"
     },
@@ -40428,7 +40473,7 @@
       "captured_at": null,
       "author": "Hayou et al.",
       "contributor": null,
-      "community": 6,
+      "community": 16,
       "norm_label": "lora+ (hayou 2024)",
       "id": "paper_lora_plus"
     },
@@ -40441,7 +40486,7 @@
       "captured_at": null,
       "author": "Kalajdzievski",
       "contributor": null,
-      "community": 6,
+      "community": 16,
       "norm_label": "rslora (kalajdzievski 2023)",
       "id": "paper_rslora"
     },
@@ -40454,7 +40499,7 @@
       "captured_at": null,
       "author": "Hu et al.",
       "contributor": null,
-      "community": 6,
+      "community": 16,
       "norm_label": "lora (hu et al. 2021)",
       "id": "paper_lora_original"
     },
@@ -40493,7 +40538,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 16,
       "norm_label": "em-llm (episodic memory)",
       "id": "paper_em_llm"
     },
@@ -40506,7 +40551,7 @@
       "captured_at": null,
       "author": "Behrouz et al.",
       "contributor": null,
-      "community": 6,
+      "community": 16,
       "norm_label": "titans (behrouz 2025, google)",
       "id": "paper_titans"
     },
@@ -40532,7 +40577,7 @@
       "captured_at": null,
       "author": "Liu et al.",
       "contributor": null,
-      "community": 6,
+      "community": 37,
       "norm_label": "lost in the middle (liu 2023)",
       "id": "paper_lost_in_the_middle"
     },
@@ -40545,7 +40590,7 @@
       "captured_at": null,
       "author": "Kamradt",
       "contributor": null,
-      "community": 6,
+      "community": 37,
       "norm_label": "needle in haystack (kamradt 2023)",
       "id": "paper_needle_haystack"
     },
@@ -40558,7 +40603,7 @@
       "captured_at": null,
       "author": "Hsieh et al.",
       "contributor": null,
-      "community": 6,
+      "community": 37,
       "norm_label": "ruler (hsieh 2024)",
       "id": "paper_ruler"
     },
@@ -40571,7 +40616,7 @@
       "captured_at": null,
       "author": "Kuratov et al.",
       "contributor": null,
-      "community": 6,
+      "community": 37,
       "norm_label": "babilong (kuratov 2024)",
       "id": "paper_babilong"
     },
@@ -40584,7 +40629,7 @@
       "captured_at": null,
       "author": "Bengio et al.",
       "contributor": null,
-      "community": 6,
+      "community": 37,
       "norm_label": "curriculum learning (bengio 2009)",
       "id": "paper_curriculum_learning"
     },
@@ -40818,7 +40863,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 6,
       "norm_label": "sliding-window variable tool",
       "id": "linked_sliding_window_variable_tool"
     },
@@ -40844,7 +40889,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 37,
       "norm_label": "scuola learning philosophy",
       "id": "linked_scuola_learning_philosophy"
     },
@@ -40857,7 +40902,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 37,
       "norm_label": "catastrophic forgetting",
       "id": "linked_catastrophic_forgetting"
     },
@@ -40870,7 +40915,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 37,
       "norm_label": "dynamic context training regime",
       "id": "linked_dynamic_context_training_regime"
     },
@@ -40883,7 +40928,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 37,
       "norm_label": "untrusted content delimiting",
       "id": "linked_untrusted_content_delimiting"
     },
@@ -40896,7 +40941,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 16,
       "norm_label": "lora stacking",
       "id": "linked_lora_stacking"
     },
@@ -40909,7 +40954,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 13,
       "norm_label": "multi-token prediction training",
       "id": "linked_multi_token_prediction_training"
     },
@@ -40935,7 +40980,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 37,
       "norm_label": "explicit attention layer",
       "id": "linked_explicit_attention_layer"
     },
@@ -41000,7 +41045,7 @@
       "captured_at": null,
       "author": "Wang et al.",
       "contributor": null,
-      "community": 6,
+      "community": 16,
       "norm_label": "voyager (wang 2023)",
       "id": "linked_voyager_paper"
     },
@@ -41026,7 +41071,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 4,
       "norm_label": "session summary 2026-05-21 (grill-me #1)",
       "id": "sessionsummary_20260521"
     },
@@ -41078,7 +41123,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 4,
       "norm_label": "user notes 2026-06-23 (telegram batch inbox)",
       "id": "usernotes_20260623"
     },
@@ -41091,7 +41136,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 4,
       "norm_label": "metacognitive degradation awareness (self-aware context mgmt)",
       "id": "usernotes_metacognitive_degradation"
     },
@@ -41104,7 +41149,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 4,
       "norm_label": "decision-point lookahead (a/b branch simulation)",
       "id": "usernotes_decision_point_lookahead"
     },
@@ -41130,7 +41175,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 4,
       "norm_label": "char-level precision training (token=char 1:1 exercises)",
       "id": "usernotes_char_level_precision"
     },
@@ -41170,7 +41215,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 4,
       "norm_label": "out-of-domain refusal training (counter-examples + hint)",
       "id": "out_of_domain_refusal"
     },
@@ -41183,7 +41228,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 4,
       "norm_label": "post-rl path optimization (impratichimento, token compression)",
       "id": "post_rl_path_optimization"
     },
@@ -41196,7 +41241,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 4,
       "norm_label": "pre-flight-safety-checks",
       "id": "pre_flight_safety_checks"
     },
@@ -41209,7 +41254,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 4,
       "norm_label": "quality target tiers (poc/prototype/mvp/production/hardened)",
       "id": "quality_target_tiers"
     },
@@ -41222,7 +41267,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 4,
       "norm_label": "runtime symbol randomization training (surgical copy skill)",
       "id": "runtime_symbol_randomization"
     },
@@ -41235,7 +41280,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 4,
       "norm_label": "scientific-method operating protocol (8-step macro-loop, two-phase cot)",
       "id": "scientific_method_protocol"
     },
@@ -41248,7 +41293,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 4,
       "norm_label": "structured context sections (lane xml del context)",
       "type": "concept",
       "id": "structured_context_sections"
@@ -41340,7 +41385,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 4,
       "norm_label": "in-context learning and induction heads (olsson et al. 2022)",
       "id": "ext_induction_heads"
     },
@@ -41353,7 +41398,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 4,
       "norm_label": "domain randomization (tobin et al. 2017)",
       "id": "ext_domain_randomization"
     },
@@ -41405,7 +41450,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 37,
       "norm_label": "curriculum learning (bengio et al. 2009)",
       "id": "ext_curriculum_learning"
     },
@@ -41418,7 +41463,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 4,
       "norm_label": "rstar-math (microsoft 2025)",
       "id": "ext_rstar_math"
     },
@@ -41483,7 +41528,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 4,
       "norm_label": "knowledge distillation (hinton et al. 2015)",
       "id": "ext_knowledge_distillation"
     },
@@ -42705,7 +42750,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 57,
+      "community": 326,
       "norm_label": "dataset on-the-fly pseudo-random (transform-layer, \u00d73-5 knob)",
       "id": "dataset_on_the_fly_pseudorandom"
     },
@@ -42718,7 +42763,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 57,
+      "community": 326,
       "norm_label": "transform-layer t(template, seed)",
       "id": "dataset_on_the_fly_transform_layer"
     },
@@ -42731,7 +42776,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 57,
+      "community": 326,
       "norm_label": "augmentation knob k~3-5 (not volume)",
       "id": "dataset_on_the_fly_augmentation_knob"
     },
@@ -42744,7 +42789,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 57,
+      "community": 326,
       "norm_label": "label/verifier invariance under t",
       "id": "dataset_on_the_fly_label_invariance"
     },
@@ -42757,7 +42802,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 57,
+      "community": 326,
       "norm_label": "round-trip translation check (gate)",
       "id": "dataset_on_the_fly_round_trip_check"
     },
@@ -42770,7 +42815,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 57,
+      "community": 326,
       "norm_label": "seed before split (anti-leakage)",
       "id": "dataset_on_the_fly_seed_before_split"
     },
@@ -43437,7 +43482,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 27,
+      "community": 44,
       "norm_label": "untrusted-content delimiting (inbox-as-data)",
       "type": "concept",
       "id": "untrusted_content_delimiting"
@@ -43491,7 +43536,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 27,
+      "community": 45,
       "norm_label": "sliding-window variable tool (read slice by id)",
       "type": "mechanism",
       "id": "sliding_window_variable_tool"
@@ -43676,7 +43721,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 32,
       "norm_label": "sota techniques catalog",
       "id": "sota_techniques_catalog"
     },
@@ -43702,7 +43747,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 32,
       "norm_label": "review-loop multi-agente (10 agenti)",
       "id": "sota_review_loop_10_agents"
     },
@@ -43715,7 +43760,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 32,
       "norm_label": "watch-list reward-hacking (rl-3)",
       "id": "sota_reward_hacking_watchlist"
     },
@@ -43728,7 +43773,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 32,
       "norm_label": "swe-bench verified deprecato (correzione critica)",
       "id": "sota_swebench_verified_deprecated"
     },
@@ -43741,7 +43786,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 32,
       "norm_label": "vincolo turing/sm75 (no bf16/fp8)",
       "id": "sota_turing_sm75_constraint"
     },
@@ -43754,7 +43799,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 32,
       "norm_label": "qlora/nf4 + unsloth dynamic-4bit",
       "id": "sota_qlora_nf4"
     },
@@ -43767,7 +43812,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 32,
       "norm_label": "grpo (rl group-relative)",
       "id": "sota_grpo"
     },
@@ -43780,7 +43825,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 32,
       "norm_label": "inoculation prompting (anti-misalignment)",
       "id": "sota_inoculation_prompting"
     },
@@ -43793,7 +43838,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 32,
       "norm_label": "xgrammar structured decoding",
       "id": "sota_xgrammar"
     },
@@ -43819,7 +43864,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 32,
       "norm_label": "gigpo (credit-assignment 2-livelli)",
       "id": "sota_gigpo"
     },
@@ -43832,7 +43877,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 32,
       "norm_label": "on-policy distillation cold-start",
       "id": "sota_on_policy_distillation"
     },
@@ -43845,7 +43890,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 32,
       "norm_label": "rlcr / conftuner calibration-reward",
       "id": "sota_rlcr_calibration"
     },
@@ -43858,7 +43903,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 32,
       "norm_label": "glossario plain-language",
       "id": "glossario"
     },
@@ -43871,7 +43916,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 33,
+      "community": 27,
       "norm_label": "hierarchical decomposition (core-invariante \u2192 assi \u2192 foglie)",
       "type": "concept",
       "id": "hierarchical_decomposition"
@@ -43965,7 +44010,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 32,
       "norm_label": "marker epistemici [v]/[a]/[?]",
       "id": "structured_thinking_markers"
     },
@@ -44004,7 +44049,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 27,
+      "community": 45,
       "norm_label": "secret-section exfiltration defense (redact at output)",
       "type": "concept",
       "id": "secret_section_exfiltration_defense"
@@ -44018,7 +44063,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 32,
       "norm_label": "adr decisioni d1-d5",
       "id": "decisions_d1_d5"
     },
@@ -44031,7 +44076,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 32,
       "norm_label": "adr open-decisions briefing",
       "id": "decisions_open_briefing"
     },
@@ -44044,7 +44089,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 32,
       "norm_label": "adr harness base = pi",
       "id": "decisions_pi_harness_base"
     },
@@ -44239,7 +44284,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 34,
       "norm_label": "d5 \u2014 judge deepseek-v4-flash + council open",
       "id": "d5_judge_deepseek_council"
     },
@@ -44265,7 +44310,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 34,
       "norm_label": "dwarfstar4 (ds4)",
       "id": "dwarfstar4"
     },
@@ -44278,7 +44323,7 @@
       "captured_at": "2026-06-28",
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 34,
       "norm_label": "anthropic policy: claude fuori dal training-loop",
       "id": "anthropic_policy_claude_out_of_loop"
     },
@@ -45643,7 +45688,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 56,
+      "community": 21,
       "norm_label": "skill (pesi) vs feature (wrapper) principle",
       "id": "harnessfeaturecatalog_skill_vs_feature"
     },
@@ -45669,7 +45714,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 46,
+      "community": 56,
       "norm_label": "classe b \u2014 dynamic context & attention",
       "id": "harnessfeaturecatalog_class_b"
     },
@@ -45695,7 +45740,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 341,
+      "community": 46,
       "norm_label": "classe d \u2014 reasoning & recovery",
       "id": "harnessfeaturecatalog_class_d"
     },
@@ -45773,7 +45818,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 46,
+      "community": 56,
       "norm_label": "section-boundary via multi-call mind (stop=</section>)",
       "id": "harnessfeaturecatalog_mind_section_boundary"
     },
@@ -45955,7 +46000,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 341,
+      "community": 46,
       "norm_label": "5 tipi di contraddizione (factual/semantic/temporal/logical/cross-source)",
       "id": "contradictiondetectionlayer_5_types"
     },
@@ -46033,7 +46078,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 341,
+      "community": 21,
       "norm_label": "judge design (giudice del reward rl)",
       "id": "judgedesign_doc"
     },
@@ -46046,7 +46091,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 341,
+      "community": 21,
       "norm_label": "contract strutturato (toon/json)",
       "id": "judgedesign_contract"
     },
@@ -46059,7 +46104,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 341,
+      "community": 21,
       "norm_label": "council open (giudici open-weight, claude/gpt/gemini fuori)",
       "id": "judgedesign_council_open"
     },
@@ -46072,7 +46117,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 341,
+      "community": 46,
       "norm_label": "coherence-anchoring a due livelli (campi\u2194facts / razionale\u2194campi)",
       "id": "judgedesign_coherence_two_levels"
     },
@@ -46189,7 +46234,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 56,
+      "community": 21,
       "norm_label": "training-vs-harness classification (playbook)",
       "id": "trainingvsharnessclassification_doc"
     },
@@ -46202,7 +46247,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 56,
+      "community": 21,
       "norm_label": "categorie f-harness/f-serving-stock/f-serving-custom/s/f+s",
       "id": "trainingvsharnessclassification_categories"
     },
@@ -46215,7 +46260,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 56,
+      "community": 21,
       "norm_label": "step 0 \u2014 scomponi {meccanismo} vs {decisione}",
       "id": "trainingvsharnessclassification_decompose_step0"
     },
@@ -46267,7 +46312,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 21,
+      "community": 47,
       "norm_label": "marker di troncamento ((+n nascosti), <notes count=n>)",
       "id": "windowawarefetching_truncation_markers"
     },
@@ -46345,7 +46390,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 33,
+      "community": 45,
       "norm_label": "adr \u2014 headroom nell'harness (proposta)",
       "id": "headroom_evaluation_adr"
     },
@@ -46358,7 +46403,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 33,
+      "community": 45,
       "norm_label": "headroom (context-compression toolkit, apache-2.0)",
       "id": "headroom_toolkit"
     },
@@ -46371,7 +46416,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 33,
+      "community": 45,
       "norm_label": "cachealigner (stabilizza prefissi per kv-cache hit, non-lossy)",
       "id": "headroom_cachealigner"
     },
@@ -46384,7 +46429,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 33,
+      "community": 45,
       "norm_label": "ccr \u2014 compressione reversibile (originali in locale + recupero on-demand)",
       "id": "headroom_ccr"
     },
@@ -46397,7 +46442,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 33,
+      "community": 45,
       "norm_label": "train-serve context-match gate (rischio compressione default-on per slm)",
       "id": "headroom_train_serve_mismatch"
     },
@@ -46837,7 +46882,7 @@
       "file_type": "code",
       "source_file": "harness/.pi/extensions/context-assembly.ts",
       "source_location": "L1",
-      "community": 32,
+      "community": 0,
       "norm_label": "context-assembly.ts",
       "id": "pi_extensions_context_assembly_ts"
     },
@@ -46864,7 +46909,7 @@
       "file_type": "code",
       "source_file": "harness/.pi/extensions/nested-compact.ts",
       "source_location": "L1",
-      "community": 16,
+      "community": 0,
       "norm_label": "nested-compact.ts",
       "id": "pi_extensions_nested_compact_ts"
     },
@@ -46900,7 +46945,7 @@
       "file_type": "code",
       "source_file": "harness/src/conversation-store.mjs",
       "source_location": "L1",
-      "community": 346,
+      "community": 5,
       "norm_label": "conversation-store.mjs",
       "id": "src_conversation_store_mjs"
     },
@@ -46909,7 +46954,7 @@
       "file_type": "code",
       "source_file": "harness/src/nested-compact.mjs",
       "source_location": "L1",
-      "community": 16,
+      "community": 0,
       "norm_label": "nested-compact.mjs",
       "id": "src_nested_compact_mjs"
     },
@@ -46954,7 +46999,7 @@
       "file_type": "code",
       "source_file": "harness/test/e2e/dogfood-latent-foresight.mjs",
       "source_location": "L1",
-      "community": 5,
+      "community": 59,
       "norm_label": "dogfood-latent-foresight.mjs",
       "id": "test_e2e_dogfood_latent_foresight_mjs"
     },
@@ -46972,7 +47017,7 @@
       "file_type": "code",
       "source_file": "harness/test/e2e/dogfood-prompt-injection.mjs",
       "source_location": "L1",
-      "community": 59,
+      "community": 5,
       "norm_label": "dogfood-prompt-injection.mjs",
       "id": "test_e2e_dogfood_prompt_injection_mjs"
     },
@@ -46981,7 +47026,7 @@
       "file_type": "code",
       "source_file": "harness/test/e2e/dogfood-test.mjs",
       "source_location": "L1",
-      "community": 44,
+      "community": 5,
       "norm_label": "dogfood-test.mjs",
       "id": "test_e2e_dogfood_test_mjs"
     },
@@ -47044,7 +47089,7 @@
       "file_type": "code",
       "source_file": "harness/test/unit/contradiction-check.test.mjs",
       "source_location": "L1",
-      "community": 55,
+      "community": 76,
       "norm_label": "contradiction-check.test.mjs",
       "id": "test_unit_contradiction_check_test_mjs"
     },
@@ -47053,7 +47098,7 @@
       "file_type": "code",
       "source_file": "harness/test/unit/conversation-store.test.mjs",
       "source_location": "L1",
-      "community": 37,
+      "community": 346,
       "norm_label": "conversation-store.test.mjs",
       "id": "test_unit_conversation_store_test_mjs"
     },
@@ -47188,7 +47233,7 @@
       "type": "mechanism",
       "file_type": "rationale",
       "source_file": "wiki/concepts/inter-agent-messaging.md",
-      "community": 27,
+      "community": 44,
       "norm_label": "inter-agent messaging (scambio diretto tra agenti)",
       "id": "inter_agent_messaging_channel"
     },
@@ -47197,7 +47242,7 @@
       "type": "mechanism",
       "file_type": "rationale",
       "source_file": "wiki/concepts/inter-agent-messaging.md",
-      "community": 27,
+      "community": 44,
       "norm_label": "inbox addressabile per idagente (sendmessage/inbox/markread)",
       "id": "inter_agent_messaging_inbox"
     },
@@ -47206,7 +47251,7 @@
       "type": "concept",
       "file_type": "rationale",
       "source_file": "wiki/concepts/inter-agent-messaging.md",
-      "community": 27,
+      "community": 44,
       "norm_label": "guida di scelta del canale cross-agent",
       "id": "inter_agent_messaging_channel_choice_guide"
     },
@@ -47215,7 +47260,7 @@
       "type": "concept",
       "file_type": "rationale",
       "source_file": "wiki/concepts/inter-agent-messaging.md",
-      "community": 27,
+      "community": 45,
       "norm_label": "body-pointer (busta leggera + contenuto per riferimento)",
       "id": "inter_agent_messaging_body_pointer"
     },
@@ -47224,7 +47269,7 @@
       "type": "capability",
       "file_type": "rationale",
       "source_file": "wiki/concepts/variable-operations-by-reference.md",
-      "community": 27,
+      "community": 45,
       "norm_label": "variable operations by reference",
       "id": "variable_operations_by_reference_capability"
     },
@@ -47233,7 +47278,7 @@
       "type": "mechanism",
       "file_type": "rationale",
       "source_file": "wiki/concepts/variable-operations-by-reference.md",
-      "community": 27,
+      "community": 45,
       "norm_label": "path-access dsl deterministico (extract_var, no eval)",
       "id": "variable_operations_by_reference_path_dsl"
     },
@@ -47242,7 +47287,7 @@
       "type": "mechanism",
       "file_type": "rationale",
       "source_file": "wiki/concepts/variable-operations-by-reference.md",
-      "community": 27,
+      "community": 158,
       "norm_label": "disambiguazione interpolazione per canale (non per delimitatore)",
       "id": "variable_operations_by_reference_channel_interpolation"
     },
@@ -47251,7 +47296,7 @@
       "type": "rule",
       "file_type": "rationale",
       "source_file": "wiki/concepts/variable-operations-by-reference.md",
-      "community": 27,
+      "community": 45,
       "norm_label": "crux di sicurezza: trasformazione harness-side, no rce/eval",
       "id": "variable_operations_by_reference_security_crux"
     },
@@ -47260,7 +47305,7 @@
       "type": "concept",
       "file_type": "rationale",
       "source_file": "wiki/concepts/cross-session-state-sharing.md",
-      "community": 27,
+      "community": 44,
       "norm_label": "cross-session / cross-agent state sharing",
       "id": "cross_session_state_sharing_concept"
     },
@@ -47269,7 +47314,7 @@
       "type": "mechanism",
       "file_type": "rationale",
       "source_file": "wiki/concepts/cross-session-state-sharing.md",
-      "community": 27,
+      "community": 44,
       "norm_label": "propose/merge single-writer (shared-vars senza race)",
       "id": "cross_session_state_sharing_propose_merge"
     },
@@ -47287,7 +47332,7 @@
       "type": "concept",
       "file_type": "rationale",
       "source_file": "wiki/concepts/cross-session-state-sharing.md",
-      "community": 27,
+      "community": 44,
       "norm_label": "persistenza mix file + db (euristica strutturato\u2192db / blob\u2192file)",
       "id": "cross_session_state_sharing_persistence_mix"
     },
@@ -47296,7 +47341,7 @@
       "type": "decision",
       "file_type": "rationale",
       "source_file": "wiki/decisions/2026-06-29-context-as-first-person-mind.md",
-      "community": 27,
+      "community": 55,
       "norm_label": "adr \u2014 il context e la mente in prima persona del modello (strada 2)",
       "id": "context_as_first_person_mind_adr"
     },
@@ -47305,7 +47350,7 @@
       "type": "concept",
       "file_type": "rationale",
       "source_file": "wiki/decisions/2026-06-29-context-as-first-person-mind.md",
-      "community": 27,
+      "community": 55,
       "norm_label": "principio 1 \u2014 context = workspace di prima persona, non chat",
       "id": "context_as_first_person_mind_workspace"
     },
@@ -47314,7 +47359,7 @@
       "type": "concept",
       "file_type": "rationale",
       "source_file": "wiki/decisions/2026-06-29-context-as-first-person-mind.md",
-      "community": 27,
+      "community": 55,
       "norm_label": "principio 2 \u2014 auto-curazione: il modello cura il proprio workspace",
       "id": "context_as_first_person_mind_self_curation"
     },
@@ -47323,7 +47368,7 @@
       "type": "mechanism",
       "file_type": "rationale",
       "source_file": "wiki/decisions/2026-06-29-context-as-first-person-mind.md",
-      "community": 27,
+      "community": 44,
       "norm_label": "principio 3 \u2014 conversazione persistita in store addressabile per id",
       "id": "context_as_first_person_mind_conversation_store"
     },
@@ -47332,7 +47377,7 @@
       "type": "decision",
       "file_type": "rationale",
       "source_file": "wiki/decisions/2026-06-29-context-as-first-person-mind.md",
-      "community": 27,
+      "community": 55,
       "norm_label": "principio 4 \u2014 compaction nativa di pi off",
       "id": "context_as_first_person_mind_pi_compaction_off"
     },
@@ -47350,7 +47395,7 @@
       "type": "entity",
       "file_type": "document",
       "source_file": "wiki/model-testbook.md",
-      "community": 27,
+      "community": 158,
       "norm_label": "model test-book \u2014 desiderata del modello + verifica",
       "id": "model_testbook_registry"
     },
@@ -47359,7 +47404,7 @@
       "type": "capability",
       "file_type": "rationale",
       "source_file": "wiki/model-testbook.md",
-      "community": 27,
+      "community": 158,
       "norm_label": "tb-01 \u2014 disambiguazione interpolazione per canale",
       "id": "model_testbook_tb01"
     },
@@ -47377,7 +47422,7 @@
       "type": "capability",
       "file_type": "rationale",
       "source_file": "wiki/model-testbook.md",
-      "community": 27,
+      "community": 55,
       "norm_label": "tb-03 \u2014 context = mente in prima persona + auto-curazione",
       "id": "model_testbook_tb03"
     },
@@ -47386,7 +47431,7 @@
       "type": "capability",
       "file_type": "rationale",
       "source_file": "wiki/model-testbook.md",
-      "community": 27,
+      "community": 158,
       "norm_label": "tb-04 \u2014 variable-operations per riferimento",
       "id": "model_testbook_tb04"
     },
@@ -47395,7 +47440,7 @@
       "type": "capability",
       "file_type": "rationale",
       "source_file": "wiki/model-testbook.md",
-      "community": 27,
+      "community": 158,
       "norm_label": "tb-05 \u2014 window-aware fetching",
       "id": "model_testbook_tb05"
     },
@@ -47404,7 +47449,7 @@
       "type": "capability",
       "file_type": "rationale",
       "source_file": "wiki/model-testbook.md",
-      "community": 27,
+      "community": 158,
       "norm_label": "tb-06 \u2014 protocollo di ritorno (pop): report-su-file + re-align",
       "id": "model_testbook_tb06"
     },
@@ -47413,7 +47458,7 @@
       "type": "capability",
       "file_type": "rationale",
       "source_file": "wiki/model-testbook.md",
-      "community": 27,
+      "community": 44,
       "norm_label": "tb-07 \u2014 scegliere il canale cross-agent giusto",
       "id": "model_testbook_tb07"
     },
@@ -47422,7 +47467,7 @@
       "type": "rule",
       "file_type": "rationale",
       "source_file": "wiki/model-testbook.md",
-      "community": 33,
+      "community": 158,
       "norm_label": "principio di verifica outcome-anchored (anti reward-hacking)",
       "id": "model_testbook_outcome_anchored"
     },
@@ -47440,7 +47485,7 @@
       "type": "decision",
       "file_type": "rationale",
       "source_file": "harness/.pi/README.md",
-      "community": 27,
+      "community": 55,
       "norm_label": "settings.json \u2014 compaction.enabled=false",
       "id": "pi_readme_settings_compaction_off"
     },
@@ -47458,7 +47503,7 @@
       "type": "concept",
       "file_type": "document",
       "source_file": "wiki/index.md",
-      "community": 27,
+      "community": 44,
       "norm_label": "index \u00a7categoria-d wrapper runtime architecture",
       "id": "wiki_index_concepts_runtime"
     },
@@ -47467,7 +47512,7 @@
       "type": "concept",
       "file_type": "document",
       "source_file": "wiki/index.md",
-      "community": 33,
+      "community": 55,
       "norm_label": "index \u00a7decisions (adr datati)",
       "id": "wiki_index_decisions"
     },
@@ -47548,7 +47593,7 @@
       "type": "rule",
       "file_type": "rationale",
       "source_file": "wiki/architecture/matrioska-orchestration-spec.md",
-      "community": 33,
+      "community": 57,
       "norm_label": "depth-bound \u22643 (graceful degrade a reorder)",
       "id": "matrioska_depth_bound"
     },
@@ -47622,7 +47667,7 @@
       "type": "mechanism",
       "file_type": "rationale",
       "source_file": "wiki/concepts/situational-policy-table.md",
-      "community": 33,
+      "community": 57,
       "norm_label": "indice gerarchico (area\u2192topic\u2192foglia) + regola taglio index-vs-inline",
       "id": "situational_policy_table_hierarchical_index"
     },
@@ -47688,7 +47733,7 @@
       "type": "mechanism",
       "file_type": "rationale",
       "source_file": "wiki/concepts/agent-wrapper-vars-queue.md",
-      "community": 27,
+      "community": 44,
       "norm_label": "agent wrapper vars-queue (god-node datastore)",
       "id": "agent_wrapper_vars_queue"
     },
@@ -47697,7 +47742,7 @@
       "type": "document",
       "file_type": "document",
       "source_file": "wiki/decisions/2026-06-29-context-as-first-person-mind.md",
-      "community": 27,
+      "community": 55,
       "norm_label": "harness request-flow (chi possiede la conversazione)",
       "id": "harness_request_flow"
     },
@@ -47706,7 +47751,7 @@
       "type": "decision",
       "file_type": "rationale",
       "source_file": "wiki/decisions/2026-06-29-context-as-first-person-mind.md",
-      "community": 27,
+      "community": 55,
       "norm_label": "adr compaction coherence (5 incoerenze, chiusa da strada-2)",
       "id": "compaction_coherence_adr"
     }
@@ -48284,17 +48329,6 @@
       "target": "src_conversation_store_buildmessageslane"
     },
     {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "harness/.pi/extensions/context-assembly.ts",
-      "source_location": "L16",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "harness_pi_extensions_context_assembly_ts",
-      "target": "src_conversation_store_windownativemessages"
-    },
-    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -48481,6 +48515,17 @@
       "confidence_score": 1.0,
       "source": "harness_pi_extensions_context_assembly_ts",
       "target": "extensions_context_assembly_lane"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "harness/.pi/extensions/context-assembly.ts",
+      "source_location": "L16",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "harness_pi_extensions_context_assembly_ts",
+      "target": "src_conversation_store_windownativemessages"
     },
     {
       "relation": "contains",
@@ -48918,9 +48963,9 @@
       "source_file": "harness/.pi/extensions/conversation-capture.ts",
       "source_location": "L65",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_pi_extensions_conversation_capture_ts",
-      "target": "extensions_conversation_capture_convid_persist",
-      "confidence_score": 1.0
+      "target": "extensions_conversation_capture_convid_persist"
     },
     {
       "relation": "contains",
@@ -49159,6 +49204,38 @@
       "confidence_score": 1.0,
       "source": "harness_pi_extensions_gemini_compat_ts",
       "target": "extensions_gemini_compat_payload"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "harness/.pi/extensions/native-window.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "harness_pi_extensions_native_window_ts",
+      "target": "harness_src_conversation_store_mjs",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "harness/.pi/extensions/native-window.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "harness_pi_extensions_native_window_ts",
+      "target": "src_conversation_store_windownativemessages",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "harness/.pi/extensions/native-window.ts",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "harness_pi_extensions_native_window_ts",
+      "target": "extensions_native_window_windowed",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -49606,9 +49683,9 @@
       "source_file": "harness/.pi/extensions/turn-trace.ts",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_pi_extensions_turn_trace_ts",
-      "target": "harness_src_session_context_mjs",
-      "confidence_score": 1.0
+      "target": "harness_src_session_context_mjs"
     },
     {
       "relation": "imports",
@@ -49617,9 +49694,9 @@
       "source_file": "harness/.pi/extensions/turn-trace.ts",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_pi_extensions_turn_trace_ts",
-      "target": "src_session_context_getconvid",
-      "confidence_score": 1.0
+      "target": "src_session_context_getconvid"
     },
     {
       "relation": "contains",
@@ -49627,9 +49704,9 @@
       "source_file": "harness/.pi/extensions/turn-trace.ts",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_pi_extensions_turn_trace_ts",
-      "target": "extensions_turn_trace_contenttext",
-      "confidence_score": 1.0
+      "target": "extensions_turn_trace_contenttext"
     },
     {
       "relation": "contains",
@@ -49637,9 +49714,9 @@
       "source_file": "harness/.pi/extensions/turn-trace.ts",
       "source_location": "L40",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_pi_extensions_turn_trace_ts",
-      "target": "extensions_turn_trace_extractsystemtext",
-      "confidence_score": 1.0
+      "target": "extensions_turn_trace_extractsystemtext"
     },
     {
       "relation": "contains",
@@ -49647,9 +49724,9 @@
       "source_file": "harness/.pi/extensions/turn-trace.ts",
       "source_location": "L52",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_pi_extensions_turn_trace_ts",
-      "target": "extensions_turn_trace_messagesinfo",
-      "confidence_score": 1.0
+      "target": "extensions_turn_trace_messagesinfo"
     },
     {
       "relation": "contains",
@@ -49657,9 +49734,9 @@
       "source_file": "harness/.pi/extensions/turn-trace.ts",
       "source_location": "L64",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_pi_extensions_turn_trace_ts",
-      "target": "extensions_turn_trace_norm",
-      "confidence_score": 1.0
+      "target": "extensions_turn_trace_norm"
     },
     {
       "relation": "contains",
@@ -49667,9 +49744,9 @@
       "source_file": "harness/.pi/extensions/turn-trace.ts",
       "source_location": "L68",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_pi_extensions_turn_trace_ts",
-      "target": "extensions_turn_trace_laneoverlap",
-      "confidence_score": 1.0
+      "target": "extensions_turn_trace_laneoverlap"
     },
     {
       "relation": "contains",
@@ -49677,9 +49754,9 @@
       "source_file": "harness/.pi/extensions/turn-trace.ts",
       "source_location": "L89",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_pi_extensions_turn_trace_ts",
-      "target": "extensions_turn_trace_sys",
-      "confidence_score": 1.0
+      "target": "extensions_turn_trace_sys"
     },
     {
       "relation": "contains",
@@ -49687,9 +49764,9 @@
       "source_file": "harness/.pi/extensions/turn-trace.ts",
       "source_location": "L90",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_pi_extensions_turn_trace_ts",
-      "target": "extensions_turn_trace_mi",
-      "confidence_score": 1.0
+      "target": "extensions_turn_trace_mi"
     },
     {
       "relation": "contains",
@@ -49697,9 +49774,9 @@
       "source_file": "harness/.pi/extensions/turn-trace.ts",
       "source_location": "L91",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_pi_extensions_turn_trace_ts",
-      "target": "extensions_turn_trace_ov",
-      "confidence_score": 1.0
+      "target": "extensions_turn_trace_ov"
     },
     {
       "relation": "contains",
@@ -49707,9 +49784,9 @@
       "source_file": "harness/.pi/extensions/turn-trace.ts",
       "source_location": "L92",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_pi_extensions_turn_trace_ts",
-      "target": "extensions_turn_trace_usage",
-      "confidence_score": 1.0
+      "target": "extensions_turn_trace_usage"
     },
     {
       "relation": "contains",
@@ -49717,9 +49794,9 @@
       "source_file": "harness/.pi/extensions/turn-trace.ts",
       "source_location": "L93",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_pi_extensions_turn_trace_ts",
-      "target": "extensions_turn_trace_rec",
-      "confidence_score": 1.0
+      "target": "extensions_turn_trace_rec"
     },
     {
       "relation": "contains",
@@ -49727,9 +49804,9 @@
       "source_file": "harness/.pi/extensions/turn-trace.ts",
       "source_location": "L133",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_pi_extensions_turn_trace_ts",
-      "target": "extensions_turn_trace_execute",
-      "confidence_score": 1.0
+      "target": "extensions_turn_trace_execute"
     },
     {
       "relation": "calls",
@@ -49738,9 +49815,9 @@
       "source_file": "harness/.pi/extensions/turn-trace.ts",
       "source_location": "L43",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "extensions_turn_trace_extractsystemtext",
-      "target": "extensions_turn_trace_contenttext",
-      "confidence_score": 1.0
+      "target": "extensions_turn_trace_contenttext"
     },
     {
       "relation": "calls",
@@ -49749,9 +49826,9 @@
       "source_file": "harness/.pi/extensions/turn-trace.ts",
       "source_location": "L72",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "extensions_turn_trace_laneoverlap",
-      "target": "extensions_turn_trace_norm",
-      "confidence_score": 1.0
+      "target": "extensions_turn_trace_norm"
     },
     {
       "relation": "imports_from",
@@ -58809,9 +58886,9 @@
       "source_file": "harness/test/unit/strada2.test.mjs",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_test_unit_strada2_test_mjs",
-      "target": "unit_strada2_test_wdef",
-      "confidence_score": 1.0
+      "target": "unit_strada2_test_wdef"
     },
     {
       "relation": "contains",
@@ -58869,9 +58946,9 @@
       "source_file": "harness/test/unit/strada2.test.mjs",
       "source_location": "L49",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_test_unit_strada2_test_mjs",
-      "target": "unit_strada2_test_cu",
-      "confidence_score": 1.0
+      "target": "unit_strada2_test_cu"
     },
     {
       "relation": "contains",
@@ -58879,9 +58956,9 @@
       "source_file": "harness/test/unit/strada2.test.mjs",
       "source_location": "L50",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_test_unit_strada2_test_mjs",
-      "target": "unit_strada2_test_withmidcustom",
-      "confidence_score": 1.0
+      "target": "unit_strada2_test_withmidcustom"
     },
     {
       "relation": "contains",
@@ -58889,9 +58966,9 @@
       "source_file": "harness/test/unit/strada2.test.mjs",
       "source_location": "L51",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_test_unit_strada2_test_mjs",
-      "target": "unit_strada2_test_w4",
-      "confidence_score": 1.0
+      "target": "unit_strada2_test_w4"
     },
     {
       "relation": "contains",
@@ -58899,9 +58976,9 @@
       "source_file": "harness/test/unit/strada2.test.mjs",
       "source_location": "L54",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_test_unit_strada2_test_mjs",
-      "target": "unit_strada2_test_withheadcustom",
-      "confidence_score": 1.0
+      "target": "unit_strada2_test_withheadcustom"
     },
     {
       "relation": "contains",
@@ -58909,9 +58986,9 @@
       "source_file": "harness/test/unit/strada2.test.mjs",
       "source_location": "L55",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_test_unit_strada2_test_mjs",
-      "target": "unit_strada2_test_w5",
-      "confidence_score": 1.0
+      "target": "unit_strada2_test_w5"
     },
     {
       "relation": "contains",
@@ -58979,9 +59056,9 @@
       "source_file": "harness/test/unit/strada2.test.mjs",
       "source_location": "L104",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_test_unit_strada2_test_mjs",
-      "target": "unit_strada2_test_newb",
-      "confidence_score": 1.0
+      "target": "unit_strada2_test_newb"
     },
     {
       "relation": "contains",
@@ -58989,8 +59066,38 @@
       "source_file": "harness/test/unit/strada2.test.mjs",
       "source_location": "L106",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "harness_test_unit_strada2_test_mjs",
-      "target": "unit_strada2_test_resumeafternew",
+      "target": "unit_strada2_test_resumeafternew"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "harness/test/unit/strada2.test.mjs",
+      "source_location": "L110",
+      "weight": 1.0,
+      "source": "harness_test_unit_strada2_test_mjs",
+      "target": "unit_strada2_test_psnew",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "harness/test/unit/strada2.test.mjs",
+      "source_location": "L112",
+      "weight": 1.0,
+      "source": "harness_test_unit_strada2_test_mjs",
+      "target": "unit_strada2_test_psreload",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "harness/test/unit/strada2.test.mjs",
+      "source_location": "L114",
+      "weight": 1.0,
+      "source": "harness_test_unit_strada2_test_mjs",
+      "target": "unit_strada2_test_psstartup",
       "confidence_score": 1.0
     },
     {
@@ -106466,5 +106573,5 @@
       "source_file": "wiki/architecture/matrioska-orchestration-spec.md"
     }
   ],
-  "built_at_commit": "a8563b58f51db0353af5803ebad5851f970de604"
+  "built_at_commit": "11ff52a939edcfc2876f3eecffe4bae09322d71a"
 }
