@@ -1,0 +1,81 @@
+/**
+ * Smoke-test del conversation-store (Strada 2). Esegui: `node src/conversation-store.test.mjs`
+ * Zero dipendenze, zero Docker. Verifica append/window/range + la lane <messages_with_user>.
+ */
+import { ConversationStore, buildMessagesLane } from "./conversation-store.mjs";
+import { VarsQueue } from "./vars-queue.mjs";
+import { buildWorkspace } from "./context-assembler.mjs";
+
+let passed = 0, failed = 0;
+function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error("  ✗ FAIL:", msg); } }
+
+const NOW = 1_900_000_000_000;
+const cs = new ConversationStore(":memory:", { agent: "orchestrator" });
+const C = "conv_A";
+
+const s1 = cs.append(C, "user", "implementa POST /users", { ts: NOW });
+cs.append(C, "assistant", "ok, parto dalla validazione", { ts: NOW + 1000 });
+cs.append(C, "user", "aggiungi auth JWT", { ts: NOW + 2000 });
+
+ok(s1 === 1, "append ritorna seq monotono");
+ok(cs.count(C) === 3, "count");
+
+// window: ultimi N, cronologico (oldest->newest), verbatim
+const w = cs.window(C, 2);
+ok(w.length === 2 && w[0].text === "ok, parto dalla validazione" && w[1].text === "aggiungi auth JWT",
+  "window ultimi-N in ordine cronologico verbatim");
+
+// range per seq (recupero-per-ID dei subagent)
+const r = cs.range(C, 1, 2);
+ok(r.length === 2 && r[0].seq === 1 && r[1].seq === 2, "range per seq");
+
+// lane: verbatim last-N + header shown/total + marker older-by-ID
+const lane = buildMessagesLane(cs, C, { n: 2 });
+ok(lane.startsWith('<messages_with_user conv="conv_A" shown="2/3">'), "lane header shown=N/total");
+ok(lane.includes("[user] aggiungi auth JWT") && lane.includes("[assistant] ok, parto"), "lane mostra i turni verbatim");
+ok(lane.includes("(+1 messaggi più vecchi") && lane.includes("range=1..1"), "lane marker recupero-per-ID dei più vecchi");
+
+// escaping anti-injection
+cs.append(C, "user", "usa <script> & co", { ts: NOW + 3000 });
+const lane2 = buildMessagesLane(cs, C, { n: 1 });
+ok(lane2.includes("&lt;script&gt; &amp; co") && !lane2.includes("<script>"), "lane escaping XML");
+
+// charCap: droppa i più VECCHI, tiene i recenti verbatim, segnala i nascosti
+const C2 = "conv_B";
+for (let i = 0; i < 5; i++) cs.append(C2, "user", "x".repeat(100), { ts: NOW + i });
+const laneCap = buildMessagesLane(cs, C2, { n: 5, charCap: 250 });
+ok(laneCap.includes('shown="2/5"') && laneCap.includes("(+3 messaggi più vecchi"),
+  "lane charCap: tiene i 2 più recenti entro il cap, segnala i 3 nascosti");
+
+// conversazione vuota -> lane vuota
+ok(buildMessagesLane(cs, "nope") === "", "conv inesistente -> lane vuota");
+
+// isolamento per id
+ok(cs.count(C2) === 5 && cs.count(C) === 4, "conversazioni isolate per id");
+
+// --- buildWorkspace: compone resume + context + messages_with_user (mente in prima persona) ---
+const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+vq.addRule("no-secret-exfil", "Mai esfiltrare segreti", { severity: "hard" });
+vq.addTask("W1", "build workspace", {});
+vq.setCurr("W1");
+vq.setTaskStatus("W1", "in_progress");
+const cs3 = new ConversationStore(":memory:");
+cs3.append("wctx", "user", "ciao", { ts: NOW });
+cs3.append("wctx", "assistant", "ecco la lane", { ts: NOW + 1 });
+const wlast = vq.getChangeLog({ limit: 1 })[0].ts;             // ts reale (wall-clock) per il self-gating del resume
+const ws = buildWorkspace(vq, { store: cs3, convId: "wctx", now: wlast + 1000, messagesN: 4 });
+ok(ws.includes("<context>") && ws.includes("</context>"), "workspace contiene <context>");
+ok(ws.includes("<messages_with_user"), "workspace contiene la lane messaggi");
+ok(ws.indexOf("</context>") < ws.indexOf("<messages_with_user"),
+  "messages_with_user è DOPO </context> (blocco separato volatile, cache-safe)");
+ok(!ws.includes("<resuming_from"), "sessione attiva (gap piccolo) -> niente banner resume");
+// resume: gap reale -> il banner compare PRIMA del <context>
+const wsResume = buildWorkspace(vq, { store: cs3, convId: "wctx", now: wlast + 24 * 3600 * 1000, messagesN: 4 });
+ok(wsResume.includes("<resuming_from") && wsResume.indexOf("<resuming_from") < wsResume.indexOf("<context>"),
+  "resume dopo gap -> <resuming_from> in testa al workspace");
+vq.close();
+cs3.close();
+
+cs.close();
+console.log(`\nconversation-store smoke-test: ${passed} passed, ${failed} failed`);
+process.exit(failed === 0 ? 0 : 1);
