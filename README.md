@@ -16,18 +16,21 @@ Sopra: un **wrapper/harness** (basato su [pi](https://pi.dev)) che gestisce cont
 
 ## Come è organizzato
 
-Pattern [Karpathy LLM-Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) (tre layer: raw / wiki / schema).
+Monorepo **ITLMv1** + pattern [Karpathy LLM-Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) (tre layer: raw / wiki / schema). La conoscenza di design è **centralizzata** in `wiki/`; i sub-progetti (`harness/`, `lm/`) contengono solo codice/config/artefatti.
 
 ```
-slm/
-├── wiki/                 # knowledge base (entry point: wiki/README.md, indice: wiki/index.md)
-│   ├── architecture/     # three-tier design, orchestrator, wrapper, verticali
-│   ├── concepts/         # tecniche & metodologia di training, context engineering, safety
+slm/  (repo ITLMv1)
+├── wiki/                 # SSOT — knowledge base (entry: wiki/README.md, indice: wiki/index.md)
+│   ├── architecture/     # three-tier design, orchestrator, wrapper, matrioska-spec
+│   ├── concepts/         # training, context-engineering (focus-task-prioritization, context-limits…), safety
 │   ├── decisions/        # ADR datati
 │   ├── entities/         # paper, modelli, framework (deep-dive)
 │   ├── training-taxonomy/# tassonomia completa dei dati di training (16 aree)
-│   ├── experiments-backlog.md   # ipotesi da validare sperimentalmente
+│   ├── model-testbook.md # desiderata-modello ("voglio che il modello…") + come si verificano
 │   └── open-questions.md
+├── harness/              # sub-progetto HARNESS — wrapper su pi (extension TS) + serving vLLM + verifier (vedi harness/README.md)
+├── lm/                   # sub-progetto LM — training + eval + data-pipeline + configs
+├── graphify-out/         # knowledge graph (graph.html / graph.json / GRAPH_REPORT.md)
 ├── docs/                 # design spec
 └── prompts/              # template di prompt
 ```
@@ -38,6 +41,7 @@ slm/
 - **[wiki/index.md](wiki/index.md)** — catalogo di tutte le pagine
 - **[wiki/architecture/three-tier-design.md](wiki/architecture/three-tier-design.md)** — l'architettura ground-truth
 - **[wiki/training-taxonomy/README.md](wiki/training-taxonomy/README.md)** — cosa e come si addestra
+- **[harness/README.md](harness/README.md)** — il wrapper/harness su pi (context-engineering, matrioska, focus-gathering, guardrail) — già implementato + testato
 
 ## Filosofia
 
