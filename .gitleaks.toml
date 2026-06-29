@@ -38,6 +38,7 @@ paths = [
 regexes = [
   '''example[.]com''',
   '''(test|dummy|placeholder|your-email|user)@(example|test|local)[.][A-Za-z]{2,}''',
+  '''@[A-Za-z0-9-]+[.]local\b''',                             # dominio .local (RFC6762, non-routable) = placeholder sintetico (es. git config sandbox in harness/sandbox/Dockerfile)
   '''noreply@''',
   '''slm_dev_[A-Za-z0-9_]+''',
   '''slm_test_[A-Za-z0-9_]+''',
