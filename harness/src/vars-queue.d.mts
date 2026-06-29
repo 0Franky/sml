@@ -65,6 +65,17 @@ export interface AgentMessageRecord {
   read: number;
 }
 
+export interface FocusFrameRecord {
+  scope_id: string;
+  parent_id: string | null;
+  depth: number;
+  aim_task: string | null;
+  task_subset: string[];
+  entered: number;
+  status: string;
+  since_seq: number;
+}
+
 export interface SetVarOpts { scope?: "private" | "shared"; namespace?: string; who?: string; decisionRef?: string | null; }
 export interface WhoOpt { who?: string; }
 
@@ -107,6 +118,17 @@ export class VarsQueue {
   // CURR
   setCurr(taskId: string, opts?: WhoOpt): void;
   getCurr(): string | null;
+
+  // ACTIVE SCOPE (matrioska: routing dell'attribuzione who in-scope)
+  setActiveScope(scopeId: string | null, opts?: WhoOpt): void;
+  getActiveScope(): string | null;
+
+  // FOCUS FRAMES (matrioska nested-compact: stack zoom-in/pop)
+  currentChangeSeq(): number;
+  createFocusFrame(scopeId: string, opts: { depth: number; parentId?: string | null; aimTask?: string | null; taskSubset?: string[]; sinceSeq?: number; now?: number; who?: string }): FocusFrameRecord;
+  getFocusFrame(scopeId: string): FocusFrameRecord | null;
+  listFocusFrames(opts?: { status?: string | null }): FocusFrameRecord[];
+  closeFocusFrame(scopeId: string, opts?: WhoOpt): FocusFrameRecord | null;
 
   // DECISIONS (scelte attribuite per agente)
   recordDecision(id: string, text: string, opts?: { rationale?: string | null; who?: string; taskRef?: string | null; decisionRef?: string | null }): DecisionRecord;

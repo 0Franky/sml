@@ -25,6 +25,10 @@ function getStore(): VarsQueue {
 export default function (pi: ExtensionAPI) {
   const vq = getStore();
 
+  // Routing dell'attribuzione: se uno scope-figlio (matrioska) è aperto, le mutazioni sono attribuite allo scope
+  // (who=scopeId) → il pop-report deriva i delta del figlio. Altrimenti = l'agente base. Vedi nested-compact.mjs.
+  const activeWho = (): string => vq.getActiveScope() ?? vq.agent;
+
   pi.registerTool({
     name: "set_var",
     label: "Set persisted variable",
@@ -44,6 +48,7 @@ export default function (pi: ExtensionAPI) {
       const v = vq.setVar(params.id, params.value, {
         scope: params.scope ?? "private",
         decisionRef: params.decision_ref ?? null,
+        who: activeWho(),
       });
       return { content: [{ type: "text", text: JSON.stringify(v) }], details: { ok: true } };
     },
@@ -71,8 +76,9 @@ export default function (pi: ExtensionAPI) {
       title: Type.Optional(Type.String({ description: "Se il task non esiste, lo crea con questo titolo." })),
     }),
     async execute(_toolCallId: string, params: any) {
-      if (!vq.getTask(params.id) && params.title) vq.addTask(params.id, params.title);
-      const t = vq.setTaskStatus(params.id, params.status);
+      const who = activeWho();
+      if (!vq.getTask(params.id) && params.title) vq.addTask(params.id, params.title, { who });
+      const t = vq.setTaskStatus(params.id, params.status, { who });
       return { content: [{ type: "text", text: JSON.stringify(t) }], details: { ok: true } };
     },
   });
@@ -93,7 +99,7 @@ export default function (pi: ExtensionAPI) {
     description: "Un sotto-agente PROPONE una scrittura su una var condivisa (non scrive diretto → niente race). L'orchestratore poi fa il merge.",
     parameters: Type.Object({ var_id: Type.String(), value: Type.Any() }),
     async execute(_t: string, p: any) {
-      vq.proposeVar(p.var_id, p.value);
+      vq.proposeVar(p.var_id, p.value, { agent: activeWho() });
       return { content: [{ type: "text", text: `proposta registrata (${vq.pendingProposals().length} pendenti)` }], details: { ok: true } };
     },
   });
@@ -163,6 +169,7 @@ export default function (pi: ExtensionAPI) {
         rationale: p.rationale ?? null,
         taskRef: p.task_ref ?? null,
         decisionRef: p.decision_ref ?? null,
+        who: activeWho(),
       });
       return { content: [{ type: "text", text: JSON.stringify(d) }], details: { ok: true } };
     },
@@ -191,7 +198,7 @@ export default function (pi: ExtensionAPI) {
       topic: Type.Optional(Type.String({ description: "Topic per filtrare la inbox." })),
     }),
     async execute(_t: string, p: any) {
-      const seq = vq.sendMessage(p.to, p.body, { topic: p.topic ?? null });
+      const seq = vq.sendMessage(p.to, p.body, { from: activeWho(), topic: p.topic ?? null });
       return { content: [{ type: "text", text: `messaggio inviato a ${p.to} (seq ${seq})` }], details: { seq } };
     },
   });

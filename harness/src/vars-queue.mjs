@@ -99,6 +99,16 @@ CREATE TABLE IF NOT EXISTS agent_messages (
   body       TEXT,                                     -- JSON-encoded
   read       INTEGER NOT NULL DEFAULT 0
 );
+CREATE TABLE IF NOT EXISTS focus_frames (
+  scope_id    TEXT PRIMARY KEY,                        -- id univoco dello scope (focus-<lead>-<ts>)
+  parent_id   TEXT,                                    -- scope_id del padre, oppure NULL = root (primo zoom)
+  depth       INTEGER NOT NULL,                        -- 1 = primo livello sotto root
+  aim_task    TEXT,                                    -- CURR del padre PRIMA dello zoom (da ripristinare al pop)
+  task_subset TEXT,                                    -- JSON array di task id messi a fuoco
+  entered     INTEGER NOT NULL,                        -- epoch ms dell'enter (lower-bound dei delta del figlio)
+  status      TEXT NOT NULL DEFAULT 'open',            -- open | popped
+  since_seq   INTEGER NOT NULL DEFAULT 0               -- max changelog seq all'enter (audit; delimita i delta)
+);
 `;
 
 /**
@@ -398,6 +408,62 @@ export class VarsQueue {
   getCurr() {
     const r = this.db.prepare(`SELECT v FROM meta WHERE k = 'curr'`).get();
     return r ? r.v : null;
+  }
+
+  // -- ACTIVE SCOPE (matrioska: routing dell'attribuzione who in-scope) --------
+  // Il modello opera con tool a handle FISSO (agent='orchestrator'), ma quando uno scope-figlio è aperto le sue
+  // mutazioni vanno attribuite allo scope (who=scopeId) → il pop-report deriva i delta del figlio. Lo scope attivo
+  // vive nel meta (condiviso cross-extension via lo stesso file DB): le extension di mutazione leggono getActiveScope()
+  // e lo usano come `who`. Log silent (strutturale: non inquina recent_changes). Vedi nested-compact.mjs.
+  setActiveScope(scopeId, { who = this.agent } = {}) {
+    const prev = this.db.prepare(`SELECT v FROM meta WHERE k = 'active_scope'`).get();
+    if (scopeId == null) this.db.prepare(`DELETE FROM meta WHERE k = 'active_scope'`).run();
+    else this.db.prepare(`INSERT INTO meta (k,v) VALUES ('active_scope',?) ON CONFLICT(k) DO UPDATE SET v=excluded.v`).run(scopeId);
+    this._log("meta", "active_scope", "active_scope", prev?.v ?? null, scopeId, who, null, 1);
+  }
+
+  getActiveScope() {
+    const r = this.db.prepare(`SELECT v FROM meta WHERE k = 'active_scope'`).get();
+    return r ? r.v : null;
+  }
+
+  // -- FOCUS FRAMES (matrioska nested-compact: stack dello zoom-in/pop) --------
+  // Source-of-truth dello stack di focus. CRUD basso livello; l'orchestrazione (enterFocus/popFocus/buildFrame…)
+  // vive in nested-compact.mjs (node-pure). Log strutturale silent (l'evento VISIBILE è la decisione enter/pop).
+  // Design: ../../wiki/architecture/matrioska-orchestration-spec.md.
+  /** Max seq corrente del change-log (snapshot delimitatore dei delta di uno scope). 0 se vuoto. */
+  currentChangeSeq() {
+    const r = this.db.prepare(`SELECT MAX(seq) AS m FROM changelog`).get();
+    return r?.m ?? 0;
+  }
+
+  createFocusFrame(scopeId, { parentId = null, depth, aimTask = null, taskSubset = [], sinceSeq = 0, now = Date.now(), who = this.agent } = {}) {
+    this.db.prepare(
+      `INSERT INTO focus_frames (scope_id, parent_id, depth, aim_task, task_subset, entered, status, since_seq)
+       VALUES (?,?,?,?,?,?,'open',?)`
+    ).run(scopeId, parentId, depth, aimTask, JSON.stringify(taskSubset ?? []), now, sinceSeq);
+    this._log("focus_frames", scopeId, "status", null, "open", who, null, 1);
+    return this.getFocusFrame(scopeId);
+  }
+
+  getFocusFrame(scopeId) {
+    const r = this.db.prepare(`SELECT * FROM focus_frames WHERE scope_id = ?`).get(scopeId);
+    if (!r) return null;
+    return { ...r, task_subset: r.task_subset == null ? [] : JSON.parse(r.task_subset) };
+  }
+
+  listFocusFrames({ status = null } = {}) {
+    let q = `SELECT * FROM focus_frames`; const args = [];
+    if (status) { q += ` WHERE status = ?`; args.push(status); }
+    q += ` ORDER BY depth, entered`;
+    return this.db.prepare(q).all(...args).map((r) => ({ ...r, task_subset: r.task_subset == null ? [] : JSON.parse(r.task_subset) }));
+  }
+
+  closeFocusFrame(scopeId, { who = this.agent } = {}) {
+    const prev = this.db.prepare(`SELECT status FROM focus_frames WHERE scope_id = ?`).get(scopeId);
+    this.db.prepare(`UPDATE focus_frames SET status = 'popped' WHERE scope_id = ?`).run(scopeId);
+    this._log("focus_frames", scopeId, "status", prev?.status ?? null, "popped", who, null, 1);
+    return this.getFocusFrame(scopeId);
   }
 }
 

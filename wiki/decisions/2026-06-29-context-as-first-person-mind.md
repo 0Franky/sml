@@ -51,6 +51,8 @@ Su progetti molto grossi le cose-da-tenere-sott'occhio/verificare/fare diventano
 
 → *3 nuance (trigger-threshold, algoritmo cornice-da-stato-durevole, depth-bound ≤3) restano **rinviate al build** e tracciate come TODO atomici in [[../todo|todo §NEXT BUILD]] (regola no-half-work); qui `[INFERRED]`, da validare empiricamente. La 4ª (meccanismo di ritorno-risultati) è **specificata** dall'utente (msg 453) → [[../concepts/report-to-file-pointer]] (report-su-file + summary-pointer); resta da **implementare** nel build.*
 
+> **✅ IMPLEMENTATO 2026-06-29** → [[../architecture/matrioska-orchestration-spec]] (status: IMPLEMENTED). Core node-pure `harness/src/nested-compact.mjs` (trigger doppio token+watch con degrade depth-saturo→reorder, `buildFrame` cornice-da-stato-durevole veritiera, `enterFocus`/`popFocus`/`realignParent`, depth-bound ≤3) + extension `nested-compact.ts` (`enter_focus`/`pop_focus`/`focus_status`, `session_before_compact` defensive) + injector matrioska-aware `context-assembly.ts` (`<focus_hint>` con token reale via `getContextUsage()`). OQ-A risolta = **model-initiated + focus_hint** (auto-enter fallback futuro); OQ-B = **table `focus_frames`**. Nuance #4 (pop/re-align) = `pop-report.mjs` + `nested-compact.popFocus`. Restano (non-blocking): hysteresis/cooldown nell'hook, lane `<messages_with_user>` nel nested workspace (gated full-Strada-2), calibrazione soglie (OQ-C). Test deterministici: `nested-compact.test.mjs` (49).
+
 ## Conseguenze / implicazioni sul build
 
 - La lane **`<messages_with_user>`** (finestra verbatim ultimi-N + recupero-per-ID) — nel design ma **non implementata** — diventa il **pezzo centrale**, non opzionale.

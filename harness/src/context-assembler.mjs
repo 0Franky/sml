@@ -146,10 +146,14 @@ export function assembleContext(vq, opts = {}) {
     : `  <current_aim>(nessuno)</current_aim>`);
 
   // --- task_list (open-loop: pending + in_progress) — cap + SEGNALA se ce ne sono altri ---
+  //     focusTaskIds (matrioska, nested-compact): se presente, la lista è FILTRATA al subset messo a fuoco
+  //     (lo zoom-IN mostra solo i task dello scope; il resto vive nel <frame> come backlog). ---
   const maxTasks = opts.maxTasks ?? 20;
-  const openAll = [...vq.listTasks({ status: "in_progress" }), ...vq.listTasks({ status: "pending" })];
+  const focusSet = Array.isArray(opts.focusTaskIds) ? new Set(opts.focusTaskIds.map(String)) : null;
+  const openAll0 = [...vq.listTasks({ status: "in_progress" }), ...vq.listTasks({ status: "pending" })];
+  const openAll = focusSet ? openAll0.filter((t) => focusSet.has(String(t.id))) : openAll0;
   const open = openAll.slice(0, maxTasks);
-  lines.push("  <task_list>");
+  lines.push(focusSet ? `  <task_list focus="${open.length}">` : "  <task_list>");
   for (const t of open) lines.push(`    - [${t.status}] ${esc(t.id)}: ${esc(t.title)}`);
   if (openAll.length > open.length) lines.push(`    - (+${openAll.length - open.length} task aperti non mostrati — usa list_tasks per l'elenco completo)`);
   lines.push("  </task_list>");

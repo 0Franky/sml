@@ -2,8 +2,8 @@
 name: matrioska-orchestration-spec
 description: Spec implementabile della nested-compact "a matrioska" (zoom-in/pop/re-align), prodotto dall'analisi con agente specializzato (2026-06-29, richiesta utente msg 464). Divide in core node-pure (harness/src/nested-compact.mjs) + thin extension (.pi/extensions/nested-compact.ts). Sblocca il codice della matrioska. NB: 2 open-question richiedono una scelta utente prima dell'implementazione.
 type: architecture
-status: spec-ready (da implementare; 2 open-question aperte per l'utente)
-tags: [harness, matrioska, nested-compact, context, pop-report, strada-2, spec]
+status: IMPLEMENTED 2026-06-29 (core node-pure `harness/src/nested-compact.mjs` + extension `nested-compact.ts` + 49 test; OQ-A/OQ-B risolte coi reco di default)
+tags: [harness, matrioska, nested-compact, context, pop-report, strada-2, spec, implemented]
 sources:
   - "[[../decisions/2026-06-29-context-as-first-person-mind]] §principio-5"
   - "[[../concepts/report-to-file-pointer]]"
@@ -14,6 +14,19 @@ last_updated: 2026-06-29
 # Matrioska nested-compact — spec di orchestrazione
 
 > Pattern: **core deterministico node-pure** `harness/src/nested-compact.mjs` (testabile senza pi, come `pop-report.mjs`) + **thin extension** `.pi/extensions/nested-compact.ts` (solo wiring). Riusa as-is: `buildPopReport` (floor-F), la lane `decisions` + `getDecisionsByAgent`/`getChangesByAgent`, `compaction.enabled:false`.
+
+## ✅ IMPLEMENTATO (2026-06-29)
+
+Build completo (suite harness 15 file verde, typecheck verde, 28 tool 0-collisioni). File reali:
+- **Core node-pure** `harness/src/nested-compact.mjs` (+ `.d.mts`): `DEFAULT_CFG`, `collectMetrics`, `classifyPressure`, `currentDepth`, `canEnter`, `evaluateTrigger`, `buildFrame`, `serializeFrame`, `getFocusStack`, `enterFocus`, `popFocus`, `realignParent`, `buildNestedWorkspace` — **firme esatte come §7**.
+- **Datastore** `harness/src/vars-queue.mjs`: tabella `focus_frames` + CRUD (`createFocusFrame`/`getFocusFrame`/`listFocusFrames`/`closeFocusFrame`/`currentChangeSeq`) + **`active_scope`** (`setActiveScope`/`getActiveScope`, routing dell'attribuzione `who` in-scope — vedi sotto).
+- **Context** `harness/src/context-assembler.mjs`: opt `focusTaskIds` → `<task_list>` filtrata al subset a fuoco.
+- **Extension** `.pi/extensions/nested-compact.ts`: tool `enter_focus`/`pop_focus`/`focus_status` (F+S) + `session_before_compact` defensive (cancel SOLO su `threshold`, non su `manual`/`overflow` per non brickare il turno).
+- **Injector unico** `.pi/extensions/context-assembly.ts`: matrioska-aware — se uno scope è aperto inietta `buildNestedWorkspace` (frame + context filtrato); altrimenti resume + context + `<focus_hint>` quando `evaluateTrigger` (token reale via `ctx.getContextUsage()` + watch) raccomanda matrioska.
+- **Routing who** `.pi/extensions/vars-queue.ts`: i tool di mutazione (`set_var`/`set_task_status`/`record_decision`/`propose_var`/`send_message`) usano `who = getActiveScope() ?? agent` → le mutazioni in-scope sono attribuite allo scope-figlio → `buildPopReport` deriva i delta (floor-F mai vuoto). **Risolve in produzione il "handle-swap" dello spec §3 senza una 2ª connessione DB.**
+- **Test** `harness/test/unit/nested-compact.test.mjs` (49): classifyPressure (tabella+OR+null-percent), depth-saturation→reorder, enterFocus depth-guard (×3 ok ×4 throw + nesting via active_scope), serializeFrame (constraints MAI troncate), popFocus round-trip (figlio→who=scope→report deriva · padre ottiene decisione promossa · task done esce dall'open-loop · CURR ripristinato · active_scope torna a root), realignParent (aim done→non ripristina), buildNestedWorkspace.
+
+> **Variazione vs spec**: lo spec §3 prevedeva `new VarsQueue(DB, {agent: scopeId})` come handle in-scope; in implementazione si usa **`active_scope` in `meta`** (condiviso cross-extension via lo stesso file DB) + routing `who` nei tool — stessa semantica (attribuzione per-scope, no rollup, no double-count), senza aprire una seconda connessione (evita il leak del refactor DB-singleton pendente). `since_seq` resta catturato per audit; il report usa `since: frame.entered` (l'API `buildPopReport` esistente).
 
 ## (1) Trigger — entrambi (utente msg 464), first-to-fire wins
 
@@ -78,7 +91,9 @@ Test node-pure (in-memory VarsQueue): classifyPressure (tabella + OR + depth-sat
 ## Rischi
 1. **Thrash/oscillazione** (alto) → hysteresis (cooldown + reorder-fallito + persist≥2). 2. `getContextUsage().tokens==null` post-compaction → fallback solo-watch. 3. token pi vs workspace iniettato (Strada-2) → `max(piPercent, selfEstimate char/4)`. 4. frame growth a depth → display-cap backlog/decisions (constraints no). 5. convId='main' single-conversation (scope non segmenta la chat — accettabile v1). 6. re-align race (task completato esternamente) → ok se tutte le transizioni passano da `setTaskStatus`.
 
-## ⚠️ OPEN QUESTIONS — richiedono scelta utente PRIMA di implementare
-- **OQ-A (chi sceglie il sub-set del focus)**: **modello** (S-policy: `enter_focus(task_ids)`, ADR principio-2 "il modello cura il suo workspace") **vs harness auto-enter** su un subset deterministico (floor-F più forte, optimization-first) quando il modello non agisce. *Reco: model-initiated + `<focus_hint>` harness; auto-enter solo come fallback opt-in.*
-- **OQ-B (storage focus-stack)**: **table `focus_frames`** (queryable, stile schema esistente, +1 migration) **vs** `meta.focus_stack` JSON (zero-schema-churn). *Reco: table.*
-- **OQ-C (calibrazione soglie)**: tutti i numeri `[CALIBRATE]` (0.55/0.75, 12/25, focusK=5, cooldown 90s) sono first-principles → pass empirico sui dogfood (ADR difersce già "soglie da calibrare").
+## ✅ OPEN QUESTIONS — RISOLTE (2026-06-29, utente "riprendi" coi reco di default)
+- **OQ-A (chi sceglie il sub-set del focus)** → **RISOLTA = model-initiated** (`enter_focus(task_ids)`, ADR principio-2 "il modello cura il suo workspace") **+ `<focus_hint>` harness** quando la pressione raccomanda matrioska (auto-suggest = floor-S graceful; la DECISIONE resta del modello). Auto-enter deterministico NON implementato in v1 (resta fallback opt-in futuro se i dogfood mostrano che il modello non agisce sotto pressione).
+- **OQ-B (storage focus-stack)** → **RISOLTA = table `focus_frames`** (queryable, stile schema esistente; +1 migration idempotente via `CREATE TABLE IF NOT EXISTS`).
+- **OQ-C (calibrazione soglie)**: tutti i numeri `[CALIBRATE]` (0.55/0.75, 12/25, focusK=5, cooldown 90s) sono first-principles → pass empirico sui dogfood (ADR difersce già "soglie da calibrare"). **Aperta** (calibrazione, non blocca l'impl).
+
+> **Resta (post-impl, non-blocking)**: (1) **hysteresis/cooldown** dell'extension (`cooldownMs` è in `DEFAULT_CFG` ma il gating anti-thrash 2-valutazioni è da cablare nell'hook se i dogfood mostrano oscillazione); (2) **lane `<messages_with_user>` nel nested workspace** (gated sul wiring full-Strada-2 della conversation-store nell'injector); (3) calibrazione soglie OQ-C.
