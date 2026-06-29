@@ -137,6 +137,7 @@ Il wrapper (vedi [[../architecture/wrapper]]) deve avere:
 - [[structured-thinking]] — il thinking strutturato che riceve injection
 - [[structured-context-sections]] — sezione `<external_inputs>` raccoglie injection storiche
 - [[contradiction-detection-layer]] — può triggerare injection di tipo `correction`
+- [[cross-session-state-sharing]] — l'injection esplicita al section-boundary è la lane-F (harness) della difesa-in-profondità per propagare i cambiamenti di stato condiviso
 - [[../architecture/wrapper]] — implementazione
 
 ## Sources
