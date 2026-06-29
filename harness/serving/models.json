@@ -15,13 +15,13 @@
     },
 
     "gemini": {
-      "_comment": "Google Gemini via endpoint OpenAI-compatible. Imposta $GEMINI_API_KEY (env o harness/.env gitignored — MAI nel repo). Modelli: gemini-2.0-flash (veloce/economico), gemini-2.5-pro (forte).",
+      "_comment": "Google Gemini via endpoint OpenAI-compatible. Imposta $GEMINI_API_KEY (env o harness/.env gitignored — MAI nel repo). Default: gemini-3.1-flash (verificato esistente via web 2026-06). flash-lite = più economico.",
       "baseUrl": "https://generativelanguage.googleapis.com/v1beta/openai/",
       "api": "openai-completions",
       "apiKey": "$GEMINI_API_KEY",
       "models": [
-        { "id": "gemini-2.0-flash", "contextWindow": 1048576, "maxTokens": 8192 },
-        { "id": "gemini-2.5-pro", "contextWindow": 1048576, "maxTokens": 8192 }
+        { "id": "gemini-3.1-flash", "contextWindow": 1048576, "maxTokens": 8192 },
+        { "id": "gemini-3.1-flash-lite", "contextWindow": 1048576, "maxTokens": 8192 }
       ]
     },
 
