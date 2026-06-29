@@ -51,7 +51,9 @@ return = {
 - `getDecisionsByAgent(idFiglio)` — le scelte prese dal figlio (con razionale),
 - `getChangesByAgent(idFiglio)` — tutte le mutazioni che ha attribuito.
 
-→ Questo è il **floor F** del protocollo: l'harness può assemblare un report/summary **mai vuoto** (decisioni + cambiamenti del figlio) senza modello; la **S** è la salienza/narrazione (cosa è load-bearing per il padre). Doppio uso oltre al pop: **audit cross-agent** "chi ha deciso cosa". *(Implementato in `harness/src/vars-queue.mjs`: tabella `decisions` + `recordDecision`/`getDecisionsByAgent`/`getChangesByAgent`, test unit block-8.)*
+→ Questo è il **floor F** del protocollo: l'harness può assemblare un report/summary **mai vuoto** (decisioni + cambiamenti del figlio) senza modello; la **S** è la salienza/narrazione (cosa è load-bearing per il padre). Doppio uso oltre al pop: **audit cross-agent** "chi ha deciso cosa".
+
+*(Implementato 2026-06-29: `harness/src/vars-queue.mjs` = tabella `decisions` + `recordDecision`/`getDecisionsByAgent`/`getChangesByAgent` (test unit block-8); `harness/src/pop-report.mjs` = `buildPopReport(vq, childAgentId)` che assembla il report-su-file dal change-log attribuito + ritorna `{summary, report_path}` con path OS-agnostic — il floor-F mai-vuoto (test `pop-report.test.mjs` 16/16). **Resta** il wiring nel ciclo di pop reale dell'extension + la metà-S della salienza.)*
 
 ## Relazione con la matrioska-compact
 
