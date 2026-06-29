@@ -73,6 +73,14 @@ L'unica cosa che richiede TE = l'**auth del provider** (per Claude: `/login anth
 
 **API pi verificata** (v0.80.2): `before_agent_start` · `tool_call` (gate) · `tool_result` (transform array) · `before_provider_request` (mutate body) · `registerTool` (typebox params). **E2E headless provato** (`src/_e2e-pi-run.mjs`, 2026-06-29): `createAgentSession` + `AuthStorage.inMemory` + `ModelRegistry.registerProvider` + `bindExtensions` → turno reale verde (context iniettato, 15/15 tool, guardrail attivi). `verifier-sandbox` usa una tempdir (Fase 2: Docker).
 
+## Config context-budget (OPT-IN, per modello/infra)
+
+Le soglie di "contesto pieno" (quando compattare/focalizzare) e la finestra messaggi sono **configurabili**, così **ognuno le tara per il proprio modello/infrastruttura** senza toccare il codice. **Opt-in**: senza config si usano i default (comportamento invariato).
+
+- **File**: copia `.pi/harness.config.example.json` → `.pi/harness.config.json` (gitignored) e modifica i valori.
+- **Env** (override rapido, vince sul file): `HARNESS_TOKEN_MATRIOSKA_PCT`, `HARNESS_TOKEN_REORDER_PCT`, `HARNESS_WATCH_MATRIOSKA`, `HARNESS_WATCH_REORDER`, `HARNESS_MAX_DEPTH`, `HARNESS_MESSAGES_WINDOW_N`.
+- **Come tararlo**: modello a **contesto piccolo** (SLM 4B) → soglie **basse** (compatta PRIMA, resti nel regime di qualità alta); modello a **contesto grande** (es. Claude Sonnet) → soglie **alte** (compatta DOPO, sfrutti la finestra). NB analisi SOTA (review-loop 2026-06-29): per un 4B il contesto EFFETTIVO è ~40-60% del nominale → il default `tokenMatrioskaPct=0.75` è un'IPOTESI da misurare (needle/RULER sul nostro modello), probabilmente da abbassare. Logica: `src/harness-config.mjs` (fail-safe ai default; test 17/17).
+
 ## Roadmap
 
 - **Fase 0** (questo scaffold) → walking skeleton + verifier-sandbox.

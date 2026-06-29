@@ -16,10 +16,14 @@ import { assembleContext, buildResumeDigest } from "../../src/context-assembler.
 import { buildMessagesLane } from "../../src/conversation-store.mjs";
 import { getConvId } from "../../src/session-context.mjs";
 import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint, markFocusHintEmitted } from "../../src/nested-compact.mjs";
+import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
-const MESSAGES_WINDOW_N = 8; // turni verbatim mostrati nella lane <messages_with_user>
+// Context-budget OPT-IN (msg 520): soglie trigger + finestra messaggi configurabili per modello/infra
+// (.pi/harness.config.json o env HARNESS_*). Senza config → default (comportamento invariato). Caricato una volta al load.
+const HARNESS_CFG = loadHarnessConfig();
+const MESSAGES_WINDOW_N = HARNESS_CFG.messagesWindowN; // turni verbatim mostrati nella lane <messages_with_user>
 
 const DB_PATH = ".pi/state/vars.db";
 
@@ -69,7 +73,7 @@ export default function (pi: ExtensionAPI) {
       // Nessuno scope → resume? + <context> + <focus_hint>? + lane <messages_with_user>.
       const resume = buildResumeDigest(vq);
       const base = assembleContext(vq);
-      const trig = evaluateTrigger(vq, { tokens, contextWindow });
+      const trig = evaluateTrigger(vq, { tokens, contextWindow }, HARNESS_CFG.trigger);
       let hint = "";
       if (trig.recommend === "matrioska" && shouldEmitFocusHint(vq)) {
         hint = `\n<focus_hint watch="${trig.metrics.watchCount}"${trig.metrics.percent != null ? ` ctx="${Math.round(trig.metrics.percent * 100)}%"` : ""}>Contesto in pressione: valuta enter_focus su un sotto-insieme di task per lavorare a fuoco (pop_focus al termine).</focus_hint>`;

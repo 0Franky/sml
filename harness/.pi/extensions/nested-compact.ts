@@ -17,12 +17,15 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { VarsQueue } from "../../src/vars-queue.mjs";
 import { getVarsQueue, closeAll } from "../../src/state-db.mjs";
-import { enterFocus, popFocus, getFocusStack, currentDepth, evaluateTrigger, DEFAULT_CFG } from "../../src/nested-compact.mjs";
+import { enterFocus, popFocus, getFocusStack, currentDepth, evaluateTrigger } from "../../src/nested-compact.mjs";
+import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
 const DB_PATH = ".pi/state/vars.db";
 const REPORT_DIR = ".pi/state/reports";
+// Context-budget OPT-IN (msg 520): stesse soglie configurabili usate da context-assembly (.pi/harness.config.json / env).
+const HARNESS_CFG = loadHarnessConfig();
 
 function getStore(): VarsQueue {
   mkdirSync(dirname(DB_PATH), { recursive: true });
@@ -45,7 +48,7 @@ export default function (pi: ExtensionAPI) {
     async execute(_t: string, p: any) {
       try {
         const parentScopeId = vq.getActiveScope();
-        const r = enterFocus(vq, { taskSubset: p.task_ids ?? [], parentScopeId });
+        const r = enterFocus(vq, { taskSubset: p.task_ids ?? [], parentScopeId }, HARNESS_CFG.trigger); // maxDepth configurabile
         return {
           content: [{ type: "text", text: JSON.stringify({ scope_id: r.scopeId, depth: r.depth, focus: p.task_ids }) }],
           details: { ok: true },
@@ -87,10 +90,10 @@ export default function (pi: ExtensionAPI) {
     parameters: Type.Object({}),
     async execute(_t: string, _p: any, _signal: any, _onUpdate: any, ctx: any) {
       const usage = ctx?.getContextUsage?.(); // ExtensionContext.getContextUsage() (5° arg di execute, types.d.ts:361)
-      const trig = evaluateTrigger(vq, { tokens: usage?.tokens ?? null, contextWindow: usage?.contextWindow ?? null });
+      const trig = evaluateTrigger(vq, { tokens: usage?.tokens ?? null, contextWindow: usage?.contextWindow ?? null }, HARNESS_CFG.trigger);
       const stack = getFocusStack(vq).map((f) => ({ scope_id: f.scope_id, depth: f.depth, subset: f.task_subset }));
       return {
-        content: [{ type: "text", text: JSON.stringify({ depth: currentDepth(vq), max_depth: DEFAULT_CFG.maxDepth, pressure: trig.recommend, watch: trig.metrics.watchCount, stack }, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify({ depth: currentDepth(vq), max_depth: HARNESS_CFG.trigger.maxDepth, pressure: trig.recommend, watch: trig.metrics.watchCount, stack }, null, 2) }],
         details: { ok: true },
       };
     },

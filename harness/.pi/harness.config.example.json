@@ -1,0 +1,19 @@
+{
+  "_README": "Config OPT-IN del context-budget (msg 520). Copia in 'harness.config.json' (stessa cartella) e taralo per il TUO modello/infra. Senza file → si usano questi default (tarati per il nostro SLM 4B). Override rapidi anche via env HARNESS_* (es. HARNESS_TOKEN_MATRIOSKA_PCT=0.9).",
+  "_come_tararlo": "Modello a CONTESTO PICCOLO (SLM 4B): soglie BASSE → compatta/focalizza PRIMA, resti nel regime di qualità alta. Modello a CONTESTO GRANDE (es. Claude Sonnet): soglie ALTE → compatta DOPO, sfrutti la finestra senza penalizzare le prestazioni.",
+  "trigger": {
+    "_tokenReorderPct": "frazione 0..1 del context window oltre cui suggerisce REORDER (riordino in-place). Default 0.55.",
+    "tokenReorderPct": 0.55,
+    "_tokenMatrioskaPct": "frazione 0..1 oltre cui suggerisce MATRIOSKA (zoom-in/focus). = il tuo 'contesto pieno effettivo'. Default 0.75; per Sonnet potresti alzarlo a 0.9.",
+    "tokenMatrioskaPct": 0.75,
+    "_watchReorder": "n. di item sott'osservazione (task aperti + verifiche pendenti) oltre cui suggerisce reorder. Default 12.",
+    "watchReorder": 12,
+    "_watchMatrioska": "n. di item oltre cui suggerisce matrioska. Default 25.",
+    "watchMatrioska": 25,
+    "_maxDepth": "profondità massima dello stack di focus annidati. Default 3.",
+    "maxDepth": 3,
+    "focusK": 5
+  },
+  "_messagesWindowN": "quanti turni recenti mostrare VERBATIM nella lane <messages_with_user>. Più alto = più storia verbatim (più token). Default 8.",
+  "messagesWindowN": 8
+}
