@@ -3,7 +3,7 @@ name: wrapper-implementation-plan
 description: Piano di implementazione del wrapper/harness su base pi. v3 post review-loop (4 reviewer 2026-06-27). Fase 0 riformulata in 3 gate onesti (dati/verifier model-independent · serving de-risk · pi skeleton minimale). Step 0.0 API pi VERIFICATO.
 type: plan
 status: draft v3 — post review-loop (criticità risolte); pronto per esecuzione Fase 0
-last_updated: 2026-06-27
+last_updated: 2026-06-29
 ---
 
 # Piano di implementazione del Wrapper (harness su pi)

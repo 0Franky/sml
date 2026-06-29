@@ -4,7 +4,7 @@ description: Catalogo completo delle feature-class che introduciamo NOI sul harn
 type: architecture
 tags: [harness, wrapper, pi, feature-catalog, extensions, three-tier, mvp, alignment]
 sources: [wiki/architecture/wrapper.md, wiki/decisions/2026-06-23-pi-harness-base.md, wiki/architecture/wrapper-implementation-plan.md, wiki/concepts/* (28 concept estratti 2026-06-27)]
-last_updated: 2026-06-27
+last_updated: 2026-06-29
 status: draft v1 (sintesi review-loop-ready) + §2bis completeness-check + §2ter metacognition-needs-training audit (2026-06-27)
 confidence: provisional
 ---
