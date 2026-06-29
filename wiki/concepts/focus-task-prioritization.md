@@ -2,18 +2,20 @@
 name: focus-task-prioritization
 description: "Gathering di priorità+dipendenze PRIMA dell'enter_focus — il modello stabilisce quali task mettere a fuoco e in che ordine, non 'i primi N'. Design DA VALIDARE (review-loop + simulazioni realistiche)."
 type: concept
-status: design-draft
-tags: [matrioska, focus, task-graph, prioritization, dependencies, training-vs-harness]
+status: implemented-v1
+tags: [matrioska, focus, task-graph, prioritization, dependencies, training-vs-harness, anti-cecità]
 sources:
   - TG utente 2026-06-29 msg 506 (gathering priorità+ordine prima del focus)
   - TG utente 2026-06-29 msg 509 (gathering-in-focus-mode)
   - TG utente 2026-06-29 msg 510/511 (validare con review-loop + simulazioni realistiche ad alto contesto)
+  - TG utente 2026-06-29 msg 515 (anti-cecità su grandi contesti)
+  - TG utente 2026-06-29 msg 528/531 (gathering = skill autonoma; forzabile via regola/workflow/hook)
 last_updated: 2026-06-29
 ---
 
 # Focus task-prioritization — gathering prima dell'enter_focus
 
-> **STATUS: VALIDATO via review-loop (25 agenti, 19/22 confermati) + simulazione realistica.** Design v1 implementabile sotto. (Anti-cecità/context-budget: 2ª review in corso.) NON ancora implementato.
+> **STATUS: IMPLEMENTATO v1 (2026-06-29).** Validato via review-loop (25 agenti, 19/22) + simulazione realistica → costruito e testato (suite 18 file 0-falliti). Dettaglio implementazione + modi di enforcement in §IMPLEMENTAZIONE v1 in fondo. Commit `9375487`→`0fc51ff`.
 
 ## ✅ SINTESI REVIEW-LOOP → DESIGN v1 IMPLEMENTABILE (decisioni validate)
 
@@ -133,9 +135,45 @@ Prototipo dell'algoritmo (no LLM) su un task-graph **realistico e denso**: 35 ta
 - Il modello deve poter SETTARE priority/deps (rischio reward-hacking: si auto-assegna priorità comode) → reward sull'outcome (progresso reale), non sui campi dichiarati.
 - gathering-in-focus: scope vero vs proiezione-vista? (vedi sopra)
 
+## IMPLEMENTAZIONE v1 (2026-06-29) [EXTRACTED dal codice]
+
+Costruito e testato (suite 18 file 0-falliti, typecheck verde). Commit `9375487`, `ba92aed`, `f7a0664`, `c1a837e`, `bc8fc2a`, `7e5a89b`, `0fc51ff`.
+
+### Nucleo node-pure (`harness/src/`)
+- **`vars-queue.mjs`**: schema `tasks.priority INTEGER DEFAULT 0` + `tasks.deps TEXT JSON DEFAULT '[]'` (migrazione DB esistenti via `_ensureColumn`/`EXPECTED_COLUMNS`). `addTask`/`setTaskMeta` con `_checkDeps` (no-self, **no-ciclo DFS**, forward-ref ammesso). `listTasksOrdered()` → `{structured, tasks}` con `ready`/`unblocks`/`order` + **gate proporzionalità** (backlog piatto → vista semplice). `readyTasks(subset)`.
+- **`nested-compact.mjs`**: `enterFocus` **HARD-GATE no-ready** (throw `{reason:'no-ready-task', missing_deps}`) + `lead = readyTasks[0]` (mai un bloccato). `collectMetrics` con **output-reserve** (percent su `window*(1-reserve)`). `shouldEmitReorgHint`/`markReorgEmitted`.
+- **`context-assembler.mjs`**: `<task_list>` in **execution-order** + segnale nascosti con **breakdown H/M/L** (solo se strutturato).
+- **`harness-config.mjs`**: sezioni `gathering {mode, minTasksForForce}` + `trigger.outputReservePct` (opt-in, file+env, fail-safe/clamp).
+
+### Tool model-facing (`harness/.pi/extensions/`)
+- `add_task(priority,deps)` · `set_task_deps` · **`get_execution_order`** (vista gathering READ-ONLY, no payload) · `list_tasks` (ordinato senza status). (`vars-queue.ts`)
+- require-gate su `enter_focus` (`nested-compact.ts`) · inject-view + aim-in-tail + reorganize_hint (`context-assembly.ts`).
+
+### Gathering-enforcement (msg 528/531) — 2 assi
+**Asse 1 — la VISTA**: sempre F-harness read-only (`get_execution_order`/`list_tasks` ordinato). Non cambia.
+**Asse 2 — QUANTO è forzata** (config `gathering.mode`, opt-in, default `delegated`; gate proporzionalità su `minTasksForForce` open):
+
+| mode | enforcement | meccanismo | classificazione |
+|---|---|---|---|
+| `delegated` (default) | nessuno — il modello decide quando consultare la vista | — | S (il modello sceglie) |
+| `inject` | l'harness allega `<execution_order>` inline nel `focus_hint` (anti-cecità, low-ceremony) | hook `before_agent_start` | F-harness (garantisce il dato) |
+| `require` | `enter_focus` bloccato finché non chiami `get_execution_order` (token `_gather_token` consumato per-focus) | gate sul tool | F-harness (hard) |
+
+Il "gathering in FOCUS-MODE DEDICATA" (msg 509) resta **cerimonia tagliata** (open-question deferred): un focus annidato solo per gatherare brucia depth + report vuoto. La REGOLA/WORKFLOW (soft, constitution / scripted) sono le altre due leve di forzatura possibili oltre all'hook.
+
+### Anti-cecità Fase-1 (msg 515/518)
+- **segnale nascosti H/M/L** nel `task_list` (H=priority>0, M=0, L<0) + execution-order (importanti in cima → il cap non li nasconde).
+- **aim-in-coda** (`<current_aim_reminder>`): l'aim ri-ancorato in fondo al workspace (anti lost-in-the-middle).
+- **output-budget-reserve** (`outputReservePct`): riserva fisica per output+thinking, distinta da `tokenMatrioskaPct`.
+- **reorganize_hint**: reminder "consolida il backlog" event-driven dalla pressione (banda reorder), non wall-clock.
+
+### Aperto (post-v1)
+Misurare la **curva effective-context** del modello (prereq #1) per calibrare le soglie default; critical-path come tie-break (Open-question #1); Fase-2: modello PROPONE priority/deps (con anti-hacking `deps_source`).
+
 ## Link
 
-- [[architecture/matrioska-orchestration-spec]] (§enter-focus — `lead` diventa primo-in-dep-order)
+- [[architecture/matrioska-orchestration-spec]] (§enter-focus — `lead` = primo-in-dep-order, hard-gate no-ready)
 - [[concepts/dependency-aware-error-recovery]] (dep-graph + truth-maintenance — stesso grafo, uso diverso)
 - [[concepts/situational-policy-table]] (situazione→azione: "quali task a fuoco" è una policy situazionale)
+- [[concepts/context-limits-explained]] (anti-cecità + output-reserve + headroom — i limiti spiegati)
 - [[concepts/training-vs-harness-classification]] (F=task-graph / S=gathering+scelta)
