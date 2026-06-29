@@ -15,7 +15,7 @@ import { getVarsQueue, getConversationStore, closeAll } from "../../src/state-db
 import { assembleContext, buildResumeDigest } from "../../src/context-assembler.mjs";
 import { buildMessagesLane, windowNativeMessages } from "../../src/conversation-store.mjs";
 import { getConvId } from "../../src/session-context.mjs";
-import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint } from "../../src/nested-compact.mjs";
+import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint, markFocusHintEmitted } from "../../src/nested-compact.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
@@ -66,10 +66,11 @@ export default function (pi: ExtensionAPI) {
       const resume = buildResumeDigest(vq);
       const base = assembleContext(vq);
       const trig = evaluateTrigger(vq, { tokens, contextWindow });
-      const hint =
-        trig.recommend === "matrioska" && shouldEmitFocusHint(vq)
-          ? `\n<focus_hint watch="${trig.metrics.watchCount}"${trig.metrics.percent != null ? ` ctx="${Math.round(trig.metrics.percent * 100)}%"` : ""}>Contesto in pressione: valuta enter_focus su un sotto-insieme di task per lavorare a fuoco (pop_focus al termine).</focus_hint>`
-          : "";
+      let hint = "";
+      if (trig.recommend === "matrioska" && shouldEmitFocusHint(vq)) {
+        hint = `\n<focus_hint watch="${trig.metrics.watchCount}"${trig.metrics.percent != null ? ` ctx="${Math.round(trig.metrics.percent * 100)}%"` : ""}>Contesto in pressione: valuta enter_focus su un sotto-insieme di task per lavorare a fuoco (pop_focus al termine).</focus_hint>`;
+        markFocusHintEmitted(vq); // commit del cooldown solo dopo aver deciso di emettere (query/command separati)
+      }
       const lane = buildMessagesLane(convStore, convId, { n: MESSAGES_WINDOW_N });
       workspace = (resume ? `${resume}\n` : "") + base + hint + (lane ? `\n${lane}` : "");
     }

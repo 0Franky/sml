@@ -110,11 +110,16 @@ export function evaluateTrigger(vq, opts = {}, cfg = DEFAULT_CFG) {
 export function shouldEmitFocusHint(vq, opts = {}) {
   const now = opts.now ?? Date.now();
   const cooldownMs = opts.cooldownMs ?? DEFAULT_CFG.cooldownMs;
-  const last = vq.getVar("_focus_hint_ts");
-  const lastTs = typeof last?.value === "number" ? last.value : 0;
-  if (now - lastTs < cooldownMs) return false; // suggerito troppo di recente → sopprimi
-  vq.setVar("_focus_hint_ts", now, { namespace: "memo", scope: "private" }); // memo = silent
-  return true;
+  // PREDICATO PURO (nessuna scrittura): true se è passato ≥ cooldownMs dall'ultimo hint emesso. Lo stato vive nel
+  // META (k/v), NON nel namespace 'memo' delle lezioni (scriverlo in 'memo' gonfiava <notes count> + garbage in
+  // recall_lessons). Il commit è separato → markFocusHintEmitted. (review-loop #2 2026-06-29, P1 memo + P3 query/command.)
+  const lastTs = Number(vq.getMeta("focus_hint_ts")) || 0;
+  return now - lastTs >= cooldownMs;
+}
+
+/** Registra che il <focus_hint> è stato EMESSO ora (commit del cooldown). Da chiamare solo dopo aver deciso di emetterlo. */
+export function markFocusHintEmitted(vq, opts = {}) {
+  vq.setMeta("focus_hint_ts", opts.now ?? Date.now()); // silent (strutturale, fuori da recent_changes)
 }
 
 /**
@@ -286,6 +291,13 @@ export function realignParent(vq, opts = {}) {
       if (open.length) { vq.setCurr(open[0].id, { who }); restoredCurr = open[0].id; }
     }
   }
+  // reporting: se il CURR punta comunque a un task APERTO valido (es. il lead dello scope, ancora pending),
+  // rifletti quel CURR effettivo invece di null → pop_focus comunica l'aim reale, non "nessuno". (review-loop #2 P3.)
+  if (!restoredCurr) {
+    const currId = vq.getCurr();
+    const curr = currId ? vq.getTask(currId) : null;
+    if (curr && curr.status !== "done" && curr.status !== "blocked") restoredCurr = curr.id;
+  }
   const frame = buildFrame(vq, { now });
   return { restoredCurr, aim: frame.aim, frame };
 }
@@ -317,6 +329,7 @@ export function buildNestedWorkspace(vq, opts = {}) {
 }
 
 export default {
-  DEFAULT_CFG, collectMetrics, classifyPressure, currentDepth, canEnter, evaluateTrigger, shouldEmitFocusHint,
+  DEFAULT_CFG, collectMetrics, classifyPressure, currentDepth, canEnter, evaluateTrigger,
+  shouldEmitFocusHint, markFocusHintEmitted,
   buildFrame, serializeFrame, getFocusStack, enterFocus, popFocus, realignParent, buildNestedWorkspace,
 };
