@@ -48,15 +48,23 @@ function extractSystemText(payload: any): string {
   return "";
 }
 
+/** Un messaggio role=user che però è un TOOL-RESULT (formato Anthropic: content con blocchi type:"tool_result"). */
+function isToolResult(m: any): boolean {
+  return Array.isArray(m?.content) && m.content.some((b: any) => b && (b.type === "tool_result" || b.type === "tool-result"));
+}
+
 /** Info sull'array messaggi NATIVO (escluso il system). */
-function messagesInfo(payload: any): { count: number; roles: string[]; userTurns: number; text: string } {
+function messagesInfo(payload: any): { count: number; roles: string[]; userTurns: number; toolResults: number; text: string } {
   const msgs = payload && Array.isArray(payload.messages) ? payload.messages : [];
   const nonSystem = msgs.filter((m: any) => m && m.role !== "system");
   const roles = nonSystem.map((m: any) => String(m.role ?? "?"));
   return {
     count: nonSystem.length,
     roles,
-    userTurns: roles.filter((r: string) => r === "user").length,
+    // turni-utente GENUINI: escludi i tool-result (role=user ma sono output-di-tool, non un nuovo turno utente →
+    // altrimenti un turno [domanda→tool-call→tool-result] conterebbe 2 "user" e falserebbe il check anti-doppia-chat).
+    userTurns: nonSystem.filter((m: any) => m.role === "user" && !isToolResult(m)).length,
+    toolResults: nonSystem.filter((m: any) => isToolResult(m)).length,
     text: nonSystem.map((m: any) => contentText(m.content)).join("\n"),
   };
 }
@@ -90,17 +98,26 @@ export default function (pi: ExtensionAPI) {
       const mi = messagesInfo(payload);
       const ov = laneOverlap(sys, mi.text);
       const usage = ctx?.getContextUsage?.();
+      const tokens = usage?.tokens ?? null;
+      const contextWindow = usage?.contextWindow ?? null;
+      // frazione 0..1 AFFIDABILE calcolata da noi (token/finestra), come fa il trigger matrioska — evita l'ambiguità
+      // di `usage.percent` (pi lo ritorna in scala 0..100, non 0..1). Fallback a percent/100 se la finestra manca.
+      const contextFraction =
+        tokens != null && contextWindow ? tokens / contextWindow : usage?.percent != null ? usage.percent / 100 : null;
       const rec = {
         ts: new Date().toISOString(),
         convId: getConvId(),
         systemLen: sys.length,
         nativeMessages: mi.count,
         nativeRoles: mi.roles,
-        nativeUserTurns: mi.userTurns, // col fix keepTurns=1 → atteso 1 (solo turno corrente)
+        nativeUserTurns: mi.userTurns, // turni-utente GENUINI (tool-result esclusi); col fix keepTurns=1 → atteso 1
+        nativeToolResults: mi.toolResults,
         laneLines: ov.laneLines,
         laneNativeOverlap: ov.overlap, // col fix → atteso ≤1 (solo il msg utente corrente); ~4 = doppia-chat
-        tokens: usage?.tokens ?? null,
-        contextPercent: usage?.percent ?? null,
+        tokens,
+        contextWindow,
+        contextFraction, // 0..1
+        contextPercentRaw: usage?.percent ?? null, // ciò che pi riporta grezzo (scala 0..100), per diagnosi
       };
       _last = rec;
       mkdirSync(TRACE_DIR, { recursive: true });
@@ -112,10 +129,10 @@ export default function (pi: ExtensionAPI) {
           `- ts: ${rec.ts}\n- convId: ${rec.convId}\n` +
           `- system prompt: ${rec.systemLen} char\n` +
           `- messaggi NATIVI (no system): ${rec.nativeMessages}  → ruoli: ${rec.nativeRoles.join(", ")}\n` +
-          `- turni-utente nativi: ${rec.nativeUserTurns}  (atteso 1 = solo turno corrente)\n` +
+          `- turni-utente nativi: ${rec.nativeUserTurns}  (atteso 1 = solo turno corrente; tool-result esclusi: ${rec.nativeToolResults})\n` +
           `- righe lane <messages_with_user>: ${rec.laneLines}\n` +
           `- overlap lane↔native: ${rec.laneNativeOverlap}  → ${dup}\n` +
-          `- tokens: ${rec.tokens ?? "?"}  (${rec.contextPercent != null ? Math.round(rec.contextPercent * 100) + "%" : "?"})\n`,
+          `- contesto: ${rec.tokens ?? "?"} token${rec.contextWindow ? ` / ${rec.contextWindow}` : ""}  (${rec.contextFraction != null ? Math.round(rec.contextFraction * 100) + "%" : "?"})\n`,
       );
     } catch {
       /* la diagnostica non deve mai rompere la richiesta */
