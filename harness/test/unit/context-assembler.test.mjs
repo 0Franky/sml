@@ -98,6 +98,21 @@ ok(digForce.includes("<resuming_from") && digForce.includes("snapshot stato corr
   "resume-digest: force su sessione attiva → testo neutro (no falso 'ripresa dopo gap')");
 vq2.close();
 
+// --- anti-cecità task_list (focus-gathering v1, msg 515): execution-order + segnale nascosti H/M/L ---
+const vq3 = new VarsQueue(":memory:", { agent: "orchestrator" });
+vq3.addTask("B1", "infra", { priority: 0 });          // ready, unblocks=1 (B3 dipende) → primo
+vq3.addTask("B2", "urgente", { priority: 9 });         // ready, H
+vq3.addTask("B3", "bloccato", { deps: ["B1"] });       // blocked (B1 non done)
+vq3.addTask("B4", "bassa", { priority: -2 });          // ready, L
+vq3.addTask("B5", "media", {});                        // ready, M (prio 0)
+vq3.addTask("B6", "altra-bassa", { priority: -1 });    // ready, L
+const ctxN = assembleContext(vq3, { now: NOW, sinceMs: 0, maxTasks: 2 });
+ok(ctxN.includes("ready prio=9") || ctxN.includes("ready unblocks=1"), "anti-cecità: task_list strutturato espone ready/prio/unblocks");
+ok(/task aperti non mostrati — priorità H:\d+ M:\d+ L:\d+/.test(ctxN), "anti-cecità: segnale nascosti con breakdown H/M/L");
+ok(/H:0 M:2 L:2/.test(ctxN), "anti-cecità: conteggio buckets corretto (nascosti B5/B3=M, B6/B4=L)");
+ok(ctxN.includes("B2:") && !ctxN.includes("B4:"), "execution-order: ready+alta-priorità mostrato, bassa-priorità nascosta (cap non nasconde gli importanti)");
+vq3.close();
+
 vq.close();
 console.log(`\ncontext-assembler smoke-test: ${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);

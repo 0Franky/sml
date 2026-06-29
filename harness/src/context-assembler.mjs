@@ -145,17 +145,34 @@ export function assembleContext(vq, opts = {}) {
     ? `  <current_aim id="${esc(curr.id)}" status="${esc(curr.status)}">${esc(curr.title)}</current_aim>`
     : `  <current_aim>(nessuno)</current_aim>`);
 
-  // --- task_list (open-loop: pending + in_progress) — cap + SEGNALA se ce ne sono altri ---
+  // --- task_list (open-loop: pending + in_progress) — ORDINE DI ESECUZIONE + cap + SEGNALE anti-cecità ---
   //     focusTaskIds (matrioska, nested-compact): se presente, la lista è FILTRATA al subset messo a fuoco
-  //     (lo zoom-IN mostra solo i task dello scope; il resto vive nel <frame> come backlog). ---
+  //     (lo zoom-IN mostra solo i task dello scope; il resto vive nel <frame> come backlog).
+  //     Anti-cecità (msg 515): i task sono in execution-order (i più importanti PRIMA, così il cap non li nasconde)
+  //     e, se troncato su backlog STRUTTURATO, il segnale riporta il breakdown per priorità H/M/L dei nascosti. ---
   const maxTasks = opts.maxTasks ?? 20;
   const focusSet = Array.isArray(opts.focusTaskIds) ? new Set(opts.focusTaskIds.map(String)) : null;
-  const openAll0 = [...vq.listTasks({ status: "in_progress" }), ...vq.listTasks({ status: "pending" })];
-  const openAll = focusSet ? openAll0.filter((t) => focusSet.has(String(t.id))) : openAll0;
+  const ordered = vq.listTasksOrdered(); // {structured, tasks} già in execution-order se strutturato
+  const openAll = focusSet ? ordered.tasks.filter((t) => focusSet.has(String(t.id))) : ordered.tasks;
   const open = openAll.slice(0, maxTasks);
+  const bucket = (p) => (p >= 1 ? "H" : p <= -1 ? "L" : "M"); // H=priority>0, M=default(0), L=priority<0
   lines.push(focusSet ? `  <task_list focus="${open.length}">` : "  <task_list>");
-  for (const t of open) lines.push(`    - [${t.status}] ${esc(t.id)}: ${esc(t.title)}`);
-  if (openAll.length > open.length) lines.push(`    - (+${openAll.length - open.length} task aperti non mostrati — usa list_tasks per l'elenco completo)`);
+  for (const t of open) {
+    const meta = ordered.structured
+      ? ` ${t.ready ? "ready" : "blocked"}${t.priority ? ` prio=${t.priority}` : ""}${t.unblocks ? ` unblocks=${t.unblocks}` : ""}`
+      : "";
+    lines.push(`    - [${t.status}]${meta} ${esc(t.id)}: ${esc(t.title)}`);
+  }
+  const hidden = openAll.slice(maxTasks);
+  if (hidden.length) {
+    if (ordered.structured) {
+      const b = { H: 0, M: 0, L: 0 };
+      for (const t of hidden) b[bucket(t.priority ?? 0)]++;
+      lines.push(`    - (+${hidden.length} task aperti non mostrati — priorità H:${b.H} M:${b.M} L:${b.L} — usa list_tasks per l'elenco completo)`);
+    } else {
+      lines.push(`    - (+${hidden.length} task aperti non mostrati — usa list_tasks per l'elenco completo)`);
+    }
+  }
   lines.push("  </task_list>");
 
   // --- verify_queue (pendenti) ---
