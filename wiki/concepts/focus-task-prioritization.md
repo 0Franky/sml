@@ -52,6 +52,38 @@ Con `pressure="matrioska"` (27 task aperti), Sonnet ha proposto `enter_focus(T-1
 - **Contro**: overhead di un focus in più (enter+pop) per una decisione che potrebbe essere inline (un solo `list_tasks` + ragionamento); rischio di cerimonia.
 - **Da pesare**: forse il gathering NON richiede un vero `enter_focus` (con scope/report) ma solo una **vista ristretta** (`list_tasks` ordinato, senza payload) — cioè una *proiezione* del workspace, non uno scope nidificato. Oppure: gathering-in-focus conviene solo quando i task hanno payload grandi (allora isolare le sole-meta aiuta). **Domanda per il review-loop.**
 
+## Il gathering è ESPLICITO e DELEGATO al modello, NON un passo forzato (msg 516)
+
+La fase di focus **non deve chiamare automaticamente il gathering**: l'harness ESPONE il task-graph (priority/deps/`unblocks`/order via `list_tasks`/`get_execution_order`), ma la **decisione** di gatherare/riorganizzare prima di `enter_focus` è del **modello**, presa in modo **esplicito** (ci ragiona su). → coerente con l'F/S split (F=meccanismo, S=quando-gatherare) e con la **proporzionalità** (task semplici → niente gathering pesante). Il reward è sull'OUTCOME (subset eseguibile), non su "ha chiamato il gathering". Niente auto-gather silenzioso forzato; niente skip-by-default: il modello **valuta** e agisce deliberatamente. (Si lega a [[concepts/low-confidence-gather-and-reorg]]: il REORG è euristica opzionale falsificabile, non passo magico.)
+
+## Anti-cecità su grandi contesti (msg 515) — il windowing/focus non deve far perdere l'obiettivo
+
+**Concerno utente (corretto)**: riducendo i task visibili (cap del `task_list`, focus su un subset), il modello può diventare **cieco** sul quadro completo e perdere obiettivo/concentrazione. Due difese:
+
+1. **SEGNALA SEMPRE cosa è nascosto, con breakdown per PRIORITÀ** (req-1). VERIFICATO stato attuale: `context-assembler.mjs:158` già emette `(+N task aperti non mostrati — usa list_tasks)`; vars/recent_changes idem. **GAP**: non è per priorità. → con il campo `priority`, il marker diventa **`(+N non mostrati: H=x · M=y · L=z — usa list_tasks)`** sia nel `<task_list>` (cap) sia nel `<frame>` (backlog dello zoom-OUT) sia, idealmente, nel `<focus_hint>`. Così il modello sa SEMPRE quanto e di che priorità sta ignorando. (File: i CAP di temp-read/sliding-var già segnalano le righe nascoste; verificare estensione al medesimo standard.)
+2. **Hook periodico di re-organize/reminding (~20 min, req-2)**: un nudge time-based che, ogni `intervalMs` (default ~20 min, configurabile), inietta un `<reorganize_reminder>` che chiede al modello di **rivedere/ri-prioritizzare i task e ri-allineare l'obiettivo** se necessario (+ il breakdown per-priorità dei nascosti). **NON esisteva** (verificato: c'è la REORG event-driven low-confidence + la meta-rule di check-in per l'agente-Claude, ma NESSUN hook time-based per il modello-in-harness). F=meccanismo (timer via meta `_reorg_reminder_ts` in `before_agent_start`, come la cooldown del focus_hint ma inverso) / S=il modello decide se/come riorganizzare (outcome-anchored: ha ri-allineato l'obiettivo quando serviva, non "ha ricevuto il reminder"). Soft-nudge, non forzato. Cooldown per non spammare. Si lega a `compaction-scheduling` (training leaf) + [[concepts/low-confidence-gather-and-reorg]].
+
+> **Why → problema → soluzione (anti-cecità)**: *why* la mente-in-prima-persona (Strada-2) vede un workspace curato/windowed → *problema* su contesti grandi il curato può nascondere troppo e il modello perde il quadro/obiettivo → *soluzione* (a) non nascondere mai in silenzio: segnala quantità+priorità del nascosto; (b) nudge periodico a ri-surveyare/ri-prioritizzare. Entrambe ancorate all'outcome (decisione corretta nonostante il window), non alla cerimonia.
+
+## Context-budget headroom + limiti non considerati (msg 517) [broader — candidato concept a sé]
+
+**Idea utente**: usare MENO contesto del disponibile (es. "pieno" = 80% di 1M). **Risposta: idea CORRETTA, e per il NOSTRO modello (SLM ~4B) ancora PIÙ importante.**
+- **Già lo facciamo in parte**: i trigger compattano/focalizzano PRIMA del 100% — `tokenReorderPct=0.55`, `tokenMatrioskaPct=0.75`. Quindi "pieno effettivo" ≈ 75%, non 100%.
+- **Non danneggia, MIGLIORA**: gli LLM degradano avvicinandosi al pieno (lost-in-the-middle, attention-dilution, context-rot); la qualità è migliore nella prima parte della finestra → tenere headroom = restare nel regime di qualità alta. Costo: curazione (checkpoint/focus/reorg) più frequente (overhead piccolo). **Autonomia invariata** (il modello resta autonomo, consolida solo più spesso).
+- **CRUCIALE per un modello PICCOLO**: un 4B degrada MOLTO prima di un frontier model → il suo **contesto EFFETTIVO << finestra massima**. "80%" è probabilmente troppo alto: la soglia va **MISURATA** dalla curva effective-context del nostro modello (needle-in-haystack a profondità crescente), non fissata a occhio (potrebbe essere 50-60% reale).
+
+**Altri limiti che NON stiamo considerando abbastanza** (completeness):
+1. **Effective-context << finestra** — misurare la curva di degradazione (needle@depth) → la soglia "pieno" deriva da DATI, non da 80% fisso. [il più importante per noi]
+2. **Budget di OUTPUT** — risposta + thinking (Qwen3) consumano token nella stessa finestra → riservare headroom per GENERARE, non solo per il context.
+3. **tool_result giganti** — un singolo read/grep grande satura → content-compression (già in piano, NEXT-BUILD item-2).
+4. **Train-serve context match** — addestrare sulle dimensioni/forme di contesto del serving; train-corto/serve-lungo = mismatch; la soglia "pieno" deve coincidere col training.
+5. **Posizione conta (lost-in-the-middle)** — aim/vincoli all'inizio/fine, non sepolti → il cache-stable-prefix (rules/aim in testa) + lane volatile in coda già aiuta; verificare le posizioni privilegiate.
+6. **KV-cache / latenza / VRAM** (2080Ti→A100) — contesto lungo = più lento+memoria; headroom aiuta throughput.
+7. **Attention-dilution intra-budget** — anche sotto soglia, troppe lane/task diluiscono il focus (= l'anti-cecità di msg 515).
+8. **Tokenizer / max-seq hard-cap** + **costo** (più token = più compute/€).
+
+→ **Sintesi**: NON fissare 80% a occhio — MISURARE l'effective-context del nostro modello e impostare la soglia da lì (probabilmente <80% per un 4B); output-budget, tool_result, train-serve-match e posizione sono i limiti load-bearing. Lega a `decisions/2026-06-29-headroom-evaluation` + cache-stable-prefix + content-compression.
+
 ## Validazione richiesta PRIMA di implementare (msg 510/511)
 
 1. **Review-loop** agnostico + verticali (matrioska-specialist + agentic-systems + ML-training): il design regge? l'ordine topological+priority è quello giusto (vs altri schemi: critical-path, WSJF, eisenhower)? il gathering-in-focus conviene o è cerimonia? blocked-handling corretto? edge: cicli, deps cross-subset, task done che sbloccano altri.
