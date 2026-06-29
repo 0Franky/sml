@@ -63,6 +63,28 @@ const noFile = join(dir, "assente.json");
   ok(c2.trigger.tokenReorderPct === DEFAULT_CFG.tokenReorderPct, "CLAMP: env non-numerico scartato");
 }
 
+// 6) GATHERING (focus-gathering v1, msg 531): default delegated, file/env override, enum-guard ------
+{
+  const c = loadHarnessConfig(noFile, { env: {} });
+  ok(c.gathering.mode === "delegated", "GATHERING: default mode = delegated");
+  ok(c.gathering.minTasksForForce === 5, "GATHERING: default minTasksForForce = 5");
+  writeFileSync(cfgPath, JSON.stringify({ gathering: { mode: "inject", minTasksForForce: 3 } }));
+  const c2 = loadHarnessConfig(cfgPath, { env: {} });
+  ok(c2.gathering.mode === "inject", "GATHERING: file override mode=inject");
+  ok(c2.gathering.minTasksForForce === 3, "GATHERING: file override minTasksForForce=3");
+  // env vince
+  const c3 = loadHarnessConfig(cfgPath, { env: { HARNESS_GATHERING_MODE: "require", HARNESS_GATHERING_MIN_TASKS: "8" } });
+  ok(c3.gathering.mode === "require", "GATHERING: env override mode=require");
+  ok(c3.gathering.minTasksForForce === 8, "GATHERING: env override minTasks=8");
+  // enum-guard: mode invalido → resta default
+  writeFileSync(cfgPath, JSON.stringify({ gathering: { mode: "nonsense", minTasksForForce: 0 } }));
+  const c4 = loadHarnessConfig(cfgPath, { env: {} });
+  ok(c4.gathering.mode === "delegated", "GATHERING: mode fuori-enum scartato (resta delegated)");
+  ok(c4.gathering.minTasksForForce === 5, "GATHERING: minTasksForForce <1 scartato (resta 5)");
+  const c5 = loadHarnessConfig(noFile, { env: { HARNESS_GATHERING_MODE: "bogus" } });
+  ok(c5.gathering.mode === "delegated", "GATHERING: env mode fuori-enum scartato");
+}
+
 rmSync(dir, { recursive: true, force: true });
 console.log(`\nharness-config test: ${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);

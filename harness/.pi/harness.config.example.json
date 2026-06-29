@@ -15,5 +15,10 @@
     "focusK": 5
   },
   "_messagesWindowN": "quanti turni recenti mostrare VERBATIM nella lane <messages_with_user>. Più alto = più storia verbatim (più token). Default 8.",
-  "messagesWindowN": 8
+  "messagesWindowN": 8,
+  "_gathering": "QUANTO è forzato il 'guarda l'ordine dei task prima di entrare a fuoco' (focus-gathering v1). mode: 'delegated' (default, il modello decide quando consultare get_execution_order — lean), 'inject' (l'harness allega la vista ordinata nel focus_hint quando nudga il focus — anti-cecità, consigliato per SLM piccoli), 'require' (enter_focus è bloccato finché non chiami get_execution_order). minTasksForForce: inject/require agiscono SOLO con ≥ N task open (sotto-soglia → no-op, anti-cerimonia). Per Sonnet: 'delegated' basta.",
+  "gathering": {
+    "mode": "delegated",
+    "minTasksForForce": 5
+  }
 }
