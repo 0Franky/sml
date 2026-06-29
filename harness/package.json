@@ -11,8 +11,7 @@
     "test:conversation": "node src/conversation-store.test.mjs",
     "test:facts": "node src/facts-pre-check.test.mjs",
     "test:sliding": "node src/sliding-var.test.mjs",
-    "test:scenarios": "node src/_test-secrets-guardrail.mjs && node src/_test-organization.mjs && node src/_test-note-after-finding.mjs && node src/_test-temp-read.mjs && node src/_test-longrun.mjs && node src/contradiction-check.test.mjs",
-    "test": "node src/vars-queue.test.mjs && node src/context-assembler.test.mjs && node src/conversation-store.test.mjs && node src/facts-pre-check.test.mjs && node src/sliding-var.test.mjs && npm run test:scenarios"
+    "test": "node run-tests.mjs"
   },
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "^0.80.2",
