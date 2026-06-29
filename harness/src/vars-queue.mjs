@@ -90,6 +90,15 @@ CREATE TABLE IF NOT EXISTS proposals (
   value   TEXT,
   applied INTEGER NOT NULL DEFAULT 0
 );
+CREATE TABLE IF NOT EXISTS agent_messages (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts         INTEGER NOT NULL,
+  from_agent TEXT NOT NULL,
+  to_agent   TEXT NOT NULL,                            -- destinatario, oppure '*' = broadcast
+  topic      TEXT,                                     -- opzionale, per filtrare la inbox
+  body       TEXT,                                     -- JSON-encoded
+  read       INTEGER NOT NULL DEFAULT 0
+);
 `;
 
 /**
@@ -325,6 +334,44 @@ export class VarsQueue {
     if (!includeSilent) q += " AND silent = 0";
     q += " ORDER BY seq DESC LIMIT ?"; args.push(limit);
     return this.db.prepare(q).all(...args);
+  }
+
+  // -- INTER-AGENT MESSAGING (scambio diretto di messaggi tra agenti) ---------
+  // Idea utente (TG msg 462, 2026-06-29). Complementare a shared-VARS (stato) e propose/merge (write):
+  // qui un agente INVIA un messaggio DIRETTO a un altro (o broadcast '*'), recuperabile dalla sua inbox.
+  // Persistente cross-compact + audit nel change-log. Transport=F deterministico; quando/cosa messaggiare=S.
+  // Guida di scelta del canale: [[../../wiki/concepts/inter-agent-messaging]].
+  sendMessage(toAgent, body, { from = this.agent, topic = null } = {}) {
+    const r = this.db.prepare(
+      `INSERT INTO agent_messages (ts, from_agent, to_agent, topic, body, read) VALUES (?,?,?,?,?,0)`
+    ).run(Date.now(), from, toAgent, topic, JSON.stringify(body ?? null));
+    const seq = Number(r.lastInsertRowid);
+    this._log("agent_messages", String(seq), "send", from, toAgent, from);
+    return seq;
+  }
+
+  /**
+   * Inbox di `agent`: messaggi diretti a lui (+ broadcast '*' se includeBroadcast). Read-only: NON marca letti
+   * (il mark è esplicito via markRead → niente ambiguità sul broadcast, che ha read globale in v1).
+   */
+  inbox(agent, { unreadOnly = true, topic = null, includeBroadcast = true, limit = 100 } = {}) {
+    const where = []; const args = [];
+    if (includeBroadcast) { where.push("(to_agent = ? OR to_agent = '*')"); args.push(agent); }
+    else { where.push("to_agent = ?"); args.push(agent); }
+    if (unreadOnly) where.push("read = 0");
+    if (topic) { where.push("topic = ?"); args.push(topic); }
+    const q = `SELECT seq, ts, from_agent, to_agent, topic, body, read FROM agent_messages
+               WHERE ${where.join(" AND ")} ORDER BY seq LIMIT ?`;
+    args.push(limit);
+    return this.db.prepare(q).all(...args).map((m) => ({ ...m, body: m.body == null ? null : JSON.parse(m.body) }));
+  }
+
+  /** Marca letti i messaggi per `seq` (lista o singolo). Esplicito → niente ambiguità sul broadcast. */
+  markRead(seqs) {
+    const list = Array.isArray(seqs) ? seqs : [seqs];
+    let n = 0;
+    for (const s of list) n += this.db.prepare(`UPDATE agent_messages SET read = 1 WHERE seq = ?`).run(s).changes;
+    return n;
   }
 
   // -- CURR pointer (aim corrente) -------------------------------------------
