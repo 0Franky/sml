@@ -41,6 +41,28 @@ Forte, su più assi:
 
 > **Verdetto in una riga**: ottimo strumento, allineato e commercial-clean; **integrarlo selettivamente (lane content) e opt-in in fase-ricerca**, NON blanket-default-on — per non comprimere lane di sicurezza, non duplicare i layer nostri, e non creare mismatch train-serve sul context dell'SLM. Conferma utente attesa su quale path (proxy/MCP/extension) e quando flippare a opt-out.
 
+## Piano di import SELETTIVO (study 2026-06-29, niente codice ancora) `[INFERRED]`
+
+Componenti di headroom valutati per valore × rischio **nel NOSTRO caso** (lane safety/decisione protette, harness TS/pi, SLM-in-training):
+
+| Componente headroom | Valore | Rischio | Verdetto |
+|---|---|---|---|
+| **CacheAligner** (stabilizza i prefissi per gli hit di KV-cache) | ALTO (costo+latenza) | **BASSO** — riordina i prefissi, **NON** comprime/perde contenuto (non-lossy) | ✅ **PRIMO da prendere** |
+| **CCR** (compressione reversibile, originali in locale + recupero on-demand) | ALTO sulle lane content | MEDIO (lossy, ma reversibile) — **solo** su tool-output/file/RAG, **mai** rules/decisioni | ⚠️ **secondo, gated** (+ replace-vs-complement vs [[sliding-window-variable-tool]]) |
+| **ContentRouter** (tipo→compressore dedicato) | MEDIO (serve a CCR per saltare il `<context>` strutturato) | MEDIO | ⚠️ **con CCR** (allowlist di lane) |
+| **Cross-agent memory** | BASSO per noi | — overlap con [[cross-session-state-sharing]] (semantica nostra) | ⛔ **skip** (al più complement) |
+| **headroom learn** (mina sessioni fallite→md) | BASSO per noi | — overlap con [[error-memo-system]] | ⛔ **skip** (al più complement) |
+| **Output token reduction** (comprime l'output del modello) | MEDIO | **ALTO** — rischia di perdere i marker `[V]/[A]/[?]` + il reasoning strutturato | ⛔ **skip per ora** |
+
+**Ordine raccomandato**:
+1. **CacheAligner** — è il più sicuro (non-lossy) e il più allineato a un caveat già nostro (KV-cache, [[harness-capabilities-as-files]] / multi-expert segment-rerun). **Modo**: la logica di prefix-stability è probabilmente piccola → **reimplementabile come extension pi in TS** (evita la dipendenza Python). Spike: misurare il delta di cache-hit su una sessione reale.
+2. **CCR + ContentRouter** — solo dopo, e SOLO sulle lane content ad alto-volume (tool_result grandi, file/RAG dump) dietro un'**allowlist di lane** + ordine corretto vs [[secret-section-exfiltration-defense|secrets-guardrail]] (redazione efficace sul compresso) + il **gate train-serve-match** (le forme compresse devono entrare nella training-distribution, o si comprime solo ciò che l'SLM tratta come dati opachi). **Modo**: CCR usa modelli di compressione → serve la lib Python → integrazione via **CLI-proxy o MCP-server** (processo separato), NON in-process. **Prima**: decidere replace-vs-complement vs il nostro `sliding-var` (misurare quale è meglio).
+3. **Niente altro** finché 1-2 non sono misurati.
+
+**Gate bloccanti prima di QUALSIASI default-on**: (a) spike di misura (riduzione-token reale + tenuta-qualità); (b) interazione con secrets-guardrail verificata; (c) decisione train-serve-match; (d) lane safety/decisione (rules/aim/secrets/decision-state) **escluse per costruzione** dall'allowlist.
+
+> **Prossima azione concreta** (quando si riapre headroom, priorità sopra i Gold ma sotto l'harness-core): spike CacheAligner reimplementato in TS + misura cache-hit. Nessun codice finora — solo questo piano.
+
 ## Collegamenti
 - [[sliding-window-variable-tool]] · [[harness-capabilities-as-files]] · [[window-aware-fetching]] — il pattern CCR-like che abbiamo costruito.
 - [[cross-session-state-sharing]] · [[error-memo-system]] — i layer che si sovrappongono a cross-agent-memory / headroom-learn.
