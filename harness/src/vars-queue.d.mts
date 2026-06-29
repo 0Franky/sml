@@ -119,6 +119,7 @@ export class VarsQueue {
   sendMessage(toAgent: string, body: unknown, opts?: { from?: string; topic?: string | null }): number;
   inbox(agent: string, opts?: { unreadOnly?: boolean; topic?: string | null; includeBroadcast?: boolean; limit?: number }): AgentMessageRecord[];
   markRead(seqs: number | number[]): number;
+  gcMessages(beforeTs: number, opts?: { readOnly?: boolean }): number;
 }
 
 export default VarsQueue;

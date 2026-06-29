@@ -6,6 +6,7 @@
  */
 import { parsePath, getByPath, extractVar, interpolate, emitToUser } from "../../src/var-ops.mjs";
 import { VarsQueue } from "../../src/vars-queue.mjs";
+import { addSecret, getDynamicSecrets, clearSecrets } from "../../src/secrets-registry.mjs";
 
 let passed = 0, failed = 0;
 function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error("  ✗ FAIL:", msg); } }
@@ -108,6 +109,45 @@ function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error(
   vq.setVar("msg", "password: hunter2-super-segreta-xyz");
   const dyn = emitToUser("{{var:msg}}", vq, { interpolate: true, dynamicSecrets: ["hunter2-super-segreta-xyz"] });
   ok(!dyn.text.includes("hunter2-super-segreta-xyz"), "SEGRETI #4: segreto dinamico redatto post-interpolazione");
+  vq.close();
+}
+
+// 5) fix di sicurezza review 2026-06-29 (getter / scope / caps) --------------
+{
+  const vq = new VarsQueue(":memory:", { agent: "x" });
+
+  // getByPath NON valuta un getter (own accessor) → invariante "solo dati JSON-plain" enforced
+  const withGetter = {};
+  Object.defineProperty(withGetter, "danger", { enumerable: true, get() { return "PWNED"; } });
+  ok(getByPath(withGetter, "danger").ok === false, "SEC: getByPath NON valuta un getter (own accessor)");
+
+  // extractVar NON eredita lo scope del src (least-privilege): da var shared → dest private
+  vq.setVar("apiShared", '{"token":"abc"}', { scope: "shared" });
+  extractVar(vq, "apiShared", "token", "tok");
+  ok(vq.getVar("tok").scope === "private", "SEC: extractVar default scope=private (no widening da shared)");
+
+  // cap dimensione-valore: var-stringa enorme rifiutata (no blocco event-loop)
+  vq.setVar("huge", "x".repeat(300 * 1024));
+  ok(extractVar(vq, "huge", "a", "d").ok === false, "SEC: extractVar rifiuta la var oltre il cap dimensione");
+
+  // cap amplificazione: un valore enorme è troncato nell'interpolazione
+  vq.setVar("big", "y".repeat(20000));
+  const r = interpolate("{{var:big}}", vq);
+  ok(r.length < 20000 && r.includes("[troncato]"), "SEC: interpolate cap l'amplificazione");
+  vq.close();
+}
+
+// 6) P0 — render_template path redige il segreto DINAMICO (registry condiviso) -
+{
+  const vq = new VarsQueue(":memory:", { agent: "x" });
+  clearSecrets();
+  const sessionSecret = "Bearer-sess-" + "Z".repeat(20); // dinamico (NON un pattern statico)
+  addSecret(sessionSecret);
+  vq.setVar("leakdyn", sessionSecret);
+  const out = emitToUser("val: {{var:leakdyn}}", vq, { interpolate: true, dynamicSecrets: getDynamicSecrets() });
+  ok(!out.text.includes(sessionSecret) && out.secretHit,
+     "SEC P0: il segreto DINAMICO è redatto via registry condiviso (no exfil da render_template)");
+  clearSecrets();
   vq.close();
 }
 

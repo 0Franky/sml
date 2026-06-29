@@ -15,6 +15,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { VarsQueue } from "../../src/vars-queue.mjs";
 import { extractVar, emitToUser } from "../../src/var-ops.mjs";
+import { getDynamicSecrets } from "../../src/secrets-registry.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
@@ -57,7 +58,9 @@ export default function (pi: ExtensionAPI) {
       text: Type.String({ description: "Testo con placeholder {{var:NOME}} (escape: {{!var:NOME}})." }),
     }),
     async execute(_t: string, p: any) {
-      const out = emitToUser(p.text, vq, { interpolate: true });
+      // P0 fix: passa la secrets-map dinamica condivisa → un segreto in una var NON esce in chiaro
+      // dall'interpolazione (ordine interpolazione→redazione→invio rispettato anche qui).
+      const out = emitToUser(p.text, vq, { interpolate: true, dynamicSecrets: getDynamicSecrets() });
       return { content: [{ type: "text", text: out.text }], details: { secretHit: out.secretHit } };
     },
   });

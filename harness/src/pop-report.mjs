@@ -39,7 +39,9 @@ export function buildPopReport(vq, childAgentId, opts = {}) {
   } = opts;
 
   const decisions = vq.getDecisionsByAgent(childAgentId);
-  const changes = vq.getChangesByAgent(childAgentId, { since });
+  // i cambiamenti del change-log ESCLUDONO entity='decisions' (già resi, più ricchi, nella sezione Decisioni)
+  // → niente doppio-conteggio. I messaggi (agent_messages) sono già esclusi perché loggati silent. (fix review)
+  const changes = vq.getChangesByAgent(childAgentId, { since }).filter((c) => c.entity !== "decisions");
 
   // --- report completo (markdown), anche lungo ------------------------------
   const L = [];
@@ -64,18 +66,25 @@ export function buildPopReport(vq, childAgentId, opts = {}) {
   }
   const report = L.join("\n") + "\n";
 
-  // --- summary breve (floor-F, bounded) -------------------------------------
+  // --- summary breve (floor-F, bounded) — childAgentId troncato (bound INCONDIZIONATO del floor) -------
   const lastDecision = decisions.length ? decisions[decisions.length - 1].text : null;
-  let summary = `scope \`${childAgentId}\`: ${decisions.length} decisioni, ${changes.length} cambiamenti`;
+  let summary = `scope \`${truncate(childAgentId, 64)}\`: ${decisions.length} decisioni, ${changes.length} cambiamenti`;
   if (lastDecision) summary += `; ultima: "${truncate(lastDecision, summaryCap)}"`;
 
   // --- write report su file + pointer nel summary ---------------------------
+  // su errore di scrittura (EACCES/ENOSPC/EROFS…) NON si perde il ritorno: report_path resta null e
+  // il report pieno è comunque disponibile in-memory nel campo `report`. Fix review 2026-06-29.
   let report_path = null;
   if (write) {
-    mkdirSync(reportDir, { recursive: true });
-    report_path = fwd(join(reportDir, `${sanitize(childAgentId)}-${sanitize(reportId)}.md`));
-    writeFileSync(report_path, report, "utf-8");
-    summary += ` → report: ${report_path}`;
+    try {
+      mkdirSync(reportDir, { recursive: true });
+      report_path = fwd(join(reportDir, `${sanitize(childAgentId)}-${sanitize(reportId)}.md`));
+      writeFileSync(report_path, report, "utf-8");
+      summary += ` → report: ${report_path}`;
+    } catch (e) {
+      report_path = null;
+      summary += ` (report non scritto: ${e.code ?? e.message}; pieno disponibile in-memory)`;
+    }
   }
 
   return { summary, report_path, report, decisions: decisions.length, changes: changes.length };

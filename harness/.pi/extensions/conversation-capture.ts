@@ -31,8 +31,9 @@ function messageText(message: any): string {
   const c = message.content ?? message;
   if (typeof c === "string") return c;
   if (Array.isArray(c)) {
-    return c.filter((b: any) => b && (b.type === "text" || typeof b.text === "string"))
-      .map((b: any) => b.text ?? "")
+    // SOLO blocchi text espliciti (esclude toolCall, thinking, redacted che potrebbero avere un campo `text`).
+    return c.filter((b: any) => b && b.type === "text" && typeof b.text === "string")
+      .map((b: any) => b.text)
       .join("");
   }
   return "";
@@ -41,17 +42,32 @@ function messageText(message: any): string {
 export default function (pi: ExtensionAPI) {
   const store = getStore();
 
-  // utente → store (prima dell'agent loop). Passthrough: non altera l'input.
+  // utente → store. SOLO input utente GENUINO: `input` fa fire anche per steer/followUp (mid-turn) e per
+  // i comandi `/` non gestiti → li si filtra (source interattiva, non-streaming, non slash-command), altrimenti
+  // si gonfia la conversazione. Passthrough: non altera l'input. (fix review P0 2026-06-29.)
   pi.on("input", (event) => {
-    const text = (event as any).text;
-    if (typeof text === "string" && text.trim()) store.append(CONV_ID, "user", text);
+    const e = event as any;
+    const text = e.text;
+    const genuine = typeof text === "string" && text.trim() &&
+      e.source === "interactive" && !e.streamingBehavior && !text.startsWith("/");
+    if (genuine) store.append(CONV_ID, "user", text);
     return { action: "continue" } as const;
   });
 
-  // assistant → store (a fine turno).
-  pi.on("turn_end", (event) => {
-    const text = messageText((event as any).message);
-    if (text.trim()) store.append(CONV_ID, "assistant", text);
+  // assistant → store. Su `agent_end` (fire UNA volta a fine loop), NON su `turn_end` (fire una volta per ROUND
+  // LLM → una risposta multi-tool darebbe N righe assistant, corrompendo window/range). Si prende l'ULTIMO
+  // messaggio assistant del loop = la risposta finale visibile all'utente. (fix review P0 2026-06-29.)
+  pi.on("agent_end", (event) => {
+    const msgs = (event as any).messages;
+    if (!Array.isArray(msgs)) return;
+    let lastAssistantText = "";
+    for (const m of msgs) {
+      if (m && m.role === "assistant") {
+        const t = messageText(m);
+        if (t.trim()) lastAssistantText = t;
+      }
+    }
+    if (lastAssistantText.trim()) store.append(CONV_ID, "assistant", lastAssistantText);
   });
 
   // recupero per ID + range (subagent / by-reference). È ciò che il marker della lane suggerisce.

@@ -40,7 +40,8 @@ try {
     ok(r.decisions === 2, "DERIVA: 2 decisioni del figlio");
     ok(r.report.includes("estrai token") && r.report.includes("evita cookie"), "DERIVA: decisione + razionale nel report");
     ok(!r.report.includes("scelta del padre"), "DERIVA: la decisione di un altro agente è ESCLUSA");
-    ok(r.changes >= 3, "DERIVA: cambiamenti attribuiti (2 decisioni + 1 var)");
+    // changes ESCLUDE entity='decisions' (rese nella sezione Decisioni) → resta solo la var (no doppio-conteggio)
+    ok(r.changes === 1, "DERIVA: changes esclude le decisioni (solo la var; no doppio-conteggio)");
 
     // file scritto + pointer nel summary + OS-agnostic
     ok(existsSync(r.report_path), "FILE: report scritto su disco");
