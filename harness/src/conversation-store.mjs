@@ -95,6 +95,12 @@ export function buildMessagesLane(store, convId, { n = 6, charCap = 4000 } = {})
   let win = store.window(convId, n);
   const sizeOf = (rows) => rows.reduce((a, r) => a + r.text.length, 0);
   while (win.length > 1 && sizeOf(win) > charCap) win = win.slice(1); // droppa i più vecchi, tieni i recenti verbatim
+  // se l'UNICO messaggio rimasto eccede ancora il cap (paste enorme in un solo turno), tronca il suo testo →
+  // il budget della lane resta bounded anche nel caso singolo-messaggio-gigante. (review-loop #2 2026-06-29, P3.)
+  if (win.length === 1 && win[0].text.length > charCap) {
+    const t = win[0];
+    win = [{ ...t, text: t.text.slice(0, charCap) + `…[+${t.text.length - charCap} char — usa get_conversation]` }];
+  }
   const shownFrom = win.length ? win[0].seq : total + 1;
   const olderHidden = total - win.length;
   const lines = [`<messages_with_user conv="${esc(convId)}" shown="${win.length}/${total}">`];
@@ -106,27 +112,39 @@ export function buildMessagesLane(store, convId, { n = 6, charCap = 4000 } = {})
   return lines.join("\n");
 }
 
+/** Ruoli STRUTTURALI non-conversazionali che pi può mettere in testa all'array (es. branchSummary dopo /tree). */
+const STRUCTURAL_ROLES = new Set(["branchSummary", "compactionSummary", "custom"]);
+
 /**
- * windowNativeMessages — Strada-2 (full): sopprime la STORIA dei turni precedenti dall'array messaggi NATIVO di pi,
- * tenendo solo il TURNO CORRENTE (dall'ultimo messaggio 'user' in poi, coi suoi tool_call/tool_result). La
- * conversazione vive curata nella lane <messages_with_user> (system prompt) → niente doppia-chat né crescita
- * illimitata (sostituisce la compaction nativa, OFF). I turni precedenti restano in conversations.db.
+ * windowNativeMessages — Strada-2: BOUNDA l'array messaggi NATIVO di pi tenendo gli ULTIMI `keepTurns` turni
+ * COMPLETI (con i loro tool_call/tool_result) e sopprimendo la storia più vecchia → niente crescita illimitata
+ * (sostituisce la compaction nativa, OFF) senza perdere la continuità multi-turno né i tool_result recenti
+ * (review-loop #2 2026-06-29: P1 tool-results-lost, scelta conservativa K-turni invece del solo turno corrente).
+ * I turni soppressi restano in conversations.db + curati nella lane <messages_with_user>.
  *
- * Entro UN turno (anche multi-tool) lastUser=0 → ritorna l'array INVARIATO (continuità del tool-loop intatta);
- * si sopprime SOLO dal 2° turno in poi. Ritorna lo STESSO riferimento se non c'è nulla da togliere (il caller
- * può confrontare per identità per decidere se rimpiazzare). (ADR 2026-06-29 principio-3.)
+ * Preserva i messaggi STRUTTURALI in testa (branchSummary/compactionSummary/custom da /tree o iniezioni) che
+ * altrimenti uno slice puro scarterebbe (review-loop #2, P2 structural-messages).
+ *
+ * Sotto soglia (≤ keepTurns turni) ritorna lo STESSO riferimento (il caller confronta per identità). (ADR principio-3.)
  *
  * @param {Array<{role?:string}>} messages
- * @returns {Array} l'array ridotto al turno corrente, o lo stesso `messages` se invariato.
+ * @param {{ keepTurns?: number }} [opts]
+ * @returns {Array} l'array ridotto agli ultimi keepTurns turni (+ head strutturale), o lo stesso `messages`.
  */
-export function windowNativeMessages(messages) {
+export function windowNativeMessages(messages, opts = {}) {
+  const keepTurns = opts.keepTurns ?? 4;
   if (!Array.isArray(messages) || messages.length < 2) return messages;
-  let lastUser = -1;
-  for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i] && messages[i].role === "user") { lastUser = i; break; }
+  const userIdx = [];
+  for (let i = 0; i < messages.length; i++) {
+    if (messages[i] && messages[i].role === "user") userIdx.push(i);
   }
-  if (lastUser <= 0) return messages; // 0/1 turno user → niente storia da rimuovere
-  return messages.slice(lastUser);
+  if (userIdx.length <= keepTurns) return messages; // sotto soglia → niente storia da rimuovere
+  const cut = userIdx[userIdx.length - keepTurns]; // indice d'inizio del K-esimo turno dal fondo
+  if (cut <= 0) return messages;
+  const head = [];
+  for (let i = 0; i < cut; i++) if (messages[i] && STRUCTURAL_ROLES.has(messages[i].role)) head.push(messages[i]);
+  const tail = messages.slice(cut);
+  return head.length ? head.concat(tail) : tail;
 }
 
 export default ConversationStore;

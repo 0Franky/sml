@@ -118,6 +118,18 @@ CREATE TABLE IF NOT EXISTS focus_frames (
  */
 const SILENT_NAMESPACES = new Set(["memo"]);
 
+/**
+ * Colonne aggiunte a tabelle ESISTENTI dopo la creazione iniziale → vanno ADD-ate via _ensureColumn sui DB su
+ * disco (CREATE TABLE IF NOT EXISTS non altera tabelle già create). Mappa data-driven: aggiungere QUI ogni colonna
+ * futura su una tabella pre-esistente → migrazione automatica, niente ALTER ad-hoc da ricordare. (review-loop #2
+ * 2026-06-29, P2 migration-fragile.) Le tabelle nate complete (decisions/agent_messages/focus_frames) non hanno
+ * colonne post-creazione finora → non elencate.
+ */
+const EXPECTED_COLUMNS = {
+  changelog: [["silent", "INTEGER NOT NULL DEFAULT 0"], ["decision_ref", "TEXT"]],
+  vars: [["decision_ref", "TEXT"]],
+};
+
 export class VarsQueue {
   /**
    * @param {string} dbPath  ":memory:" oppure un path file (es. ".pi/state/vars.db").
@@ -131,9 +143,9 @@ export class VarsQueue {
     // Migrazione difensiva IDEMPOTENTE per DB pre-esistenti su disco: `CREATE TABLE IF NOT EXISTS` NON aggiunge
     // colonne a tabelle già create → OGNI colonna aggiunta DOPO la creazione iniziale va ADD-ata qui. Helper
     // generico via PRAGMA table_info → la prossima colonna futura non crasha i DB esistenti. (review-loop 2026-06-29.)
-    this._ensureColumn("changelog", "silent", "INTEGER NOT NULL DEFAULT 0");
-    this._ensureColumn("changelog", "decision_ref", "TEXT");
-    this._ensureColumn("vars", "decision_ref", "TEXT");
+    for (const [table, cols] of Object.entries(EXPECTED_COLUMNS)) {
+      for (const [col, decl] of cols) this._ensureColumn(table, col, decl);
+    }
   }
 
   /** Aggiunge `column` a `table` se mancante (idempotente). Difesa per i DB .pi/state/*.db già su disco. */
@@ -442,6 +454,21 @@ export class VarsQueue {
 
   getActiveScope() {
     const r = this.db.prepare(`SELECT v FROM meta WHERE k = 'active_scope'`).get();
+    return r ? r.v : null;
+  }
+
+  // -- META generico (k/v) — stato di SISTEMA condiviso cross-extension (convId persistito, hysteresis…). Log
+  //    silent di default (strutturale → fuori da recent_changes). Da preferire al namespace 'memo' (riservato alle
+  //    lezioni di error-memo): scrivere stato-di-sistema in 'memo' ne gonfia il conteggio. (review-loop #2 2026-06-29.)
+  setMeta(k, v, { silent = true, who = this.agent } = {}) {
+    const prev = this.db.prepare(`SELECT v FROM meta WHERE k = ?`).get(k);
+    if (v == null) this.db.prepare(`DELETE FROM meta WHERE k = ?`).run(k);
+    else this.db.prepare(`INSERT INTO meta (k,v) VALUES (?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v`).run(k, String(v));
+    this._log("meta", k, k, prev?.v ?? null, v == null ? null : String(v), who, null, silent ? 1 : 0);
+  }
+
+  getMeta(k) {
+    const r = this.db.prepare(`SELECT v FROM meta WHERE k = ?`).get(k);
     return r ? r.v : null;
   }
 

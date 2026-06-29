@@ -20,9 +20,13 @@ import { Type } from "typebox";
 import { redactText } from "../../src/secrets-redact.mjs";
 // secrets-map DINAMICA: registry CONDIVISO (singleton di processo) → la stessa secrets-map è vista anche
 // da var-ops `render_template` (fix P0 2026-06-29: prima era module-private qui e render_template la bypassava).
-import { addSecret, getDynamicSecrets } from "../../src/secrets-registry.mjs";
+import { addSecret, getDynamicSecrets, clearSecrets } from "../../src/secrets-registry.mjs";
 
 export default function (pi: ExtensionAPI) {
+  // Isolamento di sessione: svuota la secrets-map dinamica a fine sessione → i segreti registrati nella sessione A
+  // NON restano residenti/attivi nella sessione B (reload/resume/new/fork sono in-process). (review-loop #2 P2.)
+  pi.on("session_shutdown", () => clearSecrets());
+
   pi.registerTool({
     name: "add_secret",
     label: "Register a session secret to redact",

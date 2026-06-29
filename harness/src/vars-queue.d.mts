@@ -123,6 +123,10 @@ export class VarsQueue {
   setActiveScope(scopeId: string | null, opts?: WhoOpt): void;
   getActiveScope(): string | null;
 
+  // META generico (k/v) — stato di sistema condiviso (convId persistito, hysteresis…)
+  setMeta(k: string, v: string | number | null, opts?: { silent?: boolean; who?: string }): void;
+  getMeta(k: string): string | null;
+
   // FOCUS FRAMES (matrioska nested-compact: stack zoom-in/pop)
   currentChangeSeq(): number;
   createFocusFrame(scopeId: string, opts: { depth: number; parentId?: string | null; aimTask?: string | null; taskSubset?: string[]; sinceSeq?: number; now?: number; who?: string }): FocusFrameRecord;

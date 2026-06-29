@@ -14,10 +14,19 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { ConversationStore } from "../../src/conversation-store.mjs";
-import { getConversationStore, closeAll } from "../../src/state-db.mjs";
-import { getConvId, setConvId } from "../../src/session-context.mjs";
+import { getConversationStore, getVarsQueue, closeAll } from "../../src/state-db.mjs";
+import { getConvId, setConvId, resolveConvId } from "../../src/session-context.mjs";
+import { redactText } from "../../src/secrets-redact.mjs";
+import { getDynamicSecrets } from "../../src/secrets-registry.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
+
+const META_CONV = "_conv_id"; // convId persistito (vars.db meta) → riusato cross-reload/resume
+
+/** Redige i segreti (pattern statici + dynamic) dal testo PRIMA di persisterlo/ri-iniettarlo. */
+function redactSafe(s: string): string {
+  return redactText(s, getDynamicSecrets()).redacted;
+}
 
 const DB_PATH = ".pi/state/conversations.db";
 
@@ -43,9 +52,17 @@ function messageText(message: any): string {
 export default function (pi: ExtensionAPI) {
   const store = getStore();
   pi.on("session_shutdown", () => closeAll()); // rilascia le connessioni DB condivise (fix leak)
-  // convId per-sessione: ogni sessione/fork ha la sua conversazione distinta (no interleave). Impostato una volta
-  // qui, stabile per tutta la sessione; condiviso con context-assembly (lane) via session-context. (review P1.)
-  pi.on("session_start", (event) => setConvId(`sess-${Date.now()}-${(event as any).reason ?? "start"}`));
+  // convId per-sessione PERSISTITO: nuovo SOLO per conversazioni genuinamente nuove (new/fork); per
+  // startup/reload/resume RIUSA il convId persistito in vars.db meta → la lane <messages_with_user> NON va a vuoto
+  // dopo un reload/resume (la conversazione sopravvive, ADR principio-3). Condiviso con context-assembly via
+  // session-context. (review-loop #2 2026-06-29, P1 convId-reload.)
+  pi.on("session_start", (event) => {
+    const reason = (event as any).reason ?? "startup";
+    const meta = getVarsQueue();
+    const { convId, isNew } = resolveConvId(reason, meta.getMeta(META_CONV), Date.now());
+    setConvId(convId);
+    if (isNew) meta.setMeta(META_CONV, convId); // persisti solo il nuovo (startup/reload/resume riusano)
+  });
 
   // utente → store. SOLO input utente GENUINO: `input` fa fire anche per steer/followUp (mid-turn) e per
   // i comandi `/` non gestiti → li si filtra (source interattiva, non-streaming, non slash-command), altrimenti
@@ -55,7 +72,9 @@ export default function (pi: ExtensionAPI) {
     const text = e.text;
     const genuine = typeof text === "string" && text.trim() &&
       e.source === "interactive" && !e.streamingBehavior && !text.startsWith("/");
-    if (genuine) store.append(getConvId(), "user", text);
+    // redazione segreti PRIMA di persistere: un segreto incollato dall'utente NON deve finire in chiaro in
+    // conversations.db né rientrare verbatim nel system prompt via la lane. (review-loop #2 2026-06-29, P1 security.)
+    if (genuine) store.append(getConvId(), "user", redactSafe(text));
     return { action: "continue" } as const;
   });
 
@@ -72,7 +91,7 @@ export default function (pi: ExtensionAPI) {
         if (t.trim()) lastAssistantText = t;
       }
     }
-    if (lastAssistantText.trim()) store.append(getConvId(), "assistant", lastAssistantText);
+    if (lastAssistantText.trim()) store.append(getConvId(), "assistant", redactSafe(lastAssistantText));
   });
 
   // recupero per ID + range (subagent / by-reference). È ciò che il marker della lane suggerisce.
@@ -83,7 +102,7 @@ export default function (pi: ExtensionAPI) {
       "Recupera turni della conversazione per id + range di seq (es. il pieno dietro al marker della finestra, " +
       "o un estratto citato da un messaggio inter-agent {conv_id,range}). Senza range, ritorna la finestra recente.",
     parameters: Type.Object({
-      conv_id: Type.Optional(Type.String({ description: "ID conversazione (default 'main')." })),
+      conv_id: Type.Optional(Type.String({ description: "ID conversazione (default: la conversazione della sessione corrente)." })),
       from_seq: Type.Optional(Type.Number({ description: "seq iniziale (inclusivo)." })),
       to_seq: Type.Optional(Type.Number({ description: "seq finale (inclusivo)." })),
       n: Type.Optional(Type.Number({ description: "Se nessun range: ultimi N turni (default 10)." })),

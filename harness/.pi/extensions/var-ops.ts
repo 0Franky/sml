@@ -67,18 +67,20 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
-  // Item 4 — CANALE OUTPUT: interpolazione automatica della RISPOSTA FINALE dell'assistant.
-  // Disambiguazione per CANALE (non per delimitatore, msg 437): il canale-output risolve SOLO i {{var:NOME}} di
-  // var ESISTENTI (il resto — {{...}} Jinja/Vue, var inesistenti — resta LETTERALE → niente clobber dell'output),
-  // poi applica la redazione segreti (ordine interpolazione→redazione→invio). Passthrough puro se nulla cambia.
-  // Sostituisce l'opt-in manuale render_template per l'output finale. (review TB-01.)
+  // CANALE OUTPUT (RISPOSTA FINALE dell'assistant) = REDAZIONE-SEGRETI difensiva. Difesa-in-profondità: il
+  // secrets-guardrail copre i tool_result, qui si copre anche la risposta finale (pattern statici + dynamic-secrets).
+  // L'AUTO-interpolazione di {{var:NOME}} è stata RIMOSSA da questo canale: la review-loop #2 (security P1) ha
+  // mostrato che interpolare automaticamente QUALSIASI var nell'output è un canale di ESFILTRAZIONE — una var-segreto
+  // non-pattern e non-registrata verrebbe risolta in chiaro a prescindere dall'allineamento del modello (l'interpolazione
+  // è una primitiva fidata) — oltre a clobberare l'output didattico (es. {{var:API_BASE}} citato come sintassi).
+  // L'interpolazione resta OPT-IN, esplicita e controllata, via il tool render_template. Passthrough se nulla è redatto.
   pi.on("message_end", (event) => {
     const m = event.message as any;
     if (!m || m.role !== "assistant") return;
     const dynamicSecrets = getDynamicSecrets();
     let changed = false;
     const apply = (s: string): string => {
-      const out = emitToUser(s, vq, { interpolate: true, dynamicSecrets });
+      const out = emitToUser(s, vq, { interpolate: false, dynamicSecrets }); // SOLO redazione (no interpolazione)
       if (out.text !== s) changed = true;
       return out.text;
     };
