@@ -31,7 +31,7 @@ export const DEFAULT_CFG = {
   watchMatrioska: 25,
   focusK: 5,               // display-cap del reorder (priority-sort top-K)
   maxDepth: 3,             // depth-bound dello stack
-  cooldownMs: 90_000,      // hysteresis anti-thrash (consumato dall'extension, non dal core puro)
+  cooldownMs: 90_000,      // hysteresis anti-thrash del <focus_hint> (consumato da shouldEmitFocusHint, vedi sotto)
 };
 
 const RANK = { none: 0, reorder: 1, matrioska: 2 };
@@ -97,6 +97,24 @@ export function evaluateTrigger(vq, opts = {}, cfg = DEFAULT_CFG) {
   // a depth saturo NON si raccomanda di scendere ancora → si degrada a reorder (riordino in-place).
   const recommend = level === "matrioska" && depthSaturated ? "reorder" : level;
   return { level, recommend, depthSaturated, metrics };
+}
+
+/**
+ * Gating hysteresis del <focus_hint> (anti-thrash): ritorna true — E registra il timestamp — SOLO se è passato
+ * ≥ cooldownMs dall'ultimo hint emesso. Stato in un memo SILENT del datastore (`_focus_hint_ts`, namespace memo →
+ * non inquina recent_changes). Rende reale DEFAULT_CFG.cooldownMs (era costante morta) → niente flapping
+ * enter→pop→hint→enter mentre la pressione resta alta. (review-loop 2026-06-29, P2 hysteresis-non-cablata.)
+ * @param {import("./vars-queue.mjs").VarsQueue} vq
+ * @param {{ now?: number, cooldownMs?: number }} [opts]
+ */
+export function shouldEmitFocusHint(vq, opts = {}) {
+  const now = opts.now ?? Date.now();
+  const cooldownMs = opts.cooldownMs ?? DEFAULT_CFG.cooldownMs;
+  const last = vq.getVar("_focus_hint_ts");
+  const lastTs = typeof last?.value === "number" ? last.value : 0;
+  if (now - lastTs < cooldownMs) return false; // suggerito troppo di recente → sopprimi
+  vq.setVar("_focus_hint_ts", now, { namespace: "memo", scope: "private" }); // memo = silent
+  return true;
 }
 
 /**
@@ -177,7 +195,11 @@ export function enterFocus(vq, opts = {}, cfg = DEFAULT_CFG) {
   const depth = gate.depth + 1;
   if (depth > c.maxDepth) throw new Error(`enterFocus: depth ${depth} > maxDepth ${c.maxDepth}`);
 
-  const subset = Array.isArray(opts.taskSubset) ? opts.taskSubset.filter(Boolean).map(String) : [];
+  let subset = Array.isArray(opts.taskSubset) ? opts.taskSubset.filter(Boolean).map(String) : [];
+  subset = subset.filter((id) => vq.getTask(id)); // SOLO task esistenti (no ghost-id → focus degenere/context vuoto)
+  if (!subset.length && !opts.aimTask) {
+    throw new Error("enterFocus: subset vuoto o senza task esistenti (serve ≥1 task valido)");
+  }
   const lead = opts.aimTask ?? subset[0] ?? vq.getCurr() ?? null; // su cosa puntare CURR dentro lo scope
   const parentId = opts.parentScopeId ?? vq.getActiveScope() ?? null;
   const who = parentId ?? vq.agent; // l'enter è una scelta del PADRE
@@ -204,14 +226,23 @@ export function popFocus(vq, scopeId, opts = {}) {
   const frame = vq.getFocusFrame(scopeId);
   if (!frame) throw new Error(`popFocus: scope ${scopeId} inesistente`);
   if (frame.status !== "open") throw new Error(`popFocus: scope ${scopeId} non è open (${frame.status})`);
+  // invariante LIFO: non si può poppare uno scope che ha figli ancora aperti — orfanerebbe il sotto-albero
+  // (active_scope/depth/CURR incoerenti, delta del figlio persi). Il path di default (deepest) non lo triggera;
+  // un scope_id esplicito non-top sì → guard esplicito. (review-loop 2026-06-29, P1 no-LIFO.)
+  const openChildren = vq.listFocusFrames({ status: "open" }).filter((f) => f.parent_id === scopeId);
+  if (openChildren.length) {
+    throw new Error(`popFocus: scope ${scopeId} ha ${openChildren.length} figlio/i ancora aperto/i — chiudili prima (LIFO)`);
+  }
 
   const parent = frame.parent_id ?? null;
   const who = parent ?? vq.agent;
 
-  // 1) report-to-file-pointer: i delta del figlio sono attribuiti who=scopeId (active_scope routing) e ≥ entered.
+  // 1) report-to-file-pointer: i delta del figlio sono attribuiti who=scopeId (active_scope routing) e delimitati
+  //    dal `since_seq` MONOTONO (non dal wall-clock frame.entered: immune a clock-skew/NTP-step e al same-ms).
+  //    (review-loop 2026-06-29, P1 delta-per-timestamp.)
   const { summary, report_path } = buildPopReport(vq, scopeId, {
     reportDir: opts.reportDir ?? ".pi/state/reports",
-    since: frame.entered,
+    sinceSeq: frame.since_seq,
     reportId: now,
   });
 
@@ -235,12 +266,24 @@ export function popFocus(vq, scopeId, opts = {}) {
  */
 export function realignParent(vq, opts = {}) {
   const now = opts.now ?? Date.now();
+  const who = opts.parentScopeId ?? vq.agent;
   let restoredCurr = null;
   if (opts.savedAimTask) {
     const t = vq.getTask(opts.savedAimTask);
     if (t && t.status !== "done" && t.status !== "blocked") {
-      vq.setCurr(opts.savedAimTask, { who: opts.parentScopeId ?? vq.agent });
+      vq.setCurr(opts.savedAimTask, { who });
       restoredCurr = opts.savedAimTask;
+    }
+  }
+  // anti-dangling: se l'aim non è ripristinabile (done/blocked) e il CURR resta a puntare un task chiuso/assente,
+  // ri-puntalo al primo task ancora APERTO → niente <current_aim> "done" fuorviante al re-align post-pop.
+  // (review-loop 2026-06-29, P2 CURR-dangling-su-done.)
+  if (!restoredCurr) {
+    const currId = vq.getCurr();
+    const curr = currId ? vq.getTask(currId) : null;
+    if (!curr || curr.status === "done" || curr.status === "blocked") {
+      const open = [...vq.listTasks({ status: "in_progress" }), ...vq.listTasks({ status: "pending" })];
+      if (open.length) { vq.setCurr(open[0].id, { who }); restoredCurr = open[0].id; }
     }
   }
   const frame = buildFrame(vq, { now });
@@ -256,7 +299,9 @@ export function buildNestedWorkspace(vq, opts = {}) {
   const now = opts.now ?? Date.now();
   const parts = [];
   const frame = buildFrame(vq, { now });
-  parts.push(serializeFrame(frame, { absoluteTimestamps: opts.absoluteTimestamps }));
+  // il <frame> è deliberatamente ATEMPORALE (cache-stable, zona stabile in testa): non emette timestamp → non
+  // prende absoluteTimestamps (che vale solo per la zona volatile di <context>). (review-loop 2026-06-29, P3.)
+  parts.push(serializeFrame(frame));
 
   const scope = opts.focusScopeId
     ? vq.getFocusFrame(opts.focusScopeId)
@@ -272,6 +317,6 @@ export function buildNestedWorkspace(vq, opts = {}) {
 }
 
 export default {
-  DEFAULT_CFG, collectMetrics, classifyPressure, currentDepth, canEnter, evaluateTrigger,
+  DEFAULT_CFG, collectMetrics, classifyPressure, currentDepth, canEnter, evaluateTrigger, shouldEmitFocusHint,
   buildFrame, serializeFrame, getFocusStack, enterFocus, popFocus, realignParent, buildNestedWorkspace,
 };

@@ -44,8 +44,10 @@ export function evaluateTrigger(
   cfg?: Partial<NestedCfg>,
 ): { level: PressureLevel; recommend: PressureLevel; depthSaturated: boolean; metrics: Metrics };
 
+export function shouldEmitFocusHint(vq: VarsQueue, opts?: { now?: number; cooldownMs?: number }): boolean;
+
 export function buildFrame(vq: VarsQueue, opts?: { now?: number }): Frame;
-export function serializeFrame(frame: Frame, opts?: { displayCap?: number; absoluteTimestamps?: boolean }): string;
+export function serializeFrame(frame: Frame, opts?: { displayCap?: number }): string;
 export function getFocusStack(vq: VarsQueue): FocusFrameRecord[];
 
 export function enterFocus(

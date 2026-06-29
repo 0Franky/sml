@@ -20,4 +20,6 @@ export class ConversationStore {
 
 export function buildMessagesLane(store: ConversationStore, convId: string, opts?: { n?: number; charCap?: number }): string;
 
+export function windowNativeMessages<T extends { role?: string }>(messages: T[]): T[];
+
 export default ConversationStore;
