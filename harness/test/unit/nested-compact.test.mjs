@@ -9,7 +9,7 @@
 import {
   DEFAULT_CFG, collectMetrics, classifyPressure, currentDepth, canEnter, evaluateTrigger,
   buildFrame, serializeFrame, getFocusStack, enterFocus, popFocus, realignParent, buildNestedWorkspace,
-  shouldEmitReorgHint, markReorgEmitted,
+  shouldEmitReorgHint, markReorgEmitted, requireGateBlocks,
 } from "../../src/nested-compact.mjs";
 import { VarsQueue } from "../../src/vars-queue.mjs";
 import { ConversationStore } from "../../src/conversation-store.mjs";
@@ -65,6 +65,20 @@ try {
     markReorgEmitted(vq, { now: 1_000_000 });
     ok(shouldEmitReorgHint(vq, { now: 1_000_000 + 1000 }) === false, "REORG: entro cooldown → soppresso");
     ok(shouldEmitReorgHint(vq, { now: 1_000_000 + DEFAULT_CFG.cooldownMs + 1 }) === true, "REORG: oltre cooldown → riemettibile");
+    vq.close();
+  }
+
+  // 2c) requireGateBlocks — gate gathering.mode=require (review P1 #16) --------
+  {
+    const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+    for (let i = 1; i <= 6; i++) vq.addTask("G" + i, "g" + i); // 6 open
+    ok(requireGateBlocks(vq, { mode: "delegated", minTasksForForce: 5 }) === false, "REQUIRE: mode!=require → mai blocca");
+    ok(requireGateBlocks(vq, { mode: "require", minTasksForForce: 5 }) === true, "REQUIRE: require + open≥min + no token → BLOCCA");
+    ok(requireGateBlocks(vq, { mode: "require", minTasksForForce: 99 }) === false, "REQUIRE: open<min → no-op (proporzionalità)");
+    vq.setMeta("_gather_token", "123"); // come dopo get_execution_order in require-mode
+    ok(requireGateBlocks(vq, { mode: "require", minTasksForForce: 5 }) === false, "REQUIRE: token presente → passa");
+    vq.setMeta("_gather_token", ""); // come azzeramento a inizio sessione / consume
+    ok(requireGateBlocks(vq, { mode: "require", minTasksForForce: 5 }) === true, "REQUIRE: token azzerato → ri-blocca (no gather-once-forever)");
     vq.close();
   }
 

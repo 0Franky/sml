@@ -13,10 +13,12 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { VarsQueue } from "../../src/vars-queue.mjs";
 import { getVarsQueue, closeAll } from "../../src/state-db.mjs";
+import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
 const DB_PATH = ".pi/state/vars.db";
+const HARNESS_CFG = loadHarnessConfig(); // per gathering.mode (write del token solo in require-mode)
 
 function getStore(): VarsQueue {
   mkdirSync(dirname(DB_PATH), { recursive: true });
@@ -26,6 +28,9 @@ function getStore(): VarsQueue {
 export default function (pi: ExtensionAPI) {
   const vq = getStore();
   pi.on("session_shutdown", () => closeAll()); // rilascia le connessioni DB condivise (fix leak)
+  // gathering.mode=require (review P2 #10): azzera il marker gather a inizio sessione → un token "fresco" non
+  // sopravvive cross-sessione (niente gather-in-S1 che sblocca un focus in S2 con backlog cambiato).
+  pi.on("session_start", () => { try { vq.setMeta("_gather_token", ""); } catch { /* best-effort */ } });
 
   // Routing dell'attribuzione: se uno scope-figlio (matrioska) è aperto, le mutazioni sono attribuite allo scope
   // (who=scopeId) → il pop-report deriva i delta del figlio. Altrimenti = l'agente base. Vedi nested-compact.mjs.
@@ -137,8 +142,9 @@ export default function (pi: ExtensionAPI) {
         id: t.id, title: t.title, status: t.status, ready: t.ready ?? true,
         unblocks: t.unblocks ?? 0, priority: t.priority ?? 0, deps: t.deps ?? [],
       }));
-      // marker per gathering.mode='require': segna che il gathering è stato fatto (consumato da enter_focus).
-      vq.setMeta("_gather_token", String(vq.currentChangeSeq()));
+      // marker per gathering.mode='require' (review P3 #6): scritto SOLO in require-mode → in delegated/inject la
+      // vista resta una pura LETTURA (coerente con "read-only"). Il token è consumato da enter_focus.
+      if (HARNESS_CFG.gathering.mode === "require") vq.setMeta("_gather_token", String(vq.currentChangeSeq()));
       return { content: [{ type: "text", text: JSON.stringify({ structured, order }, null, 2) }], details: { count: order.length, structured } };
     },
   });

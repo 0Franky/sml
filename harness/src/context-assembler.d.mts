@@ -28,4 +28,7 @@ export interface BuildWorkspaceOpts extends AssembleOpts {
 }
 export function buildWorkspace(vq: VarsQueue, opts?: BuildWorkspaceOpts): string;
 
+export function buildAimTail(vq: VarsQueue): string;
+export function buildExecutionOrderLines(tasks: any[], structured: boolean): string[];
+
 export default assembleContext;

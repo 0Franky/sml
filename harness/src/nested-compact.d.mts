@@ -48,6 +48,7 @@ export function shouldEmitFocusHint(vq: VarsQueue, opts?: { now?: number; cooldo
 export function markFocusHintEmitted(vq: VarsQueue, opts?: { now?: number }): void;
 export function shouldEmitReorgHint(vq: VarsQueue, opts?: { now?: number; cooldownMs?: number }): boolean;
 export function markReorgEmitted(vq: VarsQueue, opts?: { now?: number }): void;
+export function requireGateBlocks(vq: VarsQueue, cfg?: { mode?: string; minTasksForForce?: number }): boolean;
 
 export function buildFrame(vq: VarsQueue, opts?: { now?: number }): Frame;
 export function serializeFrame(frame: Frame, opts?: { displayCap?: number }): string;

@@ -12,7 +12,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { VarsQueue } from "../../src/vars-queue.mjs";
 import { getVarsQueue, getConversationStore, closeAll } from "../../src/state-db.mjs";
-import { assembleContext, buildResumeDigest } from "../../src/context-assembler.mjs";
+import { assembleContext, buildResumeDigest, buildAimTail, buildExecutionOrderLines } from "../../src/context-assembler.mjs";
 import { buildMessagesLane } from "../../src/conversation-store.mjs";
 import { getConvId } from "../../src/session-context.mjs";
 import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint, markFocusHintEmitted, shouldEmitReorgHint, markReorgEmitted } from "../../src/nested-compact.mjs";
@@ -83,10 +83,8 @@ export default function (pi: ExtensionAPI) {
         if (HARNESS_CFG.gathering.mode === "inject") {
           const { structured, tasks } = vq.listTasksOrdered();
           if (tasks.length >= HARNESS_CFG.gathering.minTasksForForce) {
-            const lines = tasks.map(
-              (t: any) =>
-                `  - ${t.id} [${t.status}]${structured ? ` ready=${t.ready} unblocks=${t.unblocks} prio=${t.priority}` : ""} : ${t.title}`,
-            );
+            // righe XML-escaped via helper node-pure condiviso (fix P1: id/status/title sono user/model-content).
+            const lines = buildExecutionOrderLines(tasks, structured);
             hint += `\n<execution_order note="ready-first then downstream-impact then priority">\n${lines.join("\n")}\n</execution_order>`;
           }
         }
@@ -102,13 +100,8 @@ export default function (pi: ExtensionAPI) {
     }
     // aim-in-coda (anti position-bias / lost-in-the-middle, msg 518): l'aim corrente è in cima al <context>, ma su
     // contesti lunghi la coda (lane recente) può "schiacciarlo". Lo ri-ancoriamo in CODA — cheap (1 riga), solo se c'è
-    // un CURR. La salienza dell'obiettivo non deve dipendere dalla posizione. Escape XML (la title è user/model-content).
-    const escTail = (s: string) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const currId = vq.getCurr();
-    const currTask = currId ? vq.getTask(currId) : null;
-    const aimTail = currTask
-      ? `\n<current_aim_reminder>Aim corrente: ${escTail(currTask.id)} — ${escTail(currTask.title ?? "")}</current_aim_reminder>`
-      : "";
+    // un CURR. Via helper node-pure `buildAimTail` (escape XML centralizzato, fix P1/drift: la title è user/model-content).
+    const aimTail = buildAimTail(vq);
     return { systemPrompt: `${event.systemPrompt}\n\n${workspace}${aimTail}` };
   });
   // NB: la SOPPRESSIONE dell'array messaggi nativo (hook `context`, Strada-2 keepTurns:1) vive nell'extension
