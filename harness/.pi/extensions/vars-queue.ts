@@ -76,4 +76,71 @@ export default function (pi: ExtensionAPI) {
       return { content: [{ type: "text", text: JSON.stringify(t) }], details: { ok: true } };
     },
   });
+
+  // --- shared-vars cross-agent (gathering 2026-06-29: anticipa cross-session-state-sharing) ---
+  pi.registerTool({
+    name: "get_shared_view",
+    label: "Read shared vars (cross-agent)",
+    description: "Ritorna la VIEW read delle var marcate 'shared' (visibili cross-agent). È ciò che un sotto-agente riceve.",
+    parameters: Type.Object({}),
+    async execute() {
+      return { content: [{ type: "text", text: JSON.stringify(vq.getSharedView(), null, 2) }], details: {} };
+    },
+  });
+  pi.registerTool({
+    name: "propose_var",
+    label: "Propose a shared-var write (cross-agent)",
+    description: "Un sotto-agente PROPONE una scrittura su una var condivisa (non scrive diretto → niente race). L'orchestratore poi fa il merge.",
+    parameters: Type.Object({ var_id: Type.String(), value: Type.Any() }),
+    async execute(_t: string, p: any) {
+      vq.proposeVar(p.var_id, p.value);
+      return { content: [{ type: "text", text: `proposta registrata (${vq.pendingProposals().length} pendenti)` }], details: { ok: true } };
+    },
+  });
+  pi.registerTool({
+    name: "merge_proposals",
+    label: "Merge pending shared-var proposals (single-writer)",
+    description: "L'orchestratore applica le proposte pendenti sulle var condivise (single-writer → niente race). Ritorna quante applicate.",
+    parameters: Type.Object({}),
+    async execute() {
+      const n = vq.mergeProposals();
+      return { content: [{ type: "text", text: `${n} proposte applicate` }], details: { applied: n } };
+    },
+  });
+
+  // --- change-log + CURR + listing (visibilità dei cambiamenti, anche cross-compact) ---
+  pi.registerTool({
+    name: "get_changelog",
+    label: "Read change-log (who/when/what)",
+    description: "Ritorna il change-log recente (chi/quando/cosa + ref-decisione). I cambiamenti sopravvivono al compact. Filtri opzionali: since (epoch ms), entity, limit.",
+    parameters: Type.Object({
+      since: Type.Optional(Type.Number()),
+      entity: Type.Optional(Type.String()),
+      limit: Type.Optional(Type.Number()),
+    }),
+    async execute(_t: string, p: any) {
+      const log = vq.getChangeLog({ since: p.since ?? 0, entity: p.entity ?? null, limit: p.limit ?? 50 });
+      return { content: [{ type: "text", text: JSON.stringify(log, null, 2) }], details: { count: log.length } };
+    },
+  });
+  pi.registerTool({
+    name: "set_curr",
+    label: "Set current aim (CURR pointer)",
+    description: "Imposta il task corrente (CURR pointer) — l'aim che alimenta il <context>.",
+    parameters: Type.Object({ task_id: Type.String() }),
+    async execute(_t: string, p: any) {
+      vq.setCurr(p.task_id);
+      return { content: [{ type: "text", text: `CURR = ${p.task_id}` }], details: { ok: true } };
+    },
+  });
+  pi.registerTool({
+    name: "list_tasks",
+    label: "List tasks",
+    description: "Elenca i task (filtro opzionale per status: pending|in_progress|done|blocked).",
+    parameters: Type.Object({ status: Type.Optional(Type.String()) }),
+    async execute(_t: string, p: any) {
+      const tasks = vq.listTasks({ status: p.status ?? null });
+      return { content: [{ type: "text", text: JSON.stringify(tasks, null, 2) }], details: { count: tasks.length } };
+    },
+  });
 }
