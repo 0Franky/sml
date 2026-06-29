@@ -26,7 +26,11 @@ function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error(
   ok(windowNativeMessages(one) === one, "WINDOW: 1 messaggio → stesso riferimento");
 
   const threeTurns = [u("t1"), a("r1"), u("t2"), a("r2"), u("t3"), a("[tool]"), tr("ok")];
-  ok(windowNativeMessages(threeTurns) === threeTurns, "WINDOW: ≤keepTurns(4) turni → invariato (tool_result intatti)");
+  const wDef = windowNativeMessages(threeTurns); // DEFAULT keepTurns=1 (Strada-2: solo turno corrente)
+  ok(wDef.length === 3 && wDef[0].text === "t3" && wDef.some((m) => m.role === "toolResult"),
+     "WINDOW: default keepTurns=1 → solo turno corrente (coi suoi tool_result)");
+  ok(windowNativeMessages(threeTurns, { keepTurns: 5 }) === threeTurns,
+     "WINDOW: keepTurns ≥ #turni → stesso riferimento (niente storia da rimuovere)");
 
   const w1 = windowNativeMessages(threeTurns, { keepTurns: 1 });
   ok(w1.length === 3 && w1[0].text === "t3", "WINDOW: keepTurns=1 → solo turno corrente (coi suoi tool)");
@@ -40,6 +44,17 @@ function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error(
   const w3 = windowNativeMessages(withBs, { keepTurns: 1 });
   ok(w3[0].role === "branchSummary", "WINDOW: branchSummary in testa preservato");
   ok(w3.some((m) => m.text === "t2") && !w3.some((m) => m.text === "t1"), "WINDOW: storia soppressa, turno corrente tenuto + strutturale in testa");
+
+  // (review #3 P3 custom-reorder) — il prefisso strutturale è preservato SOLO se CONTIGUO in testa.
+  const cu = (text) => ({ role: "custom", text });
+  const withMidCustom = [u("t1"), cu("nota-mid"), a("r1"), u("t2"), a("r2"), u("t3"), a("r3")];
+  const w4 = windowNativeMessages(withMidCustom, { keepTurns: 1 });
+  ok(w4[0].text === "t3", "WINDOW: nessun prefisso contiguo → testa = turno corrente");
+  ok(!w4.some((m) => m.text === "nota-mid"), "WINDOW: 'custom' a metà storia SOPPRESSO (non riordinato in testa)");
+  const withHeadCustom = [cu("head-note"), u("t1"), a("r1"), u("t2"), a("r2")];
+  const w5 = windowNativeMessages(withHeadCustom, { keepTurns: 1 });
+  ok(w5[0].text === "head-note" && w5.some((m) => m.text === "t2") && !w5.some((m) => m.text === "t1"),
+     "WINDOW: 'custom' nel PREFISSO CONTIGUO in testa preservato");
 }
 
 // 2) shouldEmitFocusHint PURO + markFocusHintEmitted; stato nel META (no 'memo') ------------------
@@ -74,15 +89,22 @@ function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error(
 // 4) resolveConvId — persistenza su reload/resume ------------------------------------------------
 {
   const r1 = resolveConvId("startup", null, 1000);
-  ok(r1.isNew && r1.convId === "sess-1000-startup", "CONVID: startup senza persistito → nuovo");
+  ok(r1.isNew && r1.persist && r1.convId === "sess-1000-startup", "CONVID: startup senza persistito → nuovo + PERSISTITO");
   const r2 = resolveConvId("reload", "sess-1000-startup", 2000);
-  ok(!r2.isNew && r2.convId === "sess-1000-startup", "CONVID: reload con persistito → RIUSA (lane non vuota)");
+  ok(!r2.isNew && !r2.persist && r2.convId === "sess-1000-startup", "CONVID: reload con persistito → RIUSA (no re-persist)");
   const r3 = resolveConvId("resume", "sess-1000-startup", 3000);
   ok(!r3.isNew && r3.convId === "sess-1000-startup", "CONVID: resume → riusa la conversazione persistita");
   const r4 = resolveConvId("new", "sess-1000-startup", 4000);
-  ok(r4.isNew && r4.convId === "sess-4000-new", "CONVID: new → nuova conversazione (non eredita)");
+  ok(r4.isNew && !r4.persist && r4.convId === "sess-4000-new", "CONVID: new → nuova conv EFFIMERA (persist=false, no clobber)");
   const r5 = resolveConvId("fork", "sess-1000-startup", 5000);
-  ok(r5.isNew && r5.convId === "sess-5000-fork", "CONVID: fork → nuova conversazione");
+  ok(r5.isNew && !r5.persist && r5.convId === "sess-5000-fork", "CONVID: fork → nuova conv effimera (persist=false)");
+
+  // (review #3 P2 cross-sessione) scenario: A persistito → /new B (effimero, NON clobbera) → /resume legge ANCORA A.
+  const A = "sess-A";
+  const newB = resolveConvId("new", A, 6000);
+  ok(!newB.persist, "CONVID: /new non persiste → lo slot globale resta sulla conversazione principale");
+  const resumeAfterNew = resolveConvId("resume", A, 7000); // lo slot è ancora A perché /new non l'ha sovrascritto
+  ok(resumeAfterNew.convId === A, "CONVID: /resume dopo /new → riusa la conversazione principale (no mix A/B)");
 }
 
 // 5) buildMessagesLane — cap sul singolo messaggio gigante ----------------------------------------

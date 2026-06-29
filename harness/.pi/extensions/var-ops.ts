@@ -37,6 +37,8 @@ export default function (pi: ExtensionAPI) {
     description:
       "Estrae un campo da una var JSON per PATH (dotted + indice, es. 'data.items[0].status') e lo salva in 'dest'. " +
       "Deterministico e sicuro (niente eval, niente proto-pollution). Usa questo invece di ricopiare il valore: meno errori, meno token.",
+    // promptSnippet → senza, i tool custom NON compaiono nella sezione "Available tools" del system prompt (types.d.ts:342).
+    promptSnippet: "extract_var(src,path,dest) — estrai un campo da una var JSON (by-reference, no ricopiatura).",
     parameters: Type.Object({
       src: Type.String({ description: "Var sorgente (oggetto JSON o stringa JSON, es. un tool_result catturato)." }),
       path: Type.String({ description: "Path del campo (dotted + indice): 'status', 'data.items[0].id'." }),
@@ -56,6 +58,14 @@ export default function (pi: ExtensionAPI) {
       "Canale di interpolazione OPT-IN: risolve i placeholder {{var:NOME}} delle var ESISTENTI (il resto, incl. " +
       "{{...}} di Jinja/Vue e var inesistenti, resta letterale) e applica la redazione segreti FINALE. Ritorna la " +
       "stringa risolta. Usalo per comporre testo che cita valori di var senza ricopiarli a mano.",
+    // Scopribilità (review-loop #3 2026-06-29, P2): l'auto-interpolazione nell'output è stata RIMOSSA (esfiltrazione);
+    // ora l'interpolazione richiede un'azione esplicita → va segnalata al modello, altrimenti scriverebbe {{var:X}}
+    // letterale. promptSnippet la mette in "Available tools"; promptGuidelines spiega il cambio di regime.
+    promptSnippet: "render_template(text) — risolve {{var:NOME}} citando valori di var nel testo finale (NON automatico).",
+    promptGuidelines: [
+      "Per inserire il VALORE di una var nel testo all'utente usa render_template: {{var:NOME}} NON è più risolto " +
+        "automaticamente nell'output (resta letterale). Serve a citare valori di var senza ricopiarli a mano.",
+    ],
     parameters: Type.Object({
       text: Type.String({ description: "Testo con placeholder {{var:NOME}} (escape: {{!var:NOME}})." }),
     }),
@@ -74,6 +84,9 @@ export default function (pi: ExtensionAPI) {
   // non-pattern e non-registrata verrebbe risolta in chiaro a prescindere dall'allineamento del modello (l'interpolazione
   // è una primitiva fidata) — oltre a clobberare l'output didattico (es. {{var:API_BASE}} citato come sintassi).
   // L'interpolazione resta OPT-IN, esplicita e controllata, via il tool render_template. Passthrough se nulla è redatto.
+  // PORTATA (review-loop #3 2026-06-29, P2): questa è una difesa del CANALE-TESTO della risposta finale — redige SOLO i
+  // blocchi `type:"text"` (non gli argomenti dei tool_call emessi dall'assistant). L'egress via argomenti tool_call è
+  // coperto separatamente dall'hook `tool_call` in secrets-guardrail (redazione dynamic-secrets in-place).
   pi.on("message_end", (event) => {
     const m = event.message as any;
     if (!m || m.role !== "assistant") return;

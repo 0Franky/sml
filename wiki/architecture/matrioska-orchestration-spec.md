@@ -47,11 +47,11 @@ Ladder `none < reorder < matrioska` (soglie `[CALIBRATE]`):
 
 ## (3) Enter-focus (zoom-IN) — child agent identity + focus marker nello store
 
-Nuova table `focus_frames(scope_id PK, parent_id, depth, aim_task, task_subset JSON, entered, status, since_seq)`. `enterFocus`: depth=parent+1 (throw se >3) · `scopeId="focus-"+currId+"-"+ts` (sanitized) · cattura `since_seq`=max changelog seq · CURR=lead del subset. **Meccanismo chiave**: in-scope la datastore handle è `new VarsQueue(DB, {agent: scopeId})` → ogni mutazione è stampata `who=scopeId` → il pop-report è derivabile e mai-vuoto (è ciò che `pop-report.mjs` già assume). Workspace in-scope = `serializeFrame + assembleContext(focusTaskIds=subset) + messagesLane`.
+Nuova table `focus_frames(scope_id PK, parent_id, depth, aim_task, task_subset JSON, entered, status, since_seq)`. `enterFocus`: depth=parent+1 (throw se >3) · `scopeId=sanitize("focus-"+lead+"-"+ts+"-"+since_seq)` con `lead = aimTask ?? subset[0] ?? getCurr()` · cattura `since_seq`=max changelog seq · CURR=lead del subset. **Meccanismo chiave (routing-who via `active_scope`)**: si imposta `active_scope=scopeId` sulla STESSA connessione condivisa (un meta-key, NON una nuova `VarsQueue`) → in-scope ogni mutazione è stampata `who=scopeId` → il pop-report è derivabile (per `getChangesByAgent`/`getDecisionsByAgent`) e mai-vuoto, senza una seconda connessione DB. Workspace in-scope = `serializeFrame + assembleContext(focusTaskIds=subset) + messagesLane`.
 
 ## (4) Pop — buildPopReport + re-align
 
-1. `{summary, report_path} = buildPopReport(vq, scopeId, {since: since_seq})` (scopa esattamente i delta del figlio).
+1. `{summary, report_path} = buildPopReport(vq, scopeId, {sinceSeq: since_seq, reportDir, reportId})` — delimita i delta del figlio per **seq monotono** (`seq > since_seq`, immune a clock-skew), non per epoch-ms (coerente con la nota di variazione in §0).
 2. **promuove**: `recordDecision("pop-"+scopeId, summary, {who: parent, decisionRef: report_path})` (esito = decisione del padre, report per riferimento); le var `shared` del figlio sono già visibili (no copia).
 3. close scope (`status='popped'`, depth decrementa).
 4. **RE-ALIGN del padre** (foto stantia): re-`buildFrame`; ripristina CURR all'`aim_task` salvato **se ancora aperto**; i task che il figlio ha messo `done` escono dall'open-loop automaticamente (open-loop = pending+in_progress); switch handle agent→parent.

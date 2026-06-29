@@ -22,6 +22,12 @@ const _convs = new Map(); // dbPath -> ConversationStore
 export function getVarsQueue(dbPath = ".pi/state/vars.db", opts = {}) {
   let vq = _vars.get(dbPath);
   if (!vq) { vq = new VarsQueue(dbPath, opts); _vars.set(dbPath, vq); }
+  else if (opts.agent && vq.agent !== opts.agent) {
+    // cache-hit con agent diverso dall'istanza memoizzata: "vince-la-prima" → l'opts qui è IGNORATO. È un sintomo
+    // di incoerenza tra call-site (tutte dovrebbero passare lo stesso agent); lo segnalo invece di mascherarlo.
+    // (review-loop #3 2026-06-29, P2 singleton-agent.)
+    console.warn(`[state-db] getVarsQueue("${dbPath}"): opts.agent="${opts.agent}" ignorato (istanza già creata con agent="${vq.agent}")`);
+  }
   return vq;
 }
 

@@ -29,6 +29,7 @@ function redactSafe(s: string): string {
 }
 
 const DB_PATH = ".pi/state/conversations.db";
+const VARS_DB_PATH = ".pi/state/vars.db"; // DB dello stato (distinto da conversations.db) — meta convId condiviso
 
 function getStore(): ConversationStore {
   mkdirSync(dirname(DB_PATH), { recursive: true });
@@ -58,10 +59,12 @@ export default function (pi: ExtensionAPI) {
   // session-context. (review-loop #2 2026-06-29, P1 convId-reload.)
   pi.on("session_start", (event) => {
     const reason = (event as any).reason ?? "startup";
-    const meta = getVarsQueue();
-    const { convId, isNew } = resolveConvId(reason, meta.getMeta(META_CONV), Date.now());
+    // STESSO path+opts delle altre 7 extension → il singleton vars.db non nasce mai con agent='main' per via di
+    // questa call-site, qualunque sia l'ordine di load (review-loop #3 2026-06-29, P2 singleton-agent).
+    const meta = getVarsQueue(VARS_DB_PATH, { agent: "orchestrator" });
+    const { convId, persist } = resolveConvId(reason, meta.getMeta(META_CONV), Date.now());
     setConvId(convId);
-    if (isNew) meta.setMeta(META_CONV, convId); // persisti solo il nuovo (startup/reload/resume riusano)
+    if (persist) meta.setMeta(META_CONV, convId); // persisti SOLO la prima sessione; /new,/fork effimeri (no clobber)
   });
 
   // utente → store. SOLO input utente GENUINO: `input` fa fire anche per steer/followUp (mid-turn) e per
@@ -72,8 +75,10 @@ export default function (pi: ExtensionAPI) {
     const text = e.text;
     const genuine = typeof text === "string" && text.trim() &&
       e.source === "interactive" && !e.streamingBehavior && !text.startsWith("/");
-    // redazione segreti PRIMA di persistere: un segreto incollato dall'utente NON deve finire in chiaro in
-    // conversations.db né rientrare verbatim nel system prompt via la lane. (review-loop #2 2026-06-29, P1 security.)
+    // redazione segreti PRIMA di persistere = DIFESA-IN-PROFONDITÀ best-effort, NON una garanzia: redige i pattern
+    // noti (secrets-redact) + i segreti già registrati via add_secret. Un segreto NON-pattern incollato PRIMA di
+    // add_secret può ancora finire in conversations.db e nella lane (gap di copertura inerente al redattore
+    // pattern+registry — l'utente usi add_secret). (review-loop #3 2026-06-29, P2 secret-coverage.)
     if (genuine) store.append(getConvId(), "user", redactSafe(text));
     return { action: "continue" } as const;
   });

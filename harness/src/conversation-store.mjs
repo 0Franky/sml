@@ -117,22 +117,29 @@ const STRUCTURAL_ROLES = new Set(["branchSummary", "compactionSummary", "custom"
 
 /**
  * windowNativeMessages — Strada-2: BOUNDA l'array messaggi NATIVO di pi tenendo gli ULTIMI `keepTurns` turni
- * COMPLETI (con i loro tool_call/tool_result) e sopprimendo la storia più vecchia → niente crescita illimitata
- * (sostituisce la compaction nativa, OFF) senza perdere la continuità multi-turno né i tool_result recenti
- * (review-loop #2 2026-06-29: P1 tool-results-lost, scelta conservativa K-turni invece del solo turno corrente).
- * I turni soppressi restano in conversations.db + curati nella lane <messages_with_user>.
+ * (con i loro tool_call/tool_result) e sopprimendo la storia più vecchia → niente crescita illimitata
+ * (sostituisce la compaction nativa, OFF) preservando la continuità del tool-loop del turno corrente.
  *
- * Preserva i messaggi STRUTTURALI in testa (branchSummary/compactionSummary/custom da /tree o iniezioni) che
- * altrimenti uno slice puro scarterebbe (review-loop #2, P2 structural-messages).
+ * DEFAULT keepTurns=1 (= solo TURNO CORRENTE): coerente con l'ADR principio-3 (context-as-first-person-mind).
+ * L'array nativo porta SOLO il turno in corso (coi suoi tool); la STORIA dei turni precedenti è curata e
+ * NON-duplicata nella lane <messages_with_user> (testo verbatim) + nello stato (recent_changes/vars/error-memo).
+ * Native (turno corrente) e lane (storia) sono COMPLEMENTARI → niente "doppia-chat". I tool_result dei turni
+ * passati sono intenzionalmente transitori: vanno catturati on-demand (set_var/note/error-memo), non riportati
+ * raw all'infinito. (review-loop #3 2026-06-29, P1: keepTurns=4 sovrapponeva native+lane → ripristinato a 1.)
+ *
+ * Preserva il PREFISSO CONTIGUO di messaggi strutturali in testa (branchSummary/compactionSummary da /tree o
+ * compaction): sono "summary di ciò che precede", semanticamente di testa. Si ferma al primo non-strutturale →
+ * NON promuove in testa i 'custom' iniettati a metà storia (che perderebbero il riferimento posizionale).
+ * (review-loop #3 2026-06-29, P3 custom-reorder.)
  *
  * Sotto soglia (≤ keepTurns turni) ritorna lo STESSO riferimento (il caller confronta per identità). (ADR principio-3.)
  *
  * @param {Array<{role?:string}>} messages
- * @param {{ keepTurns?: number }} [opts]
- * @returns {Array} l'array ridotto agli ultimi keepTurns turni (+ head strutturale), o lo stesso `messages`.
+ * @param {{ keepTurns?: number }} [opts]  keepTurns=1 (default) = solo turno corrente.
+ * @returns {Array} l'array ridotto agli ultimi keepTurns turni (+ prefisso strutturale contiguo), o lo stesso `messages`.
  */
 export function windowNativeMessages(messages, opts = {}) {
-  const keepTurns = opts.keepTurns ?? 4;
+  const keepTurns = opts.keepTurns ?? 1;
   if (!Array.isArray(messages) || messages.length < 2) return messages;
   const userIdx = [];
   for (let i = 0; i < messages.length; i++) {
@@ -141,8 +148,10 @@ export function windowNativeMessages(messages, opts = {}) {
   if (userIdx.length <= keepTurns) return messages; // sotto soglia → niente storia da rimuovere
   const cut = userIdx[userIdx.length - keepTurns]; // indice d'inizio del K-esimo turno dal fondo
   if (cut <= 0) return messages;
-  const head = [];
-  for (let i = 0; i < cut; i++) if (messages[i] && STRUCTURAL_ROLES.has(messages[i].role)) head.push(messages[i]);
+  // SOLO il prefisso CONTIGUO di strutturali in testa (no reorder dei 'custom' sparsi a metà storia).
+  let prefixEnd = 0;
+  while (prefixEnd < cut && messages[prefixEnd] && STRUCTURAL_ROLES.has(messages[prefixEnd].role)) prefixEnd++;
+  const head = messages.slice(0, prefixEnd);
   const tail = messages.slice(cut);
   return head.length ? head.concat(tail) : tail;
 }

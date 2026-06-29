@@ -77,14 +77,15 @@ export default function (pi: ExtensionAPI) {
     return { systemPrompt: `${event.systemPrompt}\n\n${workspace}` };
   });
 
-  // Strada-2 (full): la conversazione è il NOSTRO artefatto, curata nella lane <messages_with_user> sopra. L'array
-  // messaggi NATIVO di pi viene quindi SOPPRESSO al solo TURNO CORRENTE (dall'ultimo 'user' in poi, coi suoi
-  // tool_call/tool_result) → niente doppia-chat né crescita illimitata (sostituisce la compaction nativa, OFF). I
-  // turni precedenti restano in conversations.db, recuperabili via get_conversation. (ADR principio-3.)
-  // NB: entro UN turno (anche multi-tool) lastUser=0 → nessuna soppressione (la continuità del tool-loop è intatta);
-  // si sopprime SOLO la storia dei turni precedenti (dal 2° turno in poi).
+  // Strada-2 (full): la conversazione è il NOSTRO artefatto. L'array messaggi NATIVO di pi viene SOPPRESSO al
+  // solo TURNO CORRENTE (keepTurns:1, dall'ultimo 'user' in poi, coi suoi tool_call/tool_result) → la continuità
+  // del tool-loop in corso è intatta, la storia dei turni precedenti NO. Quella storia vive UNA volta sola, curata
+  // come testo verbatim nella lane <messages_with_user> (assemblata sopra, n=MESSAGES_WINDOW_N). COMPLEMENTARITÀ:
+  // native=turno corrente · lane=storia → niente "doppia-chat" (i due NON si sovrappongono). Sostituisce la
+  // compaction nativa (OFF). I turni soppressi restano in conversations.db, recuperabili via get_conversation.
+  // (ADR principio-3. review-loop #3 2026-06-29: keepTurns era 4 e si sovrapponeva alla lane → ripristinato a 1.)
   pi.on("context", (event) => {
-    const windowed = windowNativeMessages(event.messages as any[]);
+    const windowed = windowNativeMessages(event.messages as any[], { keepTurns: 1 });
     if (windowed !== (event.messages as any[])) return { messages: windowed };
   });
 }
