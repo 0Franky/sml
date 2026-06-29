@@ -123,3 +123,4 @@ wiki/_private/
 harness/node_modules/
 harness/dist/
 harness/sandbox/_run/
+harness/.pi/harness.config.json
