@@ -14,10 +14,32 @@
 /** secrets-map DINAMICA: valori per-sessione, in-memory (NON persistiti). */
 const DYNAMIC_SECRETS = new Set();
 
-/** Registra un valore segreto. Ritorna la dimensione corrente della secrets-map. */
+// Guardie su add_secret (review-loop #3 2026-06-29, P2 add_secret-no-guard): il valore registrato viene redatto
+// per LITERAL substring da OGNI tool_result / risposta finale / interpolazione. Un valore corto o poco-vario
+// (es. "e", "true", "1234") corromperebbe ogni output successivo (footgun availability + amplificazione di
+// prompt-injection: un tool_result ostile che induce add_secret("e") avvelenerebbe la sessione). Quindi:
+export const MIN_SECRET_LEN = 8; // sotto = redigerebbe testo comune
+export const MIN_SECRET_DISTINCT = 5; // pochi char distinti (aaaaaaaa, 12121212) = non un segreto opaco
+export const MAX_SECRETS = 256; // cap anti-crescita/costo
+
+/**
+ * Registra un valore segreto, applicando le guardie. Ritorna `{ ok, size, reason? }`.
+ * @param {string} value
+ * @returns {{ ok: boolean, size: number, reason?: string }}
+ */
 export function addSecret(value) {
-  if (typeof value === "string" && value.length > 0) DYNAMIC_SECRETS.add(value);
-  return DYNAMIC_SECRETS.size;
+  if (typeof value !== "string") return { ok: false, size: DYNAMIC_SECRETS.size, reason: "valore non-stringa" };
+  if (value.length < MIN_SECRET_LEN) {
+    return { ok: false, size: DYNAMIC_SECRETS.size, reason: `troppo corto (<${MIN_SECRET_LEN} char): redigerebbe testo legittimo` };
+  }
+  if (new Set(value).size < MIN_SECRET_DISTINCT) {
+    return { ok: false, size: DYNAMIC_SECRETS.size, reason: `troppo poco vario (<${MIN_SECRET_DISTINCT} caratteri distinti): non sembra un segreto opaco` };
+  }
+  if (!DYNAMIC_SECRETS.has(value) && DYNAMIC_SECRETS.size >= MAX_SECRETS) {
+    return { ok: false, size: DYNAMIC_SECRETS.size, reason: `secrets-map piena (max ${MAX_SECRETS})` };
+  }
+  DYNAMIC_SECRETS.add(value);
+  return { ok: true, size: DYNAMIC_SECRETS.size };
 }
 
 /** Il Set condiviso dei segreti dinamici (da passare a redactText/emitToUser). */

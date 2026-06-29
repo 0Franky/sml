@@ -5,6 +5,7 @@
  * importata da .pi/extensions/secrets-guardrail.ts). NESSUN segreto reale: tutti placeholder finti.
  */
 import { redactText, SECRET_PATTERNS } from "../../src/secrets-redact.mjs";
+import { addSecret, clearSecrets, MIN_SECRET_LEN, MIN_SECRET_DISTINCT } from "../../src/secrets-registry.mjs";
 
 let pass = 0, fail = 0;
 const ok = (c, m) => { c ? pass++ : (fail++, console.log("  ✗ FAIL: " + m)); };
@@ -39,7 +40,33 @@ ok(!multi.redacted.includes(fakeSK) && !multi.redacted.includes(fakeG) && !multi
 
 // --- nessun falso positivo su testo benigno ---
 ok(!redactText("questo è un README normale: pip install acme-utils, MIT license.").hit, "nessun falso positivo su testo benigno");
+// generico key=value NON è un pattern (per non mutilare codice) → testo con 'password = ...' resta intatto
+ok(!redactText('const password = "changeme";').hit, "no FP: key=value generico NON redatto (si usa add_secret)");
 
-console.log(`\n  pattern statici attivi: ${SECRET_PATTERNS.length} (incl. Google AIza)`);
+// --- pattern high-recall aggiunti (review #3 P2 secret-coverage) ---
+const fakeJWT = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dQw4w9WgXcQ_signature_part";
+ok(redactText(`auth: ${fakeJWT}`).hit, "JWT (eyJ.…) redatto");
+ok(redactText(`stripe sk_live_${"a".repeat(24)}`).hit, "Stripe sk_live_ redatto (underscore, gap colmato)");
+ok(redactText(`slack xoxb-${"1".repeat(12)}-${"a".repeat(12)}`).hit, "Slack xoxb- redatto");
+ok(redactText(`gho_${"a".repeat(36)}`).hit, "GitHub gho_ redatto");
+ok(redactText(`github_pat_${"a".repeat(30)}`).hit, "GitHub fine-grained PAT redatto");
+ok(redactText(`Authorization: Bearer ${"a".repeat(28)}`).hit, "Bearer <token lungo> redatto");
+ok(redactText("clone https://user:supersegreto@git.example.com/x").hit, "basic-auth URL (user:pass@) redatto");
+ok(!redactText("vai su https://example.com/path").hit, "no FP: URL normale senza credenziali");
+
+// --- opzione staticPatterns:false (canale tool_call: solo dynamic, niente shape statiche) ---
+const onlyDyn = redactText(`chiave ${fakeG} e ${"OPAQUE-TOKEN-xyz789"}`, ["OPAQUE-TOKEN-xyz789"], { staticPatterns: false });
+ok(onlyDyn.redacted.includes(fakeG), "staticPatterns:false → NON redige le shape statiche (no mutilazione args legittimi)");
+ok(!onlyDyn.redacted.includes("OPAQUE-TOKEN-xyz789"), "staticPatterns:false → redige comunque i dynamic-secrets");
+
+// --- guardia add_secret (review #3 P2 add_secret-no-guard) ---
+clearSecrets();
+ok(!addSecret("e").ok && addSecret("e").size === 0, `add_secret rifiuta valore < ${MIN_SECRET_LEN} char`);
+ok(!addSecret("aaaaaaaa").ok, `add_secret rifiuta valore poco-vario (< ${MIN_SECRET_DISTINCT} char distinti)`);
+const good = addSecret("OPAQUE-SESSION-TOKEN-7f3a9c");
+ok(good.ok && good.size === 1, "add_secret accetta un valore opaco ad alta entropia");
+clearSecrets();
+
+console.log(`\n  pattern statici attivi: ${SECRET_PATTERNS.length} (incl. Google AIza, JWT, Stripe, Slack, Bearer, basic-auth)`);
 console.log(`secrets-guardrail smoke-test: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
