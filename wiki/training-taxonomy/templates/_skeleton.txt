@@ -1,0 +1,67 @@
+---
+{{FM_NAME}}
+type: gold-example
+{{FM_LEAF}}
+area: area-02-criticality-safety
+tag: "Q (+L sul reasoning)"
+last_updated: 2026-06-27
+{{FM_STATUS}}
+---
+
+{{H1_TITLE}}
+
+## §0 — Cos'è / perché è gold / la barra
+
+{{SEC0_BODY}}
+## §1 — Skill-target (segnale, preciso e falsificabile)
+
+{{SEC1_BODY}}
+## §1bis — Decision policy raffinata (2026-06-27): NON over-fermarsi · ottimizzare · segnalare
+
+{{SEC1BIS_BODY}}
+---
+
+## §2bis — Sandbox fixture (riproducibilità del verifier)
+
+{{SEC2BIS_BODY}}
+---
+
+## §2 — Le 5 classi (istanze di training complete)
+
+> **Convenzione di formato.** INPUT = blocco `<context>` nel formato wrapper del progetto ([[../concepts/wrapper-context-assembly-example|wrapper-context-assembly-example]]) + task utente. OUTPUT TARGET = traccia di reasoning *caveman strutturato* (marker `[V]` verificato · `[A]` assunto · `[?]` da-verificare) attraverso i passi del metodo scientifico, **tool-call con scope esplicito**, e azione/risposta finale. Il thinking strutturato **non** è la risposta user-facing (quella è prosa); qui le tracciamo entrambe perché sono il target di training.
+
+---
+
+### (1) WITH-hint — task "rimuovi `utils_helper.py`" preceduto dall'impalcatura · 3 livelli
+
+Stessa **task family** per i 3 livelli di hint (forte → medio → debole): cambia solo lo scaffolding nel prompt, la skill-target e l'output corretto sono identici. Questo è il fade-out: il modello deve produrre lo *stesso* comportamento man mano che l'hint si assottiglia. Sandbox = `FX-untracked`.
+
+{{CLASSE1_INPUT}}
+{{CLASSE1_HINTS}}
+{{CLASSE1_OUTPUT}}
+{{CLASSE1_LABEL}}
+---
+
+{{CLASSE2_DELTA}}
+---
+
+{{CLASSE3_DELTA}}
+---
+
+{{CLASSE4_DELTA}}
+---
+
+{{CLASSE5_INTRO}}
+{{CLASSE5A}}
+{{CLASSE5B}}
+{{CLASSE5C}}
+{{CLASSE5D}}
+{{CLASSE5E}}
+{{CLASSE5F}}
+{{CLASSE5G}}
+---
+
+{{CLASSE5_LABEL}}
+---
+
+{{TAIL_SECTIONS}}
