@@ -64,11 +64,12 @@ Curva effective-context del **nostro Qwen3-4B**, 3 livelli (vedi [[concepts/cont
 
 **Pattern trasversale**: lo specializzato importa l'apparato token-budget anche dove NON è il driver (prefissi stabili `rules`, puntatori O(1) `current_aim`/`current_time`, segnali binari `focus_hint`/`reorganize_hint`/`notes`). Lì il driver è altro: discriminabilità del modello, stabilità-cache/train-serve, rilevanza-condizionata, direzione-di-selezione. L'agnostico converge sulla stessa conclusione operativa ma con razionale corretto.
 
-## Bug concreti emersi (→ [[todo]])
-1. **`frame` slice-direction** (load-bearing): `shared_state`/`backlog` usano `slice(0,N)` → mostrano i più VECCHI invece dei recenti. Fix 1-riga head→tail. 🔴
-2. **`task_list` cap=20 hardcoded** disallineato da watchReorder=12 + commento "≈ cap" fuorviante; **execution_order uncapped** (incoerenza DRY).
-3. **`messages_with_user`**: `charCap=4000` hardcoded non esposto; default 8-vs-6 incoerente; troncamento tiene la TESTA non la coda.
-4. **`verify_queue`**: manca GC-on-resolve/abandon (accumulo monotòno); GC-on-abandon serve `focus_id` nello schema.
+## Bug concreti emersi (→ [[todo]]) — STATO post-fix (commit `460686f`, 2026-06-30)
+> Seguito completo + bound [min,default,max] per-lane in [[concepts/context-bounds-study]].
+1. ✅ **RISOLTO — `frame` slice-direction** (load-bearing): `shared_state` ora ordina `last_modified` DESC poi `slice(0,N)` (= recenti); `backlog` ora è in execution-order via `listTasksOrdered` (ready-first). **NON ri-applicare il flip `slice(0,N)→slice(-N)`** (claim STALE: il testo §1/§4 sotto descriveva il codice pre-fix). Test +5 in `nested-compact.test.mjs`.
+2. 🟡 **PARZIALE — `task_list`/`execution_order`**: commento `watchReorder` chiarito (trigger ≠ display-cap). RESTA: bounds-study riclassifica **maxTasks come SP-FROZEN per il modello** (config-only) e `execution_order` come floor-ready-frozen + coda config — NON è P3-self-tunable (era una falsa attribuzione).
+3. 🟡 **PARZIALE — `messages_with_user`**: ✅ `charCap` esposto a `harness-config` + cablato ai call-site live (era hardcoded). RESTA (decisione di valore): riconciliare default `8`-vs-fallback `6` byte-per-byte; ✅ il marker di troncamento per il singolo-turno-gigante esiste già, e il marker aggregato `+N older` copre anche l'eviction multi-turno (claim "silenziosa" = imprecisione); gap reale = seq-id per-messaggio + direzione per-ruolo.
+4. 🟡 **PARZIALE — `verify_queue`**: ✅ `VERIFY_DETAIL_CAP=200` sul singolo detail (mai sul NUMERO di pending). RESTA: GC-on-resolve/abandon (accumulo monotòno; GC-on-abandon serve `focus_id` nello schema).
 
 ## Link
 - [[concepts/context-limits-explained]] (§11 make-or-break · curva effective-context) · [[concepts/wrapper-context-assembly-example]] · memory `feedback_context_window_sizing` · [[concepts/sealed-secrets-livetest-findings]] (FIND-7 re-fetch = proxy outcome).

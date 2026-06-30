@@ -142,6 +142,11 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 - [`concepts/untrusted-content-delimiting.md`](concepts/untrusted-content-delimiting.md) — confinamento untrusted content, prompt injection mitigation
 - [`concepts/task-decomposition-adhoc-context.md`](concepts/task-decomposition-adhoc-context.md) — plan-then-execute, context ad-hoc per step
 - [`concepts/temporal-awareness-timestamps.md`](concepts/temporal-awareness-timestamps.md) — senso del tempo: timestamp + tool call timing, multi-day continuity
+- [`concepts/context-limits-explained.md`](concepts/context-limits-explained.md) — limiti di contesto + curva effective-context (§11 make-or-break)
+- [`concepts/context-section-sizing-study.md`](concepts/context-section-sizing-study.md) 🆕 — studio (32-agenti) su QUANTE voci per sezione/lane + 4 bug load-bearing (frame slice-dir ✅fixato, verify_queue detail-cap, charCap esposto)
+- [`concepts/context-bounds-study.md`](concepts/context-bounds-study.md) 🆕 — studio (8-agenti specializzato+agnostico) sui BOUND [min,default,max] per il self-tuning P3 + design-contract: **4 lane tunable** (vars/recent_changes count, messages n+charCap), task_list/execution_order/frame=FROZEN-config, verify_queue/secrets=GATE; **3 blocker** (budget-allocator, tool set_view, reset-lifecycle)
+- [`concepts/model-controlled-context.md`](concepts/model-controlled-context.md) 🆕 — il modello CAPISCE+REGOLA la propria vista (espandi msg/sezioni, current-step) entro bound; architettura push-bounded + pull-on-demand
+- [`concepts/window-aware-fetching.md`](concepts/window-aware-fetching.md) — recupero on-demand degli item fuori-finestra (pull tools: get_conversation/get_shared_view/list_tasks/…)
 
 **Categoria C — Runtime safety + coherence**:
 - [`concepts/contradiction-detection-layer.md`](concepts/contradiction-detection-layer.md) — detector contraddizioni nel context, attention event
