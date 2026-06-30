@@ -37,23 +37,26 @@ export default function (pi: ExtensionAPI) {
     name: "run_verifier",
     label: "Run gold verifier",
     description:
-      "Run a verifier-spec (fixture setup + oracle asserts) in a sandbox and return pass/fail. Validates the gold-examples.",
+      "Run a verifier-spec (fixture setup + oracle asserts) in a temp dir with a MINIMAL env (no host secrets) and return pass/fail. Validates the gold-examples. NOTE: not yet container-isolated (Docker is a TODO) — run only trusted verifier specs.",
     parameters: VerifierSpec,
     async execute(_toolCallId: string, params: any, _signal: any, _onUpdate: any, _ctx: any) {
       // TODO(isolation): sostituire questa tempdir con un container Docker (sandbox/Dockerfile)
-      // per riproducibilità piena e isolamento — allineato ai gym SWE Docker.
+      // per riproducibilità piena e isolamento — allineato ai gym SWE Docker. NON è ancora un sandbox isolato.
       const dir = mkdtempSync(join(tmpdir(), "slm-verifier-"));
+      // P0 (review-full): NON passare `process.env` al comando — conterrebbe GEMINI_API_KEY / SEALED_SECRET_* / token
+      // che il codice eseguito (anche ostile) potrebbe esfiltrare. Env MINIMALE esplicito (no secret dell'host).
+      const SANDBOX_ENV: Record<string, string> = { PATH: process.env.PATH ?? "", HOME: dir, TMPDIR: dir, LANG: process.env.LANG ?? "C" };
       const results: Array<{ cmd: string; passed: boolean; exit: number; output: string }> = [];
       try {
         for (const c of params.setup ?? []) {
-          execFileSync("bash", ["-lc", c], { cwd: dir, stdio: "pipe" });
+          execFileSync("bash", ["-lc", c], { cwd: dir, stdio: "pipe", env: SANDBOX_ENV });
         }
         for (const a of params.asserts ?? []) {
           const want = typeof a.expect_exit === "number" ? a.expect_exit : 0;
           let exit = 0;
           let output = "";
           try {
-            output = execFileSync("bash", ["-lc", a.cmd], { cwd: dir, stdio: "pipe" }).toString();
+            output = execFileSync("bash", ["-lc", a.cmd], { cwd: dir, stdio: "pipe", env: SANDBOX_ENV }).toString();
           } catch (e: any) {
             exit = typeof e?.status === "number" ? e.status : 1;
             output = (e?.stdout?.toString?.() ?? "") + (e?.stderr?.toString?.() ?? "");
