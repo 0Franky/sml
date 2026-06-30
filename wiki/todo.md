@@ -9,6 +9,25 @@ last_updated: 2026-06-30
 
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
 
+## ⏸️ RESUME POINTER (post-compact 2026-06-30) — riprendere DA QUI
+> **Stato**: HEAD==origin/main==`f8b0ef5`, working tree PULITO, suite 19/0 (sealed-secrets 174), typecheck verde. Sessione enorme → compact richiesto.
+>
+> **✅ FATTO oggi**: (1) **secret-lifecycle** in-sessione — 5 tool (`request_sink`/`propose_secret_edit`/`propose_secret_destroy`/`check_secret_refs`/`preview_secret_use`) + Ask-con-diff + review-loop 3-agenti + fix (atomicità/sanitizzazione/consent-parity/preview-remediation), **GAP-1/GAP-2 chiusi**; (2) **studio context-sizing** (32 agenti) → [[concepts/context-section-sizing-study]] + 4 bug; (3) **lane `<secrets>`** nel context (chiude **FIND-7**).
+>
+> **🔜 PROSSIMO (utente msg 730/738 "continua con tutto" + "studi approfonditi sulle parti critiche")** — INTEGRAZIONI CONTEXT in ordine. Design completo: [[concepts/model-controlled-context]].
+> 2. **Indicatore BUDGET/occupazione context** (% pieno) nel context — `ctx.getContextUsage()` già disponibile (context-assembly.ts:60); quick, abilita P3.
+> 3. **seq-id visibili nella lane messaggi + truncation-marker** `…[troncato, +N — get_conversation(from_seq=ID)]`. **RIUSA `get_conversation`** (già fa specific-msg `from_seq==to_seq` + sliding-window `from..to`, conversation-capture.ts:106) → **NIENTE `expand_message` nuovo** (ridondante). + fix bug studio: messages tronca la TESTA non la coda (`slice(0,charCap)` → decidere per-tipo).
+> 4. **Current-step lane** (P4): `current_aim` STABILE (=CURR goal) + nuovo `<current_step>`/`now` volatile 1-riga free-text (tool `set_step`), distinto dall'aim, NON nelle note.
+> 5. **Bug-fix studio**: (a) **frame slice-direction** — `shared_state`/`backlog` usano `slice(0,N)` (i più VECCHI) invece di `slice(-N)` (fix 1-riga, load-bearing); (b) `task_list` cap=20 hardcoded vs watchReorder=12 (DRY + commento) + `execution_order` uncapped; (c) `messages_with_user` charCap=4000 hardcoded→esporre + default 8-vs-6 incoerente; (d) `verify_queue` GC-on-resolve (manca → accumulo).
+> 6. **`<secrets>` anche nel ramo NESTED** (`buildNestedWorkspace` non la mostra).
+> 7. **Self-tuning P3** (LINEA CONFERMATA utente msg 735): il modello regola i conteggi per-sezione SOLO sulla **zona volatile/coda** (n messaggi, ultime-azioni), MAI sul **prefisso-stabile** (rules/aim/task — rompe cache+prior), cambia **conteggi non ordine**, con **BOUND** per-sezione + budget; fuori-bound → **pull-tool** (get_conversation/get_shared_view/…, già esistenti). **Build con STUDIO approfondito** (review-loop specialized+agnostic).
+>
+> **Metodo** (utente): **studi approfonditi + review-loop (specialized + agnostic)** sulle parti critiche (specie P3 + i bug load-bearing). Ogni step: build→test→typecheck→commit→push. **`<secrets>` description già sanitizzata** (no re-introdurre injection).
+>
+> **⚠ PENDING CHIARIMENTO (utente msg 738)**: l'utente ha **pinnato/quotato un messaggio** di cui vuole integrare le "modifiche", MA il reply-target NON è visibile via Telegram MCP → **CHIEDERE quale messaggio** (numero/contenuto) prima di considerare "tutto integrato".
+>
+> **Differiti secret (review, tracciati sotto)**: ADR unificazione consent-path (loopback-come-sink), `propose_secret_create`, frizione-reale-widening, contratto headless `set-secret.mjs`, test-estensione-headless.
+
 ## 🔥 SESSIONE 2026-06-29 (post-compact) — stato corrente
 
 > **🟢 AUTONOMOUS-HANDOFF 2026-06-29 (utente AWAY dal PC, tutto PUSHED @ `55c9991`, working tree PULITO, HEAD==origin/main) — RESUME POINTER**. **STATO HARNESS: code-complete + hardened + DOGFOOD-VALIDATED dal vivo con Sonnet.** Catena commit di oggi: `a8563b5`(grafo 4903)→`e42bb58`(review#3: 10 fix + turn-trace)→`3bfbcab`(gitleaks allowlist fixture-test)→`11ff52a`(3 differiti: convId per-sessione via `getSessionId` + split `native-window` + TB-01/03)→`55c9991`(grafo 4929).
