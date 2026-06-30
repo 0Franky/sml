@@ -43,8 +43,10 @@ export const DEFAULT_HARNESS_CONFIG = {
   //   pressione è matrioska — rete di sicurezza per un modello che non si auto-organizza (es. SLM piccolo).
   autofocus: { mode: "nudge" },
   // secrets (sealed-secrets, msg 577/578/579): sink-gating dell'uso di `{{secret:NAME}}` + regex-ingress.
-  //   sinkGating: strict (allow-host fail-closed, DEFAULT) | warn | off. regexIngress: off | ask (DEFAULT) | auto.
-  secrets: { sinkGating: "strict", regexIngress: "ask" },
+  //   sinkGating: strict (allow-host fail-closed, DEFAULT) | warn | off.
+  //   regexIngress: off (DEFAULT) | ask | auto. ⚠ NON ANCORA WIRED a un hook (review P2): l'enforcement è planned →
+  //   default 'off' per non promettere una protezione inesistente (la sola redazione DB resta best-effort).
+  secrets: { sinkGating: "strict", regexIngress: "off" },
 };
 
 const DEFAULT_PATH = ".pi/harness.config.json";

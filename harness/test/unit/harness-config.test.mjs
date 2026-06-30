@@ -100,7 +100,7 @@ const noFile = join(dir, "assente.json");
 // 8) SECRETS (sealed-secrets, msg 577): default sicuro, file/env override, enum-guard ---------------
 {
   const c = loadHarnessConfig(noFile, { env: {} });
-  ok(c.secrets.sinkGating === "strict" && c.secrets.regexIngress === "ask", "SECRETS: default SICURO (strict + ask)");
+  ok(c.secrets.sinkGating === "strict" && c.secrets.regexIngress === "off", "SECRETS: default (strict + regexIngress off = non-ancora-wired)");
   writeFileSync(cfgPath, JSON.stringify({ secrets: { sinkGating: "warn", regexIngress: "auto" } }));
   const c2 = loadHarnessConfig(cfgPath, { env: {} });
   ok(c2.secrets.sinkGating === "warn" && c2.secrets.regexIngress === "auto", "SECRETS: file override");

@@ -36,6 +36,7 @@ export function referencedSecrets(text: string): string[];
 export function extractHosts(opText: string): string[];
 export function hasFileOrPipeExfil(opText: string): boolean;
 export function hasInsecureHttp(opText: string): boolean;
+export function hasHostPinning(opText: string): boolean;
 export function checkSink(name: string, opText: string, mode?: SinkMode): SinkVerdict;
 export function injectSecrets(opText: string, mode?: SinkMode): InjectResult;
 export function injectIntoStrings(

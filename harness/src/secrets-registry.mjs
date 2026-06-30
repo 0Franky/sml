@@ -42,6 +42,19 @@ export function addSecret(value) {
   return { ok: true, size: DYNAMIC_SECRETS.size };
 }
 
+/**
+ * registerEgressRaw — registra un valore nel Set di egress SENZA le guardie min-len/distinct. Per i SEALED-SECRETS
+ * (review P1): sono provisionati OUT-OF-BAND dall'utente (env), NON dal modello, quindi il footgun/DoS che motiva
+ * MIN_SECRET_LEN non si applica; ma DEVONO essere sempre redigibili (invariante: ogni sealed-value ∈ egress Set,
+ * altrimenti un valore corto/poco-vario eco-ato rientrerebbe nel context/transcript non redatto). @returns {boolean}
+ */
+export function registerEgressRaw(value) {
+  if (typeof value !== "string" || value.length < 1) return false;
+  if (!DYNAMIC_SECRETS.has(value) && DYNAMIC_SECRETS.size >= MAX_SECRETS) return false;
+  DYNAMIC_SECRETS.add(value);
+  return true;
+}
+
 /** Il Set condiviso dei segreti dinamici (da passare a redactText/emitToUser). */
 export function getDynamicSecrets() {
   return DYNAMIC_SECRETS;
