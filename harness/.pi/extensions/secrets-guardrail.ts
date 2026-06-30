@@ -28,7 +28,7 @@ import { redactText } from "../../src/secrets-redact.mjs";
 import { addSecret, getDynamicSecrets, clearSecrets } from "../../src/secrets-registry.mjs";
 // SEALED-SECRETS (msg 577/578/579): registry sigillato + reference-injection + sink-gating. Il valore non entra MAI
 // nel context del modello; provisioning out-of-band (env SEALED_SECRET_* + metadata .pi/secrets.config.json).
-import { loadFromEnv, listSecretsMeta, injectIntoStrings, clearSealed, setAllowLocalHttp, hasSecret, isValidSinkHost, computeSecretEditDiff, applySecretEdit, removeSecret, validateSecretRefs } from "../../src/sealed-secrets.mjs";
+import { loadFromEnv, listSecretsMeta, injectIntoStrings, clearSealed, setAllowLocalHttp, hasSecret, isValidSinkHost, computeSecretEditDiff, applySecretEdit, removeSecret, validateSecretRefs, previewSecretUse } from "../../src/sealed-secrets.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { readFileSync, existsSync } from "node:fs";
 
@@ -281,6 +281,23 @@ export default function (pi: ExtensionAPI) {
     async execute(_t: string, p: any) {
       const v = validateSecretRefs(String(p.text ?? ""));
       return { content: [{ type: "text", text: JSON.stringify(v, null, 2) }], details: { ok: v.ok, unknown: v.unknown.length } };
+    },
+  });
+  pi.registerTool({
+    name: "preview_secret_use",
+    label: "Preview if a secret use will be allowed (dry-run)",
+    description:
+      "BEFORE running a command that uses {{secret:NAME}}, check whether it will be ALLOWED — WITHOUT executing it. Returns allowed/blocked + the reason + the exact REMEDIATION (which request_sink host to ask for, or request_local_http for localhost, or the closest name on a typo). Use this to PLAN instead of trial-and-error, and to avoid unsafe workarounds (never read a secret from a plaintext env var). Read-only.",
+    promptGuidelines: [
+      "Before running a command that uses a secret, you can call preview_secret_use(name, operation) to see if it will be allowed and exactly what to request — plan instead of trial-and-error.",
+    ],
+    parameters: Type.Object({
+      name: Type.String({ minLength: 1, description: "Secret name." }),
+      operation: Type.String({ minLength: 1, description: "The exact command/operation you intend to run (e.g. the full curl)." }),
+    }),
+    async execute(_t: string, p: any) {
+      const r = previewSecretUse(String(p.name), String(p.operation ?? ""), HARNESS_CFG.secrets.sinkGating);
+      return { content: [{ type: "text", text: JSON.stringify(r, null, 2) }], details: { ok: !!r.allowed } };
     },
   });
 
