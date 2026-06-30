@@ -23,6 +23,11 @@ export const GATHERING_MODES = ["delegated", "inject", "require"];
 /** Modalità di autofocus (OQ-A, msg 551): off=nessun segnale · nudge=focus_hint (default) · auto=auto-enter deterministico. */
 export const AUTOFOCUS_MODES = ["off", "nudge", "auto"];
 
+/** Modalità di sink-gating dei sealed-secrets (msg 577): strict=allow-host fail-closed (default) · warn · off. */
+export const SINK_GATING_MODES = ["strict", "warn", "off"];
+/** Modalità di regex-ingress dei secret (msg 578/579): off · ask=chiedi conferma · auto=sigilla high-confidence. */
+export const REGEX_INGRESS_MODES = ["off", "ask", "auto"];
+
 /** Config di default = soglie trigger (DEFAULT_CFG) + finestra lane messaggi + enforcement gathering. */
 export const DEFAULT_HARNESS_CONFIG = {
   trigger: { ...DEFAULT_CFG }, // tokenReorderPct, tokenMatrioskaPct, watchReorder, watchMatrioska, maxDepth, focusK
@@ -37,6 +42,9 @@ export const DEFAULT_HARNESS_CONFIG = {
   //   modello (DEFAULT, invariato); auto = l'harness ENTRA in focus DA SOLO (deterministico) sui task ready quando la
   //   pressione è matrioska — rete di sicurezza per un modello che non si auto-organizza (es. SLM piccolo).
   autofocus: { mode: "nudge" },
+  // secrets (sealed-secrets, msg 577/578/579): sink-gating dell'uso di `{{secret:NAME}}` + regex-ingress.
+  //   sinkGating: strict (allow-host fail-closed, DEFAULT) | warn | off. regexIngress: off | ask (DEFAULT) | auto.
+  secrets: { sinkGating: "strict", regexIngress: "ask" },
 };
 
 const DEFAULT_PATH = ".pi/harness.config.json";
@@ -83,6 +91,13 @@ function applyAutofocus(dst, src) {
   if (typeof src.mode === "string" && AUTOFOCUS_MODES.includes(src.mode)) dst.mode = src.mode;
 }
 
+/** Applica i campi `secrets` validi da `src` su `dst` (in place). mode fuori-enum → ignorato (resta default). */
+function applySecrets(dst, src) {
+  if (!src || typeof src !== "object") return;
+  if (typeof src.sinkGating === "string" && SINK_GATING_MODES.includes(src.sinkGating)) dst.sinkGating = src.sinkGating;
+  if (typeof src.regexIngress === "string" && REGEX_INGRESS_MODES.includes(src.regexIngress)) dst.regexIngress = src.regexIngress;
+}
+
 const ENV_MAP = {
   HARNESS_TOKEN_REORDER_PCT: ["trigger", "tokenReorderPct"],
   HARNESS_TOKEN_MATRIOSKA_PCT: ["trigger", "tokenMatrioskaPct"],
@@ -105,6 +120,7 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
     messagesWindowN: DEFAULT_HARNESS_CONFIG.messagesWindowN,
     gathering: { ...DEFAULT_HARNESS_CONFIG.gathering },
     autofocus: { ...DEFAULT_HARNESS_CONFIG.autofocus },
+    secrets: { ...DEFAULT_HARNESS_CONFIG.secrets },
   };
   // 2) file opt-in
   try {
@@ -113,6 +129,7 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
       applyTrigger(cfg.trigger, f && f.trigger);
       applyGathering(cfg.gathering, f && f.gathering);
       applyAutofocus(cfg.autofocus, f && f.autofocus);
+      applySecrets(cfg.secrets, f && f.secrets);
       if (typeof f?.messagesWindowN === "number" && Number.isFinite(f.messagesWindowN) && f.messagesWindowN >= 1) {
         cfg.messagesWindowN = Math.floor(f.messagesWindowN);
       }
@@ -142,6 +159,12 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
   if (Number.isFinite(minT) && minT >= 1) cfg.gathering.minTasksForForce = Math.floor(minT);
   if (typeof env.HARNESS_AUTOFOCUS_MODE === "string" && AUTOFOCUS_MODES.includes(env.HARNESS_AUTOFOCUS_MODE)) {
     cfg.autofocus.mode = env.HARNESS_AUTOFOCUS_MODE;
+  }
+  if (typeof env.HARNESS_SECRETS_SINK_GATING === "string" && SINK_GATING_MODES.includes(env.HARNESS_SECRETS_SINK_GATING)) {
+    cfg.secrets.sinkGating = env.HARNESS_SECRETS_SINK_GATING;
+  }
+  if (typeof env.HARNESS_SECRETS_REGEX_INGRESS === "string" && REGEX_INGRESS_MODES.includes(env.HARNESS_SECRETS_REGEX_INGRESS)) {
+    cfg.secrets.regexIngress = env.HARNESS_SECRETS_REGEX_INGRESS;
   }
   return cfg;
 }

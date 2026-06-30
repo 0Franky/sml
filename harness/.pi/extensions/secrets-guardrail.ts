@@ -21,11 +21,78 @@ import { redactText } from "../../src/secrets-redact.mjs";
 // secrets-map DINAMICA: registry CONDIVISO (singleton di processo) → la stessa secrets-map è vista anche
 // da var-ops `render_template` (fix P0 2026-06-29: prima era module-private qui e render_template la bypassava).
 import { addSecret, getDynamicSecrets, clearSecrets } from "../../src/secrets-registry.mjs";
+// SEALED-SECRETS (msg 577/578/579): registry sigillato + reference-injection + sink-gating. Il valore non entra MAI
+// nel context del modello; provisioning out-of-band (env SEALED_SECRET_* + metadata .pi/secrets.config.json).
+import { loadFromEnv, listSecretsMeta, injectIntoStrings, clearSealed } from "../../src/sealed-secrets.mjs";
+import { loadHarnessConfig } from "../../src/harness-config.mjs";
+import { readFileSync, existsSync } from "node:fs";
+
+const HARNESS_CFG = loadHarnessConfig();
+const SECRETS_CONFIG_PATH = ".pi/secrets.config.json"; // SOLO metadata (nome→{description,allowedSinks}); MAI valori.
+
+/** Carica la metadata dei sealed-secrets (no valori) da .pi/secrets.config.json. Fail-safe a {}. */
+function loadSecretMeta(): Record<string, { description?: string; allowedSinks?: string[] }> {
+  try {
+    if (existsSync(SECRETS_CONFIG_PATH)) return JSON.parse(readFileSync(SECRETS_CONFIG_PATH, "utf-8")) || {};
+  } catch {
+    /* malformato → nessuna metadata (fail-safe) */
+  }
+  return {};
+}
+
+/** Raccoglie "slot" {get,set} per ogni valore-STRINGA in un oggetto/array di argomenti (ricorsivo). */
+function collectStringSlots(node: any, slots: { get: () => string; set: (v: string) => void }[]): void {
+  if (Array.isArray(node)) {
+    node.forEach((v, i) => {
+      if (typeof v === "string") slots.push({ get: () => node[i], set: (x) => (node[i] = x) });
+      else if (v && typeof v === "object") collectStringSlots(v, slots);
+    });
+  } else if (node && typeof node === "object") {
+    for (const k of Object.keys(node)) {
+      const v = node[k];
+      if (typeof v === "string") slots.push({ get: () => node[k], set: (x) => (node[k] = x) });
+      else if (v && typeof v === "object") collectStringSlots(v, slots);
+    }
+  }
+}
 
 export default function (pi: ExtensionAPI) {
-  // Isolamento di sessione: svuota la secrets-map dinamica a fine sessione → i segreti registrati nella sessione A
-  // NON restano residenti/attivi nella sessione B (reload/resume/new/fork sono in-process). (review-loop #2 P2.)
-  pi.on("session_shutdown", () => clearSecrets());
+  // Provisioning OUT-OF-BAND dei sealed-secrets: env SEALED_SECRET_<NAME> (valore) + metadata da config (no valori).
+  // Il valore non passa mai dal modello. Caricato al bind dell'extension.
+  loadFromEnv(process.env, loadSecretMeta());
+  // Isolamento di sessione: svuota la secrets-map dinamica + il registry sigillato a fine sessione → i segreti della
+  // sessione A NON restano residenti nella sessione B (reload/resume/new/fork sono in-process). (review-loop #2 P2.)
+  pi.on("session_shutdown", () => { clearSecrets(); clearSealed(); });
+
+  // SEALED-SECRETS — vista per il modello: nome+descrizione+allowedSinks, MAI il valore.
+  pi.registerTool({
+    name: "list_secrets",
+    label: "List available sealed secrets (names only)",
+    description:
+      "Elenca i segreti SIGILLATI disponibili: per ognuno solo NOME, descrizione e allowedSinks (host consentiti). Il VALORE non è mai visibile. Per usarne uno, metti `{{secret:NAME}}` negli argomenti di un tool: l'harness sostituisce il valore reale al momento dell'esecuzione, SOLO verso i sink consentiti.",
+    parameters: Type.Object({}),
+    async execute() {
+      const meta = listSecretsMeta();
+      return { content: [{ type: "text", text: JSON.stringify(meta, null, 2) }], details: { count: meta.length } };
+    },
+  });
+  pi.registerTool({
+    name: "request_secret",
+    label: "Request a secret you need (ask the user)",
+    description:
+      "Segnala che ti serve un segreto NON ancora disponibile per un'operazione. NON ricevi il valore: l'utente lo provisiona out-of-band (env `SEALED_SECRET_<NAME>` / CLI `set-secret`). Usa questo per chiedere, poi `{{secret:NAME}}` quando è disponibile.",
+    parameters: Type.Object({
+      name: Type.String({ description: "Nome del secret richiesto (es. OPENAI_KEY)." }),
+      why: Type.String({ description: "Perché ti serve / per quale operazione/host." }),
+    }),
+    async execute(_t: string, p: any, _signal: any, _onUpdate: any, ctx: any) {
+      ctx?.ui?.notify?.(`Il modello richiede il secret '${p.name}' — ${p.why}. Provisionalo: env SEALED_SECRET_${p.name}=… (o CLI set-secret). Il valore NON andrà al modello.`, "warning");
+      return {
+        content: [{ type: "text", text: `Richiesto il secret '${p.name}'. L'utente deve provisionarlo (env SEALED_SECRET_${p.name} o CLI set-secret) — tu NON riceverai il valore; usalo come {{secret:${p.name}}}.` }],
+        details: { ok: true },
+      };
+    },
+  });
 
   pi.registerTool({
     name: "add_secret",
@@ -74,8 +141,26 @@ export default function (pi: ExtensionAPI) {
   // codice/comandi legittimi che le contengano (un fixture con AIza… finto, un example key in un write_file).
   pi.on("tool_call", (event) => {
     const input = (event as any).input;
-    if (input && typeof input === "object") redactArgsInPlace(input, getDynamicSecrets());
-    // nessun return → non blocca; la mutazione in-place degli argomenti è il path documentato (ToolCallEventResult).
+    if (!input || typeof input !== "object") return;
+    // ORDINE (importante): (1) redazione-EGRESS dei dynamic-secrets RAW negli args (un add_secret messo raw = exfil);
+    // i riferimenti `{{secret:NAME}}` NON sono valori → non toccati. (2) INJECTION-gated dei sealed: sostituisce i ref
+    // col valore reale DOPO la redazione (così il valore appena iniettato NON viene re-redatto — i sealed sono nel Set
+    // egress per il backstop sul tool_result). Se anche un solo ref è bloccato dal sink-gating → BLOCCA il tool-call.
+    redactArgsInPlace(input, getDynamicSecrets());
+    const slots: { get: () => string; set: (v: string) => void }[] = [];
+    collectStringSlots(input, slots);
+    const r = injectIntoStrings(slots.map((s) => s.get()), HARNESS_CFG.secrets.sinkGating);
+    if (r.blocked.length) {
+      return {
+        block: true,
+        reason:
+          `sealed-secrets: uso del segreto bloccato (sink-gating ${HARNESS_CFG.secrets.sinkGating}) — ` +
+          r.blocked.map((b) => `${b.name}: ${b.reason}`).join("; ") +
+          ". Il valore NON è stato inserito. Usa il secret solo verso i suoi allowedSinks.",
+      };
+    }
+    if (r.injected.length) r.strings.forEach((v, i) => slots[i].set(v)); // sostituzione in-place dei valori reali
+    // nessun return se nulla è bloccato → il tool prosegue con i valori iniettati (mutazione in-place documentata).
   });
 }
 
