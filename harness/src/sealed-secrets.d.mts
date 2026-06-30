@@ -77,12 +77,14 @@ export interface SecretEditDiffEntry {
   after: string;
   widening: boolean;
   note?: string;
+  invalid?: boolean;
 }
 export interface SecretEditDiff {
   exists: boolean;
   name?: string;
   changes?: SecretEditDiffEntry[];
   anyWidening?: boolean;
+  anyInvalid?: boolean;
   externalSinks?: string[];
 }
 export interface SecretRefValidation {
