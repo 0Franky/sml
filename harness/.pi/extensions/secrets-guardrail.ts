@@ -32,6 +32,8 @@ import { loadFromEnv, listSecretsMeta, injectIntoStrings, clearSealed, hasSecret
 // CONSENSO (node-puro, testabile senza jiti): Ask-con-diff + frizione reale (type-to-confirm) + degrade headless
 // accurato + create-con-valore-digitato-dall'utente. Estratto da qui (i rami che prima erano inline nei tool).
 import { askAndApplyEdit, askAndDestroy, askLocalHttp, askAndCreate } from "../../src/secrets-consent.mjs";
+// canale TIPIZZATO http_request (ADR 2026-06-30, arch H2): injection+sink-gating sul SOLO url (new URL, niente shell).
+import { executeHttpRequest } from "../../src/http-request.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { readFileSync, existsSync } from "node:fs";
 
@@ -271,6 +273,35 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
+  // ───── http_request — canale TIPIZZATO per usare i sealed-secrets in rete (PREFERITO al curl in shell) ─────
+  // Perché esiste (arch H2 / ADR 2026-06-30): con un curl in bash il sink-gating deve disambiguare la shell (host
+  // estranei codificati, composizione di comandi, redirect) → fragile. Qui la destinazione è il SOLO campo `url`
+  // tipizzato (un new URL): il gating è banale e robusto. La via bash con {{secret:NAME}} resta valida (additivo).
+  pi.registerTool({
+    name: "http_request",
+    label: "Make an HTTP(S) request (typed; preferred for using a secret)",
+    description:
+      "Make an HTTP(S) request with TYPED fields (url, method, headers, body). This is the PREFERRED way to use a {{secret:NAME}} toward an API: put the reference in a header or the body, and the harness injects the real value at the URL's host only — you never see it. WHY prefer this over a curl in bash: the destination is the typed `url` alone, so sink-gating is exact and robust (no shell to disambiguate). Rules: only http/https; a secret reaches an external host only if that host is in its allowedSinks (else it is blocked — call request_sink); http is allowed only toward localhost/127.0.0.1 and only with allowLocalHttp (request_local_http). Redirects are NOT followed (a 3xx is returned to you, so a token can't be bounced to another host). The response body is size-capped and secret-redacted.",
+    promptGuidelines: [
+      "To call an API with a sealed secret, PREFER http_request over a shell curl: put {{secret:NAME}} in a header/body and set the typed url. It is gated on the url host only. If blocked, request_sink (external) or request_local_http (localhost). Never read a secret value from a plaintext env var.",
+    ],
+    parameters: Type.Object({
+      url: Type.String({ minLength: 1, description: "Full http(s) URL, e.g. https://api.example.com/v1/x." }),
+      method: Type.Optional(Type.String({ description: "GET|POST|PUT|PATCH|DELETE|HEAD (default GET)." })),
+      headers: Type.Optional(Type.Record(Type.String(), Type.String(), { description: "Request headers. May contain {{secret:NAME}} (e.g. Authorization: Bearer {{secret:TOKEN}})." })),
+      body: Type.Optional(Type.String({ description: "Request body (string). May contain {{secret:NAME}}." })),
+      timeout_ms: Type.Optional(Type.Number({ description: "Timeout in ms (default 30000, max 120000)." })),
+    }),
+    async execute(_t: string, p: any) {
+      const r = await executeHttpRequest(
+        { url: p.url, method: p.method, headers: p.headers, body: p.body, timeoutMs: p.timeout_ms },
+        { mode: HARNESS_CFG.secrets.sinkGating },
+      );
+      // La redazione egress del body è garantita a valle dall'hook tool_result (dynamic-secrets + pattern statici).
+      return { content: [{ type: "text", text: JSON.stringify(r, null, 2) }], details: { ok: !!r.ok, status: r.status, blocked: r.blocked } };
+    },
+  });
+
   pi.on("tool_result", (event, ctx) => {
     let anyHit = false;
     const content = event.content.map((block) => {
@@ -316,6 +347,10 @@ export default function (pi: ExtensionAPI) {
     // col valore reale DOPO la redazione (così il valore appena iniettato NON viene re-redatto — i sealed sono nel Set
     // egress per il backstop sul tool_result). Se anche un solo ref è bloccato dal sink-gating → BLOCCA il tool-call.
     redactArgsInPlace(input, getDynamicSecrets());
+    // ESENZIONE http_request (canale TIPIZZATO): fa la PROPRIA injection+sink-gating sul campo url nel suo execute()
+    // (un new URL, niente shell). Applicare qui la injection shell-based lo bloccherebbe/sostituirebbe a sproposito
+    // (headers/body NON sono shell). La redazione-egress raw dei dynamic-secrets sopra resta (anti add_secret raw).
+    if (toolName === "http_request") return;
     const slots: { get: () => string; set: (v: string) => void }[] = [];
     collectStringSlots(input, slots);
     const r = injectIntoStrings(slots.map((s) => s.get()), HARNESS_CFG.secrets.sinkGating);

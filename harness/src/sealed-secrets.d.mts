@@ -126,6 +126,21 @@ export interface SecretUsePreview {
 }
 export function previewSecretUse(name: string, opText: string, mode?: SinkMode): SecretUsePreview;
 
+// ── canale TIPIZZATO http_request (ADR 2026-06-30) ──
+export function checkSinkTyped(name: string, urlString: string, mode?: SinkMode): SinkVerdict;
+export interface TypedInjectResult {
+  url?: string;
+  headers?: Record<string, string>;
+  body?: string;
+  injected: string[];
+  blocked: { name: string; reason: string }[];
+  warnings: string[];
+}
+export function injectTypedRequest(
+  req: { url: string; headers?: Record<string, string>; body?: string },
+  mode?: SinkMode,
+): TypedInjectResult;
+
 declare const _default: {
   setSecret: typeof setSecret;
   setAllowLocalHttp: typeof setAllowLocalHttp;
@@ -155,5 +170,7 @@ declare const _default: {
   applySecretEdit: typeof applySecretEdit;
   validateSecretRefs: typeof validateSecretRefs;
   previewSecretUse: typeof previewSecretUse;
+  checkSinkTyped: typeof checkSinkTyped;
+  injectTypedRequest: typeof injectTypedRequest;
 };
 export default _default;

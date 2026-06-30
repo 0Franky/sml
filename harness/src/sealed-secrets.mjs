@@ -491,6 +491,70 @@ function hostMatches(host, allow) {
 }
 
 /**
+ * checkSinkTyped — sink-gating per UN secret verso una richiesta TIPIZZATA (URL stringa, non shell). È la variante
+ * pulita-by-design del canale `http_request` (arch H2, ADR 2026-06-30): la destinazione è `new URL(url).hostname` —
+ * NON serve `hasForeignHostToken`/`hasCommandComposition`/`hasFileOrPipeExfil`/`hasHostPinning` (non c'è shell da
+ * disambiguare: niente composizione, niente bare-operand, niente redirect-flag). Regola, allineata a checkSink:
+ *   - solo http/https; altri schemi → blocco.
+ *   - https → allow-host fail-closed (allowedSinks); senza allowedSinks → blocco rete (warn-mode → consentito con warn).
+ *   - http → consentito SOLO verso loopback LETTERALE e SOLO con allowLocalHttp on (parità col fast-path bash); l'IPv6
+ *     `[::1]` è gestito (più capace del path bash). Mai http verso host esterno.
+ * @returns {{allowed:boolean, reason?:string, warn?:string}}
+ */
+export function checkSinkTyped(name, urlString, mode = "strict") {
+  const s = SEALED.get(name);
+  if (!s) return { allowed: false, reason: "secret does not exist" };
+  if (mode === "off") return { allowed: true };
+  let u;
+  try { u = new URL(String(urlString)); } catch { return { allowed: false, reason: `invalid URL '${urlString}'` }; }
+  const scheme = u.protocol.replace(/:$/, "").toLowerCase();
+  const host = u.hostname.replace(/^\[|\]$/g, "").toLowerCase(); // togli [] IPv6 prima del check loopback
+  if (scheme !== "http" && scheme !== "https") {
+    return { allowed: false, reason: `'${name}': only http/https URLs are allowed (got '${scheme}')` };
+  }
+  if (scheme === "http") {
+    if (!isLoopbackLiteral(host)) return { allowed: false, reason: `'${name}' cannot be sent over http:// to a non-loopback host (${host}); use https` };
+    if (!s.allowLocalHttp) return { allowed: false, reason: `'${name}': http→loopback requires allowLocalHttp (enable via request_local_http)` };
+    return { allowed: true }; // loopback letterale + flag on → ok (bypassa allowedSinks per il solo loopback, come il fast-path bash)
+  }
+  // https
+  if (s.allowedSinks.length) {
+    if (s.allowedSinks.some((a) => hostMatches(host, a))) return { allowed: true };
+    return { allowed: false, reason: `'${name}' allowed only toward [${s.allowedSinks.join(", ")}]; disallowed host: ${host}` };
+  }
+  const reason = `'${name}' without allowedSinks: network send blocked (request_sink for ${host} to use it there)`;
+  if (mode === "warn") return { allowed: true, warn: reason };
+  return { allowed: false, reason };
+}
+
+/**
+ * injectTypedRequest — risolve i `{{secret:NAME}}` in url+headers+body di una richiesta TIPIZZATA applicando il
+ * sink-gating sul SOLO host dell'URL (checkSinkTyped). FAIL-CLOSED: se anche un ref è bloccato/inesistente NON
+ * sostituisce nulla e ritorna `blocked` (il chiamante NON deve inviare la richiesta). Il valore resta privato (valueOf).
+ * @param {{url:string, headers?:Record<string,string>, body?:string}} req @param {SinkMode} [mode]
+ * @returns {{ url?:string, headers?:Record<string,string>, body?:string, injected:string[], blocked:{name,reason}[], warnings:string[] }}
+ */
+export function injectTypedRequest({ url, headers = {}, body = "" } = {}, mode = "strict") {
+  const hdrs = headers && typeof headers === "object" ? headers : {};
+  const combined = [String(url ?? ""), ...Object.values(hdrs).map((v) => String(v ?? "")), String(body ?? "")].join("\n");
+  const refs = referencedSecrets(combined);
+  const blocked = [], warnings = [];
+  const valueMap = {};
+  for (const name of refs) {
+    if (!SEALED.has(name)) { blocked.push({ name, reason: "secret does not exist" }); continue; }
+    const gate = checkSinkTyped(name, url, mode);
+    if (!gate.allowed) { blocked.push({ name, reason: gate.reason }); continue; }
+    if (gate.warn) warnings.push(`${name}: ${gate.warn}`);
+    valueMap[name] = SEALED.get(name).value;
+  }
+  if (blocked.length) return { injected: [], blocked, warnings }; // fail-closed: niente sostituzione
+  const sub = (s) => { let t = String(s ?? ""); for (const [n, v] of Object.entries(valueMap)) t = t.split(`{{secret:${n}}}`).join(v); return t; };
+  const outHeaders = {};
+  for (const [k, v] of Object.entries(hdrs)) outHeaders[k] = sub(v);
+  return { url: sub(url), headers: outHeaders, body: body == null ? body : sub(body), injected: Object.keys(valueMap), blocked, warnings };
+}
+
+/**
  * previewSecretUse — PRE-FLIGHT (idea agent-POV utente msg 724): simula il sink-gating di UN secret verso
  * `opText` SENZA eseguire, e se è bloccato dà la REMEDIATION esatta (quale request_sink / request_local_http /
  * fix-nome). Converte il loop prova-fallisci-(aggira) in pianifica-poi-agisci → toglie sia la frizione sia la
@@ -661,4 +725,6 @@ export function clearSealed() {
 
 export default { setSecret, setAllowLocalHttp, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp, hasCommandComposition, hasForeignHostToken, hasHostPinning, isLoopbackLiteral, checkSink, injectSecrets, injectIntoStrings, scanIngress, loadFromEnv, clearSealed,
   // lifecycle in-sessione (msg 708/713/715/718) + pre-flight (msg 724)
-  isValidSinkHost, addAllowedSink, removeAllowedSink, setSecretDescription, renameSecret, removeSecret, computeSecretEditDiff, applySecretEdit, validateSecretRefs, previewSecretUse };
+  isValidSinkHost, addAllowedSink, removeAllowedSink, setSecretDescription, renameSecret, removeSecret, computeSecretEditDiff, applySecretEdit, validateSecretRefs, previewSecretUse,
+  // canale TIPIZZATO http_request (ADR 2026-06-30, arch H2): sink-gating su new URL(), niente shell-parsing
+  checkSinkTyped, injectTypedRequest };
