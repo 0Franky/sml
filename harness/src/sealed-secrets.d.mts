@@ -114,6 +114,15 @@ export function applySecretEdit(
   changes?: SecretEditChanges,
 ): { ok: boolean; name?: string; applied?: string[]; reason?: string };
 export function validateSecretRefs(text: string): SecretRefValidation;
+export interface SecretUsePreview {
+  name: string;
+  exists: boolean;
+  allowed: boolean;
+  reason?: string;
+  remediation?: string;
+  warn?: string;
+}
+export function previewSecretUse(name: string, opText: string, mode?: SinkMode): SecretUsePreview;
 
 declare const _default: {
   setSecret: typeof setSecret;
@@ -143,5 +152,6 @@ declare const _default: {
   computeSecretEditDiff: typeof computeSecretEditDiff;
   applySecretEdit: typeof applySecretEdit;
   validateSecretRefs: typeof validateSecretRefs;
+  previewSecretUse: typeof previewSecretUse;
 };
 export default _default;

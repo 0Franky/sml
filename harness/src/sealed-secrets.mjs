@@ -443,6 +443,37 @@ function hostMatches(host, allow) {
 }
 
 /**
+ * previewSecretUse — PRE-FLIGHT (idea agent-POV utente msg 724): simula il sink-gating di UN secret verso
+ * `opText` SENZA eseguire, e se è bloccato dà la REMEDIATION esatta (quale request_sink / request_local_http /
+ * fix-nome). Converte il loop prova-fallisci-(aggira) in pianifica-poi-agisci → toglie sia la frizione sia la
+ * tentazione di bypassare con una env-var (FIND-1/FIND-3). Read-only. @returns
+ *   {{name, exists:boolean, allowed:boolean, reason?:string, remediation?:string, warn?:string}}
+ */
+export function previewSecretUse(name, opText, mode = "strict") {
+  if (!SEALED.has(name)) {
+    const suggestion = closestName(name, [...SEALED.keys()]);
+    return { name, exists: false, allowed: false, reason: "secret does not exist", remediation: suggestion ? `did you mean '${suggestion}'? (verify with check_secret_refs)` : "use list_secrets to see available names" };
+  }
+  const gate = checkSink(name, opText, mode);
+  if (gate.allowed) return gate.warn ? { name, exists: true, allowed: true, warn: gate.warn } : { name, exists: true, allowed: true };
+  const s = SEALED.get(name);
+  const hosts = extractHosts(opText);
+  const external = hosts.filter((h) => !isLoopbackLiteral(h) && !s.allowedSinks.some((a) => hostMatches(h, a)));
+  const loopback = hosts.filter(isLoopbackLiteral);
+  let remediation;
+  if (hasInsecureHttp(opText) && loopback.length && !s.allowLocalHttp) {
+    remediation = `target is http://localhost → call request_local_http('${name}', why), then use it in a SINGLE clean command (no ';'/'|'/'&&'/redirects)`;
+  } else if (external.length) {
+    remediation = `host(s) [${external.join(", ")}] not in allowedSinks → call request_sink('${name}', '${external[0]}', why) so the user can approve it. Do NOT read the value from an env var.`;
+  } else if (hasInsecureHttp(opText)) {
+    remediation = `a sealed secret cannot be sent over http:// to a non-loopback host → use https`;
+  } else {
+    remediation = `grant the needed destination via request_sink (external host) or request_local_http (localhost); do NOT invent a CLI command`;
+  }
+  return { name, exists: true, allowed: false, reason: gate.reason, remediation };
+}
+
+/**
  * injectSecrets — sostituisce `{{secret:NAME}}` con il valore reale in `opText`, applicando il sink-gating.
  * Se un riferimento è bloccato (sink non consentito / secret inesistente) → NON sostituisce e lo riporta in
  * `blocked` (il chiamante deve RIFIUTARE l'operazione, non eseguirla parzialmente). @returns
@@ -570,5 +601,5 @@ export function clearSealed() {
 }
 
 export default { setSecret, setAllowLocalHttp, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp, hasCommandComposition, hasForeignHostToken, hasHostPinning, isLoopbackLiteral, checkSink, injectSecrets, injectIntoStrings, scanIngress, loadFromEnv, clearSealed,
-  // lifecycle in-sessione (msg 708/713/715/718)
-  isValidSinkHost, addAllowedSink, removeAllowedSink, setSecretDescription, renameSecret, removeSecret, computeSecretEditDiff, applySecretEdit, validateSecretRefs };
+  // lifecycle in-sessione (msg 708/713/715/718) + pre-flight (msg 724)
+  isValidSinkHost, addAllowedSink, removeAllowedSink, setSecretDescription, renameSecret, removeSecret, computeSecretEditDiff, applySecretEdit, validateSecretRefs, previewSecretUse };
