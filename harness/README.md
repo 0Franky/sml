@@ -43,17 +43,18 @@ L'idea centrale: **il context del modello è una mente in prima persona curata**
 ```bash
 npm ci                 # @earendil-works/pi-coding-agent + typebox + typescript (da lockfile)
 npm run typecheck      # extension vs tipi reali di pi (GREEN)
-npm test               # 18 file unit+integration (vars-queue/context-assembler/nested-compact/task-graph/harness-config/strada2/secrets/…) — tutti verdi
+npm test               # 19 file unit+integration (vars-queue/context-assembler/nested-compact/task-graph/harness-config/strada2/sealed-secrets/…) — tutti verdi
 
 # --- prova E2E HEADLESS (no TUI): dimostra che gira end-to-end con un provider reale ---
-#   richiede GEMINI_API_KEY in harness/.env (gitignored). VERDE = context iniettato + tutte le 15 extension (36 tool) + pre-flight blocca rm-rf + secrets redatti.
+#   richiede GEMINI_API_KEY in harness/.env (gitignored). VERDE = context iniettato + tutte le 16 extension (36 tool) + pre-flight blocca rm-rf + secrets redatti.
 node test/e2e/e2e-pi-run.mjs
 
 # --- USO INTERATTIVO (TUI nativa di pi; da questa cartella harness/ pi auto-carica .pi/extensions/) ---
 # A) DOGFOOD CON CLAUDE — col TUO abbonamento, NIENTE API key (Claude è built-in in pi):
-pi                              # TUI: poi  /login anthropic  (OAuth browser, una volta)
-                                #           seleziona un modello Claude (es. claude-sonnet-4-6 — Sonnet=reco per il test, Haiku=solo smoke)
-                                #   osservabilità: lancia con PI_TRACE=1 → .pi/state/trace/last-turn.md (overlap lane↔native, % contesto)
+npm run tui                     # TUI — PORTABILE Win/Linux/macOS (pi e' un bin LOCALE; npm lo trova ovunque).
+                                #   Comodita' doppio-click:  launch-tui.bat (Windows) /  ./launch-tui.sh (Linux/macOS) — entrambi wrappano `npm run tui`.
+                                #   poi  /login anthropic  (OAuth browser, una volta) + seleziona un modello Claude (es. claude-sonnet-4-6 — Sonnet=reco, Haiku=smoke)
+                                #   osservabilita': turn-trace ATTIVO di default (PI_TRACE=0 per disattivare) → .pi/state/trace/last-turn.md (overlap lane↔native, % contesto)
 #   → chatti con Claude col NOSTRO context attivo sotto.  (fallback esplicito: pi -e ./.pi/extensions/<ognuna>.ts)
 #
 # B) A/B: la stessa sessione SENZA le nostre extension = pi VANILLA → confronti il comportamento.

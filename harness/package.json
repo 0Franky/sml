@@ -5,6 +5,7 @@
   "description": "ITLMv1 harness — wrapper three-tier SLM su pi (extensions) + vLLM serving",
   "type": "module",
   "scripts": {
+    "tui": "pi",
     "typecheck": "tsc --noEmit",
     "test": "node run-tests.mjs",
     "test:unit": "node run-tests.mjs unit",
