@@ -113,8 +113,10 @@ export function extractHosts(opText) {
 export function hasHostPinning(opText) {
   const t = String(opText ?? "");
   return /(^|\s)(--resolve|--connect-to|--interface)(\s|=)/.test(t) ||
-    /(^|\s)(-x|--proxy[0-9a-z-]*)(\s|=)/i.test(t) ||
-    /-H\s*['"]?\s*host\s*:/i.test(t);
+    // NB: i flag curl sono CASE-SENSITIVE → niente `/i` qui, altrimenti `-X` (--request POST/PUT/...) matcherebbe `-x`
+    // (--proxy) e bloccherebbe ogni POST legittimo (bug trovato nel test live 2026-06-30: allowLocalHttp rotto su -X).
+    /(^|\s)(-x|--proxy[0-9a-z-]*)(\s|=)/.test(t) ||
+    /-H\s*['"]?\s*host\s*:/i.test(t); // l'header `Host:` resta case-insensitive (i nomi-header HTTP lo sono)
 }
 
 /** Il testo dell'operazione SCRIVE il segreto su file / lo esfiltra in modo evidente (deny-shapes)? */
