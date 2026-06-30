@@ -47,22 +47,22 @@ export function buildPopReport(vq, childAgentId, opts = {}) {
 
   // --- report completo (markdown), anche lungo ------------------------------
   const L = [];
-  L.push(`# Report scope — agente \`${childAgentId}\``);
+  L.push(`# Scope report — agent \`${childAgentId}\``);
   L.push("");
-  L.push(`- decisioni: ${decisions.length}`);
-  L.push(`- mutazioni (change-log): ${changes.length}`);
+  L.push(`- decisions: ${decisions.length}`);
+  L.push(`- mutations (change-log): ${changes.length}`);
   L.push("");
-  L.push("## Decisioni");
-  if (decisions.length === 0) L.push("_(nessuna decisione registrata)_");
+  L.push("## Decisions");
+  if (decisions.length === 0) L.push("_(no decision recorded)_");
   for (const d of decisions) {
     let line = `- **${d.id}**: ${d.text}`;
-    if (d.rationale) line += `  — _perché_: ${d.rationale}`;
+    if (d.rationale) line += `  — _why_: ${d.rationale}`;
     if (d.task_ref) line += ` _(task ${d.task_ref})_`;
     L.push(line);
   }
   L.push("");
-  L.push("## Cambiamenti (change-log)");
-  if (changes.length === 0) L.push("_(nessuna mutazione)_");
+  L.push("## Changes (change-log)");
+  if (changes.length === 0) L.push("_(no mutation)_");
   for (const c of changes) {
     L.push(`- ${c.entity}/${c.entity_id} ${c.field}: ${truncate(c.old_value, 40)} → ${truncate(c.new_value, 40)}`);
   }
@@ -70,8 +70,8 @@ export function buildPopReport(vq, childAgentId, opts = {}) {
 
   // --- summary breve (floor-F, bounded) — childAgentId troncato (bound INCONDIZIONATO del floor) -------
   const lastDecision = decisions.length ? decisions[decisions.length - 1].text : null;
-  let summary = `scope \`${truncate(childAgentId, 64)}\`: ${decisions.length} decisioni, ${changes.length} cambiamenti`;
-  if (lastDecision) summary += `; ultima: "${truncate(lastDecision, summaryCap)}"`;
+  let summary = `scope \`${truncate(childAgentId, 64)}\`: ${decisions.length} decisions, ${changes.length} changes`;
+  if (lastDecision) summary += `; latest: "${truncate(lastDecision, summaryCap)}"`;
 
   // --- write report su file + pointer nel summary ---------------------------
   // su errore di scrittura (EACCES/ENOSPC/EROFS…) NON si perde il ritorno: report_path resta null e
@@ -89,7 +89,7 @@ export function buildPopReport(vq, childAgentId, opts = {}) {
       summary += ` → report: ${report_path}`;
     } catch (e) {
       report_path = null;
-      summary += ` (report non scritto: ${e.code ?? e.message}; pieno disponibile in-memory)`;
+      summary += ` (report not written: ${e.code ?? e.message}; full version available in-memory)`;
     }
   }
 

@@ -127,28 +127,28 @@ export function hasInsecureHttp(opText) {
  */
 export function checkSink(name, opText, mode = "strict") {
   const s = SEALED.get(name);
-  if (!s) return { allowed: false, reason: "secret inesistente" };
+  if (!s) return { allowed: false, reason: "secret does not exist" };
   if (mode === "off") return { allowed: true };
   const hosts = extractHosts(opText);
   const fileExfil = hasFileOrPipeExfil(opText);
   // https-only: un sealed-secret NON transita su http:// in chiaro (vale in strict E warn: è igiene crittografica).
-  if (hasInsecureHttp(opText)) return { allowed: false, reason: `'${name}' non può essere inviato su http:// in chiaro (usa https)` };
+  if (hasInsecureHttp(opText)) return { allowed: false, reason: `'${name}' cannot be sent over http:// in cleartext (use https)` };
 
   if (s.allowedSinks.length) {
     // allow-host fail-closed (vale anche in 'warn': l'allow-list è una scelta esplicita dell'utente)
-    if (fileExfil) return { allowed: false, reason: `'${name}' non può essere scritto su file/pipe (scrittura rilevata)` };
-    if (hasHostPinning(opText)) return { allowed: false, reason: `'${name}': host-pinning rilevato (--resolve/--connect-to/proxy/Host:) → la destinazione reale non è verificabile dall'URL, bloccato` };
-    if (!hosts.length) return { allowed: false, reason: `'${name}' richiede una destinazione fra [${s.allowedSinks.join(", ")}] ma nessun host è identificabile nell'operazione (fail-closed)` };
+    if (fileExfil) return { allowed: false, reason: `'${name}' cannot be written to a file/pipe (write detected)` };
+    if (hasHostPinning(opText)) return { allowed: false, reason: `'${name}': host-pinning detected (--resolve/--connect-to/proxy/Host:) → the real destination is not verifiable from the URL, blocked` };
+    if (!hosts.length) return { allowed: false, reason: `'${name}' requires a destination among [${s.allowedSinks.join(", ")}] but no host is identifiable in the operation (fail-closed)` };
     const bad = hosts.filter((h) => !s.allowedSinks.some((a) => hostMatches(h, a)));
-    if (bad.length) return { allowed: false, reason: `'${name}' consentito solo verso [${s.allowedSinks.join(", ")}]; host non permessi: ${bad.join(", ")}` };
+    if (bad.length) return { allowed: false, reason: `'${name}' allowed only toward [${s.allowedSinks.join(", ")}]; disallowed hosts: ${bad.join(", ")}` };
     return { allowed: true };
   }
 
   // secret SENZA allow-list dichiarata → deny-list conservativa
   const reason = fileExfil
-    ? `'${name}' senza allowedSinks: scrittura-file/pipe bloccata`
+    ? `'${name}' without allowedSinks: file/pipe write blocked`
     : hosts.length
-      ? `'${name}' senza allowedSinks: invio di rete bloccato (dichiara allowedSinks per usarlo verso un host)`
+      ? `'${name}' without allowedSinks: network send blocked (declare allowedSinks to use it toward a host)`
       : null;
   if (reason) {
     if (mode === "warn") return { allowed: true, warn: reason };
@@ -175,7 +175,7 @@ export function injectSecrets(opText, mode = "strict") {
   const injected = [], blocked = [], warnings = [];
   let text = String(opText ?? "");
   for (const name of refs) {
-    if (!SEALED.has(name)) { blocked.push({ name, reason: "secret inesistente" }); continue; }
+    if (!SEALED.has(name)) { blocked.push({ name, reason: "secret does not exist" }); continue; }
     const gate = checkSink(name, opText, mode);
     if (!gate.allowed) { blocked.push({ name, reason: gate.reason }); continue; }
     if (gate.warn) warnings.push(`${name}: ${gate.warn}`);
@@ -237,7 +237,7 @@ export function injectIntoStrings(strings, mode = "strict") {
   if (!refs.length) return { strings: arr, injected: [], blocked, warnings };
   const valueMap = {};
   for (const name of refs) {
-    if (!SEALED.has(name)) { blocked.push({ name, reason: "secret inesistente" }); continue; }
+    if (!SEALED.has(name)) { blocked.push({ name, reason: "secret does not exist" }); continue; }
     const gate = checkSink(name, combined, mode);
     if (!gate.allowed) { blocked.push({ name, reason: gate.reason }); continue; }
     if (gate.warn) warnings.push(`${name}: ${gate.warn}`);

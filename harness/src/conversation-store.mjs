@@ -105,7 +105,7 @@ export function buildMessagesLane(store, convId, { n = 6, charCap = 4000, afterS
   // il budget della lane resta bounded anche nel caso singolo-messaggio-gigante. (review-loop #2 2026-06-29, P3.)
   if (win.length === 1 && win[0].text.length > charCap) {
     const t = win[0];
-    win = [{ ...t, text: t.text.slice(0, charCap) + `…[+${t.text.length - charCap} char — usa get_conversation]` }];
+    win = [{ ...t, text: t.text.slice(0, charCap) + `…[+${t.text.length - charCap} chars — use get_conversation]` }];
   }
   const shownFrom = win.length ? win[0].seq : afterSeq + total + 1;
   const olderHidden = total - win.length; // più vecchi DENTRO il segmento post-checkpoint
@@ -113,11 +113,11 @@ export function buildMessagesLane(store, convId, { n = 6, charCap = 4000, afterS
   const lines = [`<messages_with_user conv="${esc(convId)}" shown="${win.length}/${total}"${ckptAttr}>`];
   for (const t of win) lines.push(`  [${esc(t.role)}] ${esc(t.text)}`);
   if (olderHidden > 0) {
-    lines.push(`  (+${olderHidden} messaggi più vecchi nel segmento — usa get_conversation conv="${esc(convId)}" range=${afterSeq + 1}..${shownFrom - 1})`);
+    lines.push(`  (+${olderHidden} older messages in the segment — use get_conversation conv="${esc(convId)}" range=${afterSeq + 1}..${shownFrom - 1})`);
   }
   // dopo un checkpoint: la chat PRE-checkpoint è ripiegata (sintetizzata in <resuming_from>), recuperabile per ID.
   if (afterSeq > 0) {
-    lines.push(`  (ripiegato a checkpoint @${afterSeq}: i messaggi precedenti sono nel digest <resuming_from> + get_conversation range=1..${afterSeq})`);
+    lines.push(`  (folded at checkpoint @${afterSeq}: the earlier messages are in the <resuming_from> digest + get_conversation range=1..${afterSeq})`);
   }
   lines.push(`</messages_with_user>`);
   return lines.join("\n");

@@ -21,14 +21,14 @@ import { join } from "node:path";
 
 const VerifierSpec = Type.Object({
   setup: Type.Array(Type.String(), {
-    description: "Comandi shell che seedano la fixture (es. git init, scrittura file). = §2bis del gold.",
+    description: "Shell commands that seed the fixture (e.g. git init, writing files). = §2bis of the gold.",
   }),
   asserts: Type.Array(
     Type.Object({
-      cmd: Type.String({ description: "Comando il cui exit-code è l'oracolo." }),
-      expect_exit: Type.Optional(Type.Number({ description: "Exit-code atteso (default 0)." })),
+      cmd: Type.String({ description: "Command whose exit-code is the oracle." }),
+      expect_exit: Type.Optional(Type.Number({ description: "Expected exit-code (default 0)." })),
     }),
-    { description: "Oracoli deterministici ancorati all'OUTCOME (exit==expect → pass)." },
+    { description: "Deterministic oracles anchored to the OUTCOME (exit==expect → pass)." },
   ),
 });
 
@@ -37,7 +37,7 @@ export default function (pi: ExtensionAPI) {
     name: "run_verifier",
     label: "Run gold verifier",
     description:
-      "Esegue un verifier-spec (setup fixture + assert oracoli) in sandbox e ritorna pass/fail. Valida i gold-example.",
+      "Run a verifier-spec (fixture setup + oracle asserts) in a sandbox and return pass/fail. Validates the gold-examples.",
     parameters: VerifierSpec,
     async execute(_toolCallId: string, params: any, _signal: any, _onUpdate: any, _ctx: any) {
       // TODO(isolation): sostituire questa tempdir con un container Docker (sandbox/Dockerfile)

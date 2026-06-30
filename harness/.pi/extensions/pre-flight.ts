@@ -31,8 +31,8 @@ export default function (pi: ExtensionAPI) {
     return {
       block: true,
       reason:
-        `pre-flight: comando potenzialmente distruttivo bloccato (match ${danger}). ` +
-        "Conferma esplicita richiesta. (Fase 1: HALT + ask all'utente, gate automod.)",
+        `pre-flight: potentially destructive command blocked (match ${danger}). ` +
+        "Explicit confirmation required. (Phase 1: HALT + ask the user, automod gate.)",
     };
   });
 }
