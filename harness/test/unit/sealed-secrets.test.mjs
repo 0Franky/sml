@@ -316,6 +316,13 @@ const reset = () => { clearSealed(); clearSecrets(); };
   ok(hasCommandComposition("curl http://localhost& x") && !hasCommandComposition("curl http://localhost/?a=1&b=2"), "BG-AMP: token& flaggato, &param di URL no");
   // NO falso-blocco: header NON-quotato con ':' (new URL throw → skip) + -A single-word (no dot)
   ok(checkSink("LJ5", "curl http://localhost:3000/api -A myagent -H Accept:application/json -H X-Foo:bar", "strict").allowed, "NO-FP: header non-quotato con ':' + -A single-word → consentito");
+
+  // REGRESSIONE test-live 2026-06-30: `-X` (--request METODO) non deve matchare `-x` (--proxy) → POST/PUT/DELETE OK
+  ok(checkSink("LJ5", 'curl -X POST http://localhost:3000/api/renew -H "Authorization: Bearer {{secret:LJ5}}"', "strict").allowed, "DASH-X: curl -X POST loopback → consentito (bug -X vs -x chiuso)");
+  ok(checkSink("LJ5", 'curl http://localhost:3000/x -X PUT -H "Authorization: Bearer {{secret:LJ5}}"', "strict").allowed, "DASH-X: curl -X PUT loopback → consentito");
+  ok(!hasHostPinning("curl -X POST http://localhost"), "DASH-X: hasHostPinning('-X POST') = false (case-sensitive)");
+  ok(hasHostPinning("curl http://localhost -x http://proxy:8080") && hasHostPinning("curl http://localhost --proxy http://p:8080") && hasHostPinning("curl http://localhost --resolve localhost:80:1.2.3.4"),
+     "DASH-X: vero proxy -x/--proxy/--resolve resta host-pinning=true");
 }
 
 console.log(`\nsealed-secrets test: ${passed} passed, ${failed} failed`);
