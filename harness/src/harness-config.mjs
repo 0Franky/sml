@@ -32,6 +32,11 @@ export const REGEX_INGRESS_MODES = ["off", "ask", "auto"];
 export const DEFAULT_HARNESS_CONFIG = {
   trigger: { ...DEFAULT_CFG }, // tokenReorderPct, tokenMatrioskaPct, watchReorder, watchMatrioska, maxDepth, focusK
   messagesWindowN: 8, // turni verbatim mostrati nella lane <messages_with_user>
+  // Strada-2 complementarità (review-full P1-B): la lane <messages_with_user> mostra la STORIA; la native-window
+  // (native-window.ts keepTurns=1) porta il TURNO CORRENTE. true (DEFAULT) = escludi il turno in volo dalla lane →
+  // niente "doppia-chat" (overlap=0). false → la lane include anche il turno corrente (utile solo se si alza keepTurns
+  // nella native-window, o per debug). Opt-out: invariante di complementarità, non toccare se keepTurns resta 1.
+  messagesExcludeCurrentTurn: true,
   // gathering (focus-gathering v1): QUANTO è forzato il "guarda l'ordine dei task prima di entrare a fuoco".
   //   delegated = il modello decide (default, lean/anti-cerimonia); inject = l'harness inietta la vista ordinata nel
   //   focus_hint (anti-cecità, low-ceremony); require = enter_focus è bloccato finché non chiami get_execution_order.
@@ -117,12 +122,13 @@ const ENV_MAP = {
  * Carica la config harness effettiva (default → file opt-in → env). Mai lancia (fail-safe ai default).
  * @param {string} [path] path del file config (default `.pi/harness.config.json`)
  * @param {{ env?: Record<string,string|undefined> }} [opts] env iniettabile per i test
- * @returns {{ trigger: typeof DEFAULT_CFG, messagesWindowN: number }}
+ * @returns {{ trigger: typeof DEFAULT_CFG, messagesWindowN: number, messagesExcludeCurrentTurn: boolean }}
  */
 export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
   const cfg = {
     trigger: { ...DEFAULT_HARNESS_CONFIG.trigger },
     messagesWindowN: DEFAULT_HARNESS_CONFIG.messagesWindowN,
+    messagesExcludeCurrentTurn: DEFAULT_HARNESS_CONFIG.messagesExcludeCurrentTurn,
     gathering: { ...DEFAULT_HARNESS_CONFIG.gathering },
     autofocus: { ...DEFAULT_HARNESS_CONFIG.autofocus },
     secrets: { ...DEFAULT_HARNESS_CONFIG.secrets },
@@ -138,6 +144,7 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
       if (typeof f?.messagesWindowN === "number" && Number.isFinite(f.messagesWindowN) && f.messagesWindowN >= 1) {
         cfg.messagesWindowN = Math.floor(f.messagesWindowN);
       }
+      if (typeof f?.messagesExcludeCurrentTurn === "boolean") cfg.messagesExcludeCurrentTurn = f.messagesExcludeCurrentTurn;
     }
   } catch {
     /* config malformata → default (fail-safe) */
@@ -173,6 +180,9 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
   }
   if (env.HARNESS_SECRETS_ALLOW_FILE != null && env.HARNESS_SECRETS_ALLOW_FILE !== "") {
     cfg.secrets.allowSecretToFile = env.HARNESS_SECRETS_ALLOW_FILE !== "false" && env.HARNESS_SECRETS_ALLOW_FILE !== "0";
+  }
+  if (env.HARNESS_MESSAGES_EXCLUDE_CURRENT_TURN != null && env.HARNESS_MESSAGES_EXCLUDE_CURRENT_TURN !== "") {
+    cfg.messagesExcludeCurrentTurn = env.HARNESS_MESSAGES_EXCLUDE_CURRENT_TURN !== "false" && env.HARNESS_MESSAGES_EXCLUDE_CURRENT_TURN !== "0";
   }
   return cfg;
 }

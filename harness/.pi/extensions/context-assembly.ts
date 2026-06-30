@@ -26,6 +26,7 @@ import { dirname } from "node:path";
 // (.pi/harness.config.json o env HARNESS_*). Senza config → default (comportamento invariato). Caricato una volta al load.
 const HARNESS_CFG = loadHarnessConfig();
 const MESSAGES_WINDOW_N = HARNESS_CFG.messagesWindowN; // turni verbatim mostrati nella lane <messages_with_user>
+const EXCLUDE_CURRENT_TURN = HARNESS_CFG.messagesExcludeCurrentTurn; // P1-B: escludi il turno corrente dalla lane (default true)
 
 const DB_PATH = ".pi/state/vars.db";
 
@@ -74,7 +75,7 @@ export default function (pi: ExtensionAPI) {
     if (stack.length > 0) {
       // Uno scope è aperto → workspace NESTED: <frame> (zoom-OUT) + <context> FILTRATO + lane <messages_with_user>.
       const top = stack[stack.length - 1];
-      workspace = buildNestedWorkspace(vq, { focusScopeId: top.scope_id, store: convStore, convId, messagesN: MESSAGES_WINDOW_N, afterSeq: checkpointSeq });
+      workspace = buildNestedWorkspace(vq, { focusScopeId: top.scope_id, store: convStore, convId, messagesN: MESSAGES_WINDOW_N, afterSeq: checkpointSeq, excludeCurrentTurn: EXCLUDE_CURRENT_TURN });
     } else {
       // Nessuno scope → resume? + <context> + <focus_hint>? + lane <messages_with_user>.
       const resume = buildResumeDigest(vq);
@@ -103,7 +104,9 @@ export default function (pi: ExtensionAPI) {
         hint = `\n<reorganize_hint watch="${trig.metrics.watchCount}"${trig.metrics.percent != null ? ` ctx="${Math.round(trig.metrics.percent * 100)}%"` : ""}>Context accumulating: consolidate the backlog — close 'done' tasks, group similar ones, and re-check priority/dependencies (set_task_deps) so the execution order stays correct.</reorganize_hint>`;
         markReorgEmitted(vq);
       }
-      const lane = buildMessagesLane(convStore, convId, { n: MESSAGES_WINDOW_N, afterSeq: checkpointSeq });
+      // excludeCurrentTurn (config, default true): la native-window (native-window.ts) tiene keepTurns=1 = il turno
+      // corrente; la lane mostra la STORIA → escludere il turno in volo evita la doppia-chat (overlap=1). (P1-B.)
+      const lane = buildMessagesLane(convStore, convId, { n: MESSAGES_WINDOW_N, afterSeq: checkpointSeq, excludeCurrentTurn: EXCLUDE_CURRENT_TURN });
       workspace = (resume ? `${resume}\n` : "") + base + hint + (lane ? `\n${lane}` : "");
     }
     // aim-in-coda (anti position-bias / lost-in-the-middle, msg 518): l'aim corrente è in cima al <context>, ma su

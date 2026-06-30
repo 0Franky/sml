@@ -49,16 +49,27 @@ export class ConversationStore {
     return Number(r.lastInsertRowid);
   }
 
-  /** Numero di turni della conversazione (con `afterSeq` > 0: solo quelli DOPO un checkpoint/segment-boundary). */
-  count(convId, { afterSeq = 0 } = {}) {
-    return this.db.prepare(`SELECT COUNT(*) AS c FROM conversations WHERE conv_id = ? AND seq > ?`).get(convId, afterSeq).c;
+  /**
+   * Numero di turni della conversazione. `afterSeq` > 0 → solo quelli DOPO un checkpoint/segment-boundary;
+   * `untilSeq` (≠ null) → bound SUPERIORE inclusivo (es. escludere il turno corrente in volo, vedi buildMessagesLane).
+   */
+  count(convId, { afterSeq = 0, untilSeq = null } = {}) {
+    const upper = untilSeq != null ? " AND seq <= ?" : "";
+    const args = untilSeq != null ? [convId, afterSeq, untilSeq] : [convId, afterSeq];
+    return this.db.prepare(`SELECT COUNT(*) AS c FROM conversations WHERE conv_id = ? AND seq > ?${upper}`).get(...args).c;
   }
 
-  /** Ultimi N turni in ordine cronologico (oldest→newest), VERBATIM. `afterSeq` limita al segmento post-checkpoint. */
-  window(convId, n = 6, { afterSeq = 0 } = {}) {
+  /**
+   * Ultimi N turni in ordine cronologico (oldest→newest), VERBATIM. `afterSeq` = bound inferiore (segmento
+   * post-checkpoint); `untilSeq` (≠ null) = bound SUPERIORE inclusivo (simmetrico) → la finestra può escludere
+   * la coda (es. il turno corrente, che la native-window porta già). Sentinella null = nessun bound superiore.
+   */
+  window(convId, n = 6, { afterSeq = 0, untilSeq = null } = {}) {
+    const upper = untilSeq != null ? " AND seq <= ?" : "";
+    const args = untilSeq != null ? [convId, afterSeq, untilSeq, n] : [convId, afterSeq, n];
     const rows = this.db.prepare(
-      `SELECT seq, role, text, ts FROM conversations WHERE conv_id = ? AND seq > ? ORDER BY seq DESC LIMIT ?`
-    ).all(convId, afterSeq, n);
+      `SELECT seq, role, text, ts FROM conversations WHERE conv_id = ? AND seq > ?${upper} ORDER BY seq DESC LIMIT ?`
+    ).all(...args);
     return rows.reverse();
   }
 
@@ -90,15 +101,29 @@ export class ConversationStore {
  * F (meccanismo deterministico): finestra + cap + marker + store-by-ID. S (politica, futura): quanti tenere /
  * quando recuperare i più vecchi (window-aware-fetching). Senza training il default-N è già utile (DEGRADATA-MA-UTILE).
  *
+ * `excludeCurrentTurn` (Strada-2 complementarità, review-full P1-B): la native-window porta il TURNO CORRENTE
+ * (keepTurns=1, native-window.ts); la lane mostra la STORIA. Se l'hook `input` ha già catturato il messaggio
+ * utente in volo (caso interattivo genuino) questo è l'ULTIMO record dello store → va ESCLUSO dalla lane,
+ * altrimenti compare due volte (lane + native = "doppia-chat", overlap=1). Degrada con grazia: se il turno
+ * corrente NON è stato catturato (headless/slash/streaming, filtro `genuine` in conversation-capture), l'ultimo
+ * record è l'assistant precedente → niente da escludere (la storia resta completa, nessun overlap).
+ *
  * @param {ConversationStore} store
  * @param {string} convId
- * @param {{ n?: number, charCap?: number }} [opts]
+ * @param {{ n?: number, charCap?: number, afterSeq?: number, excludeCurrentTurn?: boolean }} [opts]
  * @returns {string} blocco "<messages_with_user …>…</messages_with_user>" oppure "" (conversazione vuota)
  */
-export function buildMessagesLane(store, convId, { n = 6, charCap = 4000, afterSeq = 0 } = {}) {
-  const total = store.count(convId, { afterSeq });
+export function buildMessagesLane(store, convId, { n = 6, charCap = 4000, afterSeq = 0, excludeCurrentTurn = false } = {}) {
+  // bound superiore: escludi il turno utente in volo (la sua seq è il max della conversazione, appena appeso).
+  // untilSeq può legittimamente valere 0 (turno corrente = primissimo messaggio) → lane vuota, corretto.
+  let untilSeq = null;
+  if (excludeCurrentTurn) {
+    const tail = store.window(convId, 1, { afterSeq });
+    if (tail.length && tail[0].role === "user") untilSeq = tail[0].seq - 1;
+  }
+  const total = store.count(convId, { afterSeq, untilSeq });
   if (!total) return "";
-  let win = store.window(convId, n, { afterSeq });
+  let win = store.window(convId, n, { afterSeq, untilSeq });
   const sizeOf = (rows) => rows.reduce((a, r) => a + r.text.length, 0);
   while (win.length > 1 && sizeOf(win) > charCap) win = win.slice(1); // droppa i più vecchi, tieni i recenti verbatim
   // se l'UNICO messaggio rimasto eccede ancora il cap (paste enorme in un solo turno), tronca il suo testo →
