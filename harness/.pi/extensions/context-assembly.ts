@@ -13,6 +13,9 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { VarsQueue } from "../../src/vars-queue.mjs";
 import { getVarsQueue, getConversationStore, closeAll } from "../../src/state-db.mjs";
 import { assembleContext, buildResumeDigest, buildAimTail, buildExecutionOrderLines } from "../../src/context-assembler.mjs";
+// inventario SEALED (nomi+sink+flag, MAI valori) per la lane <secrets> — singleton di processo condiviso con
+// secrets-guardrail/regex-ingress. Chiude FIND-7 (il modello ri-chiamava list_secrets perché non era in context).
+import { listSecretsMeta } from "../../src/sealed-secrets.mjs";
 import { buildMessagesLane } from "../../src/conversation-store.mjs";
 import { getConvId } from "../../src/session-context.mjs";
 import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint, markFocusHintEmitted, shouldEmitReorgHint, markReorgEmitted, maybeAutoFocus } from "../../src/nested-compact.mjs";
@@ -79,7 +82,7 @@ export default function (pi: ExtensionAPI) {
     } else {
       // Nessuno scope → resume? + <context> + <focus_hint>? + lane <messages_with_user>.
       const resume = buildResumeDigest(vq);
-      const base = assembleContext(vq);
+      const base = assembleContext(vq, { secrets: listSecretsMeta() });
       const trig = evaluateTrigger(vq, { tokens, contextWindow }, HARNESS_CFG.trigger);
       let hint = "";
       // focus_hint = il NUDGE: emesso SOLO in autofocus.mode='nudge' (default). In 'off' niente segnale; in 'auto'

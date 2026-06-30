@@ -138,6 +138,21 @@ vq3.close();
   vqX.close();
 }
 
+// --- lane <secrets> (utente msg 727, chiude FIND-7): renderizzata da opts.secrets, nomi+sink+flag, MAI valori ---
+{
+  const vqS = new VarsQueue(":memory:", { agent: "orchestrator" });
+  const meta = [
+    { name: "REDDIT_TOKEN", description: "reddit", allowedSinks: ["oauth.reddit.com"], allowLocalHttp: false },
+    { name: "LOCAL_JWT", description: "", allowedSinks: [], allowLocalHttp: true },
+  ];
+  const ctxS = assembleContext(vqS, { now: NOW, sinceMs: 0, secrets: meta });
+  ok(/<secrets>/.test(ctxS) && /REDDIT_TOKEN sinks=\[oauth\.reddit\.com\]/.test(ctxS), "SECRETS: lane render nome+sink");
+  ok(/LOCAL_JWT sinks=\[none\] allowLocalHttp/.test(ctxS), "SECRETS: allowLocalHttp mostrato, sink vuoto=none");
+  ok(!/<secrets>/.test(assembleContext(vqS, { now: NOW, sinceMs: 0, secrets: [] })), "SECRETS: nessun secret → lane OMESSA (anti-bloat)");
+  ok(!/<secrets>/.test(assembleContext(vqS, { now: NOW, sinceMs: 0 })), "SECRETS: opts.secrets assente → lane OMESSA");
+  vqS.close();
+}
+
 vq.close();
 console.log(`\ncontext-assembler smoke-test: ${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);

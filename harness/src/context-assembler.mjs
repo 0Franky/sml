@@ -204,6 +204,22 @@ export function assembleContext(vq, opts = {}) {
     lines.push("  </vars>");
   }
 
+  // --- secrets (inventario SEALED: nome + allowedSinks + flag, MAI il valore) — utente msg 727, chiude FIND-7
+  //     (il modello ri-chiamava list_secrets 6× perché il context non glielo ri-mostrava). Renderer PURO: i dati
+  //     arrivano da opts.secrets (= listSecretsMeta(), già la vista model-facing sicura) passati dall'estensione →
+  //     l'assembler resta disaccoppiato dal registry. Condizionata: solo se ci sono secret (anti-bloat, principio
+  //     "segnale condizionato-alla-rilevanza" dello studio context-sizing). La description è già sanitizzata a monte. ---
+  const secretsMeta = Array.isArray(opts.secrets) ? opts.secrets : [];
+  if (secretsMeta.length) {
+    lines.push("  <secrets>");
+    for (const s of secretsMeta) {
+      const sinks = (s.allowedSinks && s.allowedSinks.length) ? s.allowedSinks.join(",") : "none";
+      lines.push(`    - ${esc(s.name)} sinks=[${esc(sinks)}]${s.allowLocalHttp ? " allowLocalHttp" : ""}${s.description ? ` (${esc(s.description)})` : ""}`);
+    }
+    lines.push("    - (use {{secret:NAME}} as a value you never see; request_sink to grant a host, preview_secret_use to plan)");
+    lines.push("  </secrets>");
+  }
+
   // --- recent_changes (visibile-finché-serve) — finestra temporale + cap, con SEGNALE se troncato ---
   //     fetch maxChanges+1 per sapere se ce ne sono altri oltre il cap (le memo silenziose sono già escluse). ---
   const changesPlus = vq.getChangeLog({ since: sinceMs, limit: maxChanges + 1 });

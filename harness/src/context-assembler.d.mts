@@ -1,6 +1,7 @@
 /** Type declarations for context-assembler.mjs (assembla <context> dalle lane del vars-queue). */
 import type { VarsQueue } from "./vars-queue.mjs";
 import type { ConversationStore } from "./conversation-store.mjs";
+import type { SecretMeta } from "./sealed-secrets.d.mts";
 
 export interface AssembleOpts {
   sinceMs?: number;
@@ -12,6 +13,8 @@ export interface AssembleOpts {
   maxVars?: number;
   /** matrioska/nested-compact: se presente, la <task_list> è filtrata a questo subset di task id. */
   focusTaskIds?: (string | number)[] | null;
+  /** inventario sealed-secrets (nomi+sink+flag, MAI valori) per la lane <secrets> — passato da context-assembly.ts. */
+  secrets?: SecretMeta[];
 }
 
 export function assembleContext(vq: VarsQueue, opts?: AssembleOpts): string;
