@@ -39,7 +39,7 @@ const FILE_WRITE_TOOLS = new Set(["write", "create", "write_file", "str_replace_
 const SECRETS_CONFIG_PATH = ".pi/secrets.config.json"; // SOLO metadata (nome→{description,allowedSinks}); MAI valori.
 
 /** Carica la metadata dei sealed-secrets (no valori) da .pi/secrets.config.json. Fail-safe a {}. */
-function loadSecretMeta(): Record<string, { description?: string; allowedSinks?: string[] }> {
+function loadSecretMeta(): Record<string, { description?: string; allowedSinks?: string[]; redactEgress?: boolean; allowLocalHttp?: boolean }> {
   try {
     if (existsSync(SECRETS_CONFIG_PATH)) return JSON.parse(readFileSync(SECRETS_CONFIG_PATH, "utf-8")) || {};
   } catch {
@@ -81,12 +81,12 @@ export default function (pi: ExtensionAPI) {
     name: "list_secrets",
     label: "List available sealed secrets (names only)",
     description:
-      "List the available SEALED secrets: for each, only NAME, description, allowedSinks (allowed hosts) and fingerprint (non-reversible hash, to verify its identity without seeing the value).\n" +
+      "List the available SEALED secrets: for each, only NAME, description, allowedSinks (allowed hosts), allowLocalHttp (whether it may be used over http toward loopback only — localhost/127.0.0.1), and fingerprint (non-reversible hash, to verify its identity without seeing the value).\n" +
       "HOW THEY WORK (important — do not misunderstand):\n" +
       "• `{{secret:NAME}}` is a REFERENCE to a value that YOU do not hold and will NEVER see. Use it FREELY in a tool's arguments — writing a `.env`, an API call, a header — as if it were the value.\n" +
       "• At execution time the harness replaces the reference with the REAL VALUE, ONLY toward the allowedSinks. So the file/command receives the real value (useful: you can configure a `.env` or authenticate a call without ever seeing the key). The value NEVER reaches you nor the LLM provider: that is by design, not a limitation.\n" +
       "• If you RE-READ a file or an output containing the secret, you will see `[REDACTED-SECRET]`: it means the value IS PRESENT (on disk/in the output) but hidden from YOU (read-time redaction) — NOT that the file is empty or redacted. Do not say 'I can't' or 'it was redacted': say 'the value is there, it's the harness hiding it from me'.\n" +
-      "• If a use gets blocked (`sink-gating`), the secret is missing allowedSinks for that host: ask the user to declare them. You have full power to USE secrets; you simply do not SEE them.",
+      "• If a use gets blocked (`sink-gating`): for an EXTERNAL host, the secret is missing that host in allowedSinks — ask the user to declare it. For an `http://localhost` (loopback) target, call `request_local_http(name, why)` so the user can allow it (then use it in a SINGLE clean command — no ';'/'|'/'&&'/redirects). You have full power to USE secrets; you simply do not SEE them.",
     parameters: Type.Object({}),
     async execute() {
       const meta = listSecretsMeta();
@@ -117,28 +117,36 @@ export default function (pi: ExtensionAPI) {
     description:
       "Ask the USER to allow a sealed secret to be used over http TOWARD LOOPBACK ONLY (localhost / 127.0.0.1) — e.g. a local-session JWT against a dev server. You CANNOT enable this yourself: only the user can accept (the harness opens a confirmation). The value stays sealed (you never see it, it is redacted from transcripts) and can NEVER be sent to an external host over http (external stays https-only). Use this when a {{secret:NAME}} use is blocked because the target is http://localhost.",
     parameters: Type.Object({
-      name: Type.String({ description: "Name of the sealed secret (must already exist)." }),
-      why: Type.String({ description: "Why you need local http (which local server/operation)." }),
+      name: Type.String({ minLength: 1, description: "Name of the sealed secret (must already exist)." }),
+      why: Type.String({ minLength: 1, description: "Why you need local http (which local server/operation). Required, non-empty." }),
     }),
     async execute(_t: string, p: any, _signal: any, _onUpdate: any, ctx: any) {
       if (!hasSecret(p.name)) {
         return { content: [{ type: "text", text: `Secret '${p.name}' does not exist. Ask the user to provision it first (request_secret).` }], details: { ok: false } };
       }
+      const why = typeof p.why === "string" ? p.why.trim() : "";
+      if (!why) {
+        return { content: [{ type: "text", text: `Provide a non-empty 'why' (the user must see a reason before granting a loopback-http exception).` }], details: { ok: false } };
+      }
       // Consenso ESPLICITO obbligatorio (utente msg 668: MAI auto-decisione del modello). In TUI/RPC → dialog confirm;
       // in headless (no hasUI) → degrada a notify + l'utente lo abilita out-of-band (CLI/config). Mai abilitato dal solo modello.
       if (ctx?.hasUI && typeof ctx?.ui?.confirm === "function") {
+        // Il dialog DISCLOSA lo scope reale (review H1): la concessione è di SESSIONE e vale per QUALSIASI servizio
+        // loopback, non solo l'operazione descritta dal modello → l'utente decide con l'informazione giusta.
         const ok = await ctx.ui.confirm(
           `Abilitare http-locale per il secret '${p.name}'?`,
-          `Il modello vuole usare {{secret:${p.name}}} su http SOLO verso loopback (localhost / 127.0.0.1).\nMotivo: ${p.why}\nIl valore resta sigillato (non lo vedi tu né il modello, redatto dai transcript) e NON potrà MAI andare su un host esterno in http. Consenti?`,
+          `Il modello chiede di poter usare {{secret:${p.name}}} su http verso loopback (localhost / 127.0.0.1).\n` +
+          `Motivo dichiarato dal modello: ${why}\n\n` +
+          `⚠ Se acconsenti, il permesso vale per TUTTA QUESTA SESSIONE e per QUALSIASI servizio locale (qualsiasi porta/path su localhost), non solo per l'operazione descritta. Host ESTERNI in http restano sempre bloccati. Il valore resta sigillato (non lo vedi tu né il modello). Un servizio locale compromesso potrebbe però inoltrare il token altrove. Consenti?`,
         );
         if (ok) {
           setAllowLocalHttp(p.name, true);
-          return { content: [{ type: "text", text: `User APPROVED: '${p.name}' may now be used over http toward loopback only (localhost/127.0.0.1). External hosts remain https-only.` }], details: { ok: true } };
+          return { content: [{ type: "text", text: `User APPROVED: '${p.name}' may now be used over http toward loopback only (localhost/127.0.0.1), for this session. External hosts remain https-only. Use it in a SINGLE clean command (no ';'/'|'/'&&'/redirects), else it stays blocked.` }], details: { ok: true } };
         }
         return { content: [{ type: "text", text: `User DENIED local-http for '${p.name}'. Use https; a non-loopback http target is not allowed.` }], details: { ok: false } };
       }
-      ctx?.ui?.notify?.(`Il modello chiede allowLocalHttp per '${p.name}' (${p.why}). Abilitalo TU out-of-band: node scripts/set-secret.mjs ${p.name} --allow-local-http (o aggiungi "allowLocalHttp": true in .pi/secrets.config.json). Headless: non posso chiederti conferma interattiva.`, "warning");
-      return { content: [{ type: "text", text: `No interactive UI available (headless): asked the user to enable allowLocalHttp for '${p.name}' out-of-band (CLI/config). NOT enabled yet — retry after the user confirms.` }], details: { ok: false } };
+      ctx?.ui?.notify?.(`Il modello chiede allowLocalHttp per '${p.name}' (${why}). Abilitalo TU out-of-band: node scripts/set-secret.mjs ${p.name} --allow-local-http (o aggiungi "allowLocalHttp": true in .pi/secrets.config.json), poi RIAVVIA pi (la config si rilegge al boot). Headless: non posso chiederti conferma interattiva.`, "warning");
+      return { content: [{ type: "text", text: `No interactive UI available (headless): cannot enable allowLocalHttp for '${p.name}' in-session. The user must set it out-of-band (CLI/config) AND restart pi (config is read at boot) — a same-session retry will NOT pick it up. It is NOT enabled now.` }], details: { ok: false } };
     },
   });
 

