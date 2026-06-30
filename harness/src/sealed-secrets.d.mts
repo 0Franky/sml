@@ -43,6 +43,7 @@ export function extractHosts(opText: string): string[];
 export function hasFileOrPipeExfil(opText: string): boolean;
 export function hasInsecureHttp(opText: string): boolean;
 export function hasCommandComposition(opText: string): boolean;
+export function hasForeignHostToken(opText: string): boolean;
 export function hasHostPinning(opText: string): boolean;
 export function isLoopbackLiteral(host: string): boolean;
 export function checkSink(name: string, opText: string, mode?: SinkMode): SinkVerdict;
@@ -72,6 +73,7 @@ declare const _default: {
   hasFileOrPipeExfil: typeof hasFileOrPipeExfil;
   hasInsecureHttp: typeof hasInsecureHttp;
   hasCommandComposition: typeof hasCommandComposition;
+  hasForeignHostToken: typeof hasForeignHostToken;
   hasHostPinning: typeof hasHostPinning;
   isLoopbackLiteral: typeof isLoopbackLiteral;
   checkSink: typeof checkSink;
