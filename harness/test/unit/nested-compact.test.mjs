@@ -248,6 +248,10 @@ try {
     ok(ws.includes('<task_list focus='), "WS: task_list filtrata al subset");
     ok(ws.includes("T2"), "WS: T2 compare nel backlog del frame (fuori dal focus)");
     ok(ws.includes("<messages_with_user"), "WS: contiene la lane messaggi");
+    // gate-critical: la lane <secrets> deve comparire ANCHE nel ramo nested (focus mode) — altrimenti il modello
+    // perde la vista dei secret in focus e ri-chiama list_secrets (gemello FIND-7). (context-bounds-study)
+    const wsS = buildNestedWorkspace(vq, { focusScopeId: scopeId, store, convId: "main", now: 200, secrets: [{ name: "TKN", description: "x", allowedSinks: ["api.x.com"], allowLocalHttp: false }] });
+    ok(wsS.includes("<secrets>") && wsS.includes("TKN sinks=[api.x.com]"), "WS-NESTED: lane <secrets> presente nel ramo nested (gate-critical)");
     store.close();
     vq.close();
   }

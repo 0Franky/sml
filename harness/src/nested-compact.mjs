@@ -428,7 +428,10 @@ export function buildNestedWorkspace(vq, opts = {}) {
     ? vq.getFocusFrame(opts.focusScopeId)
     : getFocusStack(vq).slice(-1)[0] ?? null;
   const focusTaskIds = scope ? scope.task_subset : null;
-  parts.push(assembleContext(vq, { now, focusTaskIds, absoluteTimestamps: opts.absoluteTimestamps }));
+  // secrets: anche nel ramo NESTED l'inventario sealed va mostrato (gate-critical) — altrimenti in focus mode il
+  // modello perde la vista <secrets> e ri-chiama list_secrets (gemello di FIND-7). La lane filtra i TASK al subset,
+  // NON i secret (un secret è globale, non legato al focus). (context-bounds-study §gate-completeness, 2026-06-30.)
+  parts.push(assembleContext(vq, { now, focusTaskIds, absoluteTimestamps: opts.absoluteTimestamps, secrets: opts.secrets }));
 
   if (opts.store && opts.convId) {
     const lane = buildMessagesLane(opts.store, opts.convId, { n: opts.messagesN ?? 6, charCap: opts.messagesCharCap, afterSeq: opts.afterSeq, excludeCurrentTurn: opts.excludeCurrentTurn });
