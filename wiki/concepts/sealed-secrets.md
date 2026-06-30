@@ -117,3 +117,4 @@ Un agente ha bisogno di USARE segreti (API key, token) per eseguire operazioni, 
 - [[concepts/training-vs-harness-classification]] (F/S)
 - `harness/.pi/extensions/secrets-guardrail.ts` · `harness/src/secrets-registry.mjs` · `harness/src/secrets-redact.mjs` (infra esistente)
 - [[concepts/untrusted-content-delimiting]] (inbox/tool-result come dato, non istruzioni — vettore della exfiltration-via-use)
+- [[concepts/sealed-secrets-livetest-findings]] (lista VIVA dei findings dai test TUI live — gap grant-sink, bypass env-var, context-retention; alimenta §4ter)

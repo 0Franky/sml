@@ -82,6 +82,12 @@ last_updated: 2026-06-29
 - **Cos'è**: non sono i *messaggi* a crescere (quelli li gestiamo), ma lo **stato curato** (decisioni, variabili, priorità). Una decisione del turno 3 può contraddire una variabile aggiornata al turno 12; una priorità "alta" al turno 1 può non esserlo più al turno 40.
 - **→ Reco**: prevedere un **controllo di coerenza** periodico sullo stato che cresce (ri-derivare invece di fidarsi di flag salvati). Si lega al contraddiction-layer che già abbiamo.
 
+## 11. ⚠️ Quante voci per SEZIONE = parametro make-or-break (da tenere SEMPRE sotto osservazione)
+
+- **Cos'è** (utente msg 712, 2026-06-30): i **cap per-sezione** del context serializzato — quanti *ultimi messaggi*, *ultime decisioni*, *ultimi tool_result salienti*, *task aperti*, *vars*, *recent_changes* si mostrano — sono un parametro di **prima classe**. Troppo pochi → cecità, ri-fetch, perdita-del-filo; troppi → costo, rumore, lost-in-the-middle. "La corretta gestione di questi parametri farà la differenza tra **successo e fallimento** della metodologia."
+- **Caveat diagnostico OBBLIGATORIO**: prima di attribuire un finding all'**allineamento del modello**, escludere che sia **context-retention** (il modello non ha *visto* abbastanza). Istanza reale: in sessione live `019f1953` il modello ha chiamato `list_secrets` **6×** perché `keepTurns=1` non ri-mostra i tool_result dei turni precedenti e la lane non li porta → ri-fetch forzato, **non** inefficienza del modello. Vedi [[concepts/sealed-secrets-livetest-findings]] FIND-7 + memory `feedback_context_window_sizing`.
+- **→ Reco**: **studio dedicato** sui conteggi default per-lane (review-loop + agenti specializzati agnostici), misurato con `turn-trace`; prereq la **curva effective-context** (#1 sotto). Sub-fix candidato: far sopravvivere nella lane/working-state gli **ultimi tool_result salienti** (o un digest) così il modello non ri-chiama gli stessi tool. Tracciato in [[todo]] (studio per-section counts). **Da tenere SEMPRE sotto osservazione.**
+
 ---
 
 ## 🎯 Le mie raccomandazioni operative (cosa farei ORA vs DOPO)
