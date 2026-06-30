@@ -14,11 +14,11 @@ last_updated: 2026-06-30
 
 ## Causa-radice (genera quasi tutto)
 
-### 🔴 GAP-1 — Nessun percorso IN-SESSIONE per grant-sink / allowLocalHttp / rinomina di un secret esistente
+### ✅ GAP-1 — RISOLTO (commit `1dddd89`→`5a5b1d6`): `request_sink`/`propose_secret_edit` + Ask-con-diff atomico. — Nessun percorso IN-SESSIONE per grant-sink / allowLocalHttp / rinomina di un secret esistente
 - **[EXTRACTED]** Evidenza (transcript `019f1953`): R21-R37. Il modello capisce che a `INGRESS_1` manca `allowedSinks` (R21, R24 blocco sink-gating) ma **non ha un tool** per concederlo in-sessione. Prova `request_secret` (tool sbagliato → chiede di provisionare un NUOVO `REDDIT_TOKEN`, R22), inventa CLI (R25/R31/R35), conclude "non posso, devi farlo tu" (R35).
 - **Soluzione**: `propose_secret_edit(name, {addSinks?, allowLocalHttp?, rename?}, why)` → Ask con **diff** + **tiering** di rischio (vedi [[concepts/sealed-secrets]] §4ter). **PRIORITÀ #1** — è la chiave di volta.
 
-### 🔴 GAP-2 — Nessun consenso per sink ESTERNI (asimmetria con `request_local_http`)
+### ✅ GAP-2 — RISOLTO (`request_sink(name,host,why)` → Ask): consenso per sink esterni. Residuo: unificazione full con `request_local_http` differita (ADR, arch F1/F2). — Nessun consenso per sink ESTERNI (asimmetria con `request_local_http`)
 - **[EXTRACTED]** R37: il modello cerca esplicitamente "un meccanismo come `request_local_http` ma per siti esterni". Non esiste: per loopback c'è `request_local_http`, per host esterni (`oauth.reddit.com`) niente → l'unico path è il provisioning out-of-band degli `allowedSinks`.
 - **Soluzione**: generalizzare in `request_sink(name, host, why)` (parte dell'edit-Ask). Sink esterno = **widening alto-rischio** → Ask alta-frizione + warning "stai aprendo un host esterno". Sussume `request_local_http` (loopback = caso particolare).
 
