@@ -130,10 +130,15 @@ function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error(
   vq.setVar("huge", "x".repeat(300 * 1024));
   ok(extractVar(vq, "huge", "a", "d").ok === false, "SEC: extractVar rifiuta la var oltre il cap dimensione");
 
-  // cap amplificazione: un valore enorme è troncato nell'interpolazione
+  // cap amplificazione: ora applicato in emitToUser (output channel) DOPO la redazione (review P1-D)
   vq.setVar("big", "y".repeat(20000));
-  const r = interpolate("{{var:big}}", vq);
-  ok(r.length < 20000 && r.includes("[troncato]"), "SEC: interpolate cap l'amplificazione");
+  const r = emitToUser("{{var:big}}", vq, { interpolate: true });
+  ok(r.text.length < 20001 && r.text.includes("[troncato]"), "SEC: emitToUser cap l'amplificazione (post-redazione)");
+  // leak-fix (P1-D): un secret A CAVALLO del cap è redatto PRIMA del troncamento → nessun prefisso in chiaro
+  const sk = "sk-" + "Z".repeat(40);
+  vq.setVar("cap_secret", "y".repeat(8180) + sk); // il secret cade attorno al cap di 8192
+  const r2 = emitToUser("{{var:cap_secret}}", vq, { interpolate: true, dynamicSecrets: getDynamicSecrets() });
+  ok(r2.text.indexOf("sk-ZZ") === -1, "SEC: secret a cavallo del cap → redatto (no prefisso leakato)");
   vq.close();
 }
 
