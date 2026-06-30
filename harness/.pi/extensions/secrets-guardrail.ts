@@ -128,9 +128,18 @@ export default function (pi: ExtensionAPI) {
       }
       return block;
     });
+    // review P2: redige ANCHE `details` (non solo content) — può finire nel session-log NATIVO di pi
+    // (createToolResultMessage lo include nel messaggio toolResult persistito). Redazione ricorsiva su una COPIA.
+    let details = (event as any).details;
+    if (details && typeof details === "object") {
+      const clone = JSON.parse(JSON.stringify(details));
+      const before = JSON.stringify(clone);
+      redactArgsInPlace(clone, getDynamicSecrets(), { staticPatterns: true });
+      if (JSON.stringify(clone) !== before) { anyHit = true; details = clone; }
+    }
     if (!anyHit) return; // nessun match → lascia passare l'output originale
     ctx.ui.notify("secrets-guardrail: output redatto (match secrets-map)", "warning");
-    return { content };
+    return details !== (event as any).details ? { content, details } : { content };
   });
 
   // CANALE EGRESS DEGLI ARGOMENTI tool_call (review-loop #3 2026-06-29, P2 tool-call-egress): un modello indotto
@@ -164,23 +173,25 @@ export default function (pi: ExtensionAPI) {
   });
 }
 
-/** Redige in-place (ricorsivo) i SOLI dynamic-secrets dai valori-stringa di un oggetto/array di argomenti. */
-function redactArgsInPlace(node: any, dynamicSecrets: Iterable<string>): void {
+/** Redige in-place (ricorsivo) i valori-stringa di un oggetto/array. staticPatterns=false (default, args tool_call:
+ * non mutila codice/comandi con shape statiche) · true (details/output: redazione piena). */
+function redactArgsInPlace(node: any, dynamicSecrets: Iterable<string>, opts: { staticPatterns?: boolean } = {}): void {
+  const sp = opts.staticPatterns === true;
   if (Array.isArray(node)) {
     for (let i = 0; i < node.length; i++) {
       const v = node[i];
       if (typeof v === "string") {
-        const { redacted, hit } = redactText(v, dynamicSecrets, { staticPatterns: false });
+        const { redacted, hit } = redactText(v, dynamicSecrets, { staticPatterns: sp });
         if (hit) node[i] = redacted;
-      } else if (v && typeof v === "object") redactArgsInPlace(v, dynamicSecrets);
+      } else if (v && typeof v === "object") redactArgsInPlace(v, dynamicSecrets, opts);
     }
   } else if (node && typeof node === "object") {
     for (const k of Object.keys(node)) {
       const v = node[k];
       if (typeof v === "string") {
-        const { redacted, hit } = redactText(v, dynamicSecrets, { staticPatterns: false });
+        const { redacted, hit } = redactText(v, dynamicSecrets, { staticPatterns: sp });
         if (hit) node[k] = redacted;
-      } else if (v && typeof v === "object") redactArgsInPlace(v, dynamicSecrets);
+      } else if (v && typeof v === "object") redactArgsInPlace(v, dynamicSecrets, opts);
     }
   }
 }

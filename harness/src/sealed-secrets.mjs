@@ -11,7 +11,7 @@
  * Design: ../../wiki/concepts/sealed-secrets.md. Idea utente 2026-06-30 (msg 577/578/579).
  */
 import { SECRET_PATTERNS } from "./secrets-redact.mjs";
-import { addSecret as registerEgress } from "./secrets-registry.mjs";
+import { registerEgressRaw } from "./secrets-registry.mjs";
 
 /** Registry sigillato: name → { value, description, allowedSinks[] }. In-memory, MAI su disco in chiaro. */
 const SEALED = new Map();
@@ -28,8 +28,11 @@ export function setSecret(name, value, { description = "", allowedSinks = [] } =
   if (typeof value !== "string" || value.length < 1) return { ok: false, reason: "valore vuoto" };
   if (!SEALED.has(name) && SEALED.size >= MAX_SEALED) return { ok: false, reason: `registry pieno (max ${MAX_SEALED})` };
   const sinks = Array.isArray(allowedSinks) ? [...new Set(allowedSinks.map((s) => String(s).toLowerCase().trim()).filter(Boolean))] : [];
+  // INVARIANTE (review P1): il valore DEVE entrare nel Set di egress (redazione backstop) PRIMA di sigillarlo —
+  // altrimenti un valore corto/poco-vario sarebbe iniettabile ma non-redigibile (eco → leak provider/transcript).
+  // registerEgressRaw bypassa le guardie anti-DoS di add_secret (qui non si applicano: provisioning out-of-band).
+  if (!registerEgressRaw(value)) return { ok: false, reason: "valore non registrabile per la redazione (egress pieno)" };
   SEALED.set(name, { value, description: String(description || ""), allowedSinks: sinks });
-  registerEgress(value); // backstop: redatto da ogni tool_result/output
   return { ok: true, name };
 }
 
@@ -57,18 +60,32 @@ export function referencedSecrets(text) {
   return [...out];
 }
 
-/** Host (lowercase, senza userinfo/porta) dei URL in un testo di operazione. */
+/**
+ * Host (lowercase, senza userinfo/porta) dei URL in un testo di operazione. SECURITY (review P0): la cattura TERMINA
+ * l'authority anche su `?` `#` `\` (RFC 3986) — altrimenti `https://evil.com#.openai.com` darebbe host
+ * `evil.com#.openai.com` che fa suffix-match con `.openai.com` mentre il client si connette a evil.com (spoof). +
+ * fail-closed: un host con caratteri NON-DNS residui viene SCARTATO (→ conta come host-non-identificabile → blocco).
+ */
 export function extractHosts(opText) {
   const out = new Set();
-  const re = /\b[a-z][a-z0-9+.\-]*:\/\/([^/\s'"`)]+)/gi;
+  const re = /\b[a-z][a-z0-9+.\-]*:\/\/([^/\s'"`)?#\\]+)/gi;
   let m;
   while ((m = re.exec(String(opText ?? "")))) {
     let h = m[1];
     const at = h.lastIndexOf("@"); if (at >= 0) h = h.slice(at + 1); // toglie user:pass@
     h = h.split(":")[0].toLowerCase(); // toglie :porta
-    if (h) out.add(h);
+    if (h && /^[a-z0-9.\-]+$/.test(h)) out.add(h); // SOLO host DNS-valido (scarta residui sporchi → fail-closed)
   }
   return [...out];
+}
+
+/** L'operazione usa flag che disaccoppiano l'host-URL dalla destinazione REALE (curl --resolve/--connect-to/proxy,
+ * header Host: ridefinito)? In quel caso l'allow-host non è più verificabile → fail-closed. (review P2 host-pinning) */
+export function hasHostPinning(opText) {
+  const t = String(opText ?? "");
+  return /(^|\s)(--resolve|--connect-to|--interface)(\s|=)/.test(t) ||
+    /(^|\s)(-x|--proxy[0-9a-z-]*)(\s|=)/i.test(t) ||
+    /-H\s*['"]?\s*host\s*:/i.test(t);
 }
 
 /** Il testo dell'operazione SCRIVE il segreto su file / lo esfiltra in modo evidente (deny-shapes)? */
@@ -104,6 +121,7 @@ export function checkSink(name, opText, mode = "strict") {
   if (s.allowedSinks.length) {
     // allow-host fail-closed (vale anche in 'warn': l'allow-list è una scelta esplicita dell'utente)
     if (fileExfil) return { allowed: false, reason: `'${name}' non può essere scritto su file/pipe (scrittura rilevata)` };
+    if (hasHostPinning(opText)) return { allowed: false, reason: `'${name}': host-pinning rilevato (--resolve/--connect-to/proxy/Host:) → la destinazione reale non è verificabile dall'URL, bloccato` };
     if (!hosts.length) return { allowed: false, reason: `'${name}' richiede una destinazione fra [${s.allowedSinks.join(", ")}] ma nessun host è identificabile nell'operazione (fail-closed)` };
     const bad = hosts.filter((h) => !s.allowedSinks.some((a) => hostMatches(h, a)));
     if (bad.length) return { allowed: false, reason: `'${name}' consentito solo verso [${s.allowedSinks.join(", ")}]; host non permessi: ${bad.join(", ")}` };
@@ -223,4 +241,4 @@ export function clearSealed() {
   SEALED.clear();
 }
 
-export default { setSecret, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp, checkSink, injectSecrets, injectIntoStrings, scanIngress, loadFromEnv, clearSealed };
+export default { setSecret, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp, hasHostPinning, checkSink, injectSecrets, injectIntoStrings, scanIngress, loadFromEnv, clearSealed };
