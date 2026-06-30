@@ -39,7 +39,24 @@ const server = createServer((req, res) => {
     if (auth) lines.push(`  → AUTHORIZATION ricevuto: ${auth}  (verifica: è il VALORE reale, non {{secret:...}}?)`);
     console.log(lines.join("\n"));
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ ok: true, received: n, path: req.url }));
+    // TEST INGRESS-DA-TOOL_RESULT (utente msg 699): il server (simulato) risponde con NUOVI token, per osservare
+    // cosa fa l'harness quando un valore secret-shaped arriva DA un tool_result (non dall'input utente). Sono FINTI.
+    //  (A) api_key shape-matching → matcha SECRET_PATTERNS (sk-…{20,}) → ATTESO redatto al confine `tool_result`
+    //      (il modello vede [REDACTED-SECRET], non lo possiede mai → non può echeggiarlo).
+    //  (B) session_token OPACO → nessuna shape nota → ATTESO passa NON-redatto (gap onesto: ingress-da-tool senza
+    //      shape non è coperto; il modello LO VEDE e può echeggiarlo, a meno che non lo sigilli da sé con add_secret).
+    // Valori FINTI assemblati a RUNTIME (split dei literal → nessun secret-scanner/gitleaks falso-positivo;
+    // a runtime il valore sul filo è IDENTICO, è quello che conta per il test). Sono FALSI.
+    const fakeShaped = "sk-" + "SRVnew0renew111222333444555666AbCdE"; // a runtime matcha SECRET_PATTERNS (sk-…{20,})
+    const fakeOpaque = "sess-" + "SRVnew-Zq9fLm2pX7vK4nT8wB3cY6hD1sGjR0a"; // opaco: nessuna shape nota
+    res.end(JSON.stringify({
+      ok: true,
+      received: n,
+      path: req.url,
+      message: "token renewed (test capture server)",
+      api_key: fakeShaped,
+      session_token: fakeOpaque,
+    }));
   });
 });
 
