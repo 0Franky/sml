@@ -245,9 +245,43 @@ export function injectIntoStrings(strings, mode = "strict") {
   return { strings: out, injected: Object.keys(valueMap), blocked, warnings };
 }
 
+/** INTERNO — nome del sealed-secret il cui valore == `value` (per riusare il riferimento, no doppio-seal). */
+function nameForValue(value) {
+  for (const [name, s] of SEALED.entries()) if (s.value === value) return name;
+  return null;
+}
+
+let ingressCounter = 0;
+
+/**
+ * autoSealIngress — REGEX-INGRESS (idea utente msg 578/579 "intercettate tramite regex... harness ti fa domanda"):
+ * scansiona `text` per valori secret-shaped (scanIngress) e li SIGILLA al volo, sostituendo nel testo ogni valore con
+ * il suo riferimento `{{secret:NAME}}`. Risultato: il VALORE non raggiunge mai il modello/provider (è il testo
+ * trasformato che va avanti) + è redatto dai transcript (egress). Un valore già sigillato riusa il suo nome.
+ * I match auto-rilevati NON dichiarano allowedSinks → in strict restano lockdown (un paste accidentale non è
+ * esfiltrabile finché l'utente non lo abilita esplicitamente). @returns {{ text:string, sealed:{name,confidence}[] }}
+ */
+export function autoSealIngress(text, { redactEgress = true } = {}) {
+  const hits = scanIngress(text);
+  let out = String(text ?? "");
+  const sealed = [];
+  for (const h of hits) {
+    let name = nameForValue(h.value);
+    if (!name) {
+      name = `INGRESS_${++ingressCounter}`;
+      const r = setSecret(name, h.value, { description: `auto-ingress regex (${h.confidence})`, allowedSinks: [], redactEgress });
+      if (!r.ok) continue;
+    }
+    out = out.split(h.value).join(`{{secret:${name}}}`);
+    sealed.push({ name, confidence: h.confidence });
+  }
+  return { text: out, sealed };
+}
+
 /** Svuota il registry (test / fine-sessione). */
 export function clearSealed() {
   SEALED.clear();
+  ingressCounter = 0;
 }
 
 export default { setSecret, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp, hasHostPinning, checkSink, injectSecrets, injectIntoStrings, scanIngress, loadFromEnv, clearSealed };

@@ -44,6 +44,10 @@ export function injectIntoStrings(
   mode?: SinkMode,
 ): { strings: string[]; injected: string[]; blocked: { name: string; reason: string }[]; warnings: string[] };
 export function scanIngress(text: string): IngressHit[];
+export function autoSealIngress(
+  text: string,
+  opts?: { redactEgress?: boolean },
+): { text: string; sealed: { name: string; confidence: "high" | "medium" }[] };
 export function loadFromEnv(
   env?: Record<string, string | undefined>,
   meta?: Record<string, { description?: string; allowedSinks?: string[]; redactEgress?: boolean }>,

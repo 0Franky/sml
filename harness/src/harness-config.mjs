@@ -44,9 +44,9 @@ export const DEFAULT_HARNESS_CONFIG = {
   autofocus: { mode: "nudge" },
   // secrets (sealed-secrets, msg 577/578/579): sink-gating dell'uso di `{{secret:NAME}}` + regex-ingress.
   //   sinkGating: strict (allow-host fail-closed, DEFAULT) | warn | off.
-  //   regexIngress: off (DEFAULT) | ask | auto. ⚠ NON ANCORA WIRED a un hook (review P2): l'enforcement è planned →
-  //   default 'off' per non promettere una protezione inesistente (la sola redazione DB resta best-effort).
-  secrets: { sinkGating: "strict", regexIngress: "off" },
+  //   regexIngress: off | ask (DEFAULT) | auto — CABLATA all'hook `input` (secrets-guardrail): cattura valori
+  //   secret-shaped incollati e li sigilla+trasforma PRIMA che vadano al provider. ask=notifica warning, auto=info.
+  secrets: { sinkGating: "strict", regexIngress: "ask" },
 };
 
 const DEFAULT_PATH = ".pi/harness.config.json";
