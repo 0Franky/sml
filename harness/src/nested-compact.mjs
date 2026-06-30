@@ -27,7 +27,9 @@ const sanitizeScope = (s) => String(s).replace(/[^A-Za-z0-9_.-]/g, "_");
 export const DEFAULT_CFG = {
   tokenReorderPct: 0.55,   // <0.55 none · ≥0.55 reorder (frazione 0..1 del context window)
   tokenMatrioskaPct: 0.75, // ≥0.75 matrioska (sotto la banda di compaction nativa)
-  watchReorder: 12,        // ≈ cap maxTasks dove <task_list> tronca
+  watchReorder: 12,        // TRIGGER di pressione (openTasks+pendingVerifs ≥ 12 → reorder), NON un display-cap:
+                           // è DISGIUNTO da maxTasks (cap di display della <task_list>). Allinearli maschererebbe
+                           // la pressione (context-section-sizing-study §4). (review-loop 2026-06-30.)
   watchMatrioska: 25,
   focusK: 5,               // display-cap del reorder (priority-sort top-K)
   maxDepth: 3,             // depth-bound dello stack
@@ -206,12 +208,14 @@ export function buildFrame(vq, opts = {}) {
   const decisions = vq.listDecisions();      // scelta + razionale (tutte)
   const constraints = vq.listRules();        // MAI troncate (hard incluso)
   const sharedState = vq.getSharedView();     // già visibile a entrambi → elencata, non "riportata"
-  const open = [...vq.listTasks({ status: "in_progress" }), ...vq.listTasks({ status: "pending" })];
   const depth = currentDepth(vq);
-  // backlog = task aperti FUORI dal subset dello scope più profondo aperto (ciò che resta "intorno" al focus).
+  // backlog = task aperti FUORI dal subset dello scope più profondo, in EXECUTION-ORDER (come <task_list>): così il
+  // display-cap del <frame> tiene i task più IMPORTANTI (ready-first), non i primi-inseriti — fix slice-direction
+  // load-bearing (context-section-sizing-study bug #1). (review-loop 2026-06-30.)
   const deepest = vq.listFocusFrames({ status: "open" }).sort((a, b) => b.depth - a.depth)[0] ?? null;
   const subset = new Set(deepest ? deepest.task_subset : []);
-  const backlog = subset.size ? open.filter((t) => !subset.has(t.id)) : open;
+  const orderedOpen = vq.listTasksOrdered().tasks; // pending + in_progress, ready-first (stesso ordinamento di <task_list>)
+  const backlog = subset.size ? orderedOpen.filter((t) => !subset.has(t.id)) : orderedOpen;
   return { aim, decisions, constraints, sharedState, backlog, depth, frameTs: now };
 }
 
@@ -237,7 +241,11 @@ export function serializeFrame(frame, opts = {}) {
   }
 
   if (frame.sharedState.length) {
-    const sv = frame.sharedState.slice(0, dispCap);
+    // recency: più recenti prima (coerente con la lane <vars>), poi display-cap → il cap tiene i RECENTI, non i più
+    // vecchi (fix slice-direction, context-section-sizing-study bug #1). (review-loop 2026-06-30.)
+    const sv = [...frame.sharedState]
+      .sort((a, b) => (b.last_modified - a.last_modified) || String(a.id).localeCompare(String(b.id)))
+      .slice(0, dispCap);
     L.push(`  <shared_state shown="${sv.length}/${frame.sharedState.length}">`);
     for (const v of sv) L.push(`    - ${esc(v.id)}=${esc(JSON.stringify(v.value))}`);
     if (frame.sharedState.length > sv.length) L.push(`    - (+${frame.sharedState.length - sv.length} — use get_shared_view)`);

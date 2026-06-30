@@ -20,26 +20,29 @@ const noFile = join(dir, "assente.json");
   ok(c.trigger.tokenMatrioskaPct === DEFAULT_CFG.tokenMatrioskaPct, "DEFAULT: trigger = DEFAULT_CFG");
   ok(c.trigger.tokenReorderPct === DEFAULT_CFG.tokenReorderPct, "DEFAULT: reorderPct = DEFAULT_CFG");
   ok(c.messagesWindowN === 8, "DEFAULT: messagesWindowN = 8");
+  ok(c.messagesCharCap === 4000, "DEFAULT: messagesCharCap = 4000 (binding constraint della lane)");
   ok(c.messagesExcludeCurrentTurn === true, "DEFAULT: messagesExcludeCurrentTurn = true (P1-B complementarità)");
   ok(DEFAULT_HARNESS_CONFIG.trigger.maxDepth === DEFAULT_CFG.maxDepth, "DEFAULT_HARNESS_CONFIG espone DEFAULT_CFG");
 }
 
 // 2) FILE opt-in override (profilo "Sonnet": soglie più alte) --------------------------------------
 {
-  writeFileSync(cfgPath, JSON.stringify({ trigger: { tokenMatrioskaPct: 0.9, watchMatrioska: 60 }, messagesWindowN: 16, messagesExcludeCurrentTurn: false }));
+  writeFileSync(cfgPath, JSON.stringify({ trigger: { tokenMatrioskaPct: 0.9, watchMatrioska: 60 }, messagesWindowN: 16, messagesCharCap: 2000, messagesExcludeCurrentTurn: false }));
   const c = loadHarnessConfig(cfgPath, { env: {} });
   ok(c.trigger.tokenMatrioskaPct === 0.9, "FILE: tokenMatrioskaPct overrideato a 0.9");
   ok(c.trigger.watchMatrioska === 60, "FILE: watchMatrioska overrideato a 60");
   ok(c.messagesWindowN === 16, "FILE: messagesWindowN overrideato a 16");
+  ok(c.messagesCharCap === 2000, "FILE: messagesCharCap overrideato a 2000");
   ok(c.messagesExcludeCurrentTurn === false, "FILE: messagesExcludeCurrentTurn overrideato a false (boolean)");
   ok(c.trigger.tokenReorderPct === DEFAULT_CFG.tokenReorderPct, "FILE: i campi non specificati restano default");
 }
 
 // 3) ENV vince sul file ----------------------------------------------------------------------------
 {
-  const c = loadHarnessConfig(cfgPath, { env: { HARNESS_TOKEN_MATRIOSKA_PCT: "0.65", HARNESS_MESSAGES_WINDOW_N: "4", HARNESS_MESSAGES_EXCLUDE_CURRENT_TURN: "true" } });
+  const c = loadHarnessConfig(cfgPath, { env: { HARNESS_TOKEN_MATRIOSKA_PCT: "0.65", HARNESS_MESSAGES_WINDOW_N: "4", HARNESS_MESSAGES_CHAR_CAP: "1500", HARNESS_MESSAGES_EXCLUDE_CURRENT_TURN: "true" } });
   ok(c.trigger.tokenMatrioskaPct === 0.65, "ENV: HARNESS_TOKEN_MATRIOSKA_PCT vince sul file (0.65)");
   ok(c.messagesWindowN === 4, "ENV: HARNESS_MESSAGES_WINDOW_N vince sul file (4)");
+  ok(c.messagesCharCap === 1500, "ENV: HARNESS_MESSAGES_CHAR_CAP vince sul file (1500)");
   ok(c.messagesExcludeCurrentTurn === true, "ENV: HARNESS_MESSAGES_EXCLUDE_CURRENT_TURN vince sul file (true ribalta false)");
   ok(c.trigger.watchMatrioska === 60, "ENV: i campi non in env restano dal file (60)");
 }
