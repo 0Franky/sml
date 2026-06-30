@@ -28,8 +28,8 @@ export interface IngressHit {
 export function setSecret(
   name: string,
   value: string,
-  opts?: { description?: string; allowedSinks?: string[] },
-): { ok: boolean; name?: string; reason?: string };
+  opts?: { description?: string; allowedSinks?: string[]; redactEgress?: boolean },
+): { ok: boolean; name?: string; reason?: string; warn?: string };
 export function listSecretsMeta(): SecretMeta[];
 export function hasSecret(name: string): boolean;
 export function referencedSecrets(text: string): string[];
@@ -46,7 +46,7 @@ export function injectIntoStrings(
 export function scanIngress(text: string): IngressHit[];
 export function loadFromEnv(
   env?: Record<string, string | undefined>,
-  meta?: Record<string, { description?: string; allowedSinks?: string[] }>,
+  meta?: Record<string, { description?: string; allowedSinks?: string[]; redactEgress?: boolean }>,
 ): string[];
 export function clearSealed(): void;
 

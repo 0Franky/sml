@@ -9,6 +9,7 @@
  *   node scripts/set-secret.mjs OPENAI_KEY --desc "OpenAI key" --allow-host api.openai.com,azure.openai.com
  *   node scripts/set-secret.mjs OPENAI_KEY --allow-host "*"      # gating off per quel secret
  *   node scripts/set-secret.mjs OPENAI_KEY --allow-host ""       # lockdown (in strict: niente rete)
+ *   node scripts/set-secret.mjs OTP --allow-host api.x.com --no-redact-egress  # OTP/corto: niente redazione (no rumore)
  */
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 
@@ -16,18 +17,20 @@ const CONFIG = ".pi/secrets.config.json";
 const NAME_RE = /^[A-Za-z0-9_.\-]{1,64}$/;
 
 function parseArgs(argv) {
-  const a = { name: null, desc: "", allow: undefined };
+  const a = { name: null, desc: "", allow: undefined, redactEgress: undefined };
   const rest = argv.slice(2);
   for (let i = 0; i < rest.length; i++) {
     const t = rest[i];
     if (t === "--desc") a.desc = rest[++i] ?? "";
     else if (t === "--allow-host") a.allow = rest[++i] ?? "";
+    else if (t === "--no-redact-egress") a.redactEgress = false; // OTP/short: non redarre (evita rumore, msg 603)
+    else if (t === "--redact-egress") a.redactEgress = true;
     else if (!a.name && !t.startsWith("--")) a.name = t;
   }
   return a;
 }
 
-const { name, desc, allow } = parseArgs(process.argv);
+const { name, desc, allow, redactEgress } = parseArgs(process.argv);
 if (!name || !NAME_RE.test(name)) {
   console.error("Uso: node scripts/set-secret.mjs <NOME> [--desc \"...\"] [--allow-host host1,host2|*|\"\"]");
   console.error("  NOME valido: [A-Za-z0-9_.-], max 64.");
@@ -43,6 +46,7 @@ if (desc) entry.description = desc;
 if (allow !== undefined) {
   entry.allowedSinks = String(allow).split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
 }
+if (redactEgress !== undefined) entry.redactEgress = redactEgress;
 if (entry.description == null) entry.description = "";
 if (entry.allowedSinks == null) entry.allowedSinks = [];
 cfg[name] = entry;
@@ -56,4 +60,7 @@ console.log(`  SEALED_SECRET_${name}=<il-valore-reale>`);
 console.log("Poi riavvia pi. Il modello vedrà solo nome+descrizione (list_secrets) e userà {{secret:" + name + "}}.");
 if (!entry.allowedSinks.length) {
   console.log("⚠ allowedSinks VUOTO → in sinkGating=strict questo secret NON potrà uscire in rete (lockdown). Dichiara --allow-host per usarlo.");
+}
+if (entry.redactEgress === false) {
+  console.log("⚠ redactEgress=false → il valore NON sarà redatto dagli output (scelta per OTP/corti, evita rumore). Non eco-arlo in chiaro.");
 }

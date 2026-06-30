@@ -20,20 +20,29 @@ const NAME_RE = /^[A-Za-z0-9_.\-]{1,64}$/;
 const SECRET_REF = /\{\{secret:([A-Za-z0-9_.\-]+)\}\}/g; // riferimento usato dal modello negli args
 
 /**
- * Registra/aggiorna un sealed-secret. Il valore NON è mai esposto da listSecretsMeta. Lo registra anche in
- * secrets-registry (egress-redaction backstop). @returns {{ok:boolean, name?:string, reason?:string}}
+ * Registra/aggiorna un sealed-secret. Il valore NON è mai esposto da listSecretsMeta. Di default lo registra anche
+ * in secrets-registry (egress-redaction backstop). `redactEgress` (default true):
+ *   - true  → il valore entra nel Set di egress → INVARIANTE 'ogni sealed-value è redigibile' (review P1): un valore
+ *             corto/poco-vario eco-ato in un output viene comunque redatto (no leak provider/transcript).
+ *   - false → opt-out per i secret CORTI/poco-entropici (OTP, PIN, una data: utente msg 603): redigerli globalmente
+ *             corromperebbe ogni output che contiene quella stringa (RUMORE). Il secret resta SIGILLATO e iniettabile,
+ *             ma NON è aggiunto al backstop → trade-off esplicito (accettabile per un OTP usa-e-getta).
+ * @returns {{ok:boolean, name?:string, reason?:string, warn?:string}}
  */
-export function setSecret(name, value, { description = "", allowedSinks = [] } = {}) {
+export function setSecret(name, value, { description = "", allowedSinks = [], redactEgress = true } = {}) {
   if (typeof name !== "string" || !NAME_RE.test(name)) return { ok: false, reason: "nome non valido (usa [A-Za-z0-9_.-], max 64)" };
   if (typeof value !== "string" || value.length < 1) return { ok: false, reason: "valore vuoto" };
   if (!SEALED.has(name) && SEALED.size >= MAX_SEALED) return { ok: false, reason: `registry pieno (max ${MAX_SEALED})` };
   const sinks = Array.isArray(allowedSinks) ? [...new Set(allowedSinks.map((s) => String(s).toLowerCase().trim()).filter(Boolean))] : [];
-  // INVARIANTE (review P1): il valore DEVE entrare nel Set di egress (redazione backstop) PRIMA di sigillarlo —
-  // altrimenti un valore corto/poco-vario sarebbe iniettabile ma non-redigibile (eco → leak provider/transcript).
-  // registerEgressRaw bypassa le guardie anti-DoS di add_secret (qui non si applicano: provisioning out-of-band).
-  if (!registerEgressRaw(value)) return { ok: false, reason: "valore non registrabile per la redazione (egress pieno)" };
-  SEALED.set(name, { value, description: String(description || ""), allowedSinks: sinks });
-  return { ok: true, name };
+  const redact = redactEgress !== false;
+  let warn;
+  if (redact) {
+    if (!registerEgressRaw(value)) return { ok: false, reason: "valore non registrabile per la redazione (egress pieno)" };
+  } else {
+    warn = `'${name}': redactEgress=false → il valore NON sarà redatto dagli output (scelta per evitare rumore su OTP/short; non eco-arlo in chiaro)`;
+  }
+  SEALED.set(name, { value, description: String(description || ""), allowedSinks: sinks, redactEgress: redact });
+  return warn ? { ok: true, name, warn } : { ok: true, name };
 }
 
 /** Vista per il MODELLO: nome + descrizione + allowedSinks, MAI il valore. */
@@ -201,7 +210,7 @@ export function loadFromEnv(env = process.env, meta = {}) {
     const name = k.slice("SEALED_SECRET_".length);
     if (!NAME_RE.test(name)) continue;
     const m = meta[name] || {};
-    const r = setSecret(name, String(v), { description: m.description ?? "", allowedSinks: m.allowedSinks ?? [] });
+    const r = setSecret(name, String(v), { description: m.description ?? "", allowedSinks: m.allowedSinks ?? [], redactEgress: m.redactEgress });
     if (r.ok) loaded.push(name);
   }
   return loaded;
