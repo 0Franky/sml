@@ -10,7 +10,7 @@ last_updated: 2026-06-30
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
 
 ## ⏸️ RESUME POINTER (post-compact 2026-06-30, AGGIORNATO) — riprendere DA QUI
-> **Stato**: HEAD==origin/main==`460686f` (+ wiki batch context-bounds in commit), suite 14-file/0 (sealed-secrets 174, +10 test bug-fix), typecheck verde.
+> **Stato**: HEAD==origin/main==`9809edd`, working tree pulito, suite 14-file/0 (sealed-secrets 174, +12 test), typecheck verde.
 >
 > **✅ FATTO QUESTA SESSIONE (post-compact)**: (A) **bug-fix load-bearing context** (commit `460686f`): frame slice-direction (shared_state recency + backlog execution-order), verify_queue detail-cap, watchReorder comment, charCap esposto+cablato; (B) **studio bound P3** (8-agenti) → [[concepts/context-bounds-study]] (tabella bound + design-contract + 3 blocker); (C) risposta msg 740 (notes/progress) filed in [[concepts/model-controlled-context]] #8.
 > **✅ FATTO sessione precedente**: secret-lifecycle 5-tool + Ask-con-diff (GAP-1/2 chiusi); studio context-sizing 32-agenti; lane `<secrets>` (chiude FIND-7).
@@ -22,7 +22,9 @@ last_updated: 2026-06-30
 > 3. **seq-id per-messaggio + truncation-marker per-ruolo** — **RIUSA `get_conversation`** (già fa specific-msg + sliding-window) → NIENTE `expand_message`. NB: marker aggregato `+N older` + marker single-giant-turn ESISTONO già (claim studio "silenzioso"=impreciso, verificato); gap reale = **seq-id citabile** + direzione troncamento per-ruolo (assistant→coda).
 > 4. **Current-step lane** (P4): `<current_step>` volatile 1-riga free-text (tool `set_step`), distinto dall'aim, NON nelle note. (Connesso a lane `<progress>` msg 740.)
 > 5. ✅ **FATTO — Bug-fix studio** (commit `460686f`): frame slice-direction, verify_queue detail-cap, watchReorder comment, charCap esposto+cablato. RESIDUI sotto.
-> 6. **`<secrets>` anche nel ramo NESTED** (`buildNestedWorkspace` non passa `opts.secrets` ad `assembleContext`) + confermare `verify_queue` non filtrato da `focusTaskIds` nel nested (gate globale).
+> 6. ✅ **FATTO — `<secrets>` nel ramo NESTED** (commit `9809edd`): `buildNestedWorkspace` ora threada `opts.secrets` ad `assembleContext` (gate-critical, gemello FIND-7); la lane filtra i TASK al subset, non i secret. + test nested. (RESTA: confermare `verify_queue` non filtrato da `focusTaskIds` nel nested — verifica veloce.)
+>
+> **➡️ PROSSIMO BLOCCO (priorità utente msg 741)**: i **5 DIFFERITI SECRET** (DO ALL). Richiede di rileggere `sealed-secrets.mjs` + `secrets-guardrail.ts` + `scripts/set-secret.mjs` → blocco corposo (nuovi tool + ADR). Poi le integrazioni context #2 (budget%) / #3 (seq-id) / #4 (current-step).
 > 7. **Self-tuning P3** — ⛔ **BLOCCATO su 3 infra (studio bound)**: (P0) **allocatore budget-token totale** (oggi NON esiste → "alza-tutto" possibile); (P1) tool `set_view`/`expand_section` (NON esistono, grep 0); (P1) **lifecycle reset-to-default** (META + reset pop_focus/nuova-sessione + decay K-turni). + prereq **curva effective-context** 4B. **Superficie tunable = SOLO 4 lane** (vars/recent_changes count, messages n+charCap); task_list/execution_order/frame = FROZEN-config (NON P3). → costruire SOLO dopo i 3 blocker.
 >
 > **Metodo** (utente): studi approfonditi + review-loop (specialized+agnostic) sulle parti critiche. Ogni step: build→test→typecheck→commit→push.
