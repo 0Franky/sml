@@ -133,7 +133,7 @@ function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error(
   // cap amplificazione: un valore enorme è troncato nell'interpolazione
   vq.setVar("big", "y".repeat(20000));
   const r = interpolate("{{var:big}}", vq);
-  ok(r.length < 20000 && r.includes("[troncato]"), "SEC: interpolate cap l'amplificazione");
+  ok(r.length < 20000 && r.includes("[truncated]"), "SEC: interpolate cap l'amplificazione");
   vq.close();
 }
 

@@ -137,7 +137,7 @@ function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error(
   const lane = buildMessagesLane(store, "k", { n: 10, afterSeq: 4 });
   ok(lane.includes('checkpoint="4"') && lane.includes("m5") && lane.includes("m6") && !lane.includes("[user] m1"),
      "CKPT-LANE: lane mostra solo il segmento post-checkpoint + attributo checkpoint");
-  ok(lane.includes("ripiegato a checkpoint @4") && lane.includes("range=1..4"),
+  ok(lane.includes("folded at checkpoint @4") && lane.includes("range=1..4"),
      "CKPT-LANE: marker — chat pre-checkpoint ripiegata, recuperabile via get_conversation");
   ok(buildMessagesLane(store, "k", { n: 10 }).includes('shown="6/6"'),
      "CKPT-LANE: senza afterSeq (default 0) → comportamento invariato (tutta la conversazione)");

@@ -33,7 +33,7 @@ ok(r.length === 2 && r[0].seq === 1 && r[1].seq === 2, "range per seq");
 const lane = buildMessagesLane(cs, C, { n: 2 });
 ok(lane.startsWith('<messages_with_user conv="conv_A" shown="2/3">'), "lane header shown=N/total");
 ok(lane.includes("[user] aggiungi auth JWT") && lane.includes("[assistant] ok, parto"), "lane mostra i turni verbatim");
-ok(lane.includes("(+1 messaggi più vecchi") && lane.includes("range=1..1"), "lane marker recupero-per-ID dei più vecchi");
+ok(lane.includes("(+1 older messages") && lane.includes("range=1..1"), "lane marker recupero-per-ID dei più vecchi");
 
 // escaping anti-injection
 cs.append(C, "user", "usa <script> & co", { ts: NOW + 3000 });
@@ -44,7 +44,7 @@ ok(lane2.includes("&lt;script&gt; &amp; co") && !lane2.includes("<script>"), "la
 const C2 = "conv_B";
 for (let i = 0; i < 5; i++) cs.append(C2, "user", "x".repeat(100), { ts: NOW + i });
 const laneCap = buildMessagesLane(cs, C2, { n: 5, charCap: 250 });
-ok(laneCap.includes('shown="2/5"') && laneCap.includes("(+3 messaggi più vecchi"),
+ok(laneCap.includes('shown="2/5"') && laneCap.includes("(+3 older messages"),
   "lane charCap: tiene i 2 più recenti entro il cap, segnala i 3 nascosti");
 
 // conversazione vuota -> lane vuota

@@ -62,13 +62,13 @@ ok(memos.length === memosRemembered, `${memosRemembered} memo accumulate senza p
 const rcBlock = ctx.match(/<recent_changes>([\s\S]*?)<\/recent_changes>/)?.[1] ?? "";
 const recentChanges = (rcBlock.match(/^    - \d/gm) || []).length; // solo item-cambio (escl. nota di troncamento)
 ok(recentChanges <= 12, `recent_changes cap a 12 (trovate ${recentChanges}) nonostante ${fullLog.length} cambi totali`);
-ok(/\(\+altri cambi/.test(rcBlock), "recent_changes SEGNALA che ce ne sono altri (cap/finestra → get_changelog)");
+ok(/\(\+other older changes/.test(rcBlock), "recent_changes SEGNALA che ce ne sono altri (cap/finestra → get_changelog)");
 // FIX (b) VERIFICATO: la lane <vars> ORA è WINDOWED (cap maxVars) + SEGNALA il troncamento → context bounded.
 const varsBlock = ctx.match(/<vars>([\s\S]*?)<\/vars>/)?.[1] ?? "";
 const varsShown = (varsBlock.split("\n").filter((l) => l.startsWith("    - ") && !l.includes("(+"))).length;
 const sharedLate = vq.getSharedView().length;
 ok(varsShown <= 12, `<vars> WINDOWED a ≤12 (mostrate ${varsShown}) su ${sharedLate} shared-vars`);
-ok(sharedLate <= 12 || /\(\+\d+ più vecchie nascoste/.test(varsBlock), "<vars> SEGNALA le shared-vars nascoste (get_shared_view)");
+ok(sharedLate <= 12 || /\(\+\d+ older ones hidden/.test(varsBlock), "<vars> SEGNALA le shared-vars nascoste (get_shared_view)");
 const ctxNoVarsLate = stripVars(ctx).length;
 ok(ctxNoVarsLate < ctxNoVarsEarly + 200, `context-meno-vars BOUNDED: ${ctxNoVarsEarly}→${ctxNoVarsLate} char`);
 ok(ctxLenLate < ctxLenEarly + 400, `context TOTALE ora BOUNDED (anche <vars> cappata): ${ctxLenEarly}→${ctxLenLate} char`);

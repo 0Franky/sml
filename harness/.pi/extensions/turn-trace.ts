@@ -143,13 +143,13 @@ export default function (pi: ExtensionAPI) {
     name: "trace_status",
     label: "Last turn trace summary",
     description:
-      "Riepilogo diagnostico dell'ULTIMO turno: messaggi nativi, turni-utente nativi, overlap lane↔native " +
-      "(≤1 = ok, ~N = doppia-chat), token. Utile per verificare che il context sia assemblato senza duplicazione.",
-    promptSnippet: "trace_status() — diagnostica dell'ultimo turno (overlap lane/native, token).",
+      "Diagnostic summary of the LAST turn: native messages, native user turns, lane↔native overlap " +
+      "(≤1 = ok, ~N = double-chat), tokens. Useful to verify the context is assembled without duplication.",
+    promptSnippet: "trace_status() — diagnostics of the last turn (lane/native overlap, tokens).",
     parameters: Type.Object({}),
     async execute() {
       return {
-        content: [{ type: "text", text: _last ? JSON.stringify(_last, null, 2) : "(nessun turno tracciato ancora)" }],
+        content: [{ type: "text", text: _last ? JSON.stringify(_last, null, 2) : "(no turn traced yet)" }],
         details: { ok: true },
       };
     },

@@ -36,15 +36,15 @@ function getStore(): VarsQueue {
   if (vq.listRules().length === 0) {
     vq.addRule(
       "structured-thinking",
-      "Pensiero STRUTTURATO (tabelle di check, marker [V]/[A]/[?]); la risposta all'utente è prosa normale.",
+      "STRUCTURED thinking (check tables, [V]/[A]/[?] markers); the reply to the user is normal prose.",
       { severity: "soft" },
     );
     vq.addRule(
       "pre-flight-destructive",
-      "Azioni distruttive: pre-flight check (reversibile? dipendenze? backup?), HALT se irreversibile.",
+      "Destructive actions: pre-flight check (reversible? dependencies? backup?), HALT if irreversible.",
       { severity: "hard" },
     );
-    vq.addRule("no-secret-exfil", "Mai esfiltrare segreti o contenuti sensibili.", { severity: "hard" });
+    vq.addRule("no-secret-exfil", "Never exfiltrate secrets or sensitive content.", { severity: "hard" });
   }
   return vq;
 }
@@ -84,7 +84,7 @@ export default function (pi: ExtensionAPI) {
       // focus_hint = il NUDGE: emesso SOLO in autofocus.mode='nudge' (default). In 'off' niente segnale; in 'auto'
       // l'auto-enter sopra ha già gestito (o siamo passati al ramo nested). Il reorg_hint resta indipendente (anti-cecità).
       if (HARNESS_CFG.autofocus.mode === "nudge" && trig.recommend === "matrioska" && shouldEmitFocusHint(vq)) {
-        hint = `\n<focus_hint watch="${trig.metrics.watchCount}"${trig.metrics.percent != null ? ` ctx="${Math.round(trig.metrics.percent * 100)}%"` : ""}>Contesto in pressione: valuta enter_focus su un sotto-insieme di task per lavorare a fuoco (pop_focus al termine).</focus_hint>`;
+        hint = `\n<focus_hint watch="${trig.metrics.watchCount}"${trig.metrics.percent != null ? ` ctx="${Math.round(trig.metrics.percent * 100)}%"` : ""}>Context under pressure: consider enter_focus on a subset of tasks to work in focus (pop_focus when done).</focus_hint>`;
         // gathering.mode=inject (msg 531): allega INLINE la vista ordinata, così quando l'harness nudga il focus il
         // modello non sceglie il subset alla cieca. Low-ceremony (niente focus dedicato). Gate proporzionalità: solo
         // con ≥ minTasksForForce task open. Vedi wiki/concepts/focus-task-prioritization.md §gathering-enforcement.
@@ -100,7 +100,7 @@ export default function (pi: ExtensionAPI) {
       } else if (trig.recommend === "reorder" && shouldEmitReorgHint(vq)) {
         // anti-cecità (msg 515): nella banda di pressione REORDER (contesto in accumulo, non ancora da matrioska) nudga
         // il modello a CONSOLIDARE il backlog. Event-driven dalla pressione, non wall-clock. Cooldown proprio.
-        hint = `\n<reorganize_hint watch="${trig.metrics.watchCount}"${trig.metrics.percent != null ? ` ctx="${Math.round(trig.metrics.percent * 100)}%"` : ""}>Contesto in accumulo: consolida il backlog — chiudi i task 'done', raggruppa i simili, e ri-verifica priorità/dipendenze (set_task_deps) così l'ordine di esecuzione resta corretto.</reorganize_hint>`;
+        hint = `\n<reorganize_hint watch="${trig.metrics.watchCount}"${trig.metrics.percent != null ? ` ctx="${Math.round(trig.metrics.percent * 100)}%"` : ""}>Context accumulating: consolidate the backlog — close 'done' tasks, group similar ones, and re-check priority/dependencies (set_task_deps) so the execution order stays correct.</reorganize_hint>`;
         markReorgEmitted(vq);
       }
       const lane = buildMessagesLane(convStore, convId, { n: MESSAGES_WINDOW_N, afterSeq: checkpointSeq });

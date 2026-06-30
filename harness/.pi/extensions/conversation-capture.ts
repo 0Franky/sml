@@ -107,13 +107,13 @@ export default function (pi: ExtensionAPI) {
     name: "get_conversation",
     label: "Get conversation turns by id+range",
     description:
-      "Recupera turni della conversazione per id + range di seq (es. il pieno dietro al marker della finestra, " +
-      "o un estratto citato da un messaggio inter-agent {conv_id,range}). Senza range, ritorna la finestra recente.",
+      "Retrieve conversation turns by id + seq range (e.g. the full content behind the window marker, " +
+      "or an excerpt cited by an inter-agent message {conv_id,range}). Without a range, returns the recent window.",
     parameters: Type.Object({
-      conv_id: Type.Optional(Type.String({ description: "ID conversazione (default: la conversazione della sessione corrente)." })),
-      from_seq: Type.Optional(Type.Number({ description: "seq iniziale (inclusivo)." })),
-      to_seq: Type.Optional(Type.Number({ description: "seq finale (inclusivo)." })),
-      n: Type.Optional(Type.Number({ description: "Se nessun range: ultimi N turni (default 10)." })),
+      conv_id: Type.Optional(Type.String({ description: "Conversation ID (default: the current session's conversation)." })),
+      from_seq: Type.Optional(Type.Number({ description: "Start seq (inclusive)." })),
+      to_seq: Type.Optional(Type.Number({ description: "End seq (inclusive)." })),
+      n: Type.Optional(Type.Number({ description: "If no range: last N turns (default 10)." })),
     }),
     async execute(_t: string, p: any) {
       const convId = p.conv_id ?? getConvId();
