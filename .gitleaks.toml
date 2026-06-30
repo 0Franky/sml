@@ -35,6 +35,7 @@ paths = [
   '''(^|/).*\.example$''',
   '''(^|/)wiki/_private/.*''',                                 # cattura grezza locale (comunque gitignored)
   '''(^|/)secrets-guardrail\.test\.mjs$''',                    # test del REDATTORE → fixture segreto-shaped PER DESIGN (JWT/Stripe/Slack/Bearer finti, come .gitleaks.toml stesso)
+  '''(^|/)sealed-secrets\.test\.mjs$''',                       # test sealed-secrets → fixture AIza/sk- FINTI per design (registry/injection/ingress)
 ]
 regexes = [
   '''example[.]com''',

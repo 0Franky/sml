@@ -97,6 +97,19 @@ const noFile = join(dir, "assente.json");
   ok(loadHarnessConfig(noFile, { env: { HARNESS_AUTOFOCUS_MODE: "bogus" } }).autofocus.mode === "nudge", "AUTOFOCUS: env fuori-enum scartato");
 }
 
+// 8) SECRETS (sealed-secrets, msg 577): default sicuro, file/env override, enum-guard ---------------
+{
+  const c = loadHarnessConfig(noFile, { env: {} });
+  ok(c.secrets.sinkGating === "strict" && c.secrets.regexIngress === "ask", "SECRETS: default SICURO (strict + ask)");
+  writeFileSync(cfgPath, JSON.stringify({ secrets: { sinkGating: "warn", regexIngress: "auto" } }));
+  const c2 = loadHarnessConfig(cfgPath, { env: {} });
+  ok(c2.secrets.sinkGating === "warn" && c2.secrets.regexIngress === "auto", "SECRETS: file override");
+  const c3 = loadHarnessConfig(cfgPath, { env: { HARNESS_SECRETS_SINK_GATING: "off", HARNESS_SECRETS_REGEX_INGRESS: "off" } });
+  ok(c3.secrets.sinkGating === "off" && c3.secrets.regexIngress === "off", "SECRETS: env override (disattiva)");
+  writeFileSync(cfgPath, JSON.stringify({ secrets: { sinkGating: "nonsense" } }));
+  ok(loadHarnessConfig(cfgPath, { env: {} }).secrets.sinkGating === "strict", "SECRETS: fuori-enum scartato → resta strict (sicuro)");
+}
+
 rmSync(dir, { recursive: true, force: true });
 console.log(`\nharness-config test: ${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);
