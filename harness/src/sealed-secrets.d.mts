@@ -5,6 +5,7 @@ export interface SecretMeta {
   name: string;
   description: string;
   allowedSinks: string[];
+  fingerprint?: string;
 }
 
 export interface SinkVerdict {

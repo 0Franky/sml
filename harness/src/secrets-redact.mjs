@@ -17,18 +17,53 @@
  * → per i segreti non-shape si usa `add_secret` (literal match esatto, niente FP). (review-loop #3 2026-06-29, P2.)
  */
 export const SECRET_PATTERNS = [
-  /sk-[A-Za-z0-9]{20,}/g, // OpenAI-style API key (con trattino)
-  /[sr]k_(?:live|test)_[A-Za-z0-9]{16,}/g, // Stripe secret/restricted key (sk_live_/rk_test_… underscore) — gap 2026-06-29
-  /ghp_[A-Za-z0-9]{36}/g, // GitHub PAT (classic)
-  /gh[ousr]_[A-Za-z0-9]{36}/g, // GitHub token (gho_/ghu_/ghs_/ghr_) — OAuth/user/server/refresh
+  // ── LLM / AI ──
+  /sk-ant-(?:api03-)?[A-Za-z0-9_\-]{20,}/g, // Anthropic Claude
+  /sk-proj-[A-Za-z0-9_\-]{20,}/g, // OpenAI project key
+  /sk-(?:svcacct|admin)-[A-Za-z0-9_\-]{20,}/g, // OpenAI service-account/admin key
+  /sk-[A-Za-z0-9]{20,}/g, // OpenAI classic
+  /hf_[A-Za-z0-9]{30,}/g, // HuggingFace
+  // ── Pagamenti ──
+  /[sr]k_(?:live|test)_[A-Za-z0-9]{16,}/g, // Stripe secret/restricted
+  /whsec_[A-Za-z0-9]{32,}/g, // Stripe webhook secret
+  /sq0(?:atp|csp)-[A-Za-z0-9_\-]{22,}/g, // Square
+  // ── Git hosting ──
+  /ghp_[A-Za-z0-9]{36}/g, // GitHub PAT classic
+  /gh[ousr]_[A-Za-z0-9]{36}/g, // GitHub gho_/ghu_/ghs_/ghr_
   /github_pat_[A-Za-z0-9_]{22,}/g, // GitHub fine-grained PAT
+  /gl(?:pat|oas|ptt|rt|cbt|imt|soat|ldt|agent)-[A-Za-z0-9_\-]{20,}/g, // GitLab (PAT/OAuth/trigger/runner/deploy…)
+  /\bGR1348941[A-Za-z0-9_\-]{20,}/g, // GitLab runner registration token
+  // ── Cloud ──
+  /(?:AKIA|ASIA|AROA|AIDA)[0-9A-Z]{16}/g, // AWS access key id (long-term/temp/role/user)
+  /AIza[0-9A-Za-z_\-]{35}/g, // Google API key (GEMINI_API_KEY, Maps…)
+  /ya29\.[0-9A-Za-z_\-]{20,}/g, // Google OAuth access token
+  /AccountKey=[A-Za-z0-9+/]{86}==/g, // Azure storage account key
+  /dop_v1_[a-f0-9]{64}/g, // DigitalOcean PAT
+  /do[or]_v1_[a-f0-9]{64}/g, // DigitalOcean OAuth/refresh
+  /dapi[0-9a-f]{32,}/g, // Databricks
+  // ── Comms / SaaS ──
   /xox[baprs]-[A-Za-z0-9-]{10,}/g, // Slack token
-  /AKIA[0-9A-Z]{16}/g, // AWS access key id
-  /AIza[0-9A-Za-z_\-]{35}/g, // Google API key (GEMINI_API_KEY, Maps, ecc.)
-  /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g, // JWT (header.payload.signature base64url)
-  /\bBearer\s+[A-Za-z0-9._~+/=-]{20,}/g, // Authorization: Bearer <token lungo>
-  /[a-z][a-z0-9+.-]*:\/\/[^/\s:@]+:[^/\s@]{3,}@/gi, // basic-auth URL (scheme://user:pass@host)
-  /-----BEGIN (?:RSA |EC )?PRIVATE KEY-----/g, // PEM private key header
+  /https:\/\/hooks\.slack\.com\/services\/T[A-Za-z0-9_\/-]{20,}/g, // Slack webhook URL
+  /SG\.[A-Za-z0-9_\-]{22}\.[A-Za-z0-9_\-]{43}/g, // SendGrid
+  /SK[0-9a-fA-F]{32}/g, // Twilio API key SID
+  /key-[0-9a-fA-F]{32}/g, // Mailgun
+  /\b\d{8,10}:AA[A-Za-z0-9_\-]{33}\b/g, // Telegram bot token
+  // ── Dev tools ──
+  /npm_[A-Za-z0-9]{36}/g, // npm token
+  /pypi-AgEIcHlwaS[A-Za-z0-9_\-]{50,}/g, // PyPI token
+  /dp\.(?:pt|st|ct|sa)\.[A-Za-z0-9]{40,}/g, // Doppler
+  /lin_api_[A-Za-z0-9]{40,}/g, // Linear
+  /PMAK-[a-f0-9]{24}-[a-f0-9]{34}/g, // Postman
+  /ATATT[A-Za-z0-9_\-=]{20,}/g, // Atlassian API token
+  /shp(?:at|ss|ca|pa)_[a-fA-F0-9]{32}/g, // Shopify
+  /NRAK-[A-Z0-9]{27}/g, // New Relic
+  // ── Generici ──
+  /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g, // JWT
+  /\bBearer\s+[A-Za-z0-9._~+/=-]{20,}/g, // Authorization: Bearer
+  /[a-z][a-z0-9+.-]*:\/\/[^/\s:@]+:[^/\s@]{3,}@/gi, // basic-auth URL (mongodb/postgres/cloudinary…)
+  // chiave privata PEM — BLOCCO INTERO multi-linea (review P1: prima si redava solo l'header, il CORPO leakava)
+  /-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP |ENCRYPTED )?PRIVATE KEY-----[\s\S]*?-----END (?:RSA |EC |DSA |OPENSSH |PGP |ENCRYPTED )?PRIVATE KEY-----/g,
+  /-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP |ENCRYPTED )?PRIVATE KEY-----/g, // fallback: header senza footer
 ];
 
 /**

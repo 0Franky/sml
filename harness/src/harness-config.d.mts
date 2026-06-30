@@ -22,6 +22,7 @@ export type RegexIngressMode = "off" | "ask" | "auto";
 export interface SecretsConfig {
   sinkGating: SinkGatingMode;
   regexIngress: RegexIngressMode;
+  allowSecretToFile: boolean;
 }
 export interface HarnessConfig {
   trigger: TriggerConfig;

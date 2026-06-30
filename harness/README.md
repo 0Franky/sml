@@ -116,7 +116,25 @@ echo 'SEALED_SECRET_OPENAI_KEY=sk-...' >> harness/.env                  # il VAL
 node scripts/set-secret.mjs OPENAI_KEY --desc "OpenAI" --allow-host api.openai.com   # la METADATA (no valore)
 ```
 
-> Logica node-pure in `src/sealed-secrets.mjs` (test 58/58, incl. red-team review-loop), wiring in `.pi/extensions/secrets-guardrail.ts`.
+> Logica node-pure in `src/sealed-secrets.mjs` (test 65/65, incl. red-team review-loop), wiring in `.pi/extensions/secrets-guardrail.ts`.
+
+### Tipi di secret riconosciuti
+
+La cattura automatica (`regexIngress`) e la redazione degli output riconoscono i secret a **shape nota** (prefisso/forma riconoscibile → basso falso-positivo):
+
+| Categoria | Esempi di shape |
+|---|---|
+| **LLM / AI** | OpenAI (`sk-`, `sk-proj-`, `sk-svcacct-`), Anthropic (`sk-ant-`), HuggingFace (`hf_`) |
+| **Git hosting** | GitHub (`ghp_`, `gho_`, `github_pat_`), **GitLab** (`glpat-`, `gloas-`, `glrt-`, runner `GR…`) |
+| **Cloud** | AWS (`AKIA`/`ASIA`/`AROA`), Google (`AIza`, `ya29.`), Azure (`AccountKey=`), DigitalOcean (`dop_v1_`), Databricks (`dapi`) |
+| **Pagamenti** | Stripe (`sk_live_`, `whsec_`), Square (`sq0…`) |
+| **Comms / SaaS** | Slack (`xox…`, webhook), SendGrid (`SG.`), Twilio (`SK…`), Mailgun (`key-…`), Telegram / Discord bot |
+| **Dev tools** | npm (`npm_`), PyPI (`pypi-`), Doppler (`dp.pt.`), Linear (`lin_api_`), Postman (`PMAK-`), Atlassian (`ATATT`), Shopify (`shp…`), New Relic (`NRAK-`) |
+| **Generici** | JWT, `Bearer …`, basic-auth URL (`scheme://user:pass@` → copre mongodb/postgres/cloudinary), chiavi private PEM (RSA/EC/DSA/OpenSSH/PGP) |
+
+> **Limite, in chiaro**: copriamo solo le shape con prefisso/forma riconoscibile, di proposito — un pattern generico `chiave = valore` mutilerebbe il codice legittimo. Un secret **senza prefisso** (es. AWS secret-key a 40 char, token a pura entropia) non è patternabile in sicurezza → sigillalo esplicitamente con `set_secret` / `request_secret`.
+
+> **Contributi** 🙌 — questa lista è una base pensata per il progetto e per l'uso personale: oggi non punta a coprire *ogni* provider esistente, ma a coprire bene i più comuni. **Le PR che aggiungono shape di secret diffuse sono benvenute**: basta un pattern in `src/secrets-redact.mjs`, un test in `test/unit/secrets-redact*`/`sealed-secrets`, e una riga in questa tabella. Miglioramenti previsti = quelli che servono al progetto o all'uso reale; il resto lo porta avanti volentieri la community.
 
 ## Roadmap
 
