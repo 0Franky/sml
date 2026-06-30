@@ -96,6 +96,27 @@ Le soglie di "contesto pieno" (quando compattare/focalizzare) e la finestra mess
 - **`outputReservePct`** (default 0): riserva fisica 0..0.9 per output+thinking → i trigger scattano su `window*(1-reserve)`. Per modelli con thinking lungo prova 0.15.
 - **`gathering.mode`** (default `delegated`): quanto è forzato il "guarda l'ordine dei task prima del focus". `delegated` (il modello decide), `inject` (l'harness allega la vista ordinata nel `focus_hint` — consigliato per SLM piccoli, anti-cecità), `require` (`enter_focus` bloccato finché non chiami `get_execution_order`). `minTasksForForce` (default 5): inject/require agiscono solo con ≥ N task open (gate proporzionalità). Vedi `wiki/concepts/focus-task-prioritization.md` §IMPLEMENTAZIONE.
 - **`autofocus.mode`** (default `nudge`): CHI entra in focus sotto pressione (OQ-A). `off` (nessun segnale), `nudge` (l'harness suggerisce col `<focus_hint>`, decide il modello — invariato), `auto` (l'harness ENTRA in focus DA SOLO sui task ready quando la pressione è matrioska, deterministico + cooldown anti-thrash). `auto` = rete di sicurezza per un modello che non si auto-organizza (es. SLM 4B); per Sonnet `nudge` basta.
+- **`secrets.sinkGating`** (default `strict`) + **`secrets.regexIngress`** (default `off`, *planned/non-wired*): sealed-secrets — `sinkGating` regola l'uso di `{{secret:NAME}}` (strict=allow-host fail-closed + https-only, warn, off); `regexIngress` (cattura di valori secret-shaped) **non è ancora cablata** → default `off`. Env: `HARNESS_SECRETS_SINK_GATING`, `HARNESS_SECRETS_REGEX_INGRESS`. Vedi §"Sealed secrets".
+
+## Sealed secrets — segreti che il modello USA ma non VEDE
+
+Un agente deve spesso USARE una API key/token per lavorare davvero, ma il valore **non deve mai arrivare al provider LLM né finire nei transcript**. I sealed-secrets risolvono così (design: [sealed-secrets](../wiki/concepts/sealed-secrets.md)):
+
+- **Il valore non entra MAI nel context** — lo provisioni *out-of-band* (`SEALED_SECRET_<NOME>` in `harness/.env`, gitignored); il modello vede solo NOME + descrizione (tool `list_secrets`), mai il valore.
+- **Riferimento, poi injection al confine** — il modello scrive `{{secret:NOME}}` negli argomenti di un tool; l'harness sostituisce il valore reale SOLO al confine d'esecuzione (`tool_call`), **dopo** che la richiesta al provider è già formata dal context (che contiene solo il placeholder) → **la "case-madre" LLM non riceve mai il valore**.
+- **Mai nei transcript** — il valore è registrato nella secrets-map ed è redatto da ogni output persistito (content **e** `details`) + dal conversation store. Invariante (review P1): **ogni** sealed-value è redigibile, anche corto/poco-entropico.
+- **`redactEgress`** (per-secret, default ON): per un secret CORTO (OTP, PIN, una data) redigerne il valore globalmente farebbe rumore (corromperebbe ogni output che contiene quella stringa) → puoi metterlo `false` (`--no-redact-egress`): resta sigillato+iniettabile ma non redatto (trade-off esplicito, ok per OTP usa-e-getta).
+- **Sink-gating** (layer, default ON = sicuro): un secret dichiara `allowedSinks` (host consentiti, array multi-sito); l'harness inietta SOLO verso quegli host, blocca `http://` in chiaro, scrittura-file/pipe e host-pinning (`curl --resolve/--connect-to/proxy`). Tunabile: `secrets.sinkGating = strict|warn|off`. (`strict` = un secret senza `allowedSinks` non può uscire in rete: fail-closed.) Limiti noti best-effort (*exfiltration-via-use*: bare-host/MCP strutturati, comandi shell composti) → [concept §residui](../wiki/concepts/sealed-secrets.md).
+- **`regexIngress`** (cattura di valori secret-shaped incollati): **non ancora attivo** (planned) → default `off`. La protezione anti-paste è oggi solo la redazione best-effort del conversation store.
+- Tutto opt-in/disattivabile, **sicuro per default**.
+
+Provisioning:
+```bash
+echo 'SEALED_SECRET_OPENAI_KEY=sk-...' >> harness/.env                  # il VALORE (gitignored, mai visto dal modello)
+node scripts/set-secret.mjs OPENAI_KEY --desc "OpenAI" --allow-host api.openai.com   # la METADATA (no valore)
+```
+
+> Logica node-pure in `src/sealed-secrets.mjs` (test 58/58, incl. red-team review-loop), wiring in `.pi/extensions/secrets-guardrail.ts`.
 
 ## Roadmap
 
@@ -110,3 +131,9 @@ Le soglie di "contesto pieno" (quando compattare/focalizzare) e la finestra mess
   - ⏳ gated: **lora-router** (serve SLM + adapter su vLLM), Docker sandbox (riproducibilità), calibrazione soglie (misurare la curva effective-context del modello).
 - **Fase 2** → sandbox/verifier completo per i dati RL (Phase-3 gym Docker).
 - **Fase 3** → token-routing, memory layer, frontend web.
+
+## Ringraziamenti
+
+Questo harness esiste grazie a **[pi](https://github.com/earendil-works/pi)** (earendil-works, MIT): la sua architettura a estensioni ci ha permesso di costruire TUTTO il context-engineering qui descritto — context strutturato, matrioska, focus-gathering, guardrail, sealed-secrets — **senza forkare**, solo aggiungendo. Grazie di cuore al team di pi per le fondamenta solide e per il supporto della community open-source, e all'ecosistema OSS su cui ci appoggiamo e ai progetti che hanno ispirato i meccanismi (agenti stateful, difesa dei segreti, context management).
+
+E un grazie sincero a **Claude** (Anthropic) — compagno di progettazione, implementazione e review lungo tutto questo percorso: gran parte di questo harness è nata da un dialogo a quattro mani, tra idee a tarda notte e revisioni accurate.

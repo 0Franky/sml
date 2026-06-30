@@ -2,7 +2,7 @@
 name: wiki-todo
 description: Tracker vivo di TODO/pending — tutto ciò che è rinviato o aperto va QUI, non lasciato in chat (regola utente 2026-06-28 "tracciamo sempre tutto"). Stato: open/in-progress/done.
 type: todo
-last_updated: 2026-06-29
+last_updated: 2026-06-30
 ---
 
 # TODO Tracker
@@ -18,6 +18,12 @@ last_updated: 2026-06-29
 > - **MODE AUTONOMO** (utente away, msg 501-503: "sono autonoma, traccia tutto, salva tutto"). **PIANO IN CORSO** (commit+push+graphify+wiki ogni step, **warn TG prima di ogni /compact**): (1) **review-loop** sul codice nuovo (native-window split + convId per-sessione); (2) **`request_compaction`** (item 0b) — ⚠️ **DECISIONE DESIGN PENDING utente (TG msg 504)**: reco = **CHECKPOINT/handoff-flush nostro** (coerente ADR `context-as-first-person-mind`: compaction nativa OFF, contesto già bounded) vs `actions.compact()` nativo lossy → se nessuna risposta, costruisco il checkpoint (sicuro/reversibile, marcato per review); (3) **calibrazione** soglia watch→matrioska + e2e multi-turno; (4) **hygiene** dogfood (auto-reset `.pi/state` a fine run). [task #32]
 > - **NOTA**: il "multi-sessione convId" non è più un residuo — ora è KEYATO per-sessione (`_conv_id:<sessionId>` via `ctx.sessionManager.getSessionId()`, fix PIENO in `11ff52a`). Resta solo (P3 igiene, opzionale) l'estrazione della decisione focus_hint da context-assembly.
 >
+### 🔒 sealed-secrets — ✅ BUILDATO v1 + review-loop + fix (idea utente msg 577-603)
+- **STATO: DONE v1** (commit `351be08`→`2318f89`). Buildato: registry sigillato + `list_secrets` + reference-injection `{{secret:NAME}}` al `tool_call` + sink-gating (allow-host/https-only/file-deny/host-pinning) + provisioning out-of-band (env `SEALED_SECRET_*` + CLI `set-secret` + `request_secret`) + `redactEgress` per-OTP (msg 603). Review-loop security (17 finding): P0 host-spoof + P1 short-secret-backstop + P2 details/regexIngress → fix pushati. Test 58/58. Concept [[concepts/sealed-secrets]] §stato+residui.
+- **🔜 RESIDUI APERTI (tracciati, post-v1)**:
+  - **`regexIngress` WIRING** (P2, oggi `off`/dead-code): cablare `scanIngress` a un hook `input`/`tool_result` con confirm-UI (`auto` sigilla high-confidence / `ask` chiede). Finché non wired → default `off` (no falsa sicurezza). UI-dependent.
+  - **exfil-via-use** (DE-PRIORITIZZATO msg 593, NON urgente): gating per-tool (bare-host/MCP strutturati), shell-composta fail-closed, hook-order invariante. Documentati in concept §residui — riaprire solo se l'utente cambia priorità.
+
 ### 🆕 BUILD-QUEUE autonoma 2026-06-29 (richieste utente TG msg 505/506, mentre away)
 1. ✅ **FATTO (`c0ccb94`, typecheck+suite verde)** — **`checkpoint` tool** (ex-`request_compaction`, nome confermato dall'utente msg 505: il NOSTRO checkpoint, MAI il compaction nativo di pi). **Semantica** (Strada-2, non-lossy): `checkpoint(note?)` → (a) scrive un **handoff narrativo** + snapshot durevole (aim + task aperti + decisioni recenti) nel namespace `handoff` di vars.db; (b) marca un **segment-boundary** (`_checkpoint_seq` = max seq conversazione) → la lane `<messages_with_user>` riparte da lì (chat pre-checkpoint ripiegata nell'handoff, recuperabile via `get_conversation`). **INFRA GIÀ PARZIALE**: `buildResumeDigest` (context-assembler.mjs:73) **già legge** `vq.listVars({namespace:"handoff"})` → manca solo CHI scrive (il tool checkpoint) + il segment-boundary in `buildMessagesLane` (aggiungere opt `afterSeq`). F=meccanismo(PIENA) / S=quando-checkpointare.
 2. ✅ **FATTO v1 (2026-06-29, commit `9375487`→`0fc51ff`)** — **Focus-gathering: priorità + dipendenze + ordine d'esecuzione** (msg 506). Implementato: `tasks.priority`+`tasks.deps` (via `_ensureColumn`); `addTask`/`setTaskMeta` con validazione no-ciclo; `listTasksOrdered` (campo `ready` [non `blocked`], `unblocks`, `order` + gate proporzionalità); `enterFocus` HARD-GATE no-ready + `lead`=primo-ready; tool `add_task`/`set_task_deps`/`get_execution_order`/`list_tasks` ordinato. + `gathering.mode` (delegated/inject/require, msg 531). + testbook TB-08 + spec matrioska §enter-focus + design-doc §IMPLEMENTAZIONE. Test task-graph 22/22, suite 18/0.
