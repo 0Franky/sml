@@ -9,7 +9,7 @@ cd /d "%~dp0"
 echo ============================================================
 echo   Avvio TUI pi (harness ITLMv1)  ==  npm run tui
 echo   Cartella: %CD%
-echo   Le estensioni .ts si ricompilano al boot (jiti) -> codice nuovo gia' attivo.
+echo   Le estensioni .ts si ricompilano al boot (jiti): codice nuovo gia' attivo.
 echo   Ctrl-C per uscire.
 echo ============================================================
 echo.
