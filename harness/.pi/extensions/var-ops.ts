@@ -35,18 +35,18 @@ export default function (pi: ExtensionAPI) {
     name: "extract_var",
     label: "Extract a field from a variable (by reference)",
     description:
-      "Estrae un campo da una var JSON per PATH (dotted + indice, es. 'data.items[0].status') e lo salva in 'dest'. " +
-      "Deterministico e sicuro (niente eval, niente proto-pollution). Usa questo invece di ricopiare il valore: meno errori, meno token.",
+      "Extract a field from a JSON var by PATH (dotted + index, e.g. 'data.items[0].status') and save it into 'dest'. " +
+      "Deterministic and safe (no eval, no proto-pollution). Use this instead of recopying the value: fewer errors, fewer tokens.",
     // promptSnippet → senza, i tool custom NON compaiono nella sezione "Available tools" del system prompt (types.d.ts:342).
-    promptSnippet: "extract_var(src,path,dest) — estrai un campo da una var JSON (by-reference, no ricopiatura).",
+    promptSnippet: "extract_var(src,path,dest) — extract a field from a JSON var (by-reference, no recopying).",
     parameters: Type.Object({
-      src: Type.String({ description: "Var sorgente (oggetto JSON o stringa JSON, es. un tool_result catturato)." }),
-      path: Type.String({ description: "Path del campo (dotted + indice): 'status', 'data.items[0].id'." }),
-      dest: Type.String({ description: "Var di destinazione dove salvare il campo estratto." }),
+      src: Type.String({ description: "Source var (JSON object or JSON string, e.g. a captured tool_result)." }),
+      path: Type.String({ description: "Field path (dotted + index): 'status', 'data.items[0].id'." }),
+      dest: Type.String({ description: "Destination var where the extracted field is saved." }),
     }),
     async execute(_t: string, p: any) {
       const r = extractVar(vq, p.src, p.path, p.dest);
-      if (!r.ok) return { content: [{ type: "text", text: `errore: ${r.error}` }], details: { ok: false } };
+      if (!r.ok) return { content: [{ type: "text", text: `error: ${r.error}` }], details: { ok: false } };
       return { content: [{ type: "text", text: JSON.stringify({ dest: r.dest, value: r.value }) }], details: { ok: true } };
     },
   });
@@ -55,19 +55,19 @@ export default function (pi: ExtensionAPI) {
     name: "render_template",
     label: "Render a template (interpolate {{var:NAME}})",
     description:
-      "Canale di interpolazione OPT-IN: risolve i placeholder {{var:NOME}} delle var ESISTENTI (il resto, incl. " +
-      "{{...}} di Jinja/Vue e var inesistenti, resta letterale) e applica la redazione segreti FINALE. Ritorna la " +
-      "stringa risolta. Usalo per comporre testo che cita valori di var senza ricopiarli a mano.",
+      "OPT-IN interpolation channel: resolves the {{var:NAME}} placeholders of EXISTING vars (the rest, incl. " +
+      "Jinja/Vue {{...}} and non-existent vars, stays literal) and applies the FINAL secret redaction. Returns the " +
+      "resolved string. Use it to compose text that cites var values without recopying them by hand.",
     // Scopribilità (review-loop #3 2026-06-29, P2): l'auto-interpolazione nell'output è stata RIMOSSA (esfiltrazione);
     // ora l'interpolazione richiede un'azione esplicita → va segnalata al modello, altrimenti scriverebbe {{var:X}}
     // letterale. promptSnippet la mette in "Available tools"; promptGuidelines spiega il cambio di regime.
-    promptSnippet: "render_template(text) — risolve {{var:NOME}} citando valori di var nel testo finale (NON automatico).",
+    promptSnippet: "render_template(text) — resolves {{var:NAME}} citing var values in the final text (NOT automatic).",
     promptGuidelines: [
-      "Per inserire il VALORE di una var nel testo all'utente usa render_template: {{var:NOME}} NON è più risolto " +
-        "automaticamente nell'output (resta letterale). Serve a citare valori di var senza ricopiarli a mano.",
+      "To insert the VALUE of a var into the text shown to the user, use render_template: {{var:NAME}} is no longer " +
+        "resolved automatically in the output (it stays literal). It serves to cite var values without recopying them by hand.",
     ],
     parameters: Type.Object({
-      text: Type.String({ description: "Testo con placeholder {{var:NOME}} (escape: {{!var:NOME}})." }),
+      text: Type.String({ description: "Text with {{var:NAME}} placeholders (escape: {{!var:NAME}})." }),
     }),
     async execute(_t: string, p: any) {
       // P0 fix: passa la secrets-map dinamica condivisa → un segreto in una var NON esce in chiaro

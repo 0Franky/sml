@@ -163,7 +163,7 @@ try {
 
     const r = popFocus(vq, scopeId, { reportDir: dir, now: 2000 });
     ok(r.promotedDecisionId === `pop-${scopeId}`, "POP: id decisione promossa");
-    ok(r.summary.includes("decisioni") && r.summary.includes("cambiamenti"), "POP: summary floor-F");
+    ok(r.summary.includes("decisions") && r.summary.includes("changes"), "POP: summary floor-F");
     ok(existsSync(r.report_path), "POP: report scritto su file");
     const report = readFileSync(r.report_path, "utf-8");
     ok(report.includes("usato bearer token") && report.includes("evita cookie"), "POP: report deriva la decisione del figlio");

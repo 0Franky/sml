@@ -28,15 +28,15 @@ export const MAX_SECRETS = 256; // cap anti-crescita/costo
  * @returns {{ ok: boolean, size: number, reason?: string }}
  */
 export function addSecret(value) {
-  if (typeof value !== "string") return { ok: false, size: DYNAMIC_SECRETS.size, reason: "valore non-stringa" };
+  if (typeof value !== "string") return { ok: false, size: DYNAMIC_SECRETS.size, reason: "non-string value" };
   if (value.length < MIN_SECRET_LEN) {
-    return { ok: false, size: DYNAMIC_SECRETS.size, reason: `troppo corto (<${MIN_SECRET_LEN} char): redigerebbe testo legittimo` };
+    return { ok: false, size: DYNAMIC_SECRETS.size, reason: `too short (<${MIN_SECRET_LEN} chars): would redact legitimate text` };
   }
   if (new Set(value).size < MIN_SECRET_DISTINCT) {
-    return { ok: false, size: DYNAMIC_SECRETS.size, reason: `troppo poco vario (<${MIN_SECRET_DISTINCT} caratteri distinti): non sembra un segreto opaco` };
+    return { ok: false, size: DYNAMIC_SECRETS.size, reason: `too little variety (<${MIN_SECRET_DISTINCT} distinct characters): does not look like an opaque secret` };
   }
   if (!DYNAMIC_SECRETS.has(value) && DYNAMIC_SECRETS.size >= MAX_SECRETS) {
-    return { ok: false, size: DYNAMIC_SECRETS.size, reason: `secrets-map piena (max ${MAX_SECRETS})` };
+    return { ok: false, size: DYNAMIC_SECRETS.size, reason: `secrets-map full (max ${MAX_SECRETS})` };
   }
   DYNAMIC_SECRETS.add(value);
   return { ok: true, size: DYNAMIC_SECRETS.size };

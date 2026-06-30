@@ -40,10 +40,10 @@ export default function (pi: ExtensionAPI) {
     name: "enter_focus",
     label: "Zoom into a focus scope (matrioska)",
     description:
-      "Apre uno scope a fuoco su un SOTTO-INSIEME di task (zoom-IN): il workspace si restringe al subset, il resto resta come backlog nel <frame>. Usalo quando il contesto è in pressione (vedi <focus_hint>/focus_status) o per isolare un sotto-lavoro. Profondità max 3. Al termine chiama pop_focus.",
+      "Open a focus scope on a SUBSET of tasks (zoom-IN): the workspace narrows to the subset, the rest stays as backlog in the <frame>. Use it when the context is under pressure (see <focus_hint>/focus_status) or to isolate a sub-task. Max depth 3. When done, call pop_focus.",
     parameters: Type.Object({
-      task_ids: Type.Array(Type.String(), { minItems: 1, description: "Gli id (esistenti) dei task da mettere a fuoco — almeno 1; il primo diventa l'aim/CURR." }),
-      reason: Type.Optional(Type.String({ description: "Perché entri a fuoco (annotato nella decisione di enter)." })),
+      task_ids: Type.Array(Type.String(), { minItems: 1, description: "The (existing) ids of the tasks to focus on — at least 1; the first becomes the aim/CURR." }),
+      reason: Type.Optional(Type.String({ description: "Why you enter focus (annotated in the enter decision)." })),
     }),
     async execute(_t: string, p: any) {
       try {
@@ -53,7 +53,7 @@ export default function (pi: ExtensionAPI) {
         const g = HARNESS_CFG.gathering;
         if (requireGateBlocks(vq, g)) {
           return {
-            content: [{ type: "text", text: "enter_focus bloccato (gathering.mode=require): chiama prima get_execution_order per valutare ready/ordine/priorità del backlog, poi rientra a fuoco." }],
+            content: [{ type: "text", text: "enter_focus blocked (gathering.mode=require): first call get_execution_order to assess the backlog's ready/order/priority, then re-enter focus." }],
             details: { ok: false },
           };
         }
@@ -65,7 +65,7 @@ export default function (pi: ExtensionAPI) {
           details: { ok: true },
         };
       } catch (e: any) {
-        return { content: [{ type: "text", text: `enter_focus rifiutato: ${e?.message ?? e}` }], details: { ok: false } };
+        return { content: [{ type: "text", text: `enter_focus rejected: ${e?.message ?? e}` }], details: { ok: false } };
       }
     },
   });
@@ -74,14 +74,14 @@ export default function (pi: ExtensionAPI) {
     name: "pop_focus",
     label: "Pop the current focus scope (matrioska)",
     description:
-      "Chiude lo scope a fuoco corrente (pop): scrive un REPORT completo su file e risale solo {summary breve, report_path} (mai dump inline), promuove l'esito come decisione del padre, e RI-ALLINEA il padre allo stato attuale (ripristina l'aim se ancora aperto). Senza scope_id chiude lo scope più profondo aperto.",
+      "Close the current focus scope (pop): writes a full REPORT to a file and bubbles up only {short summary, report_path} (never an inline dump), promotes the outcome as the parent's decision, and RE-ALIGNS the parent to the current state (restores the aim if still open). Without scope_id it closes the deepest open scope.",
     parameters: Type.Object({
-      scope_id: Type.Optional(Type.String({ description: "Scope da chiudere (default: il più profondo aperto)." })),
+      scope_id: Type.Optional(Type.String({ description: "Scope to close (default: the deepest open one)." })),
     }),
     async execute(_t: string, p: any) {
       const stack = getFocusStack(vq);
       const scopeId = p.scope_id ?? (stack.length ? stack[stack.length - 1].scope_id : null);
-      if (!scopeId) return { content: [{ type: "text", text: "pop_focus: nessuno scope aperto" }], details: { ok: false } };
+      if (!scopeId) return { content: [{ type: "text", text: "pop_focus: no open scope" }], details: { ok: false } };
       try {
         const r = popFocus(vq, scopeId, { reportDir: REPORT_DIR });
         return {
@@ -89,7 +89,7 @@ export default function (pi: ExtensionAPI) {
           details: { ok: true },
         };
       } catch (e: any) {
-        return { content: [{ type: "text", text: `pop_focus errore: ${e?.message ?? e}` }], details: { ok: false } };
+        return { content: [{ type: "text", text: `pop_focus error: ${e?.message ?? e}` }], details: { ok: false } };
       }
     },
   });
@@ -97,7 +97,7 @@ export default function (pi: ExtensionAPI) {
   pi.registerTool({
     name: "focus_status",
     label: "Show the focus stack + context pressure",
-    description: "Mostra lo stack di focus aperti (depth) e la pressione del contesto corrente (none/reorder/matrioska) per decidere se entrare a fuoco.",
+    description: "Show the stack of open focus scopes (depth) and the current context pressure (none/reorder/matrioska) to decide whether to enter focus.",
     parameters: Type.Object({}),
     async execute(_t: string, _p: any, _signal: any, _onUpdate: any, ctx: any) {
       const usage = ctx?.getContextUsage?.(); // ExtensionContext.getContextUsage() (5° arg di execute, types.d.ts:361)

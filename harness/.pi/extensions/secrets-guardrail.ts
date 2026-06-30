@@ -94,12 +94,12 @@ export default function (pi: ExtensionAPI) {
     name: "list_secrets",
     label: "List available sealed secrets (names only)",
     description:
-      "Elenca i segreti SIGILLATI disponibili: per ognuno solo NOME, descrizione, allowedSinks (host consentiti) e fingerprint (hash non-reversibile, per verificarne l'identità senza vederne il valore).\n" +
-      "COME FUNZIONANO (importante — non fraintendere):\n" +
-      "• `{{secret:NAME}}` è un RIFERIMENTO a un valore che TU non possiedi e non vedrai MAI. Usalo LIBERAMENTE negli argomenti di un tool — scrivere un `.env`, una chiamata API, un header — come se fosse il valore.\n" +
-      "• Al momento dell'esecuzione l'harness sostituisce il riferimento col VALORE REALE, SOLO verso gli allowedSinks. Quindi il file/comando riceve il valore vero (utile: puoi configurare un `.env` o autenticare una chiamata senza mai vedere la chiave). Il valore NON arriva mai a te né al provider LLM: è il design, non un limite.\n" +
-      "• Se RILEGGI un file o un output che contiene il segreto, vedrai `[REDACTED-SECRET]`: significa che il valore È PRESENTE (su disco/nell'output) ma è nascosto a TE (redazione in lettura) — NON che il file sia vuoto o redatto. Non dire 'non posso' o 'è stato redatto': di' 'il valore c'è, è l'harness che lo nasconde a me'.\n" +
-      "• Se un uso viene bloccato (`sink-gating`), il segreto manca di allowedSinks per quell'host: chiedi all'utente di dichiararli. Hai pieno potere di USARE i segreti; semplicemente non li VEDI.",
+      "List the available SEALED secrets: for each, only NAME, description, allowedSinks (allowed hosts) and fingerprint (non-reversible hash, to verify its identity without seeing the value).\n" +
+      "HOW THEY WORK (important — do not misunderstand):\n" +
+      "• `{{secret:NAME}}` is a REFERENCE to a value that YOU do not hold and will NEVER see. Use it FREELY in a tool's arguments — writing a `.env`, an API call, a header — as if it were the value.\n" +
+      "• At execution time the harness replaces the reference with the REAL VALUE, ONLY toward the allowedSinks. So the file/command receives the real value (useful: you can configure a `.env` or authenticate a call without ever seeing the key). The value NEVER reaches you nor the LLM provider: that is by design, not a limitation.\n" +
+      "• If you RE-READ a file or an output containing the secret, you will see `[REDACTED-SECRET]`: it means the value IS PRESENT (on disk/in the output) but hidden from YOU (read-time redaction) — NOT that the file is empty or redacted. Do not say 'I can't' or 'it was redacted': say 'the value is there, it's the harness hiding it from me'.\n" +
+      "• If a use gets blocked (`sink-gating`), the secret is missing allowedSinks for that host: ask the user to declare them. You have full power to USE secrets; you simply do not SEE them.",
     parameters: Type.Object({}),
     async execute() {
       const meta = listSecretsMeta();
@@ -110,15 +110,15 @@ export default function (pi: ExtensionAPI) {
     name: "request_secret",
     label: "Request a secret you need (ask the user)",
     description:
-      "Segnala che ti serve un segreto NON ancora disponibile per un'operazione. NON ricevi il valore: l'utente lo provisiona out-of-band (env `SEALED_SECRET_<NAME>` / CLI `set-secret`). Usa questo per chiedere, poi `{{secret:NAME}}` quando è disponibile.",
+      "Signal that you need a secret NOT yet available for an operation. You do NOT receive the value: the user provisions it out-of-band (env `SEALED_SECRET_<NAME>` / CLI `set-secret`). Use this to ask, then `{{secret:NAME}}` once it is available.",
     parameters: Type.Object({
-      name: Type.String({ description: "Nome del secret richiesto (es. OPENAI_KEY)." }),
-      why: Type.String({ description: "Perché ti serve / per quale operazione/host." }),
+      name: Type.String({ description: "Name of the requested secret (e.g. OPENAI_KEY)." }),
+      why: Type.String({ description: "Why you need it / for which operation/host." }),
     }),
     async execute(_t: string, p: any, _signal: any, _onUpdate: any, ctx: any) {
       ctx?.ui?.notify?.(`Il modello richiede il secret '${p.name}' — ${p.why}. Provisionalo: env SEALED_SECRET_${p.name}=… (o CLI set-secret). Il valore NON andrà al modello.`, "warning");
       return {
-        content: [{ type: "text", text: `Richiesto il secret '${p.name}'. L'utente deve provisionarlo (env SEALED_SECRET_${p.name} o CLI set-secret) — tu NON riceverai il valore; usalo come {{secret:${p.name}}}.` }],
+        content: [{ type: "text", text: `Requested secret '${p.name}'. The user must provision it (env SEALED_SECRET_${p.name} or CLI set-secret) — you will NOT receive the value; use it as {{secret:${p.name}}}.` }],
         details: { ok: true },
       };
     },
@@ -128,19 +128,19 @@ export default function (pi: ExtensionAPI) {
     name: "add_secret",
     label: "Register a session secret to redact",
     description:
-      "Registra un valore segreto (in-memory, MAI su disco) che il guardrail redige da OGNI output di tool E dall'interpolazione (render_template). Riferimento opaco per-sessione (anti-exfiltration deterministica).",
-    parameters: Type.Object({ value: Type.String({ description: "Il valore segreto da redarre (opaco, alta entropia)." }) }),
+      "Register a secret value (in-memory, NEVER on disk) that the guardrail redacts from EVERY tool output AND from interpolation (render_template). Opaque per-session reference (deterministic anti-exfiltration).",
+    parameters: Type.Object({ value: Type.String({ description: "The secret value to redact (opaque, high entropy)." }) }),
     async execute(_toolCallId: string, params: any) {
       // Guardia min-length/diversità/cap: un valore corto o poco-vario corromperebbe ogni output (footgun/DoS). (P2)
       const r = addSecret(params.value);
       if (!r.ok) {
         return {
-          content: [{ type: "text", text: `add_secret RIFIUTATO: ${r.reason}. Registra un valore opaco ad alta entropia (token/chiave reale).` }],
+          content: [{ type: "text", text: `add_secret REJECTED: ${r.reason}. Register an opaque high-entropy value (real token/key).` }],
           details: { ok: false },
         };
       }
       return {
-        content: [{ type: "text", text: `secret registrato (${r.size} attivi nella secrets-map dinamica)` }],
+        content: [{ type: "text", text: `secret registered (${r.size} active in the dynamic secrets-map)` }],
         details: { ok: true },
       };
     },
@@ -198,9 +198,9 @@ export default function (pi: ExtensionAPI) {
       return {
         block: true,
         reason:
-          `sealed-secrets: uso del segreto bloccato (sink-gating ${HARNESS_CFG.secrets.sinkGating}) — ` +
+          `sealed-secrets: secret use blocked (sink-gating ${HARNESS_CFG.secrets.sinkGating}) — ` +
           r.blocked.map((b) => `${b.name}: ${b.reason}`).join("; ") +
-          ". Il valore NON è stato inserito. Usa il secret solo verso i suoi allowedSinks.",
+          ". The value was NOT inserted. Use the secret only toward its allowedSinks.",
       };
     }
     // file-write opt-OUT (utente msg 638): di default il modello PUÒ scrivere un segreto in un file locale (.env
@@ -209,7 +209,7 @@ export default function (pi: ExtensionAPI) {
     if (r.injected.length && HARNESS_CFG.secrets.allowSecretToFile === false && FILE_WRITE_TOOLS.has(toolName)) {
       return {
         block: true,
-        reason: `sealed-secrets: scrittura di un segreto su file bloccata (secrets.allowSecretToFile=false) via '${toolName}'. Il valore NON è stato scritto. Abilita allowSecretToFile, oppure provisiona il file out-of-band.`,
+        reason: `sealed-secrets: writing a secret to a file blocked (secrets.allowSecretToFile=false) via '${toolName}'. The value was NOT written. Enable allowSecretToFile, or provision the file out-of-band.`,
       };
     }
     if (r.injected.length) r.strings.forEach((v, i) => slots[i].set(v)); // sostituzione in-place dei valori reali

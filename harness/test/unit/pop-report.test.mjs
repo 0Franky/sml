@@ -20,8 +20,8 @@ try {
     const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
     const r = buildPopReport(vq, "sub-x", { write: false });
     ok(r.decisions === 0 && r.changes === 0, "EMPTY: conteggi a zero");
-    ok(r.report.includes("nessuna decisione"), "EMPTY: report non vuoto (placeholder)");
-    ok(r.summary.includes("sub-x") && r.summary.includes("0 decisioni"), "EMPTY: summary floor non vuoto");
+    ok(r.report.includes("no decision"), "EMPTY: report non vuoto (placeholder)");
+    ok(r.summary.includes("sub-x") && r.summary.includes("0 decisions"), "EMPTY: summary floor non vuoto");
     ok(r.report_path === null, "EMPTY: write:false → nessun file");
     vq.close();
   }
@@ -48,7 +48,7 @@ try {
     ok(r.report_path === fwdJoin(dir, "sub-auth-run1.md"), "FILE: path deterministico OS-agnostic (forward-slash)");
     ok(!r.report_path.includes("\\"), "FILE: nessun backslash nel path");
     ok(r.summary.includes("→ report: " + r.report_path), "POINTER: il summary contiene il report_path");
-    ok(readFileSync(r.report_path, "utf-8").includes("# Report scope"), "FILE: contenuto pieno persistito");
+    ok(readFileSync(r.report_path, "utf-8").includes("# Scope report"), "FILE: contenuto pieno persistito");
     vq.close();
   }
 

@@ -33,20 +33,20 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "checkpoint",
-    label: "Checkpoint: consolida un punto-di-ripresa durevole",
+    label: "Checkpoint: consolidate a durable resume point",
     description:
-      "Consolida un CHECKPOINT del tuo stato (NON è il compaction nativo): (1) scrive un handoff durevole — la tua " +
-      "`note` su dove sei e il prossimo passo + uno snapshot di aim/task/decisioni — che riapparirà in <resuming_from> " +
-      "alla prossima sessione; (2) ripiega la conversazione fin qui (i messaggi precedenti restano recuperabili via " +
-      "get_conversation, la lane riparte leggera). Usalo a un confine naturale o quando vuoi alleggerire il contesto senza perdere nulla.",
-    promptSnippet: "checkpoint(note?) — consolida un punto-di-ripresa durevole (handoff + alleggerisce la lane).",
+      "Consolidate a CHECKPOINT of your state (this is NOT the native compaction): (1) it writes a durable handoff — your " +
+      "`note` on where you are and the next step + a snapshot of aim/tasks/decisions — which will reappear in <resuming_from> " +
+      "at the next session; (2) it folds the conversation so far (earlier messages stay retrievable via " +
+      "get_conversation, the lane restarts light). Use it at a natural boundary or when you want to lighten the context without losing anything.",
+    promptSnippet: "checkpoint(note?) — consolidate a durable resume point (handoff + lightens the lane).",
     promptGuidelines: [
-      "Chiama checkpoint a un confine naturale (milestone, cambio-fase) o quando il contesto si appesantisce: " +
-        "scrivi nella `note` dove sei e il prossimo passo. NON perde nulla (la chat resta in get_conversation); " +
-        "consolida lo stato durevole e fa ripartire leggera la lane dei messaggi.",
+      "Call checkpoint at a natural boundary (milestone, phase change) or when the context gets heavy: " +
+        "write in the `note` where you are and the next step. It does NOT lose anything (the chat stays in get_conversation); " +
+        "it consolidates the durable state and restarts the message lane light.",
     ],
     parameters: Type.Object({
-      note: Type.Optional(Type.String({ description: "Dove sei / prossimo passo (handoff narrativo per il resume)." })),
+      note: Type.Optional(Type.String({ description: "Where you are / next step (narrative handoff for the resume)." })),
     }),
     async execute(_t: string, p: any) {
       const convId = getConvId();
@@ -60,7 +60,7 @@ export default function (pi: ExtensionAPI) {
       const summary =
         `checkpoint @seq ${boundary}` +
         (curr ? ` · aim=${curr.id}` : "") +
-        ` · ${open.length} task aperti · ${decisions} decisioni`;
+        ` · ${open.length} open tasks · ${decisions} decisions`;
       const handoff = {
         next_step: note, // letto da buildResumeDigest come "prossimo passo"
         summary,
@@ -73,7 +73,7 @@ export default function (pi: ExtensionAPI) {
       vq.setVar("session-checkpoint", handoff, { namespace: "handoff", who: "orchestrator" });
       vq.setMeta(`${CHECKPOINT_SEQ_META}${convId}`, String(boundary));
       return {
-        content: [{ type: "text", text: `✓ ${summary}${note ? ` · note: "${note}"` : ""}. Conversazione ripiegata (recuperabile via get_conversation).` }],
+        content: [{ type: "text", text: `✓ ${summary}${note ? ` · note: "${note}"` : ""}. Conversation folded (retrievable via get_conversation).` }],
         details: { ok: true, checkpoint_seq: boundary, open_tasks: open.length },
       };
     },

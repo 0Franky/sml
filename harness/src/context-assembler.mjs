@@ -28,7 +28,7 @@ const isoSec = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
  *  - assoluto (`absoluteTimestamps`): "@ISO" → STABILE finché l'entry non cambia (cache-friendly); l'età si
  *    calcola rispetto all'anchor `<current_time>` in fondo al <context> (unica riga che cambia per richiesta).
  */
-const fmtAge = (ms, now, absolute) => (absolute ? `@${isoSec(ms)}` : `${Math.round((now - ms) / 1000)}s fa`);
+const fmtAge = (ms, now, absolute) => (absolute ? `@${isoSec(ms)}` : `${Math.round((now - ms) / 1000)}s ago`);
 
 /** Finestra temporale condivisa: <recent_changes> e il self-gating del resume usano la STESSA soglia → niente
  *  banda di overlap (banner di resume mostrato mentre recent_changes è ancora pieno). */
@@ -54,7 +54,7 @@ function humanAge(ms) {
   if (m < 90) return `${m}min`;
   const h = Math.round(m / 60);
   if (h < 48) return `${h}h`;
-  return `${Math.round(h / 24)}g`;
+  return `${Math.round(h / 24)}d`;
 }
 
 /**
@@ -87,12 +87,12 @@ export function buildResumeDigest(vq, opts = {}) {
   const lastTs = Math.max(handoff?.last_modified ?? 0, last?.ts ?? 0);
   if (!opts.force && lastTs && now - lastTs < resumeGapMs) return "";
 
-  const idleAttr = lastTs ? `${humanAge(now - lastTs)} fa` : "sconosciuto";
+  const idleAttr = lastTs ? `${humanAge(now - lastTs)} ago` : "unknown";
   const lines = [`  <resuming_from idle="${idleAttr}">`];
   if (curr) lines.push(`    - aim: ${esc(curr.id)} (${esc(curr.status)}) ${esc(curr.title)}`);
   if (open.length) {
     const head = open.slice(0, 5).map((t) => `${esc(t.id)} [${t.status}]`).join(", ");
-    lines.push(`    - task aperti: ${open.length}${open.length > 5 ? " (primi 5)" : ""} — ${head}`);
+    lines.push(`    - open tasks: ${open.length}${open.length > 5 ? " (first 5)" : ""} — ${head}`);
   }
   // ultime decisioni = var shared con decision_ref (le scelte ancorate), più recenti prima.
   const decisions = vq.getSharedView()
@@ -100,17 +100,17 @@ export function buildResumeDigest(vq, opts = {}) {
     .sort((a, b) => b.last_modified - a.last_modified)
     .slice(0, 4);
   if (decisions.length) {
-    lines.push(`    - ultime decisioni: ${decisions.map((v) => `${esc(v.id)}=${esc(JSON.stringify(v.value))} (${esc(v.decision_ref)})`).join("; ")}`);
+    lines.push(`    - latest decisions: ${decisions.map((v) => `${esc(v.id)}=${esc(JSON.stringify(v.value))} (${esc(v.decision_ref)})`).join("; ")}`);
   }
   // handoff-note esplicita (scritta dal flush su session_before_compact): "prossimo passo".
   if (handoff && handoff.value != null) {
     const note = typeof handoff.value === "object" ? (handoff.value.next_step ?? handoff.value.summary ?? JSON.stringify(handoff.value)) : handoff.value;
-    if (note) lines.push(`    - prossimo passo: ${esc(note)}`);
+    if (note) lines.push(`    - next step: ${esc(note)}`);
   }
   const realGap = lastTs && now - lastTs >= resumeGapMs;
   lines.push(realGap
-    ? `    (ripresa dopo gap; usa get_changelog/list_tasks per il dettaglio completo)`
-    : `    (snapshot stato corrente; usa get_changelog/list_tasks per il dettaglio completo)`);
+    ? `    (resuming after a gap; use get_changelog/list_tasks for the full detail)`
+    : `    (current state snapshot; use get_changelog/list_tasks for the full detail)`);
   lines.push(`  </resuming_from>`);
   return lines.join("\n");
 }
@@ -143,7 +143,7 @@ export function assembleContext(vq, opts = {}) {
   const curr = currId ? vq.getTask(currId) : null;
   lines.push(curr
     ? `  <current_aim id="${esc(curr.id)}" status="${esc(curr.status)}">${esc(curr.title)}</current_aim>`
-    : `  <current_aim>(nessuno)</current_aim>`);
+    : `  <current_aim>(none)</current_aim>`);
 
   // --- task_list (open-loop: pending + in_progress) — ORDINE DI ESECUZIONE + cap + SEGNALE anti-cecità ---
   //     focusTaskIds (matrioska, nested-compact): se presente, la lista è FILTRATA al subset messo a fuoco
@@ -170,9 +170,9 @@ export function assembleContext(vq, opts = {}) {
     if (ordered.structured) {
       const b = { H: 0, M: 0, L: 0 };
       for (const t of hidden) b[bucket(t.priority ?? 0)]++;
-      lines.push(`    - (+${hidden.length} task aperti non mostrati — priorità H:${b.H} M:${b.M} L:${b.L} — usa list_tasks per l'elenco completo)`);
+      lines.push(`    - (+${hidden.length} open tasks not shown — priority H:${b.H} M:${b.M} L:${b.L} — use list_tasks for the full list)`);
     } else {
-      lines.push(`    - (+${hidden.length} task aperti non mostrati — usa list_tasks per l'elenco completo)`);
+      lines.push(`    - (+${hidden.length} open tasks not shown — use list_tasks for the full list)`);
     }
   }
   lines.push("  </task_list>");
@@ -196,10 +196,10 @@ export function assembleContext(vq, opts = {}) {
   if (vars.length) {
     lines.push("  <vars>");
     for (const v of vars) {
-      lines.push(`    - ${esc(v.id)}=${esc(JSON.stringify(v.value))} (scope=${v.scope}, ${fmtAge(v.last_modified, now, abs)}${v.decision_ref ? `, per ${esc(v.decision_ref)}` : ""})`);
+      lines.push(`    - ${esc(v.id)}=${esc(JSON.stringify(v.value))} (scope=${v.scope}, ${fmtAge(v.last_modified, now, abs)}${v.decision_ref ? `, for ${esc(v.decision_ref)}` : ""})`);
     }
     if (allVars.length > vars.length) {
-      lines.push(`    - (+${allVars.length - vars.length} più vecchie nascoste — usa get_shared_view per l'elenco completo)`);
+      lines.push(`    - (+${allVars.length - vars.length} older ones hidden — use get_shared_view for the full list)`);
     }
     lines.push("  </vars>");
   }
@@ -214,14 +214,14 @@ export function assembleContext(vq, opts = {}) {
       const what = c.old_value != null ? `${esc(c.old_value)}→${esc(c.new_value)}` : `=${esc(c.new_value)}`;
       lines.push(`    - ${fmtAge(c.ts, now, abs)}, ${esc(c.who)}: ${esc(c.entity)}/${esc(c.entity_id)}.${esc(c.field)} ${what}${c.decision_ref ? ` (${esc(c.decision_ref)})` : ""}`);
     }
-    if (changesPlus.length > changes.length) lines.push(`    - (+altri cambi più vecchi o oltre la finestra — usa get_changelog per la storia completa)`);
+    if (changesPlus.length > changes.length) lines.push(`    - (+other older changes or beyond the window — use get_changelog for the full history)`);
     lines.push("  </recent_changes>");
   }
 
   // --- notes/memo: ESCLUSE dal flusso (silent) per non inquinare → ma SEGNALA che esistono, altrimenti
   //     il modello non sa di poterle richiamare. (memo namespace = convenzione condivisa con error-memo.) ---
   const memoCount = vq.listVars({ namespace: "memo" }).length;
-  if (memoCount) lines.push(`  <notes count="${memoCount}">${memoCount} lezione/i-memo disponibile/i (non mostrate qui) — usa recall_lessons per richiamarle</notes>`);
+  if (memoCount) lines.push(`  <notes count="${memoCount}">${memoCount} lesson-memo(s) available (not shown here) — use recall_lessons to recall them</notes>`);
 
   // --- anchor temporale (cache-stable-prefix): UNICA riga volatile per richiesta in regime assoluto;
   //     l'età di vars/recent_changes si calcola rispetto a questo. In regime relativo è implicito (omesso). ---
@@ -268,7 +268,7 @@ export function buildAimTail(vq) {
   const currId = vq.getCurr();
   const curr = currId ? vq.getTask(currId) : null;
   if (!curr) return "";
-  return `\n<current_aim_reminder>Aim corrente: ${esc(curr.id)} — ${esc(curr.title ?? "")}</current_aim_reminder>`;
+  return `\n<current_aim_reminder>Current aim: ${esc(curr.id)} — ${esc(curr.title ?? "")}</current_aim_reminder>`;
 }
 
 /**

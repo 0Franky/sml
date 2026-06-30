@@ -93,7 +93,7 @@ export function checkContradiction(newFacts, decisions) {
             statement: d.statement ?? null,
             assumption: asm,
             fact: f,
-            reason: `il fatto {${f.key} ${f.op} ${JSON.stringify(f.value)}} contraddice l'assunzione {${asm.key} ${asm.op} ${JSON.stringify(asm.value)}} della decisione "${d.id}"${d.statement ? ` (${d.statement})` : ""}`,
+            reason: `the fact {${f.key} ${f.op} ${JSON.stringify(f.value)}} contradicts the assumption {${asm.key} ${asm.op} ${JSON.stringify(asm.value)}} of decision "${d.id}"${d.statement ? ` (${d.statement})` : ""}`,
           });
         }
       }

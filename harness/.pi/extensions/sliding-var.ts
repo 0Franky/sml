@@ -25,7 +25,7 @@ export default function (pi: ExtensionAPI) {
   pi.registerTool({
     name: "sliding_var_read",
     label: "Read a var slice (char-range)",
-    description: "Legge uno slice [start,end) di una var per char-range + ±context_around char (orientamento), senza scaricarla full.",
+    description: "Read a slice [start,end) of a var by char-range + ±context_around chars (orientation), without loading it in full.",
     parameters: Type.Object({
       var_id: Type.String(),
       start: Type.Number(),
@@ -42,7 +42,7 @@ export default function (pi: ExtensionAPI) {
     name: "sliding_var_replace",
     label: "Replace a var slice (preview-then-apply)",
     description:
-      "Sostituisce lo slice [start,end) con new_content. preview_only=true (default) NON applica: ritorna la preview per validare prima. Append: start=end=lunghezza var.",
+      "Replace the slice [start,end) with new_content. preview_only=true (default) does NOT apply: it returns the preview to validate first. Append: start=end=var length.",
     parameters: Type.Object({
       var_id: Type.String(),
       start: Type.Number(),

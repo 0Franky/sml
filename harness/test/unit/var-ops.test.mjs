@@ -133,7 +133,7 @@ function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error(
   // cap amplificazione: ora applicato in emitToUser (output channel) DOPO la redazione (review P1-D)
   vq.setVar("big", "y".repeat(20000));
   const r = emitToUser("{{var:big}}", vq, { interpolate: true });
-  ok(r.text.length < 20001 && r.text.includes("[troncato]"), "SEC: emitToUser cap l'amplificazione (post-redazione)");
+  ok(r.text.length < 20001 && r.text.includes("[truncated]"), "SEC: emitToUser cap l'amplificazione (post-redazione)");
   // leak-fix (P1-D): un secret A CAVALLO del cap è redatto PRIMA del troncamento → nessun prefisso in chiaro
   const sk = "sk-" + "Z".repeat(40);
   vq.setVar("cap_secret", "y".repeat(8180) + sk); // il secret cade attorno al cap di 8192

@@ -35,7 +35,7 @@ ok(ctx.includes("[in_progress] T1") && ctx.includes("[pending] T2"), "task_list 
 // verify_queue
 ok(ctx.includes("V1 (task T1): oracolo import RS256"), "verify_queue pendente");
 // vars: shared presente, con decision_ref; private esclusa di default
-ok(ctx.includes("api_base=") && ctx.includes("per DEC-t5"), "vars shared + decision_ref");
+ok(ctx.includes("api_base=") && ctx.includes("for DEC-t5"), "vars shared + decision_ref");
 ok(!ctx.includes("scratch="), "vars private escluse di default");
 // recent_changes con chi/quando/cosa
 ok(ctx.includes("<recent_changes>"), "recent_changes presente");
@@ -56,12 +56,12 @@ const cB = assembleContext(vq, { now: NOW + 3_600_000, sinceMs: 0, absoluteTimes
 const stripTime = (s) => s.replace(/ {2}<current_time>[^<]*<\/current_time>\n?/g, "");
 ok(stripTime(cA) === stripTime(cB), "cache-stable: tutto tranne <current_time> è byte-identico cross-now");
 ok(cA.includes("<current_time>") && /@\d{4}-\d\d-\d\dT/.test(cA), "absoluteTimestamps: anchor + @ISO");
-ok(!cA.includes("s fa"), "absoluteTimestamps: nessuna età relativa");
+ok(!cA.includes("s ago"), "absoluteTimestamps: nessuna età relativa");
 ok(cA.indexOf("<rules>") < cA.indexOf("<vars>") && cA.indexOf("<vars>") < cA.indexOf("<current_time>"),
   "ordine stabile-prefix → volatile → anchor");
 // regime relativo (default) invariato: niente anchor, età "Ns fa"
 const cRel = assembleContext(vq, { now: NOW, sinceMs: 0 });
-ok(!cRel.includes("<current_time>") && cRel.includes("s fa"), "regime relativo (default) invariato");
+ok(!cRel.includes("<current_time>") && cRel.includes("s ago"), "regime relativo (default) invariato");
 
 // cache-stable con la FINESTRA REALE (default sinceMs, nessun override): il prefisso PRIMA di <recent_changes>
 // resta byte-identico cross-now anche quando recent_changes è volatile attraverso il bordo 15 min.
@@ -91,10 +91,10 @@ const rt = vq2.getChangeLog({ limit: 1 })[0].ts;
 const dig = buildResumeDigest(vq2, { now: rt + 24 * 3600 * 1000 });
 ok(dig.includes("&lt;") && dig.includes("&gt;") && dig.includes("&amp;") && !dig.includes("<script>"),
   "resume-digest: escaping XML su decisioni/handoff");
-ok(dig.includes("prossimo passo: deploy &lt;prod&gt; &amp; verifica"), "resume-digest: handoff-object next_step");
-ok(dig.includes("(primi 5)") && dig.includes("task aperti: 8"), "resume-digest: slice >5 task aperti");
+ok(dig.includes("next step: deploy &lt;prod&gt; &amp; verifica"), "resume-digest: handoff-object next_step");
+ok(dig.includes("(first 5)") && dig.includes("open tasks: 8"), "resume-digest: slice >5 task aperti");
 const digForce = buildResumeDigest(vq2, { now: rt + 1000, force: true });
-ok(digForce.includes("<resuming_from") && digForce.includes("snapshot stato corrente"),
+ok(digForce.includes("<resuming_from") && digForce.includes("current state snapshot"),
   "resume-digest: force su sessione attiva → testo neutro (no falso 'ripresa dopo gap')");
 vq2.close();
 
@@ -108,7 +108,7 @@ vq3.addTask("B5", "media", {});                        // ready, M (prio 0)
 vq3.addTask("B6", "altra-bassa", { priority: -1 });    // ready, L
 const ctxN = assembleContext(vq3, { now: NOW, sinceMs: 0, maxTasks: 2 });
 ok(ctxN.includes("ready prio=9") || ctxN.includes("ready unblocks=1"), "anti-cecità: task_list strutturato espone ready/prio/unblocks");
-ok(/task aperti non mostrati — priorità H:\d+ M:\d+ L:\d+/.test(ctxN), "anti-cecità: segnale nascosti con breakdown H/M/L");
+ok(/open tasks not shown — priority H:\d+ M:\d+ L:\d+/.test(ctxN), "anti-cecità: segnale nascosti con breakdown H/M/L");
 ok(/H:0 M:2 L:2/.test(ctxN), "anti-cecità: conteggio buckets corretto (nascosti B5/B3=M, B6/B4=L)");
 ok(ctxN.includes("B2:") && !ctxN.includes("B4:"), "execution-order: ready+alta-priorità mostrato, bassa-priorità nascosta (cap non nasconde gli importanti)");
 // label 'waiting-deps' (non 'blocked') per il flag derivato (review P2 #4/#11) — B3 è waiting-deps ma è hidden;
