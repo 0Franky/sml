@@ -28,7 +28,7 @@ import { redactText } from "../../src/secrets-redact.mjs";
 import { addSecret, getDynamicSecrets, clearSecrets } from "../../src/secrets-registry.mjs";
 // SEALED-SECRETS (msg 577/578/579): registry sigillato + reference-injection + sink-gating. Il valore non entra MAI
 // nel context del modello; provisioning out-of-band (env SEALED_SECRET_* + metadata .pi/secrets.config.json).
-import { loadFromEnv, listSecretsMeta, injectIntoStrings, clearSealed, setAllowLocalHttp, hasSecret } from "../../src/sealed-secrets.mjs";
+import { loadFromEnv, listSecretsMeta, injectIntoStrings, clearSealed, setAllowLocalHttp, hasSecret, isValidSinkHost, computeSecretEditDiff, applySecretEdit, removeSecret, validateSecretRefs } from "../../src/sealed-secrets.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { readFileSync, existsSync } from "node:fs";
 
@@ -64,6 +64,46 @@ function collectStringSlots(node: any, slots: { get: () => string; set: (v: stri
   }
 }
 
+/** Rende il DIFF di una proposta di edit come testo VISIVAMENTE CHIARO per l'Ask (⚠ = widening). */
+function renderEditDiff(diff: any): string {
+  return (diff.changes || [])
+    .map((c: any) => `${c.widening ? "⚠" : "·"} ${c.field}: ${c.before}  →  ${c.after}${c.note ? `  [${c.note}]` : ""}`)
+    .join("\n");
+}
+
+/**
+ * askAndApplyEdit — consenso ESPLICITO (mai auto) per una proposta di edit: calcola il diff, mostra un Ask con il
+ * diff prima→dopo (frizione alta se widening), e SOLO se l'utente conferma applica via applySecretEdit. Headless
+ * (no ctx.hasUI) → degrada a notify (l'utente applica out-of-band). Usato da request_sink e propose_secret_edit.
+ */
+async function askAndApplyEdit(
+  ctx: any, name: string, changes: any, why: string, titleVerb: string,
+): Promise<{ content: { type: "text"; text: string }[]; details: { ok: boolean } }> {
+  const diff = computeSecretEditDiff(name, changes);
+  if (!diff.exists) return { content: [{ type: "text", text: `Secret '${name}' does not exist.` }], details: { ok: false } };
+  if (!diff.changes || !diff.changes.length) {
+    return { content: [{ type: "text", text: `No effective change for '${name}' (already in the requested state).` }], details: { ok: false } };
+  }
+  const externalSinks = diff.externalSinks || [];
+  const ext = externalSinks.length ? ` Host ESTERNO/i: ${externalSinks.join(", ")}.` : "";
+  const header = diff.anyWidening
+    ? `⚠ Questa modifica AMPLIA i permessi del secret '${name}'.${ext} Il valore reale potrà raggiungere nuove destinazioni.`
+    : `Modifica del secret '${name}' (nessun ampliamento di permessi).`;
+  if (ctx?.hasUI && typeof ctx?.ui?.confirm === "function") {
+    const ok = await ctx.ui.confirm(
+      `${titleVerb} '${name}'?`,
+      `${header}\n\nMotivo dichiarato dal modello: ${why}\n\nDIFF (prima → dopo):\n${renderEditDiff(diff)}\n\n${diff.anyWidening ? "⚠ " : ""}Confermi?`,
+    );
+    if (!ok) return { content: [{ type: "text", text: `User DENIED the edit of '${name}'. Nothing changed.` }], details: { ok: false } };
+    const r = applySecretEdit(name, changes);
+    if (!r.ok) return { content: [{ type: "text", text: `Edit failed: ${r.reason}. Nothing (or partial: ${(r.applied || []).join(", ") || "none"}) applied.` }], details: { ok: false } };
+    ctx?.ui?.notify?.(`secret '${name}' aggiornato: ${(r.applied || []).join(", ")}${r.name !== name ? ` (ora '${r.name}')` : ""}`, "info");
+    return { content: [{ type: "text", text: `User APPROVED. Applied to '${r.name}': ${(r.applied || []).join(", ")}. Use {{secret:${r.name}}} now.` }], details: { ok: true } };
+  }
+  ctx?.ui?.notify?.(`Il modello propone una modifica al secret '${name}' (${why}) ma manca l'UI interattiva (headless). Applicala TU out-of-band (es. node scripts/set-secret.mjs ...) e riavvia pi.`, "warning");
+  return { content: [{ type: "text", text: `No interactive UI (headless): the edit of '${name}' was NOT applied. The user must apply it out-of-band (CLI/config) and restart pi.` }], details: { ok: false } };
+}
+
 export default function (pi: ExtensionAPI) {
   // Provisioning OUT-OF-BAND dei sealed-secrets: env SEALED_SECRET_<NAME> (valore) + metadata da config (no valori).
   // Il valore non passa mai dal modello. Caricato al bind dell'extension.
@@ -86,7 +126,12 @@ export default function (pi: ExtensionAPI) {
       "• `{{secret:NAME}}` is a REFERENCE to a value that YOU do not hold and will NEVER see. Use it FREELY in a tool's arguments — writing a `.env`, an API call, a header — as if it were the value.\n" +
       "• At execution time the harness replaces the reference with the REAL VALUE, ONLY toward the allowedSinks. So the file/command receives the real value (useful: you can configure a `.env` or authenticate a call without ever seeing the key). The value NEVER reaches you nor the LLM provider: that is by design, not a limitation.\n" +
       "• If you RE-READ a file or an output containing the secret, you will see `[REDACTED-SECRET]`: it means the value IS PRESENT (on disk/in the output) but hidden from YOU (read-time redaction) — NOT that the file is empty or redacted. Do not say 'I can't' or 'it was redacted': say 'the value is there, it's the harness hiding it from me'.\n" +
-      "• If a use gets blocked (`sink-gating`): for an EXTERNAL host, the secret is missing that host in allowedSinks — ask the user to declare it. For an `http://localhost` (loopback) target, call `request_local_http(name, why)` so the user can allow it (then use it in a SINGLE clean command — no ';'/'|'/'&&'/redirects). You have full power to USE secrets; you simply do not SEE them.",
+      "• If a use gets blocked (`sink-gating`): for an EXTERNAL host, call `request_sink(name, host, why)` so the user can allow that host (do NOT invent CLI commands). For an `http://localhost` (loopback) target, call `request_local_http(name, why)` (then use it in a SINGLE clean command — no ';'/'|'/'&&'/redirects). You have full power to USE secrets; you simply do not SEE them.",
+    promptGuidelines: [
+      "Secrets are managed IN-SESSION via tools, NEVER via the shell/CLI. To let a secret reach a host: request_sink(name, host, why). To rename/edit (sink, description, allowLocalHttp): propose_secret_edit. To delete: propose_secret_destroy. You only PROPOSE — the user approves a clear before→after diff; widening permissions needs a stronger confirmation. Never invent or run CLI commands like `pi set-secret`/`pi update-secret` (they may not exist) — if unsure, verify (read a --help) instead of guessing.",
+      "An `INGRESS_N` secret is a value the USER pasted: it is ALREADY sealed and usable as-is — it does NOT need to be re-provisioned. If it is blocked, it only lacks a sink: to 'use the token you pasted', call request_sink for its host (e.g. oauth.reddit.com). Do not tell the user to paste it again or to set an env var.",
+      "Before using {{secret:NAME}}, if unsure the name is correct call check_secret_refs(text) — it confirms existence and suggests the closest name on a typo. Never read a secret value from a plaintext env var as a workaround for a blocked sealed secret: use {{secret:NAME}} and request the sink.",
+    ],
     parameters: Type.Object({}),
     async execute() {
       const meta = listSecretsMeta();
@@ -147,6 +192,95 @@ export default function (pi: ExtensionAPI) {
       }
       ctx?.ui?.notify?.(`Il modello chiede allowLocalHttp per '${p.name}' (${why}). Abilitalo TU out-of-band: node scripts/set-secret.mjs ${p.name} --allow-local-http (o aggiungi "allowLocalHttp": true in .pi/secrets.config.json), poi RIAVVIA pi (la config si rilegge al boot). Headless: non posso chiederti conferma interattiva.`, "warning");
       return { content: [{ type: "text", text: `No interactive UI available (headless): cannot enable allowLocalHttp for '${p.name}' in-session. The user must set it out-of-band (CLI/config) AND restart pi (config is read at boot) — a same-session retry will NOT pick it up. It is NOT enabled now.` }], details: { ok: false } };
+    },
+  });
+
+  // ───── LIFECYCLE in-sessione (utente msg 708/713/715/718) — grant-sink / edit / destroy / validate ─────
+  // Comodità E sicurezza insieme (memory feedback_security_and_convenience_both_top): il modello PROPONE, l'utente
+  // approva un Ask con DIFF chiaro (visivamente chiaro); il widening dei permessi alza la frizione. Mai auto-deciso.
+  pi.registerTool({
+    name: "request_sink",
+    label: "Ask the user to let a secret reach a host",
+    description:
+      "Ask the USER to allow a sealed secret to be used toward a specific HOST (added to its allowedSinks). Use when a {{secret:NAME}} use is blocked because the host is not in allowedSinks (e.g. you must call an external API like oauth.reddit.com). You CANNOT grant it yourself: the harness shows the user a confirmation with the diff and only the user approves. For an http://localhost target use request_local_http instead. An INGRESS_N secret is a value the user pasted — to 'use the token you pasted' toward its API, call this with that host (do NOT ask the user to re-provision).",
+    parameters: Type.Object({
+      name: Type.String({ minLength: 1, description: "Name of the sealed secret (must already exist — see list_secrets)." }),
+      host: Type.String({ minLength: 1, description: "Host to allow, e.g. 'oauth.reddit.com' (no scheme/path/port)." }),
+      why: Type.String({ minLength: 1, description: "Why the secret must reach this host. Required, non-empty." }),
+    }),
+    async execute(_t: string, p: any, _signal: any, _onUpdate: any, ctx: any) {
+      if (!hasSecret(p.name)) return { content: [{ type: "text", text: `Secret '${p.name}' does not exist. Ask the user to provision it (request_secret).` }], details: { ok: false } };
+      const host = String(p.host ?? "").toLowerCase().trim();
+      if (!isValidSinkHost(host)) return { content: [{ type: "text", text: `Invalid host '${p.host}' (give a domain/IP like 'oauth.reddit.com' — no scheme/path/port).` }], details: { ok: false } };
+      const why = String(p.why ?? "").trim();
+      if (!why) return { content: [{ type: "text", text: `Provide a non-empty 'why' (the user must see a reason before granting a host).` }], details: { ok: false } };
+      return askAndApplyEdit(ctx, p.name, { addSinks: [host] }, why, "Concedere un host a");
+    },
+  });
+  pi.registerTool({
+    name: "propose_secret_edit",
+    label: "Propose an edit to a secret (user approves the diff)",
+    description:
+      "Propose changes to an existing sealed secret — rename, add/remove a sink host, edit description, toggle allowLocalHttp. You only PROPOSE: the harness shows the user a before→after diff and the user approves/denies (you can never change a secret yourself). Widening permissions (adding a host, enabling allowLocalHttp) gets a high-friction confirmation. To promote an INGRESS_N to a clear name, use `rename` here (no re-paste; the value stays sealed).",
+    parameters: Type.Object({
+      name: Type.String({ minLength: 1, description: "Name of the secret to edit." }),
+      rename: Type.Optional(Type.String({ description: "New name (e.g. promote INGRESS_1 → REDDIT_TOKEN)." })),
+      addSinks: Type.Optional(Type.Array(Type.String(), { description: "Hosts to ADD to allowedSinks (widening)." })),
+      removeSinks: Type.Optional(Type.Array(Type.String(), { description: "Hosts to REMOVE from allowedSinks (narrowing)." })),
+      description: Type.Optional(Type.String({ description: "New description." })),
+      allowLocalHttp: Type.Optional(Type.Boolean({ description: "Enable/disable http toward loopback." })),
+      why: Type.String({ minLength: 1, description: "Why this edit. Required, non-empty." }),
+    }),
+    async execute(_t: string, p: any, _signal: any, _onUpdate: any, ctx: any) {
+      if (!hasSecret(p.name)) return { content: [{ type: "text", text: `Secret '${p.name}' does not exist.` }], details: { ok: false } };
+      const why = String(p.why ?? "").trim();
+      if (!why) return { content: [{ type: "text", text: `Provide a non-empty 'why'.` }], details: { ok: false } };
+      const changes: any = {};
+      if (typeof p.rename === "string" && p.rename.trim()) changes.rename = p.rename.trim();
+      if (Array.isArray(p.addSinks)) changes.addSinks = p.addSinks;
+      if (Array.isArray(p.removeSinks)) changes.removeSinks = p.removeSinks;
+      if (typeof p.description === "string") changes.description = p.description;
+      if (typeof p.allowLocalHttp === "boolean") changes.allowLocalHttp = p.allowLocalHttp;
+      return askAndApplyEdit(ctx, p.name, changes, why, "Modificare");
+    },
+  });
+  pi.registerTool({
+    name: "propose_secret_destroy",
+    label: "Propose destroying a secret (user approves)",
+    description:
+      "Propose destroying a sealed secret. You only PROPOSE with a reason; the user must approve (destruction never happens without explicit consent). Use when a secret is wrong/obsolete and should be re-provisioned fresh.",
+    parameters: Type.Object({
+      name: Type.String({ minLength: 1, description: "Name of the secret to destroy." }),
+      why: Type.String({ minLength: 1, description: "Why it should be destroyed. Required, non-empty." }),
+    }),
+    async execute(_t: string, p: any, _signal: any, _onUpdate: any, ctx: any) {
+      if (!hasSecret(p.name)) return { content: [{ type: "text", text: `Secret '${p.name}' does not exist.` }], details: { ok: false } };
+      const why = String(p.why ?? "").trim();
+      if (!why) return { content: [{ type: "text", text: `Provide a non-empty 'why'.` }], details: { ok: false } };
+      if (ctx?.hasUI && typeof ctx?.ui?.confirm === "function") {
+        const ok = await ctx.ui.confirm(
+          `Distruggere il secret '${p.name}'?`,
+          `Il modello propone di ELIMINARE il secret '${p.name}'.\nMotivo dichiarato: ${why}\n\n⚠ Operazione irreversibile in-sessione: il riferimento {{secret:${p.name}}} smetterà di funzionare. Confermi?`,
+        );
+        if (!ok) return { content: [{ type: "text", text: `User DENIED destruction of '${p.name}'. It still exists.` }], details: { ok: false } };
+        const r = removeSecret(p.name);
+        if (!r.ok) return { content: [{ type: "text", text: `Destruction failed: ${r.reason}` }], details: { ok: false } };
+        ctx?.ui?.notify?.(`secret '${p.name}' eliminato.`, "info");
+        return { content: [{ type: "text", text: `User APPROVED. Secret '${p.name}' destroyed.` }], details: { ok: true } };
+      }
+      ctx?.ui?.notify?.(`Il modello propone di eliminare il secret '${p.name}' (${why}) ma manca l'UI interattiva (headless). Eliminalo TU out-of-band se concordi.`, "warning");
+      return { content: [{ type: "text", text: `No interactive UI (headless): '${p.name}' was NOT destroyed. The user must do it out-of-band.` }], details: { ok: false } };
+    },
+  });
+  pi.registerTool({
+    name: "check_secret_refs",
+    label: "Validate {{secret:NAME}} references in a text",
+    description:
+      "Validate the {{secret:NAME}} references in a text BEFORE using them: for each, reports whether the secret exists and, for an unknown name, suggests the closest existing one (catches typos / invented names). Read-only, changes nothing. Call it when unsure a secret name is correct, instead of guessing.",
+    parameters: Type.Object({ text: Type.String({ description: "Text containing {{secret:NAME}} references to validate." }) }),
+    async execute(_t: string, p: any) {
+      const v = validateSecretRefs(String(p.text ?? ""));
+      return { content: [{ type: "text", text: JSON.stringify(v, null, 2) }], details: { ok: v.ok, unknown: v.unknown.length } };
     },
   });
 
@@ -226,7 +360,7 @@ export default function (pi: ExtensionAPI) {
         reason:
           `sealed-secrets: secret use blocked (sink-gating ${HARNESS_CFG.secrets.sinkGating}) — ` +
           r.blocked.map((b) => `${b.name}: ${b.reason}`).join("; ") +
-          ". The value was NOT inserted. Use the secret only toward its allowedSinks.",
+          ". The value was NOT inserted. To let a secret reach an EXTERNAL host, call request_sink(name, host, why) (the user approves). For http://localhost use request_local_http. If a secret name looks wrong, call check_secret_refs to verify it. Do NOT invent CLI commands or read the value from a plaintext env var.",
       };
     }
     // file-write opt-OUT (utente msg 638): di default il modello PUÒ scrivere un segreto in un file locale (.env

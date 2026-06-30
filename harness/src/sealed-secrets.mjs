@@ -65,6 +65,173 @@ export function setAllowLocalHttp(name, allow = true) {
   return { ok: true, name, allowLocalHttp: s.allowLocalHttp };
 }
 
+// ───────────────────────── LIFECYCLE in-sessione (utente msg 708/713/715/718, 2026-06-30) ─────────────────────────
+// Primitive per gestire un secret SENZA CLI né re-paste: grant-sink / rinomina / rimuovi / edit. Sono SOLO MECCANISMO
+// (F-harness): il CONSENSO (Ask con diff) lo impone l'estensione (secrets-guardrail), MAI auto-deciso dal modello —
+// stesso pattern di setAllowLocalHttp/request_local_http. Design: ../../wiki/concepts/sealed-secrets.md §4ter.
+
+/** Un host accettabile in allowedSinks: dominio/IP DNS-shape, loopback letterale, o '*' (wildcard). Rifiuta
+ * scheme://, path, porta, userinfo, spazi. (hostMatches/extractHosts lavorano già su questa shape.) */
+export function isValidSinkHost(host) {
+  const h = String(host ?? "").toLowerCase().trim();
+  if (h === "*") return true;
+  return h.length > 0 && h.length <= 253 && /^[a-z0-9.\-]+$/.test(h);
+}
+
+/** Aggiunge un host agli allowedSinks di un secret esistente (GRANT-SINK in-sessione). WIDENING → l'estensione lo gate
+ * con un Ask ad alta frizione. @returns {{ok, name?, allowedSinks?, added?, reason?}} */
+export function addAllowedSink(name, host) {
+  const s = SEALED.get(name);
+  if (!s) return { ok: false, reason: "secret does not exist" };
+  const h = String(host ?? "").toLowerCase().trim();
+  if (!isValidSinkHost(h)) return { ok: false, reason: `invalid sink host '${host}' (use a domain/IP/'*' — no scheme/path/port)` };
+  if (s.allowedSinks.includes(h)) return { ok: true, name, allowedSinks: s.allowedSinks, added: false };
+  s.allowedSinks = [...s.allowedSinks, h];
+  return { ok: true, name, allowedSinks: s.allowedSinks, added: true };
+}
+
+/** Rimuove un host dagli allowedSinks (NARROWING). @returns {{ok, name?, allowedSinks?, removed?, reason?}} */
+export function removeAllowedSink(name, host) {
+  const s = SEALED.get(name);
+  if (!s) return { ok: false, reason: "secret does not exist" };
+  const h = String(host ?? "").toLowerCase().trim();
+  const before = s.allowedSinks.length;
+  s.allowedSinks = s.allowedSinks.filter((x) => x !== h);
+  return { ok: true, name, allowedSinks: s.allowedSinks, removed: s.allowedSinks.length < before };
+}
+
+/** Aggiorna la descrizione (BENIGN). @returns {{ok, name?, description?, reason?}} */
+export function setSecretDescription(name, description) {
+  const s = SEALED.get(name);
+  if (!s) return { ok: false, reason: "secret does not exist" };
+  s.description = String(description ?? "");
+  return { ok: true, name, description: s.description };
+}
+
+/** Rinomina un secret mantenendo valore + metadata (il VALORE non si ri-espone, no re-paste). Promozione
+ * INGRESS_N→nome-esplicito = questa. @returns {{ok, name?, renamed?, from?, reason?}} */
+export function renameSecret(oldName, newName) {
+  const s = SEALED.get(oldName);
+  if (!s) return { ok: false, reason: "secret does not exist" };
+  if (typeof newName !== "string" || !NAME_RE.test(newName)) return { ok: false, reason: "invalid new name (use [A-Za-z0-9_.-], max 64)" };
+  if (newName === oldName) return { ok: true, name: newName, renamed: false };
+  if (SEALED.has(newName)) return { ok: false, reason: `a secret named '${newName}' already exists` };
+  SEALED.delete(oldName);
+  SEALED.set(newName, s);
+  return { ok: true, name: newName, renamed: true, from: oldName };
+}
+
+/** Distrugge un secret (distruzione PREVIA Ask, imposta dall'estensione). NB: il valore resta nel registry di
+ * egress-redaction (backstop conservativo: continua a redarre eventuali echi residui) — non si de-registra, nessun
+ * leak. @returns {{ok, name?, removed?, reason?}} */
+export function removeSecret(name) {
+  if (!SEALED.has(name)) return { ok: false, reason: "secret does not exist" };
+  SEALED.delete(name);
+  return { ok: true, name, removed: true };
+}
+
+/**
+ * computeSecretEditDiff — diff prima→dopo di una proposta di modifica + classifica ogni cambiamento come 'widening'
+ * (allarga reach/leak → Ask alta-frizione + warning) o benigno. NON muta nulla. È il cuore "visivamente chiaro" +
+ * "frizione proporzionale al rischio". changes: { rename?, addSinks?:string[], removeSinks?:string[], description?,
+ * allowLocalHttp?:boolean }. @returns {{exists, name?, changes?:{field,before,after,widening,note?}[], anyWidening?, externalSinks?:string[]}}
+ */
+export function computeSecretEditDiff(name, changes = {}) {
+  const s = SEALED.get(name);
+  if (!s) return { exists: false };
+  const out = [];
+  const externalSinks = [];
+  if (typeof changes.rename === "string" && changes.rename !== name) {
+    out.push({ field: "name", before: name, after: changes.rename, widening: false });
+  }
+  if (Array.isArray(changes.addSinks)) {
+    for (const raw of changes.addSinks) {
+      const h = String(raw ?? "").toLowerCase().trim();
+      if (!h || s.allowedSinks.includes(h)) continue;
+      const wildcard = h === "*";
+      const external = !wildcard && !isLoopbackLiteral(h);
+      if (external || wildcard) externalSinks.push(h);
+      out.push({ field: "allowedSinks+", before: s.allowedSinks.join(",") || "(none)", after: h, widening: true, note: wildcard ? "wildcard: ANY host (max widening)" : external ? "external host" : "loopback host" });
+    }
+  }
+  if (Array.isArray(changes.removeSinks)) {
+    for (const raw of changes.removeSinks) {
+      const h = String(raw ?? "").toLowerCase().trim();
+      if (s.allowedSinks.includes(h)) out.push({ field: "allowedSinks-", before: h, after: "(removed)", widening: false, note: "narrowing" });
+    }
+  }
+  if (typeof changes.description === "string" && changes.description !== s.description) {
+    out.push({ field: "description", before: s.description || "(none)", after: changes.description, widening: false });
+  }
+  if (typeof changes.allowLocalHttp === "boolean" && changes.allowLocalHttp !== (s.allowLocalHttp === true)) {
+    out.push({ field: "allowLocalHttp", before: String(s.allowLocalHttp === true), after: String(changes.allowLocalHttp), widening: changes.allowLocalHttp === true, note: changes.allowLocalHttp ? "enables http→loopback" : "narrowing" });
+  }
+  return { exists: true, name, changes: out, anyWidening: out.some((c) => c.widening), externalSinks };
+}
+
+/**
+ * applySecretEdit — applica le modifiche (DOPO l'Ask di consenso, lo garantisce l'estensione). Ordine: sink/desc/flag
+ * sul nome CORRENTE, poi rename per ultimo (cambia la chiave). Fail-closed: se un passo fallisce, ritorna l'errore con
+ * ciò che era già applicato. @returns {{ok, name?, applied?:string[], reason?}} */
+export function applySecretEdit(name, changes = {}) {
+  if (!SEALED.has(name)) return { ok: false, reason: "secret does not exist" };
+  const applied = [];
+  if (Array.isArray(changes.addSinks)) {
+    for (const h of changes.addSinks) { const r = addAllowedSink(name, h); if (!r.ok) return { ok: false, reason: r.reason, applied }; if (r.added) applied.push(`+sink ${String(h).toLowerCase().trim()}`); }
+  }
+  if (Array.isArray(changes.removeSinks)) {
+    for (const h of changes.removeSinks) { const r = removeAllowedSink(name, h); if (r.removed) applied.push(`-sink ${String(h).toLowerCase().trim()}`); }
+  }
+  if (typeof changes.description === "string") { setSecretDescription(name, changes.description); applied.push("description"); }
+  if (typeof changes.allowLocalHttp === "boolean") { setAllowLocalHttp(name, changes.allowLocalHttp); applied.push(`allowLocalHttp=${changes.allowLocalHttp}`); }
+  let finalName = name;
+  if (typeof changes.rename === "string" && changes.rename !== name) {
+    const r = renameSecret(name, changes.rename); if (!r.ok) return { ok: false, reason: r.reason, applied }; finalName = changes.rename; applied.push(`renamed→${finalName}`);
+  }
+  return { ok: true, name: finalName, applied };
+}
+
+/**
+ * validateSecretRefs — VALIDATORE proattivo ("LSP-like", idea utente msg 713) dei riferimenti {{secret:NAME}} in un
+ * testo: per ogni ref controlla se il secret ESISTE; se no, suggerisce il nome esistente più vicino (edit-distance).
+ * NON muta, NON inietta. Fa scoprire un typo/nome-inventato PRIMA del tool_call (FIND-4). @returns
+ *   {{ok:boolean, refs:{name,exists,suggestion?}[], unknown:string[]}}
+ */
+export function validateSecretRefs(text) {
+  const names = referencedSecrets(text);
+  const existing = [...SEALED.keys()];
+  const refs = names.map((n) => {
+    if (SEALED.has(n)) return { name: n, exists: true };
+    const suggestion = closestName(n, existing);
+    return suggestion ? { name: n, exists: false, suggestion } : { name: n, exists: false };
+  });
+  return { ok: refs.every((r) => r.exists), refs, unknown: refs.filter((r) => !r.exists).map((r) => r.name) };
+}
+
+/** Nome candidato più vicino per edit-distance (suggerisce solo se ragionevolmente vicino, anti-nonsense). */
+function closestName(target, candidates) {
+  let best = null, bestD = Infinity;
+  for (const c of candidates) {
+    const d = levenshtein(String(target).toLowerCase(), c.toLowerCase());
+    if (d < bestD) { bestD = d; best = c; }
+  }
+  if (best && bestD <= Math.max(2, Math.ceil(Math.max(String(target).length, best.length) * 0.4))) return best;
+  return null;
+}
+
+/** Distanza di Levenshtein (due-righe, O(n) memoria). */
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  if (!m) return n; if (!n) return m;
+  let prev = Array.from({ length: n + 1 }, (_, i) => i);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[n];
+}
+
 /** Vista per il MODELLO: nome + descrizione + allowedSinks + allowLocalHttp, MAI il valore. */
 export function listSecretsMeta() {
   return [...SEALED.entries()].map(([name, s]) => ({ name, description: s.description, allowedSinks: s.allowedSinks, allowLocalHttp: s.allowLocalHttp === true, fingerprint: s.fingerprint }));
@@ -402,4 +569,6 @@ export function clearSealed() {
   ingressCounter = 0;
 }
 
-export default { setSecret, setAllowLocalHttp, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp, hasCommandComposition, hasForeignHostToken, hasHostPinning, isLoopbackLiteral, checkSink, injectSecrets, injectIntoStrings, scanIngress, loadFromEnv, clearSealed };
+export default { setSecret, setAllowLocalHttp, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp, hasCommandComposition, hasForeignHostToken, hasHostPinning, isLoopbackLiteral, checkSink, injectSecrets, injectIntoStrings, scanIngress, loadFromEnv, clearSealed,
+  // lifecycle in-sessione (msg 708/713/715/718)
+  isValidSinkHost, addAllowedSink, removeAllowedSink, setSecretDescription, renameSecret, removeSecret, computeSecretEditDiff, applySecretEdit, validateSecretRefs };
