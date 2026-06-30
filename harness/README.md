@@ -119,7 +119,7 @@ echo 'SEALED_SECRET_OPENAI_KEY=sk-...' >> harness/.env                  # il VAL
 node scripts/set-secret.mjs OPENAI_KEY --desc "OpenAI" --allow-host api.openai.com   # la METADATA (no valore)
 ```
 
-> Logica node-pure in `src/sealed-secrets.mjs` (test 110/110, incl. red-team review-loop ×2 su allowLocalHttp). Wiring su DUE estensioni: `.pi/extensions/secrets-guardrail.ts` (lato EGRESS: redazione + injection sink-gated) e `.pi/extensions/regex-ingress.ts` (lato INGRESS: cattura dall'input utente — separata e disattivabile, `secrets.regexIngress=off`). Soft-dep: regex-ingress standalone = anti-provider; +secrets-guardrail = anche anti-transcript.
+> Logica node-pure in `src/sealed-secrets.mjs` (test 120/120, incl. red-team review-loop ×3 su allowLocalHttp — host-normalization curl-accurate via `new URL`). Wiring su DUE estensioni: `.pi/extensions/secrets-guardrail.ts` (lato EGRESS: redazione + injection sink-gated) e `.pi/extensions/regex-ingress.ts` (lato INGRESS: cattura dall'input utente — separata e disattivabile, `secrets.regexIngress=off`). Soft-dep: regex-ingress standalone = anti-provider; +secrets-guardrail = anche anti-transcript.
 
 ### Tipi di secret riconosciuti
 
