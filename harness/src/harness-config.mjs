@@ -46,7 +46,9 @@ export const DEFAULT_HARNESS_CONFIG = {
   //   sinkGating: strict (allow-host fail-closed, DEFAULT) | warn | off.
   //   regexIngress: off | ask (DEFAULT) | auto — CABLATA all'hook `input` (secrets-guardrail): cattura valori
   //   secret-shaped incollati e li sigilla+trasforma PRIMA che vadano al provider. ask=notifica warning, auto=info.
-  secrets: { sinkGating: "strict", regexIngress: "ask" },
+  //   allowSecretToFile: true (DEFAULT, opt-OUT, utente msg 638) — il modello può iniettare un sealed-secret in un tool
+  //   di scrittura-file (.env provisioning locale); false → bloccato (kill-switch per chi teme exfil-via-file).
+  secrets: { sinkGating: "strict", regexIngress: "ask", allowSecretToFile: true },
 };
 
 const DEFAULT_PATH = ".pi/harness.config.json";
@@ -98,6 +100,7 @@ function applySecrets(dst, src) {
   if (!src || typeof src !== "object") return;
   if (typeof src.sinkGating === "string" && SINK_GATING_MODES.includes(src.sinkGating)) dst.sinkGating = src.sinkGating;
   if (typeof src.regexIngress === "string" && REGEX_INGRESS_MODES.includes(src.regexIngress)) dst.regexIngress = src.regexIngress;
+  if (typeof src.allowSecretToFile === "boolean") dst.allowSecretToFile = src.allowSecretToFile;
 }
 
 const ENV_MAP = {
@@ -167,6 +170,9 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
   }
   if (typeof env.HARNESS_SECRETS_REGEX_INGRESS === "string" && REGEX_INGRESS_MODES.includes(env.HARNESS_SECRETS_REGEX_INGRESS)) {
     cfg.secrets.regexIngress = env.HARNESS_SECRETS_REGEX_INGRESS;
+  }
+  if (env.HARNESS_SECRETS_ALLOW_FILE != null && env.HARNESS_SECRETS_ALLOW_FILE !== "") {
+    cfg.secrets.allowSecretToFile = env.HARNESS_SECRETS_ALLOW_FILE !== "false" && env.HARNESS_SECRETS_ALLOW_FILE !== "0";
   }
   return cfg;
 }

@@ -12,6 +12,13 @@
  */
 import { SECRET_PATTERNS } from "./secrets-redact.mjs";
 import { registerEgressRaw } from "./secrets-registry.mjs";
+import { createHash } from "node:crypto";
+
+/** Fingerprint NON-reversibile (sha256 troncato + lunghezza): per verificare l'IDENTITÀ di un secret senza vederne il
+ * valore (idea utente: "verificare se un segreto è inserito correttamente"). Non espone alcun carattere del valore. */
+function fingerprint(value) {
+  return `sha256:${createHash("sha256").update(String(value)).digest("hex").slice(0, 10)}/len:${String(value).length}`;
+}
 
 /** Registry sigillato: name → { value, description, allowedSinks[] }. In-memory, MAI su disco in chiaro. */
 const SEALED = new Map();
@@ -41,13 +48,13 @@ export function setSecret(name, value, { description = "", allowedSinks = [], re
   } else {
     warn = `'${name}': redactEgress=false → il valore NON sarà redatto dagli output (scelta per evitare rumore su OTP/short; non eco-arlo in chiaro)`;
   }
-  SEALED.set(name, { value, description: String(description || ""), allowedSinks: sinks, redactEgress: redact });
+  SEALED.set(name, { value, description: String(description || ""), allowedSinks: sinks, redactEgress: redact, fingerprint: fingerprint(value) });
   return warn ? { ok: true, name, warn } : { ok: true, name };
 }
 
 /** Vista per il MODELLO: nome + descrizione + allowedSinks, MAI il valore. */
 export function listSecretsMeta() {
-  return [...SEALED.entries()].map(([name, s]) => ({ name, description: s.description, allowedSinks: s.allowedSinks }));
+  return [...SEALED.entries()].map(([name, s]) => ({ name, description: s.description, allowedSinks: s.allowedSinks, fingerprint: s.fingerprint }));
 }
 
 /** Esiste un sealed-secret con questo nome? */

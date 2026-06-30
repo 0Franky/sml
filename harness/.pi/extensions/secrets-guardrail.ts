@@ -28,6 +28,9 @@ import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { readFileSync, existsSync } from "node:fs";
 
 const HARNESS_CFG = loadHarnessConfig();
+// Tool di SCRITTURA-FILE strutturati (il loro sink è un path, non un host → hasFileOrPipeExfil non li vede). Usati dal
+// gating opt-out allowSecretToFile. (I redirect bash `>`/`tee` sono già coperti da hasFileOrPipeExfil nel sink-gating.)
+const FILE_WRITE_TOOLS = new Set(["write", "create", "write_file", "str_replace_editor", "edit", "apply_patch", "new_file", "str_replace", "insert"]);
 const SECRETS_CONFIG_PATH = ".pi/secrets.config.json"; // SOLO metadata (nome→{description,allowedSinks}); MAI valori.
 
 /** Carica la metadata dei sealed-secrets (no valori) da .pi/secrets.config.json. Fail-safe a {}. */
@@ -91,7 +94,12 @@ export default function (pi: ExtensionAPI) {
     name: "list_secrets",
     label: "List available sealed secrets (names only)",
     description:
-      "Elenca i segreti SIGILLATI disponibili: per ognuno solo NOME, descrizione e allowedSinks (host consentiti). Il VALORE non è mai visibile. Per usarne uno, metti `{{secret:NAME}}` negli argomenti di un tool: l'harness sostituisce il valore reale al momento dell'esecuzione, SOLO verso i sink consentiti.",
+      "Elenca i segreti SIGILLATI disponibili: per ognuno solo NOME, descrizione, allowedSinks (host consentiti) e fingerprint (hash non-reversibile, per verificarne l'identità senza vederne il valore).\n" +
+      "COME FUNZIONANO (importante — non fraintendere):\n" +
+      "• `{{secret:NAME}}` è un RIFERIMENTO a un valore che TU non possiedi e non vedrai MAI. Usalo LIBERAMENTE negli argomenti di un tool — scrivere un `.env`, una chiamata API, un header — come se fosse il valore.\n" +
+      "• Al momento dell'esecuzione l'harness sostituisce il riferimento col VALORE REALE, SOLO verso gli allowedSinks. Quindi il file/comando riceve il valore vero (utile: puoi configurare un `.env` o autenticare una chiamata senza mai vedere la chiave). Il valore NON arriva mai a te né al provider LLM: è il design, non un limite.\n" +
+      "• Se RILEGGI un file o un output che contiene il segreto, vedrai `[REDACTED-SECRET]`: significa che il valore È PRESENTE (su disco/nell'output) ma è nascosto a TE (redazione in lettura) — NON che il file sia vuoto o redatto. Non dire 'non posso' o 'è stato redatto': di' 'il valore c'è, è l'harness che lo nasconde a me'.\n" +
+      "• Se un uso viene bloccato (`sink-gating`), il segreto manca di allowedSinks per quell'host: chiedi all'utente di dichiararli. Hai pieno potere di USARE i segreti; semplicemente non li VEDI.",
     parameters: Type.Object({}),
     async execute() {
       const meta = listSecretsMeta();
@@ -152,13 +160,17 @@ export default function (pi: ExtensionAPI) {
     });
     // review P2: redige ANCHE `details` (non solo content) — può finire nel session-log NATIVO di pi
     // (createToolResultMessage lo include nel messaggio toolResult persistito). Redazione ricorsiva su una COPIA.
+    // review-full P1: il clone JSON può LANCIARE (circolare/BigInt) → isolato in try/catch così un fallimento su
+    // `details` NON fa cadere la redazione di `content` già calcolata (sarebbe un leak del content non-redatto).
     let details = (event as any).details;
-    if (details && typeof details === "object") {
-      const clone = JSON.parse(JSON.stringify(details));
-      const before = JSON.stringify(clone);
-      redactArgsInPlace(clone, getDynamicSecrets(), { staticPatterns: true });
-      if (JSON.stringify(clone) !== before) { anyHit = true; details = clone; }
-    }
+    try {
+      if (details && typeof details === "object") {
+        const clone = JSON.parse(JSON.stringify(details));
+        const before = JSON.stringify(clone);
+        redactArgsInPlace(clone, getDynamicSecrets(), { staticPatterns: true });
+        if (JSON.stringify(clone) !== before) { anyHit = true; details = clone; }
+      }
+    } catch { /* details non-clonabile → si redige comunque il content; details resta l'originale */ }
     if (!anyHit) return; // nessun match → lascia passare l'output originale
     ctx.ui.notify("secrets-guardrail: output redatto (match secrets-map)", "warning");
     return details !== (event as any).details ? { content, details } : { content };
@@ -173,6 +185,7 @@ export default function (pi: ExtensionAPI) {
   pi.on("tool_call", (event) => {
     const input = (event as any).input;
     if (!input || typeof input !== "object") return;
+    const toolName = String((event as any).toolName ?? (event as any).name ?? "");
     // ORDINE (importante): (1) redazione-EGRESS dei dynamic-secrets RAW negli args (un add_secret messo raw = exfil);
     // i riferimenti `{{secret:NAME}}` NON sono valori → non toccati. (2) INJECTION-gated dei sealed: sostituisce i ref
     // col valore reale DOPO la redazione (così il valore appena iniettato NON viene re-redatto — i sealed sono nel Set
@@ -188,6 +201,15 @@ export default function (pi: ExtensionAPI) {
           `sealed-secrets: uso del segreto bloccato (sink-gating ${HARNESS_CFG.secrets.sinkGating}) — ` +
           r.blocked.map((b) => `${b.name}: ${b.reason}`).join("; ") +
           ". Il valore NON è stato inserito. Usa il secret solo verso i suoi allowedSinks.",
+      };
+    }
+    // file-write opt-OUT (utente msg 638): di default il modello PUÒ scrivere un segreto in un file locale (.env
+    // provisioning); se allowSecretToFile=false, blocca l'iniezione di un sealed-secret nei tool di scrittura-file
+    // STRUTTURATI (write/create/edit — che hasFileOrPipeExfil non vede, a differenza dei redirect bash `>`).
+    if (r.injected.length && HARNESS_CFG.secrets.allowSecretToFile === false && FILE_WRITE_TOOLS.has(toolName)) {
+      return {
+        block: true,
+        reason: `sealed-secrets: scrittura di un segreto su file bloccata (secrets.allowSecretToFile=false) via '${toolName}'. Il valore NON è stato scritto. Abilita allowSecretToFile, oppure provisiona il file out-of-band.`,
       };
     }
     if (r.injected.length) r.strings.forEach((v, i) => slots[i].set(v)); // sostituzione in-place dei valori reali

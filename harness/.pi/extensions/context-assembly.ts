@@ -17,6 +17,8 @@ import { buildMessagesLane } from "../../src/conversation-store.mjs";
 import { getConvId } from "../../src/session-context.mjs";
 import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint, markFocusHintEmitted, shouldEmitReorgHint, markReorgEmitted, maybeAutoFocus } from "../../src/nested-compact.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
+import { redactText } from "../../src/secrets-redact.mjs";
+import { getDynamicSecrets } from "../../src/secrets-registry.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
@@ -65,7 +67,7 @@ export default function (pi: ExtensionAPI) {
 
     // autofocus.mode=auto (OQ-A, msg 551): l'harness entra in focus DA SOLO sotto pressione matrioska, PRIMA di
     // leggere lo stack → il workspace di QUESTO turno riflette già lo scope aperto. No-op in off/nudge (default nudge).
-    if (HARNESS_CFG.autofocus.mode === "auto") maybeAutoFocus(vq, { tokens, contextWindow });
+    if (HARNESS_CFG.autofocus.mode === "auto") maybeAutoFocus(vq, { tokens, contextWindow }, HARNESS_CFG.trigger);
 
     const stack = getFocusStack(vq);
     let workspace: string;
@@ -108,7 +110,13 @@ export default function (pi: ExtensionAPI) {
     // contesti lunghi la coda (lane recente) può "schiacciarlo". Lo ri-ancoriamo in CODA — cheap (1 riga), solo se c'è
     // un CURR. Via helper node-pure `buildAimTail` (escape XML centralizzato, fix P1/drift: la title è user/model-content).
     const aimTail = buildAimTail(vq);
-    return { systemPrompt: `${event.systemPrompt}\n\n${workspace}${aimTail}` };
+    // EGRESS-REDACTION del workspace (review-loop full P1, 2026-06-30): il <context> assemblato (vars/task/decisioni/
+    // handoff/lane) è anteposto al systemPrompt e va al provider + ai transcript nativi. È un CONFINE D'EGRESS: un
+    // segreto finito nello STATO (set_var, title, decision — anche via prompt-injection) leakerebbe in chiaro. Lo
+    // redigiamo QUI (punto unico di convergenza): pattern statici noti + secrets-map dinamica. Coerente con la
+    // redazione su tool_result/tool_call. (NB: non tocca i riferimenti {{secret:NAME}}, che non sono valori.)
+    const safe = redactText(`${workspace}${aimTail}`, getDynamicSecrets(), { staticPatterns: true }).redacted;
+    return { systemPrompt: `${event.systemPrompt}\n\n${safe}` };
   });
   // NB: la SOPPRESSIONE dell'array messaggi nativo (hook `context`, Strada-2 keepTurns:1) vive nell'extension
   // dedicata `native-window.ts` (responsabilità ortogonale all'assemblaggio del workspace). La lane

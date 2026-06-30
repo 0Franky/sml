@@ -6,6 +6,7 @@ import {
   hasHostPinning, checkSink, injectSecrets, injectIntoStrings, scanIngress, autoSealIngress, loadFromEnv, clearSealed,
 } from "../../src/sealed-secrets.mjs";
 import { getDynamicSecrets, clearSecrets } from "../../src/secrets-registry.mjs";
+import { redactText } from "../../src/secrets-redact.mjs";
 
 let passed = 0, failed = 0;
 function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error("  ✗ FAIL:", msg); } }
@@ -171,6 +172,28 @@ const reset = () => { clearSealed(); clearSecrets(); };
   ok(r2.sealed[0].name === "INGRESS_1" && listSecretsMeta().length === 1, "INGRESS: stesso valore riusa il nome (no doppio-seal)");
   // nessun secret-shaped → no-op
   ok(autoSealIngress("solo testo normale").sealed.length === 0, "INGRESS: testo pulito → nessun seal");
+}
+
+// 10) review-full batch: fingerprint, PEM-intera, pattern estesi, redazione context-like ----------
+{
+  reset();
+  // fingerprint (seq-15): identità verificabile senza esporre il valore
+  setSecret("FP", "sk-superlongsecretvalue123456", { allowedSinks: ["*"] });
+  const m = listSecretsMeta().find((x) => x.name === "FP");
+  ok(m.fingerprint && /^sha256:[0-9a-f]{10}\/len:\d+$/.test(m.fingerprint), "FINGERPRINT: formato sha256+len");
+  ok(m.fingerprint.indexOf("superlong") === -1 && m.fingerprint.indexOf("sk-") === -1, "FINGERPRINT: non espone caratteri del valore");
+  ok(listSecretsMeta().find((x) => x.name === "FP").fingerprint === m.fingerprint, "FINGERPRINT: stabile/deterministico");
+  // PEM intera (review P1): redige header+CORPO, non solo l'header
+  const pem = "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAabc\nDEFnextline\n-----END RSA PRIVATE KEY-----";
+  const red = redactText(pem, []);
+  ok(red.hit && !red.redacted.includes("MIIEowIBAA") && !red.redacted.includes("DEFnextline"), "PEM: redatto il BLOCCO intero (corpo incluso)");
+  // pattern estesi: GitLab, Anthropic, Telegram, Doppler
+  ok(redactText("token glpat-ABCDEFGHIJ1234567890xy", []).hit, "PATTERN: GitLab glpat- redatto");
+  ok(redactText("key sk-ant-api03-abcdefghij0123456789ABCDEF", []).hit, "PATTERN: Anthropic sk-ant- redatto");
+  ok(redactText("normale codice senza segreti x=1", []).hit === false, "PATTERN: testo pulito non redatto (no FP)");
+  // redazione context-like (P1-A invariante): un secret in una 'var' serializzata NON sopravvive alla redazione d'egress
+  const ctxLike = `<vars>\n  api_key="sk-leakedvalue1234567890abcd"\n</vars>`;
+  ok(redactText(ctxLike, getDynamicSecrets(), { staticPatterns: true }).redacted.indexOf("sk-leakedvalue") === -1, "EGRESS: secret-shape in una var del <context> viene redatto al confine");
 }
 
 console.log(`\nsealed-secrets test: ${passed} passed, ${failed} failed`);
