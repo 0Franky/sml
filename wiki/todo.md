@@ -9,24 +9,28 @@ last_updated: 2026-06-30
 
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
 
-## ⏸️ RESUME POINTER (post-compact 2026-06-30) — riprendere DA QUI
-> **Stato**: HEAD==origin/main==`f8b0ef5`, working tree PULITO, suite 19/0 (sealed-secrets 174), typecheck verde. Sessione enorme → compact richiesto.
+## ⏸️ RESUME POINTER (post-compact 2026-06-30, AGGIORNATO) — riprendere DA QUI
+> **Stato**: HEAD==origin/main==`460686f` (+ wiki batch context-bounds in commit), suite 14-file/0 (sealed-secrets 174, +10 test bug-fix), typecheck verde.
 >
-> **✅ FATTO oggi**: (1) **secret-lifecycle** in-sessione — 5 tool (`request_sink`/`propose_secret_edit`/`propose_secret_destroy`/`check_secret_refs`/`preview_secret_use`) + Ask-con-diff + review-loop 3-agenti + fix (atomicità/sanitizzazione/consent-parity/preview-remediation), **GAP-1/GAP-2 chiusi**; (2) **studio context-sizing** (32 agenti) → [[concepts/context-section-sizing-study]] + 4 bug; (3) **lane `<secrets>`** nel context (chiude **FIND-7**).
+> **✅ FATTO QUESTA SESSIONE (post-compact)**: (A) **bug-fix load-bearing context** (commit `460686f`): frame slice-direction (shared_state recency + backlog execution-order), verify_queue detail-cap, watchReorder comment, charCap esposto+cablato; (B) **studio bound P3** (8-agenti) → [[concepts/context-bounds-study]] (tabella bound + design-contract + 3 blocker); (C) risposta msg 740 (notes/progress) filed in [[concepts/model-controlled-context]] #8.
+> **✅ FATTO sessione precedente**: secret-lifecycle 5-tool + Ask-con-diff (GAP-1/2 chiusi); studio context-sizing 32-agenti; lane `<secrets>` (chiude FIND-7).
 >
-> **🔜 PROSSIMO (utente msg 730/738 "continua con tutto" + "studi approfonditi sulle parti critiche")** — INTEGRAZIONI CONTEXT in ordine. Design completo: [[concepts/model-controlled-context]].
-> 2. **Indicatore BUDGET/occupazione context** (% pieno) nel context — `ctx.getContextUsage()` già disponibile (context-assembly.ts:60); quick, abilita P3.
-> 3. **seq-id visibili nella lane messaggi + truncation-marker** `…[troncato, +N — get_conversation(from_seq=ID)]`. **RIUSA `get_conversation`** (già fa specific-msg `from_seq==to_seq` + sliding-window `from..to`, conversation-capture.ts:106) → **NIENTE `expand_message` nuovo** (ridondante). + fix bug studio: messages tronca la TESTA non la coda (`slice(0,charCap)` → decidere per-tipo).
-> 4. **Current-step lane** (P4): `current_aim` STABILE (=CURR goal) + nuovo `<current_step>`/`now` volatile 1-riga free-text (tool `set_step`), distinto dall'aim, NON nelle note.
-> 5. **Bug-fix studio**: (a) **frame slice-direction** — `shared_state`/`backlog` usano `slice(0,N)` (i più VECCHI) invece di `slice(-N)` (fix 1-riga, load-bearing); (b) `task_list` cap=20 hardcoded vs watchReorder=12 (DRY + commento) + `execution_order` uncapped; (c) `messages_with_user` charCap=4000 hardcoded→esporre + default 8-vs-6 incoerente; (d) `verify_queue` GC-on-resolve (manca → accumulo).
-> 6. **`<secrets>` anche nel ramo NESTED** (`buildNestedWorkspace` non la mostra).
-> 7. **Self-tuning P3** (LINEA CONFERMATA utente msg 735): il modello regola i conteggi per-sezione SOLO sulla **zona volatile/coda** (n messaggi, ultime-azioni), MAI sul **prefisso-stabile** (rules/aim/task — rompe cache+prior), cambia **conteggi non ordine**, con **BOUND** per-sezione + budget; fuori-bound → **pull-tool** (get_conversation/get_shared_view/…, già esistenti). **Build con STUDIO approfondito** (review-loop specialized+agnostic).
+> **🔴 DECISIONE UTENTE msg 741**: i **5 differiti secret SI FANNO TUTTI** (non più differiti). Solo #1 (ADR consent-path → tool `http_request` TIPIZZATO) è posticipabile, MA da fare se il nuovo metodo è più sicuro + stesso comportamento attuale + extra (verificare regressione). + **"C" (context P3) APPROVATA**: studiare bound+default per-sezione (✅ FATTO = context-bounds-study); ordine confermato (dinamico in coda; gate ad alto valore NON in coda effimera).
 >
-> **Metodo** (utente): **studi approfonditi + review-loop (specialized + agnostic)** sulle parti critiche (specie P3 + i bug load-bearing). Ogni step: build→test→typecheck→commit→push. **`<secrets>` description già sanitizzata** (no re-introdurre injection).
+> **🔜 PROSSIMO — INTEGRAZIONI CONTEXT** (design [[concepts/model-controlled-context]] + bound [[concepts/context-bounds-study]]):
+> 2. **Indicatore BUDGET/occupazione context** (% pieno) — `ctx.getContextUsage()` già disponibile (context-assembly.ts). Quick. (Prereq/embrione del budget-allocator P0.)
+> 3. **seq-id per-messaggio + truncation-marker per-ruolo** — **RIUSA `get_conversation`** (già fa specific-msg + sliding-window) → NIENTE `expand_message`. NB: marker aggregato `+N older` + marker single-giant-turn ESISTONO già (claim studio "silenzioso"=impreciso, verificato); gap reale = **seq-id citabile** + direzione troncamento per-ruolo (assistant→coda).
+> 4. **Current-step lane** (P4): `<current_step>` volatile 1-riga free-text (tool `set_step`), distinto dall'aim, NON nelle note. (Connesso a lane `<progress>` msg 740.)
+> 5. ✅ **FATTO — Bug-fix studio** (commit `460686f`): frame slice-direction, verify_queue detail-cap, watchReorder comment, charCap esposto+cablato. RESIDUI sotto.
+> 6. **`<secrets>` anche nel ramo NESTED** (`buildNestedWorkspace` non passa `opts.secrets` ad `assembleContext`) + confermare `verify_queue` non filtrato da `focusTaskIds` nel nested (gate globale).
+> 7. **Self-tuning P3** — ⛔ **BLOCCATO su 3 infra (studio bound)**: (P0) **allocatore budget-token totale** (oggi NON esiste → "alza-tutto" possibile); (P1) tool `set_view`/`expand_section` (NON esistono, grep 0); (P1) **lifecycle reset-to-default** (META + reset pop_focus/nuova-sessione + decay K-turni). + prereq **curva effective-context** 4B. **Superficie tunable = SOLO 4 lane** (vars/recent_changes count, messages n+charCap); task_list/execution_order/frame = FROZEN-config (NON P3). → costruire SOLO dopo i 3 blocker.
 >
-> **⚠ PENDING CHIARIMENTO (utente msg 738)**: l'utente ha **pinnato/quotato un messaggio** di cui vuole integrare le "modifiche", MA il reply-target NON è visibile via Telegram MCP → **CHIEDERE quale messaggio** (numero/contenuto) prima di considerare "tutto integrato".
+> **Metodo** (utente): studi approfonditi + review-loop (specialized+agnostic) sulle parti critiche. Ogni step: build→test→typecheck→commit→push.
 >
-> **Differiti secret (review, tracciati sotto)**: ADR unificazione consent-path (loopback-come-sink), `propose_secret_create`, frizione-reale-widening, contratto headless `set-secret.mjs`, test-estensione-headless.
+> **🔜 DIFFERITI / RESIDUI tracciati**:
+> - **Secret (msg 741 = DO ALL)**: (1) ADR consent-path→`http_request` tipizzato [condizionale: solo se più-sicuro+stesso-comportamento+extra]; (2) `propose_secret_create` Ask-con-prefill; (3) frizione REALE widening (double-confirm vs solo testo); (4) contratto headless `set-secret.mjs`; (5) test estensione headless (degrade+confirm→false).
+> - **Context residui** (context-bounds-study §4): riconciliare messages default `8`-vs-fallback `6` byte-per-byte [decisione valore]; **split frame displayCap** in 3 cap write-time; **GC-on-resolve/abandon** verify_queue (GC-on-abandon serve `focus_id` nello schema); charCap→token-accounting; lane `<progress>`/done-summary (msg 740, separata dalle note).
+> - **⚠ PENDING CHIARIMENTO (msg 738)**: messaggio pinnato non visibile via Telegram MCP → l'utente NON ha ancora indicato quale; chiedere se rilevante.
 
 ## 🔥 SESSIONE 2026-06-29 (post-compact) — stato corrente
 
