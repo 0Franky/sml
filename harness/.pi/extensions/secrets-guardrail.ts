@@ -64,41 +64,56 @@ function collectStringSlots(node: any, slots: { get: () => string; set: (v: stri
   }
 }
 
-/** Rende il DIFF di una proposta di edit come testo VISIVAMENTE CHIARO per l'Ask (⚠ = widening). */
+/** Rende il DIFF come testo VISIVAMENTE CHIARO per l'Ask. SANITIZZA ogni valore (review P2-1 anti UI-redress): i
+ * valori sono in parte controllati dal modello (description, nomi, host) → strip di newline e dei glifi-marker
+ * ⚠/·/✗ così un campo non può forgiare righe-diff o mascherare la riga del widening. Marker: ⚠ widening · ✗ invalido. */
 function renderEditDiff(diff: any): string {
+  const clean = (v: any) => String(v ?? "").replace(/[\r\n\t\f\v\0]/g, " ").replace(/[⚠·✗]/g, "");
   return (diff.changes || [])
-    .map((c: any) => `${c.widening ? "⚠" : "·"} ${c.field}: ${c.before}  →  ${c.after}${c.note ? `  [${c.note}]` : ""}`)
+    .map((c: any) => `${c.widening ? "⚠" : c.invalid ? "✗" : "·"} ${clean(c.field)}: ${clean(c.before)}  →  ${clean(c.after)}${c.note ? `  [${clean(c.note)}]` : ""}`)
     .join("\n");
 }
 
 /**
  * askAndApplyEdit — consenso ESPLICITO (mai auto) per una proposta di edit: calcola il diff, mostra un Ask con il
- * diff prima→dopo (frizione alta se widening), e SOLO se l'utente conferma applica via applySecretEdit. Headless
- * (no ctx.hasUI) → degrada a notify (l'utente applica out-of-band). Usato da request_sink e propose_secret_edit.
+ * diff prima→dopo (frizione alta se widening), e SOLO se l'utente conferma applica via applySecretEdit (ATOMICO).
+ * Headless (no ctx.hasUI) → degrada a notify (l'utente applica out-of-band). Usato da request_sink e propose_secret_edit.
  */
 async function askAndApplyEdit(
   ctx: any, name: string, changes: any, why: string, titleVerb: string,
-): Promise<{ content: { type: "text"; text: string }[]; details: { ok: boolean } }> {
+): Promise<{ content: { type: "text"; text: string }[]; details: { ok: boolean; applied?: string[]; name?: string } }> {
   const diff = computeSecretEditDiff(name, changes);
   if (!diff.exists) return { content: [{ type: "text", text: `Secret '${name}' does not exist.` }], details: { ok: false } };
   if (!diff.changes || !diff.changes.length) {
     return { content: [{ type: "text", text: `No effective change for '${name}' (already in the requested state).` }], details: { ok: false } };
   }
+  // review P1 drift: se un change non è appliabile (rename collisione/invalido, host invalido) NON mostriamo un Ask
+  // per qualcosa che applySecretEdit rifiuterebbe → il modello lo corregge prima (niente conferma sprecata/parziale).
+  if (diff.anyInvalid) {
+    const bad = (diff.changes || []).filter((c: any) => c.invalid).map((c: any) => `${c.field}→${c.after} (${c.note})`).join("; ");
+    return { content: [{ type: "text", text: `Cannot apply — invalid change(s): ${bad}. Fix and retry; no confirmation was shown to the user.` }], details: { ok: false } };
+  }
   const externalSinks = diff.externalSinks || [];
   const ext = externalSinks.length ? ` Host ESTERNO/i: ${externalSinks.join(", ")}.` : "";
+  // disclosure per-CAMPO (review arch F1/F4): se la modifica abilita allowLocalHttp, RIPETI qui la disclosure
+  // relay/per-sessione che vive in request_local_http → parità di consenso a prescindere dal tool scelto dal modello.
+  const enablesLocalHttp = (diff.changes || []).some((c: any) => c.field === "allowLocalHttp" && c.after === "true");
+  const localHttpDisclosure = enablesLocalHttp
+    ? `\n\n⚠ allowLocalHttp: il permesso vale per TUTTA QUESTA SESSIONE e per QUALSIASI servizio loopback (qualsiasi porta/path su localhost), non solo per questa operazione. Host esterni in http restano sempre bloccati. Un servizio locale compromesso potrebbe però inoltrare il token altrove.`
+    : "";
   const header = diff.anyWidening
     ? `⚠ Questa modifica AMPLIA i permessi del secret '${name}'.${ext} Il valore reale potrà raggiungere nuove destinazioni.`
     : `Modifica del secret '${name}' (nessun ampliamento di permessi).`;
   if (ctx?.hasUI && typeof ctx?.ui?.confirm === "function") {
     const ok = await ctx.ui.confirm(
       `${titleVerb} '${name}'?`,
-      `${header}\n\nMotivo dichiarato dal modello: ${why}\n\nDIFF (prima → dopo):\n${renderEditDiff(diff)}\n\n${diff.anyWidening ? "⚠ " : ""}Confermi?`,
+      `${header}\n\nMotivo dichiarato dal modello: ${why}\n\nDIFF (prima → dopo):\n${renderEditDiff(diff)}${localHttpDisclosure}\n\n${diff.anyWidening ? "⚠ " : ""}Confermi?`,
     );
     if (!ok) return { content: [{ type: "text", text: `User DENIED the edit of '${name}'. Nothing changed.` }], details: { ok: false } };
     const r = applySecretEdit(name, changes);
-    if (!r.ok) return { content: [{ type: "text", text: `Edit failed: ${r.reason}. Nothing (or partial: ${(r.applied || []).join(", ") || "none"}) applied.` }], details: { ok: false } };
+    if (!r.ok) return { content: [{ type: "text", text: `Edit failed: ${r.reason}. Nothing was changed (atomic).` }], details: { ok: false } };
     ctx?.ui?.notify?.(`secret '${name}' aggiornato: ${(r.applied || []).join(", ")}${r.name !== name ? ` (ora '${r.name}')` : ""}`, "info");
-    return { content: [{ type: "text", text: `User APPROVED. Applied to '${r.name}': ${(r.applied || []).join(", ")}. Use {{secret:${r.name}}} now.` }], details: { ok: true } };
+    return { content: [{ type: "text", text: `User APPROVED. Applied to '${r.name}': ${(r.applied || []).join(", ")}. Use {{secret:${r.name}}} now.` }], details: { ok: true, applied: r.applied, name: r.name } };
   }
   ctx?.ui?.notify?.(`Il modello propone una modifica al secret '${name}' (${why}) ma manca l'UI interattiva (headless). Applicala TU out-of-band (es. node scripts/set-secret.mjs ...) e riavvia pi.`, "warning");
   return { content: [{ type: "text", text: `No interactive UI (headless): the edit of '${name}' was NOT applied. The user must apply it out-of-band (CLI/config) and restart pi.` }], details: { ok: false } };

@@ -25,6 +25,14 @@ const SEALED = new Map();
 const MAX_SEALED = 256;
 const NAME_RE = /^[A-Za-z0-9_.\-]{1,64}$/;
 const SECRET_REF = /\{\{secret:([A-Za-z0-9_.\-]+)\}\}/g; // riferimento usato dal modello negli args
+const MAX_DESC_LEN = 256;
+
+/** Sanitizza una description CONTROLLATA-DAL-MODELLO (review security 2026-06-30 P2-1): la description finisce
+ * verbatim nel dialog di consenso (Ask) e in listSecretsMeta → newline/glifi potrebbero forgiare righe-diff o
+ * spingere fuori vista la riga ⚠ del widening (UI redress). Strip dei control-char (incl. newline) + cap lunghezza. */
+function sanitizeDescription(d) {
+  return String(d ?? "").replace(/[\r\n\t\f\v\0]/g, " ").slice(0, MAX_DESC_LEN);
+}
 
 /**
  * Registra/aggiorna un sealed-secret. Il valore NON è mai esposto da listSecretsMeta. Di default lo registra anche
@@ -48,7 +56,7 @@ export function setSecret(name, value, { description = "", allowedSinks = [], re
   } else {
     warn = `'${name}': redactEgress=false → il valore NON sarà redatto dagli output (scelta per evitare rumore su OTP/short; non eco-arlo in chiaro)`;
   }
-  SEALED.set(name, { value, description: String(description || ""), allowedSinks: sinks, redactEgress: redact, allowLocalHttp: allowLocalHttp === true, fingerprint: fingerprint(value) });
+  SEALED.set(name, { value, description: sanitizeDescription(description), allowedSinks: sinks, redactEgress: redact, allowLocalHttp: allowLocalHttp === true, fingerprint: fingerprint(value) });
   return warn ? { ok: true, name, warn } : { ok: true, name };
 }
 
@@ -104,7 +112,7 @@ export function removeAllowedSink(name, host) {
 export function setSecretDescription(name, description) {
   const s = SEALED.get(name);
   if (!s) return { ok: false, reason: "secret does not exist" };
-  s.description = String(description ?? "");
+  s.description = sanitizeDescription(description); // strip control-char + cap (anti UI-redress nel dialog di consenso)
   return { ok: true, name, description: s.description };
 }
 
@@ -141,32 +149,49 @@ export function computeSecretEditDiff(name, changes = {}) {
   if (!s) return { exists: false };
   const out = [];
   const externalSinks = [];
+  let anyInvalid = false; // review 2026-06-30 (drift diff↔apply): segnala i change che applySecretEdit RIFIUTEREBBE
+  // rename — valida NAME_RE + collisione (il diff DEVE riflettere ciò che apply farà davvero)
   if (typeof changes.rename === "string" && changes.rename !== name) {
-    out.push({ field: "name", before: name, after: changes.rename, widening: false });
+    const bad = !NAME_RE.test(changes.rename) ? "invalid name (use [A-Za-z0-9_.-], max 64)"
+      : SEALED.has(changes.rename) ? "a secret with this name already exists" : null;
+    if (bad) anyInvalid = true;
+    out.push({ field: "name", before: name, after: changes.rename, widening: false, ...(bad ? { note: `CANNOT: ${bad}`, invalid: true } : {}) });
   }
+  // addSinks — dedup nel batch + valida (host invalidi = riga INVALID, non appliabile) + UNA riga additiva (lista finale)
   if (Array.isArray(changes.addSinks)) {
+    const seen = new Set();
+    const newHosts = [];
     for (const raw of changes.addSinks) {
       const h = String(raw ?? "").toLowerCase().trim();
-      if (!h || s.allowedSinks.includes(h)) continue;
-      const wildcard = h === "*";
-      const external = !wildcard && !isLoopbackLiteral(h);
-      if (external || wildcard) externalSinks.push(h);
-      out.push({ field: "allowedSinks+", before: s.allowedSinks.join(",") || "(none)", after: h, widening: true, note: wildcard ? "wildcard: ANY host (max widening)" : external ? "external host" : "loopback host" });
+      if (!h || seen.has(h)) continue; // dedup nel batch (apply aggiunge una volta sola)
+      seen.add(h);
+      if (!isValidSinkHost(h)) { anyInvalid = true; out.push({ field: "allowedSinks", before: "(invalid)", after: h, widening: false, note: "CANNOT: invalid host (use domain/IP/'*', no scheme/path/port)", invalid: true }); continue; }
+      if (s.allowedSinks.includes(h)) continue; // già presente → no-op (niente riga: il diff == lo stato finale)
+      newHosts.push(h);
+      if (h === "*" || !isLoopbackLiteral(h)) externalSinks.push(h);
+    }
+    if (newHosts.length) {
+      const after = [...s.allowedSinks, ...newHosts];
+      const ext = newHosts.filter((h) => h === "*" || !isLoopbackLiteral(h));
+      // UNA riga, stato COMPLETO prima→dopo (review F5: il per-host before=lista/after=singolo sembrava sostituzione)
+      out.push({ field: "allowedSinks", before: s.allowedSinks.join(", ") || "(none)", after: after.join(", "), widening: true,
+        note: ext.includes("*") ? "adds wildcard '*' = ANY host (MAX widening)" : ext.length ? `adds external host(s): ${ext.join(", ")}` : "adds loopback host(s)" });
     }
   }
+  // removeSinks — UNA riga additiva (narrowing)
   if (Array.isArray(changes.removeSinks)) {
-    for (const raw of changes.removeSinks) {
-      const h = String(raw ?? "").toLowerCase().trim();
-      if (s.allowedSinks.includes(h)) out.push({ field: "allowedSinks-", before: h, after: "(removed)", widening: false, note: "narrowing" });
-    }
+    const rm = [];
+    for (const raw of changes.removeSinks) { const h = String(raw ?? "").toLowerCase().trim(); if (s.allowedSinks.includes(h) && !rm.includes(h)) rm.push(h); }
+    if (rm.length) out.push({ field: "allowedSinks", before: s.allowedSinks.join(", ") || "(none)", after: s.allowedSinks.filter((x) => !rm.includes(x)).join(", ") || "(none)", widening: false, note: `narrowing (removes ${rm.join(", ")})` });
   }
-  if (typeof changes.description === "string" && changes.description !== s.description) {
-    out.push({ field: "description", before: s.description || "(none)", after: changes.description, widening: false });
+  if (typeof changes.description === "string") {
+    const newDesc = sanitizeDescription(changes.description);
+    if (newDesc !== s.description) out.push({ field: "description", before: s.description || "(none)", after: newDesc || "(none)", widening: false });
   }
   if (typeof changes.allowLocalHttp === "boolean" && changes.allowLocalHttp !== (s.allowLocalHttp === true)) {
-    out.push({ field: "allowLocalHttp", before: String(s.allowLocalHttp === true), after: String(changes.allowLocalHttp), widening: changes.allowLocalHttp === true, note: changes.allowLocalHttp ? "enables http→loopback" : "narrowing" });
+    out.push({ field: "allowLocalHttp", before: String(s.allowLocalHttp === true), after: String(changes.allowLocalHttp), widening: changes.allowLocalHttp === true, note: changes.allowLocalHttp ? "enables http→loopback (session-wide, ANY local service)" : "narrowing" });
   }
-  return { exists: true, name, changes: out, anyWidening: out.some((c) => c.widening), externalSinks };
+  return { exists: true, name, changes: out, anyWidening: out.some((c) => c.widening), anyInvalid, externalSinks };
 }
 
 /**
@@ -175,9 +200,20 @@ export function computeSecretEditDiff(name, changes = {}) {
  * ciò che era già applicato. @returns {{ok, name?, applied?:string[], reason?}} */
 export function applySecretEdit(name, changes = {}) {
   if (!SEALED.has(name)) return { ok: false, reason: "secret does not exist" };
+  // ATOMICITÀ (review 2026-06-30 P1 drift): pre-valida TUTTO ciò che potrebbe fallire PRIMA di mutare — così lo
+  // stato finale == il diff che l'utente ha approvato (niente partial-apply post-conferma). Gli unici step fallibili
+  // sono rename (NAME_RE+collisione) e addSinks (isValidSinkHost); gli altri non falliscono.
+  if (typeof changes.rename === "string" && changes.rename !== name) {
+    if (!NAME_RE.test(changes.rename)) return { ok: false, reason: "invalid new name (use [A-Za-z0-9_.-], max 64)" };
+    if (SEALED.has(changes.rename)) return { ok: false, reason: `a secret named '${changes.rename}' already exists` };
+  }
+  if (Array.isArray(changes.addSinks)) {
+    for (const raw of changes.addSinks) { const h = String(raw ?? "").toLowerCase().trim(); if (h && !isValidSinkHost(h)) return { ok: false, reason: `invalid sink host '${raw}' (use domain/IP/'*', no scheme/path/port)` }; }
+  }
+  // tutto valido → applica (nessuno di questi step può più fallire). Ordine: sink/desc/flag sul nome corrente, rename per ultimo.
   const applied = [];
   if (Array.isArray(changes.addSinks)) {
-    for (const h of changes.addSinks) { const r = addAllowedSink(name, h); if (!r.ok) return { ok: false, reason: r.reason, applied }; if (r.added) applied.push(`+sink ${String(h).toLowerCase().trim()}`); }
+    for (const h of changes.addSinks) { const r = addAllowedSink(name, h); if (r.ok && r.added) applied.push(`+sink ${String(h).toLowerCase().trim()}`); }
   }
   if (Array.isArray(changes.removeSinks)) {
     for (const h of changes.removeSinks) { const r = removeAllowedSink(name, h); if (r.removed) applied.push(`-sink ${String(h).toLowerCase().trim()}`); }
@@ -185,9 +221,7 @@ export function applySecretEdit(name, changes = {}) {
   if (typeof changes.description === "string") { setSecretDescription(name, changes.description); applied.push("description"); }
   if (typeof changes.allowLocalHttp === "boolean") { setAllowLocalHttp(name, changes.allowLocalHttp); applied.push(`allowLocalHttp=${changes.allowLocalHttp}`); }
   let finalName = name;
-  if (typeof changes.rename === "string" && changes.rename !== name) {
-    const r = renameSecret(name, changes.rename); if (!r.ok) return { ok: false, reason: r.reason, applied }; finalName = changes.rename; applied.push(`renamed→${finalName}`);
-  }
+  if (typeof changes.rename === "string" && changes.rename !== name) { renameSecret(name, changes.rename); finalName = changes.rename; applied.push(`renamed→${finalName}`); }
   return { ok: true, name: finalName, applied };
 }
 
@@ -198,25 +232,39 @@ export function applySecretEdit(name, changes = {}) {
  *   {{ok:boolean, refs:{name,exists,suggestion?}[], unknown:string[]}}
  */
 export function validateSecretRefs(text) {
-  const names = referencedSecrets(text);
+  const t = String(text ?? "");
+  const names = referencedSecrets(t); // SOLO i ref ben-formati {{secret:NAME}}
   const existing = [...SEALED.keys()];
   const refs = names.map((n) => {
     if (SEALED.has(n)) return { name: n, exists: true };
     const suggestion = closestName(n, existing);
     return suggestion ? { name: n, exists: false, suggestion } : { name: n, exists: false };
   });
+  // ref MALFORMATI (review P2-4): `{{secret:FOO BAR}}` (spazio) / `{{secret:}}` (vuoto) NON matchano SECRET_REF →
+  // sfuggivano silenziosamente (il validatore diceva ok:true) e poi uscivano letterali. Catturali con un pattern lasco
+  // e segnalali, così il modello li corregge PRIMA del tool_call (è lo scopo del validatore, FIND-4).
+  const wellFormed = new Set(t.match(SECRET_REF) || []);
+  const loose = /\{\{\s*secret\s*:[^}]*\}\}/gi;
+  let m;
+  while ((m = loose.exec(t))) {
+    if (!wellFormed.has(m[0])) refs.push({ name: m[0], exists: false, malformed: true });
+  }
   return { ok: refs.every((r) => r.exists), refs, unknown: refs.filter((r) => !r.exists).map((r) => r.name) };
 }
 
 /** Nome candidato più vicino per edit-distance (suggerisce solo se ragionevolmente vicino, anti-nonsense). */
 function closestName(target, candidates) {
+  const t = String(target).toLowerCase();
   let best = null, bestD = Infinity;
   for (const c of candidates) {
-    const d = levenshtein(String(target).toLowerCase(), c.toLowerCase());
+    const d = levenshtein(t, c.toLowerCase());
     if (d < bestD) { bestD = d; best = c; }
   }
-  if (best && bestD <= Math.max(2, Math.ceil(Math.max(String(target).length, best.length) * 0.4))) return best;
-  return null;
+  if (!best) return null;
+  // soglia anti-nonsense (review P2-3): per nomi CORTI (≤4) il budget è 1 — evita di suggerire "XY" per "AB"
+  // (il vecchio floor costante 2 le rendeva equivalenti); per nomi lunghi ~40% della lunghezza.
+  const budget = Math.max(t.length, best.length) <= 4 ? 1 : Math.max(2, Math.ceil(Math.max(t.length, best.length) * 0.4));
+  return bestD <= budget ? best : null;
 }
 
 /** Distanza di Levenshtein (due-righe, O(n) memoria). */
@@ -460,15 +508,26 @@ export function previewSecretUse(name, opText, mode = "strict") {
   const hosts = extractHosts(opText);
   const external = hosts.filter((h) => !isLoopbackLiteral(h) && !s.allowedSinks.some((a) => hostMatches(h, a)));
   const loopback = hosts.filter(isLoopbackLiteral);
+  // Rami ESPLICITI allineati ai motivi di blocco di checkSink (review P2-1/P2-2 + arch F6): senza questi, host-pinning/
+  // file-exfil/no-host/composizione cadevano nel fallback generico "chiedi un sink" — consiglio SBAGLIATO che
+  // rimanderebbe il modello nel loop prova-fallisci (il contrario dello scopo del preflight).
   let remediation;
-  if (hasInsecureHttp(opText) && loopback.length && !s.allowLocalHttp) {
-    remediation = `target is http://localhost → call request_local_http('${name}', why), then use it in a SINGLE clean command (no ';'/'|'/'&&'/redirects)`;
+  if (hasHostPinning(opText)) {
+    remediation = `host-pinning (--resolve/--connect-to/proxy/Host:) makes the real destination unverifiable → REMOVE that flag. Granting a sink will NOT help.`;
+  } else if (hasFileOrPipeExfil(opText)) {
+    remediation = `a sealed secret cannot be written to a file/pipe → send it to an allowed host over https instead.`;
+  } else if (hasInsecureHttp(opText) && loopback.length && !s.allowLocalHttp) {
+    remediation = `target is http://localhost → call request_local_http('${name}', why), then use it in a SINGLE clean command (no ';'/'|'/'&&'/redirects).`;
   } else if (external.length) {
     remediation = `host(s) [${external.join(", ")}] not in allowedSinks → call request_sink('${name}', '${external[0]}', why) so the user can approve it. Do NOT read the value from an env var.`;
   } else if (hasInsecureHttp(opText)) {
-    remediation = `a sealed secret cannot be sent over http:// to a non-loopback host → use https`;
+    remediation = `a sealed secret cannot be sent over http:// to a non-loopback host → use https.`;
+  } else if (s.allowedSinks.length && !hosts.length) {
+    remediation = `no destination host is identifiable in the command → put an explicit https URL of an allowed host (${s.allowedSinks.join(", ")}) in the command (not a sink grant).`;
+  } else if (hasCommandComposition(opText)) {
+    remediation = `command composition (';'/'|'/'&&'/'$()'/redirects/control-chars) blocks a loopback secret use → use a SINGLE clean command.`;
   } else {
-    remediation = `grant the needed destination via request_sink (external host) or request_local_http (localhost); do NOT invent a CLI command`;
+    remediation = `adjust the operation; grant the needed destination via request_sink (external host) or request_local_http (localhost); do NOT invent a CLI command.`;
   }
   return { name, exists: true, allowed: false, reason: gate.reason, remediation };
 }
