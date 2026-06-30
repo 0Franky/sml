@@ -243,7 +243,7 @@ export function assembleContext(vq, opts = {}) {
  * @param {{ store?: import("./conversation-store.mjs").ConversationStore, convId?: string, now?: number,
  *           absoluteTimestamps?: boolean, messagesN?: number, messagesCharCap?: number, includePrivateVars?: boolean,
  *           sinceMs?: number, maxChanges?: number, maxTasks?: number, maxVars?: number,
- *           resumeGapMs?: number, forceResume?: boolean }} [opts]
+ *           resumeGapMs?: number, forceResume?: boolean, excludeCurrentTurn?: boolean }} [opts]
  * @returns {string} il workspace completo (resume? + context + messages?)
  */
 export function buildWorkspace(vq, opts = {}) {
@@ -253,7 +253,8 @@ export function buildWorkspace(vq, opts = {}) {
   if (resume) parts.push(resume);
   parts.push(assembleContext(vq, opts));
   if (opts.store && opts.convId) {
-    const lane = buildMessagesLane(opts.store, opts.convId, { n: opts.messagesN ?? 6, charCap: opts.messagesCharCap });
+    // excludeCurrentTurn: la native-window porta già il turno corrente (keepTurns=1) → la lane mostra solo la storia.
+    const lane = buildMessagesLane(opts.store, opts.convId, { n: opts.messagesN ?? 6, charCap: opts.messagesCharCap, excludeCurrentTurn: opts.excludeCurrentTurn });
     if (lane) parts.push(lane);
   }
   return parts.join("\n");

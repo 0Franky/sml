@@ -27,6 +27,7 @@ export interface SecretsConfig {
 export interface HarnessConfig {
   trigger: TriggerConfig;
   messagesWindowN: number;
+  messagesExcludeCurrentTurn: boolean;
   gathering: GatheringConfig;
   autofocus: AutofocusConfig;
   secrets: SecretsConfig;

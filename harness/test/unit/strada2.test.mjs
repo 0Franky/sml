@@ -144,6 +144,52 @@ function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error(
   store.close();
 }
 
+// 5c) buildMessagesLane excludeCurrentTurn — complementarità lane↔native (review-full P1-B) --------
+{
+  const store = new ConversationStore(":memory:");
+  // storia: u1, a1 + il turno CORRENTE u2 (catturato dall'hook `input`, ancora senza risposta assistant)
+  store.append("d", "user", "u1");
+  store.append("d", "assistant", "a1");
+  store.append("d", "user", "u2-current");
+
+  // senza il flag → la lane include il turno corrente (comportamento storico, backward-compat)
+  const laneAll = buildMessagesLane(store, "d", { n: 10 });
+  ok(laneAll.includes("u2-current") && laneAll.includes('shown="3/3"'),
+     "P1-B: default (no flag) → lane include il turno corrente (backward-compat)");
+
+  // con excludeCurrentTurn → la lane mostra SOLO la storia (u1, a1), NON il turno in volo
+  const laneHist = buildMessagesLane(store, "d", { n: 10, excludeCurrentTurn: true });
+  ok(laneHist.includes("[user] u1") && laneHist.includes("[assistant] a1") &&
+     !laneHist.includes("u2-current") && laneHist.includes('shown="2/2"'),
+     "P1-B: excludeCurrentTurn → lane = SOLO storia, turno corrente escluso (no doppia-chat)");
+
+  // COMPLEMENTARITÀ esplicita: il turno corrente vive nella native-window (keepTurns=1), NON nella lane → overlap=0
+  const native = windowNativeMessages(
+    [{ role: "user", text: "u1" }, { role: "assistant", text: "a1" }, { role: "user", text: "u2-current" }],
+    { keepTurns: 1 });
+  ok(native.some((m) => m.text === "u2-current") && !laneHist.includes("u2-current"),
+     "P1-B: complementarità — turno corrente in native, storia in lane, NESSUN overlap");
+  store.close();
+}
+
+// 5d) excludeCurrentTurn degrada con grazia (turno non catturato) + edge primo-turno ---------------
+{
+  const store = new ConversationStore(":memory:");
+  // caso headless/non-genuino: l'ultimo record è un assistant → il turno corrente NON è nello store
+  store.append("e", "user", "u1");
+  store.append("e", "assistant", "a1");
+  const laneA = buildMessagesLane(store, "e", { n: 10, excludeCurrentTurn: true });
+  ok(laneA.includes("[user] u1") && laneA.includes("[assistant] a1") && laneA.includes('shown="2/2"'),
+     "P1-B: degrade — ultimo record = assistant → niente da escludere (storia completa)");
+
+  // edge: il turno corrente è il PRIMISSIMO messaggio (untilSeq=0) → lane vuota, non crash
+  const solo = new ConversationStore(":memory:");
+  solo.append("f", "user", "u1-current");
+  ok(buildMessagesLane(solo, "f", { n: 10, excludeCurrentTurn: true }) === "",
+     "P1-B: edge — turno corrente = primo messaggio (untilSeq=0) → lane vuota");
+  store.close(); solo.close();
+}
+
 // 6) state-db singleton + closeAll ----------------------------------------------------------------
 {
   const a = getVarsQueue(":memory:");

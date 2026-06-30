@@ -87,5 +87,6 @@ export function buildNestedWorkspace(
     messagesN?: number;
     messagesCharCap?: number;
     afterSeq?: number;
+    excludeCurrentTurn?: boolean;
   },
 ): string;

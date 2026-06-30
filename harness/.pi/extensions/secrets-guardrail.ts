@@ -12,6 +12,11 @@
  * `add_secret` registra un valore segreto **in-memory** (per-processo, MAI su disco) che il
  * guardrail redige da ogni output di tool — i "riferimenti opachi per-sessione" di
  * ../../wiki/concepts/secret-section-exfiltration-defense.md.
+ *
+ * SCOPE: questa estensione è il lato EGRESS (output→tool / tool_result / injection sink-gated). Il lato INGRESS
+ * (cattura valori secret-shaped dall'INPUT utente PRIMA del provider) vive nell'estensione SEPARATA
+ * `regex-ingress.ts` (più invasiva: muta ogni input → disattivabile a parte). Coordinano via il singleton condiviso
+ * `src/sealed-secrets.mjs`. Soft-dep: regex-ingress standalone = anti-provider; +questa = anche anti-transcript.
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
@@ -23,7 +28,7 @@ import { redactText } from "../../src/secrets-redact.mjs";
 import { addSecret, getDynamicSecrets, clearSecrets } from "../../src/secrets-registry.mjs";
 // SEALED-SECRETS (msg 577/578/579): registry sigillato + reference-injection + sink-gating. Il valore non entra MAI
 // nel context del modello; provisioning out-of-band (env SEALED_SECRET_* + metadata .pi/secrets.config.json).
-import { loadFromEnv, listSecretsMeta, injectIntoStrings, autoSealIngress, clearSealed } from "../../src/sealed-secrets.mjs";
+import { loadFromEnv, listSecretsMeta, injectIntoStrings, clearSealed } from "../../src/sealed-secrets.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { readFileSync, existsSync } from "node:fs";
 
@@ -67,27 +72,9 @@ export default function (pi: ExtensionAPI) {
   // sessione A NON restano residenti nella sessione B (reload/resume/new/fork sono in-process). (review-loop #2 P2.)
   pi.on("session_shutdown", () => { clearSecrets(); clearSealed(); });
 
-  // REGEX-INGRESS (idea utente msg 578/579) — cattura valori secret-shaped nell'INPUT utente PRIMA che raggiungano il
-  // modello/provider. `regexIngress`: off | ask | auto (env HARNESS_SECRETS_REGEX_INGRESS). Entrambi auto/ask sigillano
-  // (fail-safe: meglio sigillare un falso-positivo che leakare un segreto vero) e TRASFORMANO il testo: il valore è
-  // sostituito col riferimento {{secret:INGRESS_N}} → il VALORE non entra nel context (mai al provider, mai nei
-  // transcript nativi). Differenza: `auto` notifica info, `ask` notifica warning (chiede conferma/undo all'utente;
-  // il blocco-interattivo vero richiederebbe un prompt TUI non disponibile headless → degrada a seal-provvisorio+notify).
-  pi.on("input", (event, ctx) => {
-    const mode = HARNESS_CFG.secrets.regexIngress; // off | ask | auto
-    if (mode === "off") return { action: "continue" } as const;
-    const e = event as any;
-    const text = e.text;
-    if (typeof text !== "string" || !text.trim() || text.startsWith("/")) return { action: "continue" } as const;
-    const { text: newText, sealed } = autoSealIngress(text);
-    if (!sealed.length) return { action: "continue" } as const;
-    const names = sealed.map((s) => s.name).join(", ");
-    const msg = mode === "ask"
-      ? `secrets-guardrail (regex-ingress=ask): rilevato e sigillato ${sealed.length} valore secret-shaped → ${names}. Il valore NON va al modello/provider. Se è un falso positivo o vuoi usarlo, gestiscilo (allowedSinks).`
-      : `secrets-guardrail (regex-ingress=auto): ${sealed.length} valore secret-shaped sigillato (${names}); il valore NON raggiunge il modello/provider.`;
-    ctx?.ui?.notify?.(msg, mode === "ask" ? "warning" : "info");
-    return { action: "transform", text: newText, images: e.images } as const;
-  });
+  // NB: l'INGRESS regex (cattura valori secret-shaped dall'INPUT utente, hook `input`+transform) è stato ESTRATTO
+  // nell'estensione separata `regex-ingress.ts` (utente msg 619): muta ogni input → più invasivo → disattivabile a
+  // parte. Coordina con questa via il singleton `src/sealed-secrets.mjs`. Qui resta SOLO il lato egress.
 
   // SEALED-SECRETS — vista per il modello: nome+descrizione+allowedSinks, MAI il valore.
   pi.registerTool({
