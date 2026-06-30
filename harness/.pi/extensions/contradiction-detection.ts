@@ -27,9 +27,9 @@ function store(): VarsQueue {
 }
 
 const Predicate = Type.Object({
-  key: Type.String({ description: "Il nome del fatto/proprietà (es. 'emails_per_user')." }),
-  op: Type.String({ description: "Operatore: eq|neq|gt|lt|gte|lte|in|nin (accetta anche ==,!=,>,<,>=,<=,is,is-not)." }),
-  value: Type.Unknown({ description: "Valore (numero, stringa, booleano, o array per in/nin)." }),
+  key: Type.String({ description: "The fact/property name (e.g. 'emails_per_user')." }),
+  op: Type.String({ description: "Operator: eq|neq|gt|lt|gte|lte|in|nin (also accepts ==,!=,>,<,>=,<=,is,is-not)." }),
+  value: Type.Unknown({ description: "Value (number, string, boolean, or array for in/nin)." }),
 });
 
 export default function (pi: ExtensionAPI) {
@@ -44,11 +44,11 @@ export default function (pi: ExtensionAPI) {
     name: "record_assumptions",
     label: "Record a decision's assumptions (contradiction layer)",
     description:
-      "Registra le ASSUNZIONI tipizzate {key,op,value} su cui poggia una decisione (id condiviso con record_decision). Un nuovo fatto che NEGA un'assunzione verrà segnalato da check_facts. Sopravvive al compact. Usalo dopo record_decision quando la decisione poggia su assunzioni non banali.",
+      "Record the typed ASSUMPTIONS {key,op,value} a decision rests on (id shared with record_decision). A new fact that NEGATES an assumption will be flagged by check_facts. Survives the compact. Use it after record_decision when the decision rests on non-trivial assumptions.",
     parameters: Type.Object({
-      id: Type.String({ description: "Slug della decisione (stesso id usato con record_decision, es. 'D1-dedup-email')." }),
-      statement: Type.Optional(Type.String({ description: "La decisione in una frase." })),
-      assumptions: Type.Array(Predicate, { description: "Le assunzioni su cui poggia, come predicati {key,op,value}." }),
+      id: Type.String({ description: "Decision slug (same id used with record_decision, e.g. 'D1-dedup-email')." }),
+      statement: Type.Optional(Type.String({ description: "The decision in one sentence." })),
+      assumptions: Type.Array(Predicate, { description: "The assumptions it rests on, as {key,op,value} predicates." }),
     }),
     async execute(_toolCallId: string, params: any) {
       vq.setVar(
@@ -57,7 +57,7 @@ export default function (pi: ExtensionAPI) {
         { namespace: NS, scope: "private" },
       );
       return {
-        content: [{ type: "text", text: `decisione '${params.id}' registrata (${(params.assumptions ?? []).length} assunzioni)` }],
+        content: [{ type: "text", text: `decision '${params.id}' recorded (${(params.assumptions ?? []).length} assumptions)` }],
         details: { ok: true },
       };
     },
@@ -67,17 +67,17 @@ export default function (pi: ExtensionAPI) {
     name: "check_facts",
     label: "Check new facts vs recorded decisions",
     description:
-      "Controlla se uno o più NUOVI FATTI {key,op,value} contraddicono le assunzioni di decisioni registrate. Ritorna i conflitti (vuoto = nessuno). Chiamalo quando apprendi un fatto/requisito nuovo, PRIMA di applicarlo in isolamento.",
+      "Check whether one or more NEW FACTS {key,op,value} contradict the assumptions of recorded decisions. Returns the conflicts (empty = none). Call it when you learn a new fact/requirement, BEFORE applying it in isolation.",
     parameters: Type.Object({
-      facts: Type.Array(Predicate, { description: "I nuovi fatti come predicati {key,op,value}." }),
+      facts: Type.Array(Predicate, { description: "The new facts as {key,op,value} predicates." }),
     }),
     async execute(_toolCallId: string, params: any) {
       const decisions = vq.listVars({ namespace: NS }).map((v: any) => ({ id: v.id, ...(v.value || {}) }));
       const conflicts = checkContradiction(params.facts ?? [], decisions as any);
       const text = conflicts.length
-        ? `⚠️ ${conflicts.length} CONTRADDIZIONE/I rilevata/e (riconcilia PRIMA di procedere):\n` +
+        ? `⚠️ ${conflicts.length} CONTRADICTION(S) detected (reconcile BEFORE proceeding):\n` +
           conflicts.map((c) => `- ${c.reason}`).join("\n")
-        : `nessuna contraddizione con le ${decisions.length} decisioni registrate`;
+        : `no contradiction with the ${decisions.length} recorded decisions`;
       return { content: [{ type: "text", text }], details: { conflicts, decisions_checked: decisions.length } };
     },
   });

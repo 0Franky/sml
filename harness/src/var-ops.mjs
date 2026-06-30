@@ -61,15 +61,15 @@ export function getByPath(obj, path) {
   let cur = obj;
   for (const part of parts) {
     if (FORBIDDEN_KEYS.has(part)) {
-      return { ok: false, error: `path '${path}': segmento '${part}' vietato (proto-pollution)` };
+      return { ok: false, error: `path '${path}': segment '${part}' forbidden (proto-pollution)` };
     }
     if (cur == null || typeof cur !== "object") {
-      return { ok: false, error: `path '${path}': '${part}' su valore non-oggetto` };
+      return { ok: false, error: `path '${path}': '${part}' on a non-object value` };
     }
     if (Array.isArray(cur)) {
       const idx = Number(part);
       if (!Number.isInteger(idx) || idx < 0 || idx >= cur.length) {
-        return { ok: false, error: `path '${path}': indice '${part}' fuori range [0,${cur.length})` };
+        return { ok: false, error: `path '${path}': index '${part}' out of range [0,${cur.length})` };
       }
       cur = cur[idx];
     } else {
@@ -77,8 +77,8 @@ export function getByPath(obj, path) {
       // se la chiave è un accessor (get/set) NON la si valuta → l'invariante "solo dati JSON-plain"
       // diventa enforced anche se un chiamante passa un oggetto live (non solo output di JSON.parse).
       const desc = Object.getOwnPropertyDescriptor(cur, part);
-      if (!desc) return { ok: false, error: `path '${path}': chiave '${part}' assente` };
-      if (desc.get || desc.set) return { ok: false, error: `path '${path}': '${part}' è un accessor (getter/setter), non valutato` };
+      if (!desc) return { ok: false, error: `path '${path}': key '${part}' missing` };
+      if (desc.get || desc.set) return { ok: false, error: `path '${path}': '${part}' is an accessor (getter/setter), not evaluated` };
       cur = desc.value;
     }
   }
@@ -93,16 +93,16 @@ export function getByPath(obj, path) {
  */
 export function extractVar(vq, src, path, dest, opts = {}) {
   const v = vq.getVar(src);
-  if (!v) return { ok: false, error: `var '${src}' non trovata` };
+  if (!v) return { ok: false, error: `var '${src}' not found` };
 
   let data = v.value;
   if (typeof data === "string") {
-    if (data.length > MAX_VALUE_BYTES) return { ok: false, error: `var '${src}' troppo grande (${data.length} > ${MAX_VALUE_BYTES} byte)` };
+    if (data.length > MAX_VALUE_BYTES) return { ok: false, error: `var '${src}' too large (${data.length} > ${MAX_VALUE_BYTES} bytes)` };
     try { data = JSON.parse(data); }
-    catch (e) { return { ok: false, error: `var '${src}' non è JSON valido: ${e.message}` }; }
+    catch (e) { return { ok: false, error: `var '${src}' is not valid JSON: ${e.message}` }; }
   }
   if (data == null || typeof data !== "object") {
-    return { ok: false, error: `var '${src}' non è un oggetto/array JSON` };
+    return { ok: false, error: `var '${src}' is not a JSON object/array` };
   }
 
   const r = getByPath(data, path);
@@ -158,7 +158,7 @@ export function emitToUser(text, vq, { dynamicSecrets = [], interpolate: doInter
   const { redacted, hit } = redactText(resolved, dynamicSecrets);
   // cap DOPO la redazione (review P1-D): anti-amplificazione applicata sul risultato GIÀ redatto, così nessun
   // prefisso di un segreto a cavallo del cap può sfuggire (redazione su testo completo, poi troncamento).
-  const capped = redacted.length > MAX_INTERP_CHARS ? redacted.slice(0, MAX_INTERP_CHARS) + "…[troncato]" : redacted;
+  const capped = redacted.length > MAX_INTERP_CHARS ? redacted.slice(0, MAX_INTERP_CHARS) + "…[truncated]" : redacted;
   return { text: capped, interpolated: doInterpolate, secretHit: hit };
 }
 

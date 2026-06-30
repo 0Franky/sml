@@ -221,7 +221,7 @@ export function serializeFrame(frame, opts = {}) {
   const L = [`<frame depth="${frame.depth}">`];
   L.push(frame.aim
     ? `  <aim id="${esc(frame.aim.id)}" status="${esc(frame.aim.status)}">${esc(frame.aim.title)}</aim>`
-    : `  <aim>(nessuno)</aim>`);
+    : `  <aim>(none)</aim>`);
 
   // constraints — MAI troncate (sono le regole che vincolano anche dentro il focus)
   L.push("  <constraints>");
@@ -232,7 +232,7 @@ export function serializeFrame(frame, opts = {}) {
     const decs = frame.decisions.slice(-dispCap); // le più recenti
     L.push(`  <decisions shown="${decs.length}/${frame.decisions.length}">`);
     for (const d of decs) L.push(`    - ${esc(d.id)}: ${esc(d.text)}${d.rationale ? ` — ${esc(d.rationale)}` : ""}`);
-    if (frame.decisions.length > decs.length) L.push(`    - (+${frame.decisions.length - decs.length} più vecchie — usa get_decisions_by_agent)`);
+    if (frame.decisions.length > decs.length) L.push(`    - (+${frame.decisions.length - decs.length} older ones — use get_decisions_by_agent)`);
     L.push("  </decisions>");
   }
 
@@ -240,7 +240,7 @@ export function serializeFrame(frame, opts = {}) {
     const sv = frame.sharedState.slice(0, dispCap);
     L.push(`  <shared_state shown="${sv.length}/${frame.sharedState.length}">`);
     for (const v of sv) L.push(`    - ${esc(v.id)}=${esc(JSON.stringify(v.value))}`);
-    if (frame.sharedState.length > sv.length) L.push(`    - (+${frame.sharedState.length - sv.length} — usa get_shared_view)`);
+    if (frame.sharedState.length > sv.length) L.push(`    - (+${frame.sharedState.length - sv.length} — use get_shared_view)`);
     L.push("  </shared_state>");
   }
 
@@ -248,7 +248,7 @@ export function serializeFrame(frame, opts = {}) {
     const bl = frame.backlog.slice(0, dispCap);
     L.push(`  <backlog shown="${bl.length}/${frame.backlog.length}">`);
     for (const t of bl) L.push(`    - [${t.status}] ${esc(t.id)}: ${esc(t.title)}`);
-    if (frame.backlog.length > bl.length) L.push(`    - (+${frame.backlog.length - bl.length} — usa list_tasks)`);
+    if (frame.backlog.length > bl.length) L.push(`    - (+${frame.backlog.length - bl.length} — use list_tasks)`);
     L.push("  </backlog>");
   }
   L.push("</frame>");
@@ -269,14 +269,14 @@ export function enterFocus(vq, opts = {}, cfg = DEFAULT_CFG) {
   const c = { ...DEFAULT_CFG, ...cfg };
   const now = opts.now ?? Date.now();
   const gate = canEnter(vq, c);
-  if (!gate.ok) throw new Error(`enterFocus rifiutato: ${gate.reason}`);
+  if (!gate.ok) throw new Error(`enterFocus rejected: ${gate.reason}`);
   const depth = gate.depth + 1;
   if (depth > c.maxDepth) throw new Error(`enterFocus: depth ${depth} > maxDepth ${c.maxDepth}`);
 
   let subset = Array.isArray(opts.taskSubset) ? opts.taskSubset.filter(Boolean).map(String) : [];
   subset = subset.filter((id) => vq.getTask(id)); // SOLO task esistenti (no ghost-id → focus degenere/context vuoto)
   if (!subset.length && !opts.aimTask) {
-    throw new Error("enterFocus: subset vuoto o senza task esistenti (serve ≥1 task valido)");
+    throw new Error("enterFocus: empty subset or no existing tasks (need ≥1 valid task)");
   }
   // HARD-GATE no-lead (focus-gathering v1, review P0/P2): se non c'è alcun task su cui appoggiare il lead, RIFIUTA
   // invece di degenerare su un task non-eseguibile (il fallimento che il design previene, msg 506). Diagnostica
@@ -286,12 +286,12 @@ export function enterFocus(vq, opts = {}, cfg = DEFAULT_CFG) {
   const throwNoLead = (ids) => {
     const open = ids.filter(isOpen);
     if (!open.length) {
-      const e = new Error("enterFocus: nessun task OPEN nel subset (tutti già done/blocked)");
+      const e = new Error("enterFocus: no OPEN task in the subset (all already done/blocked)");
       e.reason = "no-open-task"; e.missing_deps = [];
       throw e;
     }
     const missing = [...new Set(open.flatMap((id) => (vq.getTask(id)?.deps ?? []).filter((d) => vq.getTask(d)?.status !== "done")))];
-    const e = new Error(`enterFocus: nessun task READY nel subset (deps non soddisfatte) — missing_deps: [${missing.join(", ")}]`);
+    const e = new Error(`enterFocus: no READY task in the subset (deps not satisfied) — missing_deps: [${missing.join(", ")}]`);
     e.reason = "no-ready-task"; e.missing_deps = missing;
     throw e;
   };
@@ -316,7 +316,7 @@ export function enterFocus(vq, opts = {}, cfg = DEFAULT_CFG) {
   vq.createFocusFrame(scopeId, { parentId, depth, aimTask: priorCurr, taskSubset: subset, sinceSeq, now, who });
   if (lead) vq.setCurr(lead, { who });
   vq.recordDecision(`enter-${scopeId}`,
-    `zoom-in su [${subset.join(", ") || lead || "scope"}] (depth ${depth})`,
+    `zoom-in on [${subset.join(", ") || lead || "scope"}] (depth ${depth})`,
     { who, taskRef: lead ?? null });
   vq.setActiveScope(scopeId, { who });
   return { scopeId, depth, sinceSeq };
@@ -330,14 +330,14 @@ export function enterFocus(vq, opts = {}, cfg = DEFAULT_CFG) {
 export function popFocus(vq, scopeId, opts = {}) {
   const now = opts.now ?? Date.now();
   const frame = vq.getFocusFrame(scopeId);
-  if (!frame) throw new Error(`popFocus: scope ${scopeId} inesistente`);
-  if (frame.status !== "open") throw new Error(`popFocus: scope ${scopeId} non è open (${frame.status})`);
+  if (!frame) throw new Error(`popFocus: scope ${scopeId} does not exist`);
+  if (frame.status !== "open") throw new Error(`popFocus: scope ${scopeId} is not open (${frame.status})`);
   // invariante LIFO: non si può poppare uno scope che ha figli ancora aperti — orfanerebbe il sotto-albero
   // (active_scope/depth/CURR incoerenti, delta del figlio persi). Il path di default (deepest) non lo triggera;
   // un scope_id esplicito non-top sì → guard esplicito. (review-loop 2026-06-29, P1 no-LIFO.)
   const openChildren = vq.listFocusFrames({ status: "open" }).filter((f) => f.parent_id === scopeId);
   if (openChildren.length) {
-    throw new Error(`popFocus: scope ${scopeId} ha ${openChildren.length} figlio/i ancora aperto/i — chiudili prima (LIFO)`);
+    throw new Error(`popFocus: scope ${scopeId} has ${openChildren.length} child scope(s) still open — close them first (LIFO)`);
   }
 
   const parent = frame.parent_id ?? null;

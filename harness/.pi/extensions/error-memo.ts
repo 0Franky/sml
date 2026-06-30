@@ -30,11 +30,11 @@ export default function (pi: ExtensionAPI) {
     name: "remember_lesson",
     label: "Remember a lesson/error",
     description:
-      "Persiste una lezione appresa da un errore (2 livelli: lezione generica + esempio concreto). Richiamabile con recall_lessons. Sopravvive al compact.",
+      "Persist a lesson learned from an error (2 levels: generic lesson + concrete example). Retrievable with recall_lessons. Survives the compact.",
     parameters: Type.Object({
-      id: Type.String({ description: "Slug breve (es. 'find-references-before-rename')." }),
-      lesson: Type.String({ description: "La lezione generica / il principio." }),
-      example: Type.Optional(Type.String({ description: "Esempio concreto (cosa è successo)." })),
+      id: Type.String({ description: "Short slug (e.g. 'find-references-before-rename')." }),
+      lesson: Type.String({ description: "The generic lesson / principle." }),
+      example: Type.Optional(Type.String({ description: "Concrete example (what happened)." })),
     }),
     async execute(_toolCallId: string, params: any) {
       vq.setVar(
@@ -42,14 +42,14 @@ export default function (pi: ExtensionAPI) {
         { lesson: params.lesson, example: params.example ?? null },
         { namespace: MEMO_NS, scope: "private" },
       );
-      return { content: [{ type: "text", text: `lezione '${params.id}' memorizzata` }], details: { ok: true } };
+      return { content: [{ type: "text", text: `lesson '${params.id}' stored` }], details: { ok: true } };
     },
   });
 
   pi.registerTool({
     name: "recall_lessons",
     label: "Recall lessons/errors",
-    description: "Richiama le lezioni memorizzate (memo errori). Filtro opzionale su substring di id/lezione.",
+    description: "Recall stored lessons (error memos). Optional filter on a substring of id/lesson.",
     parameters: Type.Object({ filter: Type.Optional(Type.String()) }),
     async execute(_toolCallId: string, params: any) {
       const all = vq.listVars({ namespace: MEMO_NS });
