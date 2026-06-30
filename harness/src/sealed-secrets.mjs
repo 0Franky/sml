@@ -36,7 +36,7 @@ const SECRET_REF = /\{\{secret:([A-Za-z0-9_.\-]+)\}\}/g; // riferimento usato da
  *             ma NON è aggiunto al backstop → trade-off esplicito (accettabile per un OTP usa-e-getta).
  * @returns {{ok:boolean, name?:string, reason?:string, warn?:string}}
  */
-export function setSecret(name, value, { description = "", allowedSinks = [], redactEgress = true } = {}) {
+export function setSecret(name, value, { description = "", allowedSinks = [], redactEgress = true, allowLocalHttp = false } = {}) {
   if (typeof name !== "string" || !NAME_RE.test(name)) return { ok: false, reason: "nome non valido (usa [A-Za-z0-9_.-], max 64)" };
   if (typeof value !== "string" || value.length < 1) return { ok: false, reason: "valore vuoto" };
   if (!SEALED.has(name) && SEALED.size >= MAX_SEALED) return { ok: false, reason: `registry pieno (max ${MAX_SEALED})` };
@@ -48,13 +48,26 @@ export function setSecret(name, value, { description = "", allowedSinks = [], re
   } else {
     warn = `'${name}': redactEgress=false → il valore NON sarà redatto dagli output (scelta per evitare rumore su OTP/short; non eco-arlo in chiaro)`;
   }
-  SEALED.set(name, { value, description: String(description || ""), allowedSinks: sinks, redactEgress: redact, fingerprint: fingerprint(value) });
+  SEALED.set(name, { value, description: String(description || ""), allowedSinks: sinks, redactEgress: redact, allowLocalHttp: allowLocalHttp === true, fingerprint: fingerprint(value) });
   return warn ? { ok: true, name, warn } : { ok: true, name };
 }
 
-/** Vista per il MODELLO: nome + descrizione + allowedSinks, MAI il valore. */
+/**
+ * setAllowLocalHttp — abilita/disabilita il flag `allowLocalHttp` di un secret ESISTENTE (utente msg 668). Il secret
+ * diventa usabile su `http://` MA SOLO verso loopback letterale (vedi checkSink). Va chiamata SOLO dopo consenso
+ * ESPLICITO dell'utente (Ask della TUI o provisioning out-of-band), MAI per auto-decisione del modello.
+ * @returns {{ok:boolean, name?:string, allowLocalHttp?:boolean, reason?:string}}
+ */
+export function setAllowLocalHttp(name, allow = true) {
+  const s = SEALED.get(name);
+  if (!s) return { ok: false, reason: "secret does not exist" };
+  s.allowLocalHttp = allow !== false;
+  return { ok: true, name, allowLocalHttp: s.allowLocalHttp };
+}
+
+/** Vista per il MODELLO: nome + descrizione + allowedSinks + allowLocalHttp, MAI il valore. */
 export function listSecretsMeta() {
-  return [...SEALED.entries()].map(([name, s]) => ({ name, description: s.description, allowedSinks: s.allowedSinks, fingerprint: s.fingerprint }));
+  return [...SEALED.entries()].map(([name, s]) => ({ name, description: s.description, allowedSinks: s.allowedSinks, allowLocalHttp: s.allowLocalHttp === true, fingerprint: s.fingerprint }));
 }
 
 /** Esiste un sealed-secret con questo nome? */
@@ -117,6 +130,20 @@ export function hasInsecureHttp(opText) {
 }
 
 /**
+ * isLoopbackLiteral — `host` è un loopback LETTERALE (127.0.0.0/8, `localhost`, `::1`)? Usato dal fast-path
+ * `allowLocalHttp`: http è consentito SOLO verso loopback, e SOLO su host LETTERALE (non hostname arbitrari) per non
+ * dipendere dalla risoluzione DNS (anti DNS-rebinding). NB: `localhost` è incluso per ergonomia dev; un /etc/hosts
+ * sabotato potrebbe rimapparlo (rischio residuo accettato: è la macchina dell'utente). IPv6 in URL `http://[::1]`:
+ * extractHosts non estrae le parentesi → usa 127.0.0.1/localhost (limite noto).
+ */
+export function isLoopbackLiteral(host) {
+  const h = String(host ?? "").toLowerCase().trim();
+  if (h === "localhost" || h === "::1") return true;
+  const m = h.match(/^127\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  return !!m && m.slice(1).every((o) => Number(o) >= 0 && Number(o) <= 255);
+}
+
+/**
  * checkSink — sink-gating per UN secret verso l'operazione `opText`. Modi:
  *   - 'strict' (default): allow-host fail-closed. Se il secret dichiara allowedSinks → consenti SOLO se TUTTI gli
  *     host del comando sono in allow-list (e nessuna scrittura-file). Se NON dichiara allowedSinks → BLOCCA ogni
@@ -131,13 +158,22 @@ export function checkSink(name, opText, mode = "strict") {
   if (mode === "off") return { allowed: true };
   const hosts = extractHosts(opText);
   const fileExfil = hasFileOrPipeExfil(opText);
+  const hostPinned = hasHostPinning(opText);
+  // FAST-PATH allowLocalHttp (utente msg 668): un secret LOCALE che ha fatto opt-in ESPLICITO può andare su http MA
+  // SOLO verso loopback LETTERALE. Condizioni TUTTE necessarie: (a) flag attivo; (b) c'è ≥1 host; (c) OGNI host è
+  // loopback letterale; (d) NIENTE scrittura-file; (e) NIENTE host-pinning. La (e) è CRITICA: `--resolve`/proxy/`Host:`
+  // potrebbero far connettere "localhost" a un IP ESTERNO → senza questo guard il fast-path sarebbe un bypass. Quando
+  // concesso, bypassa https-only E allowedSinks (loopback è intrinsecamente non-esfiltrante + opt-in dell'utente).
+  if (s.allowLocalHttp && hosts.length && !fileExfil && !hostPinned && hosts.every(isLoopbackLiteral)) {
+    return { allowed: true };
+  }
   // https-only: un sealed-secret NON transita su http:// in chiaro (vale in strict E warn: è igiene crittografica).
-  if (hasInsecureHttp(opText)) return { allowed: false, reason: `'${name}' cannot be sent over http:// in cleartext (use https)` };
+  if (hasInsecureHttp(opText)) return { allowed: false, reason: `'${name}' cannot be sent over http:// in cleartext (use https; for a local secret enable allowLocalHttp + target loopback only)` };
 
   if (s.allowedSinks.length) {
     // allow-host fail-closed (vale anche in 'warn': l'allow-list è una scelta esplicita dell'utente)
     if (fileExfil) return { allowed: false, reason: `'${name}' cannot be written to a file/pipe (write detected)` };
-    if (hasHostPinning(opText)) return { allowed: false, reason: `'${name}': host-pinning detected (--resolve/--connect-to/proxy/Host:) → the real destination is not verifiable from the URL, blocked` };
+    if (hostPinned) return { allowed: false, reason: `'${name}': host-pinning detected (--resolve/--connect-to/proxy/Host:) → the real destination is not verifiable from the URL, blocked` };
     if (!hosts.length) return { allowed: false, reason: `'${name}' requires a destination among [${s.allowedSinks.join(", ")}] but no host is identifiable in the operation (fail-closed)` };
     const bad = hosts.filter((h) => !s.allowedSinks.some((a) => hostMatches(h, a)));
     if (bad.length) return { allowed: false, reason: `'${name}' allowed only toward [${s.allowedSinks.join(", ")}]; disallowed hosts: ${bad.join(", ")}` };
@@ -217,7 +253,7 @@ export function loadFromEnv(env = process.env, meta = {}) {
     const name = k.slice("SEALED_SECRET_".length);
     if (!NAME_RE.test(name)) continue;
     const m = meta[name] || {};
-    const r = setSecret(name, String(v), { description: m.description ?? "", allowedSinks: m.allowedSinks ?? [], redactEgress: m.redactEgress });
+    const r = setSecret(name, String(v), { description: m.description ?? "", allowedSinks: m.allowedSinks ?? [], redactEgress: m.redactEgress, allowLocalHttp: m.allowLocalHttp });
     if (r.ok) loaded.push(name);
   }
   return loaded;
@@ -291,4 +327,4 @@ export function clearSealed() {
   ingressCounter = 0;
 }
 
-export default { setSecret, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp, hasHostPinning, checkSink, injectSecrets, injectIntoStrings, scanIngress, loadFromEnv, clearSealed };
+export default { setSecret, setAllowLocalHttp, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp, hasHostPinning, isLoopbackLiteral, checkSink, injectSecrets, injectIntoStrings, scanIngress, loadFromEnv, clearSealed };

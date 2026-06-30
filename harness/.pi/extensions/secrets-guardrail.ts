@@ -28,7 +28,7 @@ import { redactText } from "../../src/secrets-redact.mjs";
 import { addSecret, getDynamicSecrets, clearSecrets } from "../../src/secrets-registry.mjs";
 // SEALED-SECRETS (msg 577/578/579): registry sigillato + reference-injection + sink-gating. Il valore non entra MAI
 // nel context del modello; provisioning out-of-band (env SEALED_SECRET_* + metadata .pi/secrets.config.json).
-import { loadFromEnv, listSecretsMeta, injectIntoStrings, clearSealed } from "../../src/sealed-secrets.mjs";
+import { loadFromEnv, listSecretsMeta, injectIntoStrings, clearSealed, setAllowLocalHttp, hasSecret } from "../../src/sealed-secrets.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { readFileSync, existsSync } from "node:fs";
 
@@ -108,6 +108,37 @@ export default function (pi: ExtensionAPI) {
         content: [{ type: "text", text: `Requested secret '${p.name}'. The user must provision it (env SEALED_SECRET_${p.name} or CLI set-secret) — you will NOT receive the value; use it as {{secret:${p.name}}}.` }],
         details: { ok: true },
       };
+    },
+  });
+
+  pi.registerTool({
+    name: "request_local_http",
+    label: "Ask the user to allow a secret over loopback http",
+    description:
+      "Ask the USER to allow a sealed secret to be used over http TOWARD LOOPBACK ONLY (localhost / 127.0.0.1) — e.g. a local-session JWT against a dev server. You CANNOT enable this yourself: only the user can accept (the harness opens a confirmation). The value stays sealed (you never see it, it is redacted from transcripts) and can NEVER be sent to an external host over http (external stays https-only). Use this when a {{secret:NAME}} use is blocked because the target is http://localhost.",
+    parameters: Type.Object({
+      name: Type.String({ description: "Name of the sealed secret (must already exist)." }),
+      why: Type.String({ description: "Why you need local http (which local server/operation)." }),
+    }),
+    async execute(_t: string, p: any, _signal: any, _onUpdate: any, ctx: any) {
+      if (!hasSecret(p.name)) {
+        return { content: [{ type: "text", text: `Secret '${p.name}' does not exist. Ask the user to provision it first (request_secret).` }], details: { ok: false } };
+      }
+      // Consenso ESPLICITO obbligatorio (utente msg 668: MAI auto-decisione del modello). In TUI/RPC → dialog confirm;
+      // in headless (no hasUI) → degrada a notify + l'utente lo abilita out-of-band (CLI/config). Mai abilitato dal solo modello.
+      if (ctx?.hasUI && typeof ctx?.ui?.confirm === "function") {
+        const ok = await ctx.ui.confirm(
+          `Abilitare http-locale per il secret '${p.name}'?`,
+          `Il modello vuole usare {{secret:${p.name}}} su http SOLO verso loopback (localhost / 127.0.0.1).\nMotivo: ${p.why}\nIl valore resta sigillato (non lo vedi tu né il modello, redatto dai transcript) e NON potrà MAI andare su un host esterno in http. Consenti?`,
+        );
+        if (ok) {
+          setAllowLocalHttp(p.name, true);
+          return { content: [{ type: "text", text: `User APPROVED: '${p.name}' may now be used over http toward loopback only (localhost/127.0.0.1). External hosts remain https-only.` }], details: { ok: true } };
+        }
+        return { content: [{ type: "text", text: `User DENIED local-http for '${p.name}'. Use https; a non-loopback http target is not allowed.` }], details: { ok: false } };
+      }
+      ctx?.ui?.notify?.(`Il modello chiede allowLocalHttp per '${p.name}' (${p.why}). Abilitalo TU out-of-band: node scripts/set-secret.mjs ${p.name} --allow-local-http (o aggiungi "allowLocalHttp": true in .pi/secrets.config.json). Headless: non posso chiederti conferma interattiva.`, "warning");
+      return { content: [{ type: "text", text: `No interactive UI available (headless): asked the user to enable allowLocalHttp for '${p.name}' out-of-band (CLI/config). NOT enabled yet — retry after the user confirms.` }], details: { ok: false } };
     },
   });
 

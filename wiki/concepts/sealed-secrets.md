@@ -12,7 +12,7 @@ last_updated: 2026-06-30
 
 # Sealed secrets — secret-reference per agenti
 
-> **STATUS: DESIGN (non implementato).** Idea utente msg 577/578/579. Estende l'infra esistente (`secrets-guardrail`/`secrets-registry`/`secrets-redact`). Build da fare (centrato sul sink-gating, non sullo storage).
+> **STATUS: IMPLEMENTATO v1** (2026-06-30). Idea utente msg 577/578/579. `src/sealed-secrets.mjs` (test 89/89, incl. red-team) + wiring `secrets-guardrail.ts` (egress) + `regex-ingress.ts` (ingress). Include `allowLocalHttp` (§4bis, msg 668). Residui best-effort (*exfiltration-via-use*) tracciati §residui.
 
 ## Problema
 
@@ -44,6 +44,15 @@ Un agente ha bisogno di USARE segreti (API key, token) per eseguire operazioni, 
 - Ogni secret dichiara `allowed_sinks` (es. host fidati: `api.openai.com`). La sostituzione `{{secret:NAME}}` avviene **SOLO** se la destinazione dell'operazione è allow-listed.
 - Blocco di sink ostili/esfiltranti: `echo {{secret}} > file`, outbound verso host non-allow-listed, scrittura in una var. Si aggancia al **pre-flight** esistente.
 - Difende dall'**exfiltration-via-use** (il modello non vede il valore ma potrebbe usarlo per spedirlo altrove). **Senza sink-gating, il sealed-secret è teatro.**
+
+### 4bis. `allowLocalHttp` — secret LOCALE su http-loopback (utente msg 668, 2026-06-30)
+> **STATUS: IMPLEMENTATO** (`src/sealed-secrets.mjs`, test block 11). Risolve un GAP reale: lo sviluppo locale richiede `http://localhost` (un JWT di sessione contro il dev-server), ma `https-only` blocca ogni http per i sealed-secrets. Né sealed (https-only) né `add_secret` (solo-redazione, redatto pure dagli argomenti) permettevano l'uso di un JWT su http locale.
+
+- **Flag per-secret `allowLocalHttp`** (default **OFF**): quando ON, il secret è iniettabile su `http://` MA **solo verso loopback LETTERALE** — `localhost` / `127.0.0.0/8` / `::1` (via `isLoopbackLiteral`). Host esterni in http → **sempre bloccati** (https-only invariato).
+- **Perché loopback è sicuro**: il rischio di `https-only` è il valore in chiaro intercettabile **sul filo verso un host esterno**; verso loopback il traffico non lascia la macchina → il rischio non esiste. Il discriminante è la **destinazione-loopback**, NON "questo secret permette http" (che riaprirebbe il buco esterno).
+- **Anti-bypass critico**: il fast-path è disattivato se c'è **host-pinning** (`--resolve`/`--connect-to`/proxy/`Host:`) — altrimenti `--resolve localhost:80:1.2.3.4` farebbe connettere "localhost" a un IP esterno. Anche `127.0.0.1.evil.com` (hostname che inizia con 127 ma risolve fuori) è respinto (match loopback solo su 4-ottetti `127.N.N.N`). Loopback-letterale-only = anti DNS-rebinding.
+- **Chi lo abilita (MAI il modello da solo, utente msg 668)**: (a) l'utente da CLI `set-secret … --allow-local-http` o config `"allowLocalHttp": true`; (b) il modello chiama `request_local_http(name, why)` → **Ask interattivo** (`ctx.ui.confirm` della TUI) → l'utente accetta intenzionalmente → `setAllowLocalHttp`. In headless (no `ctx.hasUI`) degrada a notify + abilitazione out-of-band. Il modello PUÒ solo CHIEDERE, mai decidere.
+- **Limite noto**: `localhost` è incluso per ergonomia; un `/etc/hosts` sabotato potrebbe rimapparlo (rischio residuo accettato: è la macchina dell'utente). IPv6 in URL `http://[::1]` non è estratto da `extractHosts` (usa `127.0.0.1`/`localhost`).
 
 ## Config (opt-in, gemello degli altri toggle)
 - `secrets.sinkGating = strict | warn | off` (default **strict**): allow-host fail-closed + https-only + deny scrittura-file/pipe + deny host-pinning (`curl --resolve/--connect-to/proxy/-H Host:`). Env `HARNESS_SECRETS_SINK_GATING`.
