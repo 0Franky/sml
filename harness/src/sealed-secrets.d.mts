@@ -63,6 +63,58 @@ export function loadFromEnv(
 ): string[];
 export function clearSealed(): void;
 
+// ── lifecycle in-sessione (grant-sink / rename / remove / edit / validate) ──
+export interface SecretEditChanges {
+  rename?: string;
+  addSinks?: string[];
+  removeSinks?: string[];
+  description?: string;
+  allowLocalHttp?: boolean;
+}
+export interface SecretEditDiffEntry {
+  field: string;
+  before: string;
+  after: string;
+  widening: boolean;
+  note?: string;
+}
+export interface SecretEditDiff {
+  exists: boolean;
+  name?: string;
+  changes?: SecretEditDiffEntry[];
+  anyWidening?: boolean;
+  externalSinks?: string[];
+}
+export interface SecretRefValidation {
+  ok: boolean;
+  refs: { name: string; exists: boolean; suggestion?: string }[];
+  unknown: string[];
+}
+export function isValidSinkHost(host: string): boolean;
+export function addAllowedSink(
+  name: string,
+  host: string,
+): { ok: boolean; name?: string; allowedSinks?: string[]; added?: boolean; reason?: string };
+export function removeAllowedSink(
+  name: string,
+  host: string,
+): { ok: boolean; name?: string; allowedSinks?: string[]; removed?: boolean; reason?: string };
+export function setSecretDescription(
+  name: string,
+  description: string,
+): { ok: boolean; name?: string; description?: string; reason?: string };
+export function renameSecret(
+  oldName: string,
+  newName: string,
+): { ok: boolean; name?: string; renamed?: boolean; from?: string; reason?: string };
+export function removeSecret(name: string): { ok: boolean; name?: string; removed?: boolean; reason?: string };
+export function computeSecretEditDiff(name: string, changes?: SecretEditChanges): SecretEditDiff;
+export function applySecretEdit(
+  name: string,
+  changes?: SecretEditChanges,
+): { ok: boolean; name?: string; applied?: string[]; reason?: string };
+export function validateSecretRefs(text: string): SecretRefValidation;
+
 declare const _default: {
   setSecret: typeof setSecret;
   setAllowLocalHttp: typeof setAllowLocalHttp;
@@ -82,5 +134,14 @@ declare const _default: {
   scanIngress: typeof scanIngress;
   loadFromEnv: typeof loadFromEnv;
   clearSealed: typeof clearSealed;
+  isValidSinkHost: typeof isValidSinkHost;
+  addAllowedSink: typeof addAllowedSink;
+  removeAllowedSink: typeof removeAllowedSink;
+  setSecretDescription: typeof setSecretDescription;
+  renameSecret: typeof renameSecret;
+  removeSecret: typeof removeSecret;
+  computeSecretEditDiff: typeof computeSecretEditDiff;
+  applySecretEdit: typeof applySecretEdit;
+  validateSecretRefs: typeof validateSecretRefs;
 };
 export default _default;
