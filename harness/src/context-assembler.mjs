@@ -34,6 +34,15 @@ const fmtAge = (ms, now, absolute) => (absolute ? `@${isoSec(ms)}` : `${Math.rou
  *  banda di overlap (banner di resume mostrato mentre recent_changes è ancora pieno). */
 const RECENT_WINDOW_MS = 15 * 60 * 1000;
 
+/** Cap-char su un SINGOLO `detail` di verify_queue: il gate (pending) resta SEMPRE visibile — MAI cappare il
+ *  NUMERO di pending (nasconderebbe un controllo non soddisfatto = falla silenziosa) — ma un detail verboso si
+ *  tronca con marker, così la lane resta bounded senza occultare gate. (context-section-sizing-study §verify_queue.) */
+const VERIFY_DETAIL_CAP = 200;
+const capDetail = (s) => {
+  const t = String(s);
+  return t.length > VERIFY_DETAIL_CAP ? `${t.slice(0, VERIFY_DETAIL_CAP)}…[+${t.length - VERIFY_DETAIL_CAP}]` : t;
+};
+
 /* ── CONTRATTO stable-prefix (cache-stable-prefix, 2026-06-29) ───────────────────────────────────────────────
  * Per massimizzare gli hit di KV-cache del provider il <context> è ordinato STABILE-in-testa / VOLATILE-in-fondo:
  *   PREFISSO STABILE  : <rules> → <current_aim> → <task_list> → <verify_queue>   (nessun timestamp; cambia SOLO
@@ -181,7 +190,7 @@ export function assembleContext(vq, opts = {}) {
   const pendingV = vq.listVerifications({ status: "pending" });
   if (pendingV.length) {
     lines.push("  <verify_queue>");
-    for (const v of pendingV) lines.push(`    - ${esc(v.id)} (task ${esc(v.task_id)})${v.detail ? `: ${esc(v.detail)}` : ""}`);
+    for (const v of pendingV) lines.push(`    - ${esc(v.id)} (task ${esc(v.task_id)})${v.detail ? `: ${esc(capDetail(v.detail))}` : ""}`);
     lines.push("  </verify_queue>");
   }
 

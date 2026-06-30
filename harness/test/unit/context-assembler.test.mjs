@@ -153,6 +153,19 @@ vq3.close();
   vqS.close();
 }
 
+// --- verify_queue: cap-char sul singolo detail MA mai sul NUMERO di pending (context-section-sizing-study) ---
+{
+  const vqV = new VarsQueue(":memory:", { agent: "orchestrator" });
+  vqV.addTask("TV", "task", {});
+  vqV.addVerification("VLONG", "TV", { detail: "X".repeat(500) });
+  for (let i = 0; i < 10; i++) vqV.addVerification("VN" + i, "TV", { detail: "g" + i }); // 10 gate → tutti mostrati
+  const ctxV = assembleContext(vqV, { now: NOW, sinceMs: 0 });
+  ok(ctxV.includes("…[+300]") && !ctxV.includes("X".repeat(300)), "verify_queue: detail >200 char troncato con marker …[+N]");
+  let shown = 0; for (let i = 0; i < 10; i++) if (ctxV.includes("VN" + i + " (task TV)")) shown++;
+  ok(shown === 10 && ctxV.includes("VLONG (task TV)"), "verify_queue: TUTTI gli 11 gate pending mostrati (numero MAI cappato)");
+  vqV.close();
+}
+
 vq.close();
 console.log(`\ncontext-assembler smoke-test: ${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);

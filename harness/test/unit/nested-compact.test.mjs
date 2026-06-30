@@ -144,6 +144,37 @@ try {
     vq.close();
   }
 
+  // 4b) FIX slice-direction (context-section-sizing-study bug #1) — shared_state recency + backlog execution-order
+  {
+    // shared_state: serializeFrame ordina per recency (last_modified DESC) PRIMA del display-cap → tiene i RECENTI
+    // (era slice(0,N) = i più VECCHI). Frame hand-built → test puro e deterministico.
+    const frameSV = {
+      depth: 0, aim: null, decisions: [], constraints: [],
+      sharedState: [
+        { id: "oldv", value: 1, last_modified: 100 },
+        { id: "midv", value: 2, last_modified: 200 },
+        { id: "newv", value: 3, last_modified: 300 },
+      ],
+      backlog: [],
+    };
+    const sv = serializeFrame(frameSV, { displayCap: 2 });
+    ok(sv.includes("newv") && sv.includes("midv"), "FRAME shared_state: mostra i 2 più RECENTI (newv,midv)");
+    ok(!sv.includes("- oldv="), "FRAME shared_state: NON mostra il più vecchio (slice-direction fix)");
+    ok(sv.includes('shared_state shown="2/3"'), "FRAME shared_state: display-cap 2/3");
+
+    // backlog: buildFrame lo costruisce in EXECUTION-ORDER (listTasksOrdered), non insertion-order → il display-cap
+    // del frame tiene i task più IMPORTANTI. B (priority 5) deve precedere A (priority 0) benché inserito dopo.
+    const vq = new VarsQueue(":memory:");
+    vq.addTask("A", "low", { priority: 0 });
+    vq.addTask("B", "high", { priority: 5 });
+    const frame = buildFrame(vq, { now: 1 });
+    const ids = frame.backlog.map((t) => String(t.id));
+    const orderedIds = vq.listTasksOrdered().tasks.map((t) => String(t.id));
+    ok(JSON.stringify(ids) === JSON.stringify(orderedIds), "FRAME backlog: == listTasksOrdered (execution-order)");
+    ok(ids[0] === "B", "FRAME backlog: priorità alta (B) precede l'insertion-order (A) — fix slice/order");
+    vq.close();
+  }
+
   // 5) popFocus — round-trip completo ------------------------------------------
   {
     const vq = new VarsQueue(":memory:", { agent: "orchestrator" });

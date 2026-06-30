@@ -32,6 +32,10 @@ export const REGEX_INGRESS_MODES = ["off", "ask", "auto"];
 export const DEFAULT_HARNESS_CONFIG = {
   trigger: { ...DEFAULT_CFG }, // tokenReorderPct, tokenMatrioskaPct, watchReorder, watchMatrioska, maxDepth, focusK
   messagesWindowN: 8, // turni verbatim mostrati nella lane <messages_with_user>
+  // charCap della lane <messages_with_user>: è il VINCOLO REALE (binding) sulla dimensione, più del numero di turni N
+  // (context-section-sizing-study §messages). Misurato in CHAR ma il budget è in TOKEN: ~3 char/token → 4000 char ≈
+  // 1300-1400 token (non ~1000). Esposto a config per A/B; default invariato 4000. (context-bounds-study 2026-06-30.)
+  messagesCharCap: 4000,
   // Strada-2 complementarità (review-full P1-B): la lane <messages_with_user> mostra la STORIA; la native-window
   // (native-window.ts keepTurns=1) porta il TURNO CORRENTE. true (DEFAULT) = escludi il turno in volo dalla lane →
   // niente "doppia-chat" (overlap=0). false → la lane include anche il turno corrente (utile solo se si alza keepTurns
@@ -116,18 +120,20 @@ const ENV_MAP = {
   HARNESS_MAX_DEPTH: ["trigger", "maxDepth"],
   HARNESS_OUTPUT_RESERVE_PCT: ["trigger", "outputReservePct"],
   HARNESS_MESSAGES_WINDOW_N: ["root", "messagesWindowN"],
+  HARNESS_MESSAGES_CHAR_CAP: ["root", "messagesCharCap"],
 };
 
 /**
  * Carica la config harness effettiva (default → file opt-in → env). Mai lancia (fail-safe ai default).
  * @param {string} [path] path del file config (default `.pi/harness.config.json`)
  * @param {{ env?: Record<string,string|undefined> }} [opts] env iniettabile per i test
- * @returns {{ trigger: typeof DEFAULT_CFG, messagesWindowN: number, messagesExcludeCurrentTurn: boolean }}
+ * @returns {{ trigger: typeof DEFAULT_CFG, messagesWindowN: number, messagesCharCap: number, messagesExcludeCurrentTurn: boolean }}
  */
 export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
   const cfg = {
     trigger: { ...DEFAULT_HARNESS_CONFIG.trigger },
     messagesWindowN: DEFAULT_HARNESS_CONFIG.messagesWindowN,
+    messagesCharCap: DEFAULT_HARNESS_CONFIG.messagesCharCap,
     messagesExcludeCurrentTurn: DEFAULT_HARNESS_CONFIG.messagesExcludeCurrentTurn,
     gathering: { ...DEFAULT_HARNESS_CONFIG.gathering },
     autofocus: { ...DEFAULT_HARNESS_CONFIG.autofocus },
@@ -143,6 +149,9 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
       applySecrets(cfg.secrets, f && f.secrets);
       if (typeof f?.messagesWindowN === "number" && Number.isFinite(f.messagesWindowN) && f.messagesWindowN >= 1) {
         cfg.messagesWindowN = Math.floor(f.messagesWindowN);
+      }
+      if (typeof f?.messagesCharCap === "number" && Number.isFinite(f.messagesCharCap) && f.messagesCharCap >= 200) {
+        cfg.messagesCharCap = Math.floor(f.messagesCharCap);
       }
       if (typeof f?.messagesExcludeCurrentTurn === "boolean") cfg.messagesExcludeCurrentTurn = f.messagesExcludeCurrentTurn;
     }
@@ -161,6 +170,8 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
       if (v !== undefined) cfg.trigger[field] = v;
     } else if (field === "messagesWindowN" && n >= 1) {
       cfg.messagesWindowN = Math.floor(n);
+    } else if (field === "messagesCharCap" && n >= 200) {
+      cfg.messagesCharCap = Math.floor(n);
     }
   }
   // gathering env (mode = stringa-enum, fuori dallo schema numerico di ENV_MAP)
