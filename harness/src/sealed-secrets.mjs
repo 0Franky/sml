@@ -143,7 +143,9 @@ export function hasCommandComposition(opText) {
   // separatori-di-comando + whitespace-di-CONTROLLO (TAB/CR/VT/FF/NUL): NON lo SPACE (0x20) — rompe ogni comando —
   // ma gli altri whitespace sono anomali in un comando legittimo e servono a obfuscare operandi (review-loop #2 2026-06-30).
   if (/[\n\r\t\f\v\0;`|]/.test(t)) return true;              // newline/CR/TAB/VT/FF/NUL · ; · backtick · pipe (incl. ||)
-  if (/&&/.test(t) || /(^|\s)&(\s|$)/.test(t)) return true;  // && · backgrounding & (non &param di URL)
+  // && + backgrounding & ANCHE non-spaziato (`localhost& whoami`, review code-reviewer P1-a) — ma NON `&param` di URL
+  // (in `?a=1&b=2` la `&` è seguita da un carattere, non da spazio/fine).
+  if (/&&/.test(t) || /(^|[^&])&(\s|$)/.test(t)) return true;
   if (/\$\(|<\(/.test(t)) return true;                       // $(...) · <(...)
   if (/\/dev\/(tcp|udp)\b/i.test(t)) return true;            // bash network redirect (esfil senza nc)
   return false;
@@ -158,9 +160,13 @@ export function hasCommandComposition(opText) {
  * ogni candidato-host come fa curl, via `new URL("http://"+tok).hostname` (parser WHATWG = stessa espansione IPv4 di
  * curl), e pretendiamo che il risultato sia loopback. Pre-pass: togliamo le stringhe QUOTATE (header/body legittimi:
  * un host citato lì non è un operando) e gli URL `scheme://` (host già verificato da extractHosts).
- * Candidato = token con punto / `0x..` / `[..]` / decimale grande → esclude i numeri PICCOLI (flag-value `--max-time 30`)
- * e i token single-word (`-A myagent`) → niente falso-blocco. RESIDUO ACCETTATO (de-prioritizzato, exfil-via-use): un host
- * SINGLE-LABEL senza punto (`myserver`) sfugge → ma esfiltra solo se l'attaccante controlla il DNS locale (contrived).
+ * Il NORMALIZZATORE è l'arbitro: NON pre-filtriamo "sembra un host?" col punto ASCII (lo fa anche `%2e`/dot-unicode
+ * `。．｡` che `new URL`+curl decodificano → bypassavano il gate, review security 4° giro). Saltiamo SOLO i flag e i
+ * numeri PICCOLI (flag-value tipo `--max-time 30`), normalizziamo TUTTO il resto, e marchiamo estraneo se l'hostname
+ * CANONICO è host-shaped (ha un `.` o è IPv6 `[..]`) e NON loopback. Un single-label (`myagent`, `myserver`) → hostname
+ * senza punto → NON host-shaped → non marcato (no falso-blocco di `-A myagent`; residuo accettato: single-label esterno
+ * serve DNS-locale attaccante = contrived). `new URL` che lancia (es. `-H Accept:application/json` non-quotato) → SKIP
+ * (non è un host risolvibile → curl non lo raggiunge esterno; evita falso-blocco). RESIDUI fail-safe doc in §4bis.
  */
 export function hasForeignHostToken(opText) {
   let t = String(opText ?? "");
@@ -169,13 +175,12 @@ export function hasForeignHostToken(opText) {
   for (const raw of t.split(/\s+/)) {
     if (!raw || raw.startsWith("-")) continue;                      // flag → ok
     const tok = raw.replace(/[)(;,'"`]+$/g, "");                    // togli punteggiatura di coda
-    if (!tok) continue;
-    const isCandidate = /\./.test(tok) || /^0x[0-9a-f]+$/i.test(tok) || /^\[.*\]/.test(tok) || /^\d{7,}$/.test(tok);
-    if (!isCandidate) continue;                                     // numeri piccoli / single-word → non-host (no FP)
+    if (!tok || /^\d{1,6}$/.test(tok)) continue;                    // numero piccolo = flag-value (--max-time 30) → no normalizzare
     let hostname;
-    try { hostname = new URL("http://" + tok).hostname; } catch { return true; } // candidato malformato → fail-closed
+    try { hostname = new URL("http://" + tok).hostname; } catch { continue; } // non parsabile come host → curl non lo risolve esterno
     const h = hostname.replace(/^\[|\]$/g, "");                     // togli [] IPv6 prima del check loopback
-    if (h && !isLoopbackLiteral(h)) return true;                    // host curl-canonico non-loopback → estraneo
+    // host-shaped (ha un `.` o è IPv6) e NON loopback → operando estraneo. `new URL` ha già decodificato %2e/dot-unicode.
+    if ((hostname.includes(".") || hostname.startsWith("[")) && !isLoopbackLiteral(h)) return true;
   }
   return false;
 }

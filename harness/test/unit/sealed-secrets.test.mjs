@@ -305,6 +305,17 @@ const reset = () => { clearSealed(); clearSecrets(); };
   // new URL espansione curl-accurate verificata a livello di hasForeignHostToken
   ok(hasForeignHostToken("x 8.8") && hasForeignHostToken("x 0xCB007107") && hasForeignHostToken("x [2001:db8::1]") && !hasForeignHostToken("x 2130706433") && !hasForeignHostToken("--max-time 30"),
      "FOREIGN: new URL normalizza come curl (8.8/hex/IPv6 esterni bloccati; 2130706433/30 no-FP)");
+
+  // P0 iter-4 (security 4° giro): dot ENCODED (%2e) e dot-UNICODE (。．) saltavano il gate basato sul punto ASCII → ora
+  // il normalizzatore new URL li decodifica e li blocca.
+  ok(!checkSink("LJ5", "curl http://localhost:3000 evil%2ecom", "strict").allowed, "DOT-ENC: %2e (dot percent-encoded) → evil.com esterno → bloccato");
+  ok(!checkSink("LJ5", "curl http://localhost:3000 evil。com", "strict").allowed, "DOT-ENC: dot ideografico U+3002 → bloccato");
+  ok(hasForeignHostToken("x evil%2ecom") && hasForeignHostToken("x evil．com"), "DOT-ENC: %2e + fullwidth-dot riconosciuti via new URL");
+  // & background NON-spaziato (code-reviewer P1-a): `localhost& secondo-comando`
+  ok(!checkSink("LJ5", "curl http://localhost:3000/api& whoami", "strict").allowed, "BG-AMP: 'localhost&' background non-spaziato → bloccato");
+  ok(hasCommandComposition("curl http://localhost& x") && !hasCommandComposition("curl http://localhost/?a=1&b=2"), "BG-AMP: token& flaggato, &param di URL no");
+  // NO falso-blocco: header NON-quotato con ':' (new URL throw → skip) + -A single-word (no dot)
+  ok(checkSink("LJ5", "curl http://localhost:3000/api -A myagent -H Accept:application/json -H X-Foo:bar", "strict").allowed, "NO-FP: header non-quotato con ':' + -A single-word → consentito");
 }
 
 console.log(`\nsealed-secrets test: ${passed} passed, ${failed} failed`);
