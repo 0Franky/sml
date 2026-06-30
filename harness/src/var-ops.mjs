@@ -124,9 +124,9 @@ const VAR_MARKER = /\{\{(!?)var:([A-Za-z0-9_$]+)\}\}/g;
 
 function valueToString(value) {
   if (value == null) return "";
-  const s = typeof value === "string" ? value : JSON.stringify(value);
-  // cap dell'amplificazione: un singolo {{var:big}} non deve gonfiare l'output oltre il limite.
-  return s.length > MAX_INTERP_CHARS ? s.slice(0, MAX_INTERP_CHARS) + "…[troncato]" : s;
+  // NB (review P1-D): NON troncare QUI. Il cap va applicato DOPO la redazione (in emitToUser): troncare il valore
+  // prima della redazione lascerebbe leakare un prefisso in chiaro di un segreto che cade a cavallo del cap.
+  return typeof value === "string" ? value : JSON.stringify(value);
 }
 
 /**
@@ -156,7 +156,10 @@ export function interpolate(text, vq) {
 export function emitToUser(text, vq, { dynamicSecrets = [], interpolate: doInterpolate = false } = {}) {
   const resolved = doInterpolate ? interpolate(text, vq) : String(text);
   const { redacted, hit } = redactText(resolved, dynamicSecrets);
-  return { text: redacted, interpolated: doInterpolate, secretHit: hit };
+  // cap DOPO la redazione (review P1-D): anti-amplificazione applicata sul risultato GIÀ redatto, così nessun
+  // prefisso di un segreto a cavallo del cap può sfuggire (redazione su testo completo, poi troncamento).
+  const capped = redacted.length > MAX_INTERP_CHARS ? redacted.slice(0, MAX_INTERP_CHARS) + "…[troncato]" : redacted;
+  return { text: capped, interpolated: doInterpolate, secretHit: hit };
 }
 
 export default { parsePath, getByPath, extractVar, interpolate, emitToUser };

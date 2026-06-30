@@ -201,8 +201,15 @@ export class VarsQueue {
   }
 
   // -- VARS -------------------------------------------------------------------
-  setVar(id, value, { scope = "private", namespace = this.agent, who = this.agent, decisionRef = null } = {}) {
-    const prev = this.db.prepare(`SELECT value FROM vars WHERE id = ?`).get(id);
+  setVar(id, value, opts = {}) {
+    const who = opts.who ?? this.agent;
+    const decisionRef = opts.decisionRef ?? null;
+    const prev = this.db.prepare(`SELECT value, scope, namespace FROM vars WHERE id = ?`).get(id);
+    // scope/namespace STICKY su update (review P1-E): se il caller NON li passa esplicitamente e la var ESISTE,
+    // preserva quelli correnti — un `set_var` senza scope non deve DECLASSARE una var `shared` a `private`
+    // (rompeva l'invariante cross-agent). Su INSERT nuovo → default `private`/agent come prima.
+    const scope = opts.scope !== undefined ? opts.scope : (prev?.scope ?? "private");
+    const namespace = opts.namespace !== undefined ? opts.namespace : (prev?.namespace ?? this.agent);
     const json = JSON.stringify(value);
     this.db.prepare(
       `INSERT INTO vars (id, value, scope, namespace, last_modified, last_modified_by, decision_ref)
