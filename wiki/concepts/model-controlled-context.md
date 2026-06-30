@@ -54,6 +54,16 @@ last_updated: 2026-06-30
 
 **Criterio** (anti-bloat): ogni nuova lane paga budget → si aggiunge SOLO se outcome-positiva e CONDIZIONATA alla rilevanza (gemello del principio notes/segnali-binari dello studio). Priorità: #1 (secrets, chiude FIND-7) → #4 (budget%, abilita P3) → #2/#3 (workspace/files) → #5/#6/#7.
 
+## Architettura PUSH-bounded + PULL-on-demand (utente msg 735, 2026-06-30) — CONFERMATA e già in gran parte in piedi
+
+Il modello regola la vista SEMPRE-ON entro bound (P3, **linea confermata**: solo zona volatile, mai il prefisso-stabile, conteggi non ordine, con BOUND per-sezione + budget). Per tutto ciò che sta **FUORI dai bound** usa **tool di PULL specifici** che ritornano SOLO ciò che serve, on-demand, senza gonfiare la vista sempre-on. Le due metà:
+- **PUSH (lane bounded)** = la vista standing, cap auto-regolabili entro limiti → protegge cache + prior posizionale.
+- **PULL (tool specifici)** = reach illimitato senza bloat. **GIÀ ESISTONO per ogni lane**: `get_shared_view` (vars), `get_changelog` (changes), `list_tasks` (tasks), `recall_lessons` (notes/memo), **`get_conversation`** (messaggi). E i **footer delle lane già puntano** al tool giusto ("(+N hidden — use list_tasks)", "use get_shared_view…").
+
+**Gli esempi dell'utente sono GIÀ coperti**: `get_conversation(from_seq, to_seq)` fa SIA il **messaggio specifico** (`from_seq==to_seq`) SIA la **sliding-window** (`from_seq..to_seq`); senza range ritorna la finestra recente N (`conversation-capture.ts:106`). → **NON serve un nuovo tool `expand_message`** (sarebbe ridondante, anti-bloat): si RIUSA `get_conversation`.
+
+**Gap reale residuo** (la sola cosa che manca per i messaggi, ridimensiona P1/P2): (a) **mostrare il `seq`-id di ogni messaggio nella lane** così il modello sa COSA chiedere a `get_conversation(from_seq=…)`; (b) **truncation-marker** che cita il seq → `…[troncato, +N — get_conversation(from_seq=ID)]`. Niente tool nuovo, solo rendere ancorabile il pull esistente. (Lega FIND-4/«verifica-non-indovinare»: il marker dà l'id esatto, il modello non tira a indovinare.)
+
 ## Classificazione F/S (regola #11)
 - **F-harness**: gli id-stabili, i marker di troncamento, i tool `expand_message`/`set_view`/`set_step`, i BOUND (min/max/budget), il reset, l'isolamento prefisso-stabile-vs-coda. Deterministico.
 - **S (modello)**: **QUANDO** espandere un messaggio / alzare-abbassare una sezione / aggiornare lo step — outcome-anchored (l'espansione ha aiutato il task reale?), con proporzionalità (no over-expand = anti-bloat, gemello del cry-wolf).
