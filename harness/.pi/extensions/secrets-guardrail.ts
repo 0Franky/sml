@@ -28,7 +28,10 @@ import { redactText } from "../../src/secrets-redact.mjs";
 import { addSecret, getDynamicSecrets, clearSecrets } from "../../src/secrets-registry.mjs";
 // SEALED-SECRETS (msg 577/578/579): registry sigillato + reference-injection + sink-gating. Il valore non entra MAI
 // nel context del modello; provisioning out-of-band (env SEALED_SECRET_* + metadata .pi/secrets.config.json).
-import { loadFromEnv, listSecretsMeta, injectIntoStrings, clearSealed, setAllowLocalHttp, hasSecret, isValidSinkHost, computeSecretEditDiff, applySecretEdit, removeSecret, validateSecretRefs, previewSecretUse } from "../../src/sealed-secrets.mjs";
+import { loadFromEnv, listSecretsMeta, injectIntoStrings, clearSealed, hasSecret, isValidSinkHost, validateSecretRefs, previewSecretUse } from "../../src/sealed-secrets.mjs";
+// CONSENSO (node-puro, testabile senza jiti): Ask-con-diff + frizione reale (type-to-confirm) + degrade headless
+// accurato + create-con-valore-digitato-dall'utente. Estratto da qui (i rami che prima erano inline nei tool).
+import { askAndApplyEdit, askAndDestroy, askLocalHttp, askAndCreate } from "../../src/secrets-consent.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { readFileSync, existsSync } from "node:fs";
 
@@ -64,61 +67,6 @@ function collectStringSlots(node: any, slots: { get: () => string; set: (v: stri
   }
 }
 
-/** Rende il DIFF come testo VISIVAMENTE CHIARO per l'Ask. SANITIZZA ogni valore (review P2-1 anti UI-redress): i
- * valori sono in parte controllati dal modello (description, nomi, host) → strip di newline e dei glifi-marker
- * ⚠/·/✗ così un campo non può forgiare righe-diff o mascherare la riga del widening. Marker: ⚠ widening · ✗ invalido. */
-function renderEditDiff(diff: any): string {
-  const clean = (v: any) => String(v ?? "").replace(/[\r\n\t\f\v\0]/g, " ").replace(/[⚠·✗]/g, "");
-  return (diff.changes || [])
-    .map((c: any) => `${c.widening ? "⚠" : c.invalid ? "✗" : "·"} ${clean(c.field)}: ${clean(c.before)}  →  ${clean(c.after)}${c.note ? `  [${clean(c.note)}]` : ""}`)
-    .join("\n");
-}
-
-/**
- * askAndApplyEdit — consenso ESPLICITO (mai auto) per una proposta di edit: calcola il diff, mostra un Ask con il
- * diff prima→dopo (frizione alta se widening), e SOLO se l'utente conferma applica via applySecretEdit (ATOMICO).
- * Headless (no ctx.hasUI) → degrada a notify (l'utente applica out-of-band). Usato da request_sink e propose_secret_edit.
- */
-async function askAndApplyEdit(
-  ctx: any, name: string, changes: any, why: string, titleVerb: string,
-): Promise<{ content: { type: "text"; text: string }[]; details: { ok: boolean; applied?: string[]; name?: string } }> {
-  const diff = computeSecretEditDiff(name, changes);
-  if (!diff.exists) return { content: [{ type: "text", text: `Secret '${name}' does not exist.` }], details: { ok: false } };
-  if (!diff.changes || !diff.changes.length) {
-    return { content: [{ type: "text", text: `No effective change for '${name}' (already in the requested state).` }], details: { ok: false } };
-  }
-  // review P1 drift: se un change non è appliabile (rename collisione/invalido, host invalido) NON mostriamo un Ask
-  // per qualcosa che applySecretEdit rifiuterebbe → il modello lo corregge prima (niente conferma sprecata/parziale).
-  if (diff.anyInvalid) {
-    const bad = (diff.changes || []).filter((c: any) => c.invalid).map((c: any) => `${c.field}→${c.after} (${c.note})`).join("; ");
-    return { content: [{ type: "text", text: `Cannot apply — invalid change(s): ${bad}. Fix and retry; no confirmation was shown to the user.` }], details: { ok: false } };
-  }
-  const externalSinks = diff.externalSinks || [];
-  const ext = externalSinks.length ? ` Host ESTERNO/i: ${externalSinks.join(", ")}.` : "";
-  // disclosure per-CAMPO (review arch F1/F4): se la modifica abilita allowLocalHttp, RIPETI qui la disclosure
-  // relay/per-sessione che vive in request_local_http → parità di consenso a prescindere dal tool scelto dal modello.
-  const enablesLocalHttp = (diff.changes || []).some((c: any) => c.field === "allowLocalHttp" && c.after === "true");
-  const localHttpDisclosure = enablesLocalHttp
-    ? `\n\n⚠ allowLocalHttp: il permesso vale per TUTTA QUESTA SESSIONE e per QUALSIASI servizio loopback (qualsiasi porta/path su localhost), non solo per questa operazione. Host esterni in http restano sempre bloccati. Un servizio locale compromesso potrebbe però inoltrare il token altrove.`
-    : "";
-  const header = diff.anyWidening
-    ? `⚠ Questa modifica AMPLIA i permessi del secret '${name}'.${ext} Il valore reale potrà raggiungere nuove destinazioni.`
-    : `Modifica del secret '${name}' (nessun ampliamento di permessi).`;
-  if (ctx?.hasUI && typeof ctx?.ui?.confirm === "function") {
-    const ok = await ctx.ui.confirm(
-      `${titleVerb} '${name}'?`,
-      `${header}\n\nMotivo dichiarato dal modello: ${why}\n\nDIFF (prima → dopo):\n${renderEditDiff(diff)}${localHttpDisclosure}\n\n${diff.anyWidening ? "⚠ " : ""}Confermi?`,
-    );
-    if (!ok) return { content: [{ type: "text", text: `User DENIED the edit of '${name}'. Nothing changed.` }], details: { ok: false } };
-    const r = applySecretEdit(name, changes);
-    if (!r.ok) return { content: [{ type: "text", text: `Edit failed: ${r.reason}. Nothing was changed (atomic).` }], details: { ok: false } };
-    ctx?.ui?.notify?.(`secret '${name}' aggiornato: ${(r.applied || []).join(", ")}${r.name !== name ? ` (ora '${r.name}')` : ""}`, "info");
-    return { content: [{ type: "text", text: `User APPROVED. Applied to '${r.name}': ${(r.applied || []).join(", ")}. Use {{secret:${r.name}}} now.` }], details: { ok: true, applied: r.applied, name: r.name } };
-  }
-  ctx?.ui?.notify?.(`Il modello propone una modifica al secret '${name}' (${why}) ma manca l'UI interattiva (headless). Applicala TU out-of-band (es. node scripts/set-secret.mjs ...) e riavvia pi.`, "warning");
-  return { content: [{ type: "text", text: `No interactive UI (headless): the edit of '${name}' was NOT applied. The user must apply it out-of-band (CLI/config) and restart pi.` }], details: { ok: false } };
-}
-
 export default function (pi: ExtensionAPI) {
   // Provisioning OUT-OF-BAND dei sealed-secrets: env SEALED_SECRET_<NAME> (valore) + metadata da config (no valori).
   // Il valore non passa mai dal modello. Caricato al bind dell'extension.
@@ -143,7 +91,7 @@ export default function (pi: ExtensionAPI) {
       "• If you RE-READ a file or an output containing the secret, you will see `[REDACTED-SECRET]`: it means the value IS PRESENT (on disk/in the output) but hidden from YOU (read-time redaction) — NOT that the file is empty or redacted. Do not say 'I can't' or 'it was redacted': say 'the value is there, it's the harness hiding it from me'.\n" +
       "• If a use gets blocked (`sink-gating`): for an EXTERNAL host, call `request_sink(name, host, why)` so the user can allow that host (do NOT invent CLI commands). For an `http://localhost` (loopback) target, call `request_local_http(name, why)` (then use it in a SINGLE clean command — no ';'/'|'/'&&'/redirects). You have full power to USE secrets; you simply do not SEE them.",
     promptGuidelines: [
-      "Secrets are managed IN-SESSION via tools, NEVER via the shell/CLI. To let a secret reach a host: request_sink(name, host, why). To rename/edit (sink, description, allowLocalHttp): propose_secret_edit. To delete: propose_secret_destroy. You only PROPOSE — the user approves a clear before→after diff; widening permissions needs a stronger confirmation. Never invent or run CLI commands like `pi set-secret`/`pi update-secret` (they may not exist) — if unsure, verify (read a --help) instead of guessing.",
+      "Secrets are managed IN-SESSION via tools, NEVER via the shell/CLI. To create a new one: propose_secret_create (you give the metadata only — the user types the value, you never see it). To let a secret reach a host: request_sink(name, host, why). To rename/edit (sink, description, allowLocalHttp): propose_secret_edit. To delete: propose_secret_destroy. You only PROPOSE — the user approves a clear before→after diff; widening permissions (new host, enabling allowLocalHttp) needs a stronger confirmation where the user must TYPE the host to confirm. Never invent or run CLI commands like `pi set-secret`/`pi update-secret` (they may not exist) — if unsure, verify (read a --help) instead of guessing.",
       "An `INGRESS_N` secret is a value the USER pasted: it is ALREADY sealed and usable as-is — it does NOT need to be re-provisioned. If it is blocked, it only lacks a sink: to 'use the token you pasted', call request_sink for its host (e.g. oauth.reddit.com). Do not tell the user to paste it again or to set an env var.",
       "Before using {{secret:NAME}}, if unsure the name is correct call check_secret_refs(text) — it confirms existence and suggests the closest name on a typo. Never read a secret value from a plaintext env var as a workaround for a blocked sealed secret: use {{secret:NAME}} and request the sink.",
     ],
@@ -181,32 +129,9 @@ export default function (pi: ExtensionAPI) {
       why: Type.String({ minLength: 1, description: "Why you need local http (which local server/operation). Required, non-empty." }),
     }),
     async execute(_t: string, p: any, _signal: any, _onUpdate: any, ctx: any) {
-      if (!hasSecret(p.name)) {
-        return { content: [{ type: "text", text: `Secret '${p.name}' does not exist. Ask the user to provision it first (request_secret).` }], details: { ok: false } };
-      }
-      const why = typeof p.why === "string" ? p.why.trim() : "";
-      if (!why) {
-        return { content: [{ type: "text", text: `Provide a non-empty 'why' (the user must see a reason before granting a loopback-http exception).` }], details: { ok: false } };
-      }
-      // Consenso ESPLICITO obbligatorio (utente msg 668: MAI auto-decisione del modello). In TUI/RPC → dialog confirm;
-      // in headless (no hasUI) → degrada a notify + l'utente lo abilita out-of-band (CLI/config). Mai abilitato dal solo modello.
-      if (ctx?.hasUI && typeof ctx?.ui?.confirm === "function") {
-        // Il dialog DISCLOSA lo scope reale (review H1): la concessione è di SESSIONE e vale per QUALSIASI servizio
-        // loopback, non solo l'operazione descritta dal modello → l'utente decide con l'informazione giusta.
-        const ok = await ctx.ui.confirm(
-          `Abilitare http-locale per il secret '${p.name}'?`,
-          `Il modello chiede di poter usare {{secret:${p.name}}} su http verso loopback (localhost / 127.0.0.1).\n` +
-          `Motivo dichiarato dal modello: ${why}\n\n` +
-          `⚠ Se acconsenti, il permesso vale per TUTTA QUESTA SESSIONE e per QUALSIASI servizio locale (qualsiasi porta/path su localhost), non solo per l'operazione descritta. Host ESTERNI in http restano sempre bloccati. Il valore resta sigillato (non lo vedi tu né il modello). Un servizio locale compromesso potrebbe però inoltrare il token altrove. Consenti?`,
-        );
-        if (ok) {
-          setAllowLocalHttp(p.name, true);
-          return { content: [{ type: "text", text: `User APPROVED: '${p.name}' may now be used over http toward loopback only (localhost/127.0.0.1), for this session. External hosts remain https-only. Use it in a SINGLE clean command (no ';'/'|'/'&&'/redirects), else it stays blocked.` }], details: { ok: true } };
-        }
-        return { content: [{ type: "text", text: `User DENIED local-http for '${p.name}'. Use https; a non-loopback http target is not allowed.` }], details: { ok: false } };
-      }
-      ctx?.ui?.notify?.(`Il modello chiede allowLocalHttp per '${p.name}' (${why}). Abilitalo TU out-of-band: node scripts/set-secret.mjs ${p.name} --allow-local-http (o aggiungi "allowLocalHttp": true in .pi/secrets.config.json), poi RIAVVIA pi (la config si rilegge al boot). Headless: non posso chiederti conferma interattiva.`, "warning");
-      return { content: [{ type: "text", text: `No interactive UI available (headless): cannot enable allowLocalHttp for '${p.name}' in-session. The user must set it out-of-band (CLI/config) AND restart pi (config is read at boot) — a same-session retry will NOT pick it up. It is NOT enabled now.` }], details: { ok: false } };
+      // Consenso ESPLICITO obbligatorio (utente msg 668: MAI auto-decisione del modello). Tutta la logica (guard +
+      // dialog disclosa-scope + degrade headless accurato) vive in askLocalHttp (node-puro, testabile senza jiti).
+      return askLocalHttp(ctx?.ui, !!ctx?.hasUI, p.name, p.why);
     },
   });
 
@@ -229,7 +154,7 @@ export default function (pi: ExtensionAPI) {
       if (!isValidSinkHost(host)) return { content: [{ type: "text", text: `Invalid host '${p.host}' (give a domain/IP like 'oauth.reddit.com' — no scheme/path/port).` }], details: { ok: false } };
       const why = String(p.why ?? "").trim();
       if (!why) return { content: [{ type: "text", text: `Provide a non-empty 'why' (the user must see a reason before granting a host).` }], details: { ok: false } };
-      return askAndApplyEdit(ctx, p.name, { addSinks: [host] }, why, "Concedere un host a");
+      return askAndApplyEdit(ctx?.ui, !!ctx?.hasUI, p.name, { addSinks: [host] }, why, "Concedere un host a");
     },
   });
   pi.registerTool({
@@ -256,7 +181,7 @@ export default function (pi: ExtensionAPI) {
       if (Array.isArray(p.removeSinks)) changes.removeSinks = p.removeSinks;
       if (typeof p.description === "string") changes.description = p.description;
       if (typeof p.allowLocalHttp === "boolean") changes.allowLocalHttp = p.allowLocalHttp;
-      return askAndApplyEdit(ctx, p.name, changes, why, "Modificare");
+      return askAndApplyEdit(ctx?.ui, !!ctx?.hasUI, p.name, changes, why, "Modificare");
     },
   });
   pi.registerTool({
@@ -269,22 +194,30 @@ export default function (pi: ExtensionAPI) {
       why: Type.String({ minLength: 1, description: "Why it should be destroyed. Required, non-empty." }),
     }),
     async execute(_t: string, p: any, _signal: any, _onUpdate: any, ctx: any) {
-      if (!hasSecret(p.name)) return { content: [{ type: "text", text: `Secret '${p.name}' does not exist.` }], details: { ok: false } };
       const why = String(p.why ?? "").trim();
       if (!why) return { content: [{ type: "text", text: `Provide a non-empty 'why'.` }], details: { ok: false } };
-      if (ctx?.hasUI && typeof ctx?.ui?.confirm === "function") {
-        const ok = await ctx.ui.confirm(
-          `Distruggere il secret '${p.name}'?`,
-          `Il modello propone di ELIMINARE il secret '${p.name}'.\nMotivo dichiarato: ${why}\n\n⚠ Operazione irreversibile in-sessione: il riferimento {{secret:${p.name}}} smetterà di funzionare. Confermi?`,
-        );
-        if (!ok) return { content: [{ type: "text", text: `User DENIED destruction of '${p.name}'. It still exists.` }], details: { ok: false } };
-        const r = removeSecret(p.name);
-        if (!r.ok) return { content: [{ type: "text", text: `Destruction failed: ${r.reason}` }], details: { ok: false } };
-        ctx?.ui?.notify?.(`secret '${p.name}' eliminato.`, "info");
-        return { content: [{ type: "text", text: `User APPROVED. Secret '${p.name}' destroyed.` }], details: { ok: true } };
-      }
-      ctx?.ui?.notify?.(`Il modello propone di eliminare il secret '${p.name}' (${why}) ma manca l'UI interattiva (headless). Eliminalo TU out-of-band se concordi.`, "warning");
-      return { content: [{ type: "text", text: `No interactive UI (headless): '${p.name}' was NOT destroyed. The user must do it out-of-band.` }], details: { ok: false } };
+      return askAndDestroy(ctx?.ui, !!ctx?.hasUI, p.name, why);
+    },
+  });
+  pi.registerTool({
+    name: "propose_secret_create",
+    label: "Propose creating a new sealed secret (user enters the value)",
+    description:
+      "Propose creating a NEW sealed secret. You provide ONLY the metadata (name, description, allowedSinks, allowLocalHttp) and a reason — you do NOT provide and will NEVER see the value. The harness shows the user your proposal and, if they accept, asks THEM to type the value directly (USER→harness, the value never passes through you or the LLM provider; it is sealed and redacted from transcripts). Then use it as {{secret:NAME}}. Use this when the user clearly needs a new credential provisioned for an operation. For a value the user ALREADY pasted (an INGRESS_N), do NOT create a new one — rename/grant it via propose_secret_edit/request_sink.",
+    promptGuidelines: [
+      "To provision a brand-new secret in-session, call propose_secret_create with the metadata only (never the value): the user types the value into the harness dialog. Headless (no UI) degrades to out-of-band provisioning (env SEALED_SECRET_<NAME> + config). Do not put a real secret value in any tool argument.",
+    ],
+    parameters: Type.Object({
+      name: Type.String({ minLength: 1, description: "Name for the new secret, e.g. REDDIT_API_KEY ([A-Za-z0-9_.-], max 64)." }),
+      description: Type.Optional(Type.String({ description: "What the secret is for (shown to the user and in list_secrets)." })),
+      allowedSinks: Type.Optional(Type.Array(Type.String(), { description: "Hosts the secret may reach, e.g. ['oauth.reddit.com']. Empty = lockdown until a sink is granted." })),
+      allowLocalHttp: Type.Optional(Type.Boolean({ description: "Allow use over http toward loopback only (localhost/127.0.0.1)." })),
+      why: Type.String({ minLength: 1, description: "Why this secret is needed. Required, non-empty." }),
+    }),
+    async execute(_t: string, p: any, _signal: any, _onUpdate: any, ctx: any) {
+      // Il VALORE non transita MAI dal modello: askAndCreate lo raccoglie via ctx.ui.input() (USER→harness). Headless
+      // → degrada a provisioning out-of-band. Tutta la logica è node-pura/testabile in secrets-consent.mjs.
+      return askAndCreate(ctx?.ui, !!ctx?.hasUI, { name: p.name, description: p.description, allowedSinks: p.allowedSinks, allowLocalHttp: p.allowLocalHttp }, p.why);
     },
   });
   pi.registerTool({
