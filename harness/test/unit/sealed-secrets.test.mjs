@@ -3,7 +3,7 @@
  */
 import {
   setSecret, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp,
-  hasHostPinning, checkSink, injectSecrets, injectIntoStrings, scanIngress, loadFromEnv, clearSealed,
+  hasHostPinning, checkSink, injectSecrets, injectIntoStrings, scanIngress, autoSealIngress, loadFromEnv, clearSealed,
 } from "../../src/sealed-secrets.mjs";
 import { getDynamicSecrets, clearSecrets } from "../../src/secrets-registry.mjs";
 
@@ -151,6 +151,26 @@ const reset = () => { clearSealed(); clearSecrets(); };
   const res = injectIntoStrings(input);
   ok(input[0].includes("{{secret:OK}}") && !input[0].includes("REALVALUE-OK-123"), "P1: injectIntoStrings NON muta l'input (history conserva il placeholder)");
   ok(res.strings[0].includes("REALVALUE-OK-123"), "P1: il valore è SOLO nella copia di output (passata a execute)");
+}
+
+// 9) REGEX-INGRESS autoSealIngress (msg 578/579, wiring hook input) -------------------------------
+{
+  const key = "AIzaSyA1234567890123456789012345678901234";
+  const matched = scanIngress(`x ${key} y`)[0].value; // ciò che la regex cattura davvero (può essere prefisso di key)
+  reset();
+  const r = autoSealIngress(`la mia chiave e ${key} ok?`);
+  ok(r.sealed.length === 1 && r.sealed[0].name === "INGRESS_1", "INGRESS: valore secret-shaped sigillato");
+  ok(!r.text.includes(matched), "INGRESS: il VALORE catturato non è più nel testo trasformato (non va al provider)");
+  ok(r.text.includes("{{secret:INGRESS_1}}"), "INGRESS: sostituito col riferimento");
+  ok([...getDynamicSecrets()].includes(matched), "INGRESS: valore registrato per la redazione (transcript)");
+  ok(hasSecret("INGRESS_1") && listSecretsMeta().find((m) => m.name === "INGRESS_1").allowedSinks.length === 0, "INGRESS: sigillato in lockdown (no allowedSinks → paste non esfiltrabile)");
+  // stesso valore ripetuto → riusa il nome, non doppio-seal
+  reset();
+  autoSealIngress(`primo ${key}`);
+  const r2 = autoSealIngress(`secondo ${key}`);
+  ok(r2.sealed[0].name === "INGRESS_1" && listSecretsMeta().length === 1, "INGRESS: stesso valore riusa il nome (no doppio-seal)");
+  // nessun secret-shaped → no-op
+  ok(autoSealIngress("solo testo normale").sealed.length === 0, "INGRESS: testo pulito → nessun seal");
 }
 
 console.log(`\nsealed-secrets test: ${passed} passed, ${failed} failed`);

