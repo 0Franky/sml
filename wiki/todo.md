@@ -42,6 +42,16 @@ last_updated: 2026-06-30
 > - `conversation-capture` (quali messaggi appendere allo store) — store testato, logica-di-cattura inline.
 > - **pre-flight HARDENING** (gap noti già documentati come test): flag separati `rm -r -f`, long-form `--recursive --force`, `find -delete` — la deny-list non è un parser; l'intento è coperto dal reward area-02 (S). Estendere se si vuole più copertura harness-side (attenzione ai falsi positivi).
 
+### 🔧 FIX SESSIONE LIVE #2 2026-07-03 (run `019f281b` + msg 811-820) — DONE
+> Seconda run col 9B: PROGRESSO (tool-gating rende propose_secret_create visibile, l'Ask di fix C si APRE) ma "ancora non ci siamo": (A) il MODELLO è debole (chiama con valori PLACEHOLDER "NOME_DEL_SEGRETO"; allucina nomi-tool git_log/proposta_secret_create che NON usa find_tool per cercare; off-track legge/edita reddit_post.js) — è il training; (B) BUCO harness = amnesia delle PROPRIE azioni (keepTurns:1, nessuna lane last_tool_calls). Sicurezza OK: il read di .env mostra [REDACTED-SECRET] (redazione backstop funziona anche sui file).
+> **FIX FATTI (lean, mirati — utente msg 820 "harness snello, no framework gigante"):**
+> - ✅ **load_secrets_from_env** (commit `988c5b8`, idea utente msg 811): file→sealed, valore mai dal modello/contesto → provisioning DETERMINISTICO che aggira il fumbling del 9B. Lockdown default. Test 15.
+> - ✅ **lane `<last_tool_calls>`** (commit `f331a05`, fix amnesia #1): ring buffer condiviso `src/tool-call-log.mjs` (cattura via `tool_execution_start/end`) → context-assembly inietta le ultime 8 azioni (nome+args+esito, redatte) in entrambi i rami. Il modello "ricorda" cosa ha fatto. Test 19.
+> - ✅ **istruzione anti-placeholder** su propose_secret_create (msg 819, "istruzioni chiare le capiscono anche i modelli scemi"): "mai placeholder, usa nome reale o chiedi; valore in file → load_secrets_from_env". NON un guardrail-pezza (droppato su richiesta utente).
+> - ✅ **recovery-hint** su find_tool: "se un tool è 'not found' NON inventare un altro nome, usa find_tool". Lean (la lane last_tool_calls mostra già il fallimento) — niente interception fragile (la generazione del "not found" di pi non è intercettabile pulita).
+> **DECISIONE checklist (msg 814, "verifica se ha senso")**: analisi data → hints-first (soft, fatti), checklist SOLO su ops critiche/irreversibili, dichiarativa, feedback azionabile, toggleable — **DA COSTRUIRE MIRATA solo se gli hint non bastano** (evidence-first, anti over-engineering). L'Ask è già una checklist-checkpoint.
+> **DA TESTARE**: riavvio pi → verificare col 9B se last_tool_calls+hint riducono placeholder/allucinazioni/flailing. Poi decidere checklist.
+
 ### 🔴 FINDING SESSIONE LIVE 2026-07-03 (utente (A) TUI, sessione `019f27c1` — msg 790-797)
 > L'utente ha eseguito qwen3.5:9b nella TUI reale e mandato session-file + NOTE. Finding (ordine di priorità):
 >

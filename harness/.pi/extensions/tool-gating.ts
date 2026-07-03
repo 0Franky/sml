@@ -63,6 +63,7 @@ export default function (pi: ExtensionAPI) {
     promptSnippet: "find_tool(query) — search hidden tools/skills by intent and activate the matches.",
     promptGuidelines: [
       "Your tool list is intentionally SHORT. If you need to do something and don't see a tool for it, call find_tool(query) (search by intent) or open_category(category) to reveal more tools AND skills, then call the revealed tool. Do NOT improvise an unsafe workaround or claim a capability is unavailable — search first.",
+      "If you called a tool and got 'not found' (or you're unsure a tool name is exact), that tool does NOT exist — do NOT invent or guess another name. Call find_tool('what you want to do') and use a name it returns.",
     ],
     parameters: Type.Object({ query: Type.String({ minLength: 1, description: "What you want to do, in a few words (e.g. 'store an api key', 'run a verifier', 'rotate a token')." }) }),
     async execute(_t: string, p: any) {
