@@ -7,7 +7,8 @@
  *   - apre il dialog di CONFERMA (naming/sink/motivo),
  *   - chiede all'utente di DIGITARE il valore (il modello non lo vede mai),
  *   - crea il secret sigillato.
- * Copre anche: deny, headless (no UI → out-of-band), external-sink type-to-confirm, nome invalido, wildcard.
+ * Copre anche: deny, headless (no UI → out-of-band), external-sink via confirm sì/no (opzione A msg 875 — no
+ * type-to-confirm in creazione), nome invalido, wildcard.
  *
  * Corollario diagnostico (NON un difetto di questo codice): nel transcript il modello non CHIAMA propose_secret_create
  * → è un problema di routing/instruction-following del modello + troppi tool secret, tracciato in wiki/todo.md.
@@ -72,24 +73,26 @@ async function run() {
     removeSecret(name);
   }
 
-  // 4) EXTERNAL-SINK: pre-cablare host esterni = widening → type-to-confirm ESATTO del challenge.
+  // 4) EXTERNAL-SINK: opzione A (utente msg 875) → in CREAZIONE il consenso è il confirm sì/no (che elenca gli host
+  //    esterni); NIENTE type-to-confirm ridondante. La frizione type-to-confirm resta solo per il WIDENING di secret esistenti.
   {
     const name = "TEST_CREATE_SINK_1";
     removeSecret(name);
-    // confirm=true, poi il type-to-confirm del sink OK, poi il valore.
-    const { ui, calls } = fakeUI({ confirm: [true], input: ["oauth.reddit.com", "tok"] });
+    // confirm=true, poi SOLO il valore (nessun type-to-confirm del sink).
+    const { ui, calls } = fakeUI({ confirm: [true], input: ["tok"] });
     const r = await askAndCreate(ui, true, { name, allowedSinks: ["oauth.reddit.com"], why: "x" }, "x");
-    ok(calls.input.length === 2, "sink: due input (type-to-confirm + valore)");
-    ok(r?.details?.ok === true && hasSecret(name), "sink: creato dopo type-to-confirm corretto");
+    ok(calls.input.length === 1, "sink: un solo input = il valore (opzione A, no type-to-confirm)");
+    ok(r?.details?.ok === true && hasSecret(name), "sink: creato col solo confirm sì/no");
+    ok(/oauth\.reddit\.com/.test(calls.confirm[0]?.message ?? ""), "sink: il confirm elenca l'host esterno (consenso informato)");
     removeSecret(name);
 
-    // type-to-confirm SBAGLIATO → abort, niente valore, niente creazione.
+    // confirm=NO → niente secret, valore mai chiesto (il confirm sì/no È il gate della creazione a sink esterni).
     const name2 = "TEST_CREATE_SINK_2";
     removeSecret(name2);
-    const { ui: ui2, calls: c2 } = fakeUI({ confirm: [true], input: ["wrong.host.com"] });
+    const { ui: ui2, calls: c2 } = fakeUI({ confirm: [false], input: ["should-not-ask"] });
     const r2 = await askAndCreate(ui2, true, { name: name2, allowedSinks: ["oauth.reddit.com"], why: "x" }, "x");
-    ok(c2.input.length === 1, "sink-wrong: solo il type-to-confirm (nessun input valore)");
-    ok(r2?.details?.ok === false && !hasSecret(name2), "sink-wrong: abort, nessuna creazione");
+    ok(c2.input.length === 0, "sink-deny: valore mai chiesto dopo il rifiuto");
+    ok(r2?.details?.ok === false && !hasSecret(name2), "sink-deny: abort, nessuna creazione");
     removeSecret(name2);
   }
 

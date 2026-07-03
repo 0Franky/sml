@@ -176,19 +176,23 @@ function mockUi({ confirm = false, input = undefined, noInput = false } = {}) {
 // ── askAndCreate (#2): il VALORE lo digita l'utente, mai dal modello ──────────────────────────────
 {
   reset();
-  // create OK con sink ESTERNO: confirm→true + type-to-confirm host + value (coda di 2 input)
-  const { ui, calls } = mockUi({ confirm: true, input: ["api.x.com", "sk-REALVALUE-xyz123"] });
+  // create OK con sink ESTERNO: opzione A (utente msg 875) → NIENTE type-to-confirm in creazione, solo il VALORE.
+  // Il consenso è il confirm sì/no, che GIÀ elenca gli host esterni (extWarn).
+  const { ui, calls } = mockUi({ confirm: true, input: ["sk-REALVALUE-xyz123"] });
   const r = await askAndCreate(ui, true, { name: "NEWK", description: "test", allowedSinks: ["api.x.com"] }, "serve per l'API");
-  ok(r.details.ok === true && hasSecret("NEWK"), "CREATE: secret creato (con type-to-confirm sink esterno)");
+  ok(r.details.ok === true && hasSecret("NEWK"), "CREATE: secret creato (sink esterno, confirm sì/no — no type-to-confirm)");
   ok(JSON.stringify(listSecretsMeta()).indexOf("sk-REALVALUE") === -1, "CREATE: il VALORE non è in listSecretsMeta (sealed)");
   ok([...getDynamicSecrets()].includes("sk-REALVALUE-xyz123"), "CREATE: valore registrato nel backstop di redazione");
-  ok(calls.input.length === 2, "CREATE: type-to-confirm host + input valore (2 input)");
+  ok(calls.input.length === 1, "CREATE opzione A: un solo input = il valore (niente type-to-confirm sink)");
+  ok(/api\.x\.com/.test(calls.confirm[0].message) && /ESTERN/i.test(calls.confirm[0].message), "CREATE: il confirm sì/no mostra già gli host esterni (consenso informato)");
 }
 {
   reset();
-  // review P2: sink esterno con type-to-confirm SBAGLIATO → abort, niente secret
-  const r = await askAndCreate(mockUi({ confirm: true, input: ["wrong-host", "val"] }).ui, true, { name: "NEWK", allowedSinks: ["api.x.com"] }, "why");
-  ok(r.details.ok === false && r.details.aborted === "sinks-not-confirmed" && !hasSecret("NEWK"), "CREATE P2: sink esterno non confermato → NON creato");
+  // opzione A (msg 875): per un secret pre-cablato a host ESTERNI il consenso È il confirm sì/no (che li elenca) →
+  // se l'utente NEGA, niente secret e il valore non viene MAI chiesto (nessun input consumato).
+  const { ui, calls } = mockUi({ confirm: false, input: ["sk-SHOULD-NOT-BE-ASKED"] });
+  const r = await askAndCreate(ui, true, { name: "NEWK", allowedSinks: ["api.x.com"] }, "why");
+  ok(r.details.ok === false && !hasSecret("NEWK") && calls.input.length === 0, "CREATE (sink esterno) confirm→NO: niente secret, valore mai chiesto");
 }
 {
   reset();

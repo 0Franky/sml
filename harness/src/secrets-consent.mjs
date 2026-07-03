@@ -261,15 +261,11 @@ export async function askAndCreate(ui, hasUI, proposal, why) {
       `Se confermi, ti chiederò di DIGITARE TU il valore (resta sigillato: il modello e il provider LLM non lo vedono mai, ed è redatto dai transcript). Procedere?`,
     );
     if (!ok) return result(`User DENIED creation of '${name}'. Nothing was created.`, { ok: false });
-    // review P2 parità: creare un secret PRE-CABLATO verso host ESTERNI = widening quanto un grant → type-to-confirm.
-    if (externalSinks.length) {
-      const challenge = externalSinks.join(", ");
-      const typed = await ui.input(`Conferma i sink esterni di '${name}'`, `digita ESATTAMENTE: ${challenge}`);
-      if (typed == null || normChallenge(typed) !== normChallenge(challenge)) {
-        notify(ui, `Creazione di '${name}' ANNULLATA (sink esterni non confermati).`, "warning");
-        return result(`User did NOT confirm the external sinks ('${challenge}') for '${name}'. ABORTED — nothing created.`, { ok: false, aborted: "sinks-not-confirmed" });
-      }
-    }
+    // DECISIONE utente msg 875 (opzione A — "comodità E sicurezza entrambe al top"): in CREAZIONE il consenso è il
+    // confirm sì/no qui sopra, che GIÀ elenca gli allowedSinks e mostra ⚠ per gli host ESTERNI (extWarn), mentre l'utente
+    // sta inserendo tutto a mano e consapevolmente (subito dopo digita il valore). Niente type-to-confirm ridondante qui.
+    // La frizione anti rubber-stamp (type-to-confirm) resta SOLO per il WIDENING di un secret ESISTENTE
+    // (askAndApplyEdit/askLocalHttp), dove il "sì" distratto su un secret già in uso è il rischio reale.
     const raw = await ui.input(`Valore per il secret '${name}'`, `incolla il valore reale (resta sigillato; il modello non lo vede)`);
     // review P3: trimma (un paste porta spesso newline/spazi finali → romperebbero la redazione-substring e l'injection).
     const value = raw == null ? "" : String(raw).replace(/^\s+|\s+$/g, "");
