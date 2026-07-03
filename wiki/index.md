@@ -148,6 +148,7 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 - [`concepts/context-bounds-study.md`](concepts/context-bounds-study.md) 🆕 — studio (8-agenti specializzato+agnostico) sui BOUND [min,default,max] per il self-tuning P3 + design-contract: **4 lane tunable** (vars/recent_changes count, messages n+charCap), task_list/execution_order/frame=FROZEN-config, verify_queue/secrets=GATE; **3 blocker** (budget-allocator, tool set_view, reset-lifecycle)
 - [`concepts/model-controlled-context.md`](concepts/model-controlled-context.md) 🆕 — il modello CAPISCE+REGOLA la propria vista (espandi msg/sezioni, current-step) entro bound; architettura push-bounded + pull-on-demand
 - [`concepts/window-aware-fetching.md`](concepts/window-aware-fetching.md) — recupero on-demand degli item fuori-finestra (pull tools: get_conversation/get_shared_view/list_tasks/…)
+- [`concepts/persist-salient-facts.md`](concepts/persist-salient-facts.md) 🆕 — skill: riconoscere un fatto DUREVOLE (nome/soprannome/preferenza/decisione) → `set_var` PRIMA che scrolli fuori dalla rolling-window → richiamo. Meccanismo=F / decisione=S, reward OUTCOME-anchored; layered col raise `nativeKeepTurns` (breve termine). Awareness `<how_memory_works>` spiega *quali* item evictano. TB-16
 
 **Categoria C — Runtime safety + coherence**:
 - [`concepts/contradiction-detection-layer.md`](concepts/contradiction-detection-layer.md) — detector contraddizioni nel context, attention event

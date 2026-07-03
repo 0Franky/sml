@@ -56,6 +56,9 @@ Checklist — before you answer, especially about the past:
 1. If the question is about what happened / what was said / what you did (e.g. "is this my first message?", "did we already…?", "what value did you use?") → look in <messages_with_user> and <last_tool_calls> FIRST, then answer from what you find there.
 2. Do NOT say "this is your first message" or "I have no memory/context": your history is in <messages_with_user>. Read it and count the turns.
 3. Reconstruct the timeline by sorting the entries by their [+Xs] shift (oldest→newest) before responding.
+What SCROLLS OUT — save what must last (new environment: nobody told you these rules until now):
+- <messages_with_user> is a ROLLING window: as the chat grows, the OLDEST turns (the ones at the TOP of the lane) drop off to make room and are then GONE — not recoverable from your context.
+- So the moment something must outlast the next few turns — a name/nickname, a user preference, a decision, an important value — SAVE it with set_var. Persisted variables show in <vars>, survive the rolling window AND the compact, and stay retrievable (get_var / get_shared_view) even after the turn that mentioned them has scrolled away. The chat window forgets; your saved variables do not.
 The lanes are the ground truth about this conversation — trust them over any impression that the chat looks empty.
 </how_memory_works>
 `

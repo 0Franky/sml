@@ -40,7 +40,7 @@ export default function (pi: ExtensionAPI) {
     name: "set_var",
     label: "Set persisted variable",
     description:
-      "Persist a variable (survives the compact; scope 'shared' makes it visible cross-agent). The change is tracked in the change-log with a timestamp + optional decision-ref.",
+      "Persist a variable (survives the compact AND the rolling chat window; scope 'shared' makes it visible cross-agent). Use it to REMEMBER durable facts — a name, a nickname, a user preference, a decision, an important value — so they outlast the oldest chat turns as those scroll out of <messages_with_user>. The change is tracked in the change-log with a timestamp + optional decision-ref.",
     parameters: Type.Object({
       id: Type.String({ description: "Variable identifier." }),
       value: Type.Any({ description: "Value (JSON-serializable)." }),
