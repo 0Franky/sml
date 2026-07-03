@@ -57,6 +57,14 @@ The lanes are the ground truth about this conversation — trust them over any i
 `
   : "";
 
+// RECENCY REMINDER in CODA (utente msg 853/855): l'awareness completa è in TESTA al contesto, ma su 24-26K char un
+// modello debole la "perde" (lost-in-the-middle). Stesso principio dell'aim-in-coda (msg 518): ri-ancorare in CODA —
+// dove l'attenzione è massima — l'istruzione load-bearing. Qui: un promemoria BREVE (non duplica il blocco intero)
+// che dice di ricostruire la timeline dagli shift prima di rispondere sul passato. Gated dallo stesso laneMemoryHint.
+const MEMORY_TAIL = HARNESS_CFG.laneMemoryHint
+  ? `\n<reminder note="read this right before you answer">If the question touches the past (what was said/done, "is this my first message?", "did we already…?", "what value did you use?"): reconstruct the timeline by sorting the entries in <messages_with_user> and <last_tool_calls> by their [+Xs] shift (oldest→newest), then answer from them. NEVER say you have no memory or that this is the first message — your history is in those lanes. The shifts are the authoritative order, not the line position.</reminder>`
+  : "";
+
 const DB_PATH = ".pi/state/vars.db";
 
 function getStore(): VarsQueue {
@@ -163,7 +171,8 @@ export default function (pi: ExtensionAPI) {
     // segreto finito nello STATO (set_var, title, decision — anche via prompt-injection) leakerebbe in chiaro. Lo
     // redigiamo QUI (punto unico di convergenza): pattern statici noti + secrets-map dinamica. Coerente con la
     // redazione su tool_result/tool_call. (NB: non tocca i riferimenti {{secret:NAME}}, che non sono valori.)
-    const safe = redactText(`${workspace}${aimTail}`, getDynamicSecrets(), { staticPatterns: true }).redacted;
+    // ordine di coda: … lane → aim-in-coda → MEMORY_TAIL (LETTERALMENTE ultimo, recency massima per il fix amnesia).
+    const safe = redactText(`${workspace}${aimTail}${MEMORY_TAIL}`, getDynamicSecrets(), { staticPatterns: true }).redacted;
     return { systemPrompt: `${event.systemPrompt}\n\n${safe}` };
   });
   // NB: la SOPPRESSIONE dell'array messaggi nativo (hook `context`, Strada-2 keepTurns:1) vive nell'extension
