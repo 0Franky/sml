@@ -16,7 +16,9 @@ export class ConversationStore {
   window(convId: string, n?: number, opts?: { afterSeq?: number; untilSeq?: number | null }): ConversationTurn[];
   nthLastUserSeq(convId: string, k: number, opts?: { afterSeq?: number }): number | null;
   lastSeq(convId: string): number;
+  firstSeq(convId: string, opts?: { afterSeq?: number }): number;
   range(convId: string, fromSeq: number, toSeq: number): ConversationTurn[];
+  windowOldest(convId: string, n?: number, opts?: { afterSeq?: number; untilSeq?: number | null }): ConversationTurn[];
   all(convId: string): ConversationTurn[];
 }
 

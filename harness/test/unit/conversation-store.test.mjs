@@ -29,6 +29,27 @@ ok(w.length === 2 && w[0].text === "ok, parto dalla validazione" && w[1].text ==
 const r = cs.range(C, 1, 2);
 ok(r.length === 2 && r[0].seq === 1 && r[1].seq === 2, "range per seq");
 
+// GLOBAL-seq bug (sessione live 019f292b): il seq è GLOBALE/condiviso tra sessioni → una conv NON parte da seq 1.
+// Chiedere "i primi/più vecchi" facendo range basso (1..N) cade su seq di ALTRE sessioni → []. Fix = from_start/windowOldest.
+{
+  const gs = new ConversationStore(":memory:", { agent: "orchestrator" });
+  gs.append("older_sess", "user", "roba di un'altra sessione", { ts: NOW });   // seq 1
+  gs.append("older_sess", "assistant", "...", { ts: NOW + 1 });                 // seq 2
+  const Y = "later_sess";
+  const yFirst = gs.append(Y, "user", "primo di Y", { ts: NOW + 10 });          // seq 3
+  gs.append(Y, "assistant", "secondo di Y", { ts: NOW + 11 });                  // seq 4
+  gs.append(Y, "user", "terzo di Y", { ts: NOW + 12 });                         // seq 5
+  ok(yFirst === 3, "seq è GLOBALE: Y NON parte da 1");
+  ok(gs.firstSeq(Y) === 3, "firstSeq = min reale della conv (3, non 1)");
+  ok(gs.range(Y, 1, 2).length === 0, "range basso (1..2) su Y → [] (seq di un'altra sessione) = IL BUG");
+  const oldest2 = gs.windowOldest(Y, 2);
+  ok(oldest2.length === 2 && oldest2[0].text === "primo di Y" && oldest2[1].text === "secondo di Y",
+    "windowOldest: i PRIMI N di QUESTA conv, oldest-first (fix)");
+  const yLane = buildMessagesLane(gs, Y, { n: 1 });
+  ok(yLane.includes("from_start=true") && !yLane.includes("range=1.."), "lane header: steera a from_start, non al range=1.. fuorviante");
+  ok(yLane.includes("range=3..4"), "lane header: se dà un range usa il firstSeq REALE (3), non 1");
+}
+
 // lane: verbatim last-N + header shown/total + marker older-by-ID
 const lane = buildMessagesLane(cs, C, { n: 2 });
 ok(lane.startsWith('<messages_with_user conv="conv_A" shown="2/3">'), "lane header shown=N/total");

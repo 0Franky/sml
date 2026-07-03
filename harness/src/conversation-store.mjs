@@ -101,6 +101,28 @@ export class ConversationStore {
     ).all(convId, fromSeq, toSeq);
   }
 
+  /**
+   * Seq MINIMO reale della conversazione (nel segmento post-`afterSeq`), 0 se vuota. Il `seq` è GLOBALE (condiviso
+   * tra sessioni) → una conv NON parte da 1: questo è il confine inferiore vero, per header/marker non-fuorvianti.
+   */
+  firstSeq(convId, { afterSeq = 0 } = {}) {
+    const r = this.db.prepare(`SELECT MIN(seq) AS s FROM conversations WHERE conv_id = ? AND seq > ?`).get(convId, afterSeq);
+    return r && r.s != null ? Number(r.s) : 0;
+  }
+
+  /**
+   * Primi N turni (oldest→newest) VERBATIM — "leggi DALL'INIZIO". Il modello (o l'utente) chiede "i più vecchi / i
+   * primi della conversazione" senza dover calcolare i seq GLOBALI (che non partono da 1): qui bastano conv_id + n.
+   * `afterSeq`/`untilSeq` = stessi bound del segmento della window.
+   */
+  windowOldest(convId, n = 10, { afterSeq = 0, untilSeq = null } = {}) {
+    const upper = untilSeq != null ? " AND seq <= ?" : "";
+    const args = untilSeq != null ? [convId, afterSeq, untilSeq, n] : [convId, afterSeq, n];
+    return this.db.prepare(
+      `SELECT seq, role, text, ts FROM conversations WHERE conv_id = ? AND seq > ?${upper} ORDER BY seq ASC LIMIT ?`
+    ).all(...args);
+  }
+
   /** Conversazione completa (usare con parsimonia: la `window` è la vista di default). */
   all(convId) {
     return this.db.prepare(`SELECT seq, role, text, ts FROM conversations WHERE conv_id = ? ORDER BY seq`).all(convId);
@@ -182,7 +204,10 @@ export function buildMessagesLane(store, convId, { n = 6, charCap = 4000, afterS
   const lines = [`<messages_with_user conv="${esc(convId)}"${startAttr} shown="${win.length}/${total}"${ckptAttr}>`];
   for (const t of win) lines.push(`  ${shiftPrefix(t.ts, startMs)}[${esc(t.role)}] ${esc(t.text)}`);
   if (olderHidden > 0) {
-    lines.push(`  (+${olderHidden} older messages in the segment — use get_conversation conv="${esc(convId)}" range=${afterSeq + 1}..${shownFrom - 1})`);
+    // NB: `seq` è GLOBALE (non 1-based) → NON suggerire range=1.. (indurrebbe il modello a chiedere seq bassi = quelli
+    // di ALTRE sessioni → []). Steera a from_start (i più vecchi di QUESTA conv, oldest-first, senza calcolare seq).
+    const segFirst = store.firstSeq(convId, { afterSeq });
+    lines.push(`  (+${olderHidden} older messages hidden — read them with get_conversation(from_start=true, n=${olderHidden}), oldest first. For a precise slice use range=${segFirst}..${shownFrom - 1}; seq are GLOBAL ids, not 1-based.)`);
   }
   // dopo un checkpoint: la chat PRE-checkpoint è ripiegata (sintetizzata in <resuming_from>), recuperabile per ID.
   if (afterSeq > 0) {

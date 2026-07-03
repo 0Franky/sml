@@ -107,19 +107,23 @@ export default function (pi: ExtensionAPI) {
     name: "get_conversation",
     label: "Get conversation turns by id+range",
     description:
-      "Retrieve conversation turns by id + seq range (e.g. the full content behind the window marker, " +
-      "or an excerpt cited by an inter-agent message {conv_id,range}). Without a range, returns the recent window.",
+      "Retrieve past conversation turns. For 'my first/oldest N messages' or 'read from the beginning', use from_start=true " +
+      "(you do NOT need seq numbers — seq are GLOBAL ids shared across sessions, they do NOT start at 1 for this chat). " +
+      "For a precise slice pass from_seq+to_seq. With none of these, returns the recent window (last N).",
     parameters: Type.Object({
       conv_id: Type.Optional(Type.String({ description: "Conversation ID (default: the current session's conversation)." })),
-      from_seq: Type.Optional(Type.Number({ description: "Start seq (inclusive)." })),
-      to_seq: Type.Optional(Type.Number({ description: "End seq (inclusive)." })),
-      n: Type.Optional(Type.Number({ description: "If no range: last N turns (default 10)." })),
+      from_start: Type.Optional(Type.Boolean({ description: "Read the OLDEST turns first (the beginning of THIS conversation). Use for 'give me my first/oldest N messages' — no seq math needed." })),
+      from_seq: Type.Optional(Type.Number({ description: "Precise slice: start seq (inclusive). seq are GLOBAL — read the value from a lane marker, don't guess a low number." })),
+      to_seq: Type.Optional(Type.Number({ description: "Precise slice: end seq (inclusive)." })),
+      n: Type.Optional(Type.Number({ description: "How many turns (default 10) — for from_start and for the default recent window." })),
     }),
     async execute(_t: string, p: any) {
       const convId = p.conv_id ?? getConvId();
-      const rows = (p.from_seq != null && p.to_seq != null)
-        ? store.range(convId, p.from_seq, p.to_seq)
-        : store.window(convId, p.n ?? 10);
+      const rows = p.from_start
+        ? store.windowOldest(convId, p.n ?? 10)
+        : (p.from_seq != null && p.to_seq != null)
+          ? store.range(convId, p.from_seq, p.to_seq)
+          : store.window(convId, p.n ?? 10);
       return { content: [{ type: "text", text: JSON.stringify(rows, null, 2) }], details: { count: rows.length } };
     },
   });
