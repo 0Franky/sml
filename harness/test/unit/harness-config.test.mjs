@@ -129,7 +129,7 @@ const noFile = join(dir, "assente.json");
 // N) nativeKeepTurns + laneMemoryHint (fix amnesia 2026-07-03, verification-loop) -----------------
 {
   const c = loadHarnessConfig(noFile, { env: {} });
-  ok(c.nativeKeepTurns === 1, "DEFAULT: nativeKeepTurns = 1 (awareness-first; il raise è l'ultima opzione)");
+  ok(c.nativeKeepTurns === 6, "DEFAULT: nativeKeepTurns = 6 (raise attivo, msg 863: storia nel nativo — provato dall'esperimento ollama)");
   ok(c.laneMemoryHint === true, "DEFAULT: laneMemoryHint = true (opt-in ON, regime SLM)");
   writeFileSync(cfgPath, JSON.stringify({ nativeKeepTurns: 6, laneMemoryHint: false }));
   const c2 = loadHarnessConfig(cfgPath, { env: {} });

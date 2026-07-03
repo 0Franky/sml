@@ -434,7 +434,7 @@ export function buildNestedWorkspace(vq, opts = {}) {
   parts.push(assembleContext(vq, { now, focusTaskIds, absoluteTimestamps: opts.absoluteTimestamps, secrets: opts.secrets }));
 
   if (opts.store && opts.convId) {
-    const lane = buildMessagesLane(opts.store, opts.convId, { n: opts.messagesN ?? 6, charCap: opts.messagesCharCap, afterSeq: opts.afterSeq, excludeCurrentTurn: opts.excludeCurrentTurn });
+    const lane = buildMessagesLane(opts.store, opts.convId, { n: opts.messagesN ?? 6, charCap: opts.messagesCharCap, afterSeq: opts.afterSeq, excludeCurrentTurn: opts.excludeCurrentTurn, nativeKeepTurns: opts.nativeKeepTurns });
     if (lane) parts.push(lane);
   }
   return parts.join("\n");

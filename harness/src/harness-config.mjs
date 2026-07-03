@@ -43,10 +43,12 @@ export const DEFAULT_HARNESS_CONFIG = {
   // Causa-radice PROVATA: con keepTurns=1 il modello (che tratta l'ARRAY NATIVO come "la conversazione" e IGNORA la
   // lane nel system prompt) rispondeva "non ho accesso alla conversazione" ANCHE con la lane piena + il blocco
   // <how_memory_works> davanti (sessione 019f2880, lane ricostruita = storia intera, modello l'ha ignorata).
-  // L'AWARENESS-first (opzione A, msg 830) è stata PROVATA e FALLITA con dati puliti. Il raise (opzione B) è pronto ma
-  // SOSPESO (utente msg 840: "aspetta ad alzare, prima test con Sonnet") → prima si isola se è debolezza del 9B o
-  // problema harness. DEFAULT resta 1; flip a 6 (o env HARNESS_NATIVE_KEEP_TURNS) quando si decide di alzare.
-  nativeKeepTurns: 1,
+  // RAISE ATTIVO (utente msg 863 "procedi", 2026-07-03): la storia recente sta nell'array NATIVO (K turni), dove il
+  // modello guarda DAVVERO. PROVATO dall'esperimento controllato ollama: STESSO 9B + STESSO testo → lo LEGGE se è un
+  // messaggio user/nativo, lo IGNORA se è nel system prompt. La lane <messages_with_user> resta COMPLEMENTARE (solo i
+  // turni più vecchi del K-esimo, via nthLastUserSeq → niente doppia-chat). K=6 default (tuning via env
+  // HARNESS_NATIVE_KEEP_TURNS). Le REGOLE/reminder restano nel system (autorità + confine tool_result-vs-user).
+  nativeKeepTurns: 6,
   // laneMemoryHint (AWARENESS-first, utente msg 830): inietta un blocco <how_memory_works> che SPIEGA al modello
   // piccolo che vede 1 solo messaggio per volta e che le lane (<messages_with_user>, <last_tool_calls>, …) SONO la
   // sua memoria, con una checklist su come ragionare. true (DEFAULT ON, regime SLM: "già configurarlo"); false per

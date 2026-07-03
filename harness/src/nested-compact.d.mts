@@ -88,6 +88,8 @@ export function buildNestedWorkspace(
     messagesCharCap?: number;
     afterSeq?: number;
     excludeCurrentTurn?: boolean;
+    /** complementarità native-window: la lane mostra solo i turni più vecchi del K-esimo user (K>0 → precede excludeCurrentTurn). */
+    nativeKeepTurns?: number;
     /** inventario sealed-secrets (nomi+sink+flag, MAI valori) per la lane <secrets> nel ramo nested (gate-critical). */
     secrets?: import("./sealed-secrets.d.mts").SecretMeta[];
   },

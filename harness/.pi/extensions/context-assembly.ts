@@ -36,6 +36,10 @@ const MESSAGES_WINDOW_N = HARNESS_CFG.messagesWindowN; // turni verbatim mostrat
 const TOOL_CALLS_N = 8; // azioni recenti mostrate nella lane <last_tool_calls> (memoria delle proprie tool-call)
 const MESSAGES_CHAR_CAP = HARNESS_CFG.messagesCharCap; // VINCOLO REALE (binding) sulla dimensione della lane (config, default 4000)
 const EXCLUDE_CURRENT_TURN = HARNESS_CFG.messagesExcludeCurrentTurn; // P1-B: escludi il turno corrente dalla lane (default true)
+// COMPLEMENTARITÀ native↔lane (raise attivo, utente msg 863): gli ultimi K turni-utente sono nell'array NATIVO
+// (native-window keepTurns=K, dove il 9B legge davvero — provato dall'esperimento ollama); la lane mostra SOLO i
+// turni più VECCHI del K-esimo (nthLastUserSeq → niente doppia-chat). K>0 ha precedenza su EXCLUDE_CURRENT_TURN.
+const NATIVE_KEEP_TURNS = Number((HARNESS_CFG as any).nativeKeepTurns ?? 1);
 
 // <how_memory_works> — AWARENESS-first (utente msg 830): un modello piccolo con keepTurns=1 vede 1 solo messaggio per
 // volta e tratta l'ARRAY NATIVO come "la conversazione", IGNORANDO le lane nel system prompt → amnesia ("è il mio primo
@@ -120,7 +124,7 @@ export default function (pi: ExtensionAPI) {
     if (stack.length > 0) {
       // Uno scope è aperto → workspace NESTED: <frame> (zoom-OUT) + <context> FILTRATO + lane <messages_with_user>.
       const top = stack[stack.length - 1];
-      workspace = buildNestedWorkspace(vq, { focusScopeId: top.scope_id, store: convStore, convId, messagesN: MESSAGES_WINDOW_N, messagesCharCap: MESSAGES_CHAR_CAP, afterSeq: checkpointSeq, excludeCurrentTurn: EXCLUDE_CURRENT_TURN, secrets: listSecretsMeta() });
+      workspace = buildNestedWorkspace(vq, { focusScopeId: top.scope_id, store: convStore, convId, messagesN: MESSAGES_WINDOW_N, messagesCharCap: MESSAGES_CHAR_CAP, afterSeq: checkpointSeq, excludeCurrentTurn: EXCLUDE_CURRENT_TURN, nativeKeepTurns: NATIVE_KEEP_TURNS, secrets: listSecretsMeta() });
     } else {
       // Nessuno scope → resume? + <context> + <focus_hint>? + lane <messages_with_user>.
       const resume = buildResumeDigest(vq);
@@ -151,7 +155,7 @@ export default function (pi: ExtensionAPI) {
       }
       // excludeCurrentTurn (config, default true): la native-window (native-window.ts) tiene keepTurns=1 = il turno
       // corrente; la lane mostra la STORIA → escludere il turno in volo evita la doppia-chat (overlap=1). (P1-B.)
-      const lane = buildMessagesLane(convStore, convId, { n: MESSAGES_WINDOW_N, charCap: MESSAGES_CHAR_CAP, afterSeq: checkpointSeq, excludeCurrentTurn: EXCLUDE_CURRENT_TURN });
+      const lane = buildMessagesLane(convStore, convId, { n: MESSAGES_WINDOW_N, charCap: MESSAGES_CHAR_CAP, afterSeq: checkpointSeq, excludeCurrentTurn: EXCLUDE_CURRENT_TURN, nativeKeepTurns: NATIVE_KEEP_TURNS });
       workspace = (resume ? `${resume}\n` : "") + base + hint + (lane ? `\n${lane}` : "");
     }
     // <how_memory_works> IN TESTA (AWARENESS-first, msg 830): il modello legge PRIMA la spiegazione, poi vede le lane
