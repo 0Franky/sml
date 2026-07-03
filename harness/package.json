@@ -6,6 +6,9 @@
   "type": "module",
   "scripts": {
     "tui": "pi",
+    "tui:debug": "node --inspect=127.0.0.1:9229 node_modules/@earendil-works/pi-coding-agent/dist/cli.js",
+    "inspect": "node --experimental-sqlite tools/harness-inspect.mjs",
+    "attach": "node tools/harness-attach.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node run-tests.mjs",
     "test:unit": "node run-tests.mjs unit",
