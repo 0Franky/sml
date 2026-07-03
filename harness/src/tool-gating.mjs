@@ -25,12 +25,19 @@ export const CATEGORY_TOOLS = {
   meta: ["find_tool", "open_category", "list_tool_categories"],
 };
 
-/** Set-ESSENZIALE sempre attivo (anche senza scoperta): core pi + i pochi tool harness d'uso più comune + le meta-tool.
- * Un 9B qui ha già di che operare; la CODA LUNGA (request_secret, focus, error-memo, messaging, sliding-var, …) è
- * deferita e si rivela con find_tool/open_category. Il set reale è l'INTERSEZIONE con i tool davvero registrati. */
+/** Set-ESSENZIALE sempre attivo (anche senza scoperta): core pi + i tool harness dei FLUSSI COMUNI + le meta-tool.
+ * Un 9B qui ha già di che operare; la CODA LUNGA (request_secret, error-memo, messaging, sliding-var, reasoning, …) è
+ * deferita e si rivela con find_tool/open_category. Il set reale è l'INTERSEZIONE con i tool davvero registrati.
+ * B3 widen-default (2026-07-03, scelta utente msg 892/896): il flusso SECRET utente-facing è sempre-attivo COMPLETO —
+ * la sessione live 019f292b ha mostrato il 9B in loop "not found" proprio su list_secrets/request_sink/preview/edit
+ * (gated → si rompeva il flusso). Restano deferiti solo i rari/distruttivi. ~30 tool: sotto la soglia-annegamento (~50)
+ * ma copre i flussi che il modello usa davvero → raramente deve rivelare. Vedi tool-gating.ts (sticky-reveal, B2). */
 export const ESSENTIAL_TOOLS = [
   "bash", "read", "write", "edit", "grep", "find", "ls", "str_replace", "create", "multiedit", // core pi
-  "propose_secret_create", "load_secrets_from_env", "http_request", // secrets/http d'uso comune (load_secrets_from_env = provisioning deterministico da file, msg 811)
+  // secrets: flusso comune COMPLETO (B3) — provisioning + stato + grant-sink + preview + edit + check.
+  // load_secrets_from_env = provisioning deterministico da file (msg 811). Deferiti: destroy/add_secret/request_secret/request_local_http.
+  "propose_secret_create", "load_secrets_from_env", "http_request",
+  "list_secrets", "request_sink", "preview_secret_use", "propose_secret_edit", "check_secret_refs",
   "list_tasks", "add_task", "set_task_status", "set_curr", // task basics
   "set_var", "get_var", // vars basics
   "enter_focus", "pop_focus", "focus_status", // focus/matrioska (utente msg 807: enter_focus essenziale; il TRIO

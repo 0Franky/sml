@@ -34,23 +34,49 @@ export default function (pi: ExtensionAPI) {
     const skills = (api.getCommands?.() ?? []).map((c: any) => ({ name: c?.name ?? c?.command ?? "", description: c?.description ?? "", kind: "skill" }));
     return [...tools, ...skills].filter((i: any) => i.name);
   }
-  /** Attiva (senza rimuovere gli attivi) i tool indicati; ritorna quelli effettivamente AGGIUNTI. */
+  // B2 STICKY-REVEAL (2026-07-03, scelta utente msg 892/896). Bug osservato nella sessione live 019f292b: un tool
+  // ATTIVATO da find_tool/open_category tornava "not found" al giro dopo → il 9B andava in LOOP. Causa: pi ricostruisce
+  // turnState.activeTools per-round da this.activeToolNames (agent-harness.createTurnState:260) e la reveal mid-turn
+  // può perdersi (setActiveTools è async ma a livello extension è tipata `void` → NON await-abile → race). NB: il
+  // "pre-check hook" per attivare al volo è IMPOSSIBILE — agent-loop.js:361 risolve `context.tools.find(name)` e
+  // ritorna "not found" (riga 365) PRIMA del tool_call hook (riga 372). Unico rimedio: tenere memoria di ciò che è
+  // stato rivelato e RI-APPLICARE `default ∪ revealed` prima di ogni agent-start (cross-turn) e di ogni round
+  // (within-loop). Così ciò che è stato rivelato RESTA chiamabile per tutta la sessione.
+  const revealed = new Set<string>();
+
+  /** Set-attivo desiderato = default (essenziali presenti) ∪ revealed presenti. Intersezione difensiva con i registrati. */
+  function desiredActive(): string[] {
+    const all = (api.getAllTools?.() ?? []).map((t: any) => t?.name).filter(Boolean);
+    const present = new Set<string>(all);
+    const out = new Set<string>(computeDefaultActive(all));
+    for (const n of revealed) if (present.has(n)) out.add(n);
+    return [...out];
+  }
+
+  /** Ri-applica il set desiderato SOLO se differisce dall'attivo (evita active_tools_change ridondanti per-round). */
+  function applyActive() {
+    if (typeof api.setActiveTools !== "function") return;
+    const want = desiredActive();
+    const curSet = new Set<string>(api.getActiveTools?.() ?? []);
+    const same = want.length === curSet.size && want.every((n) => curSet.has(n));
+    if (!same) { api.setActiveTools(want); api.refreshTools?.(); }
+  }
+
+  /** Registra i tool come "rivelati" (persistono per la sessione) e li rende attivi subito. Ritorna i NUOVI rivelati. */
   function reveal(names: string[]) {
-    if (!names.length || typeof api.setActiveTools !== "function") return [];
-    const active = new Set<string>(api.getActiveTools?.() ?? []);
-    const added = names.filter((n) => n && !active.has(n));
-    if (added.length) { api.setActiveTools([...active, ...added]); api.refreshTools?.(); }
+    const added: string[] = [];
+    for (const n of names) if (n && !revealed.has(n)) { revealed.add(n); added.push(n); }
+    if (MODE === "gated") applyActive();
     return added;
   }
 
-  // gated: a inizio sessione applica il set-default (nasconde la coda lunga). session_start fire dopo il load di TUTTE
-  // le estensioni → getAllTools() è completo. Le meta-tool sono in ESSENTIAL → restano visibili.
+  // gated: applica il set curato (default ∪ revealed) a inizio sessione, prima di OGNI agent-start (cross-turn) e di
+  // OGNI round (within-loop). session_start fire dopo il load di TUTTE le estensioni → getAllTools() è completo.
+  // In `discover` NON si tocca il set-attivo (tutto resta attivo/chiamabile). Le meta-tool sono in ESSENTIAL.
   if (MODE === "gated") {
-    pi.on("session_start", () => {
-      const all = (api.getAllTools?.() ?? []).map((t: any) => t?.name).filter(Boolean);
-      const active = computeDefaultActive(all);
-      if (active.length && typeof api.setActiveTools === "function") { api.setActiveTools(active); api.refreshTools?.(); }
-    });
+    pi.on("session_start", () => applyActive());
+    pi.on("before_agent_start", () => applyActive());
+    pi.on("turn_start", () => applyActive());
   }
 
   pi.registerTool({

@@ -81,5 +81,19 @@ ok(searchTools(ITEMS, "secret", { limit: 1 }).length === 1, "search: limit rispe
   ok(ESSENTIAL_TOOLS.includes("propose_secret_create"), "default: propose_secret_create è essenziale (fix secret-Ask)");
 }
 
+// ── B3 widen-default: il flusso SECRET comune è sempre-attivo COMPLETO (2026-07-03, sessione 019f292b) ──
+{
+  for (const n of ["list_secrets", "request_sink", "preview_secret_use", "propose_secret_edit", "check_secret_refs"])
+    ok(ESSENTIAL_TOOLS.includes(n), `widen: ${n} è essenziale (flusso secret non si rompe più)`);
+  // i rari/distruttivi restano deferiti (coda lunga)
+  for (const n of ["propose_secret_destroy", "add_secret", "request_secret", "request_local_http"])
+    ok(!ESSENTIAL_TOOLS.includes(n), `widen: ${n} resta deferito (raro/distruttivo)`);
+  // con i tool secret registrati, il default li attiva
+  const all = ["bash", "list_secrets", "request_sink", "preview_secret_use", "propose_secret_edit", "check_secret_refs", "propose_secret_destroy", "find_tool"];
+  const active = computeDefaultActive(all);
+  ok(active.includes("list_secrets") && active.includes("request_sink") && active.includes("preview_secret_use"), "widen: default attiva il flusso secret comune");
+  ok(!active.includes("propose_secret_destroy"), "widen: default NON attiva destroy (deferito)");
+}
+
 console.log(`\ntool-gating: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);
