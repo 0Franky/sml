@@ -71,11 +71,12 @@ ok(searchTools(ITEMS, "secret", { limit: 1 }).length === 1, "search: limit rispe
 
 // ── computeDefaultActive ──
 {
-  const all = ["bash", "read", "write", "propose_secret_create", "http_request", "list_tasks", "enter_focus", "sliding_var_read", "find_tool", "open_category", "list_tool_categories"];
+  const all = ["bash", "read", "write", "propose_secret_create", "http_request", "list_tasks", "enter_focus", "pop_focus", "focus_status", "sliding_var_read", "remember_lesson", "find_tool", "open_category", "list_tool_categories"];
   const active = computeDefaultActive(all);
   ok(active.includes("bash") && active.includes("propose_secret_create") && active.includes("http_request"), "default: essenziali attivi");
   ok(active.includes("find_tool") && active.includes("open_category"), "default: meta-tool attive");
-  ok(!active.includes("enter_focus") && !active.includes("sliding_var_read"), "default: coda-lunga NON attiva");
+  ok(active.includes("enter_focus") && active.includes("pop_focus") && active.includes("focus_status"), "default: trio focus attivo (msg 807)");
+  ok(!active.includes("sliding_var_read") && !active.includes("remember_lesson"), "default: coda-lunga NON attiva");
   ok(active.every((n) => all.includes(n)), "default: solo tool realmente registrati (no nomi inesistenti)");
   ok(ESSENTIAL_TOOLS.includes("propose_secret_create"), "default: propose_secret_create è essenziale (fix secret-Ask)");
 }

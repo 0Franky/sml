@@ -18,8 +18,11 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { searchTools, toolsInCategory, listCategories, computeDefaultActive, CATEGORY_TOOLS } from "../../src/tool-gating.mjs";
+import { loadHarnessConfig } from "../../src/harness-config.mjs";
 
-const MODE = String(process.env.HARNESS_TOOL_GATING ?? "off").toLowerCase(); // off | discover | gated
+// off | discover | gated. Da harness-config (default `gated`, regime SLM): file `.pi/harness.config.json` o env
+// HARNESS_TOOL_GATING. Meccanismo AFFIDABILE (readFileSync), non dipende dal caricamento di `.env` (che pi non fa).
+const MODE = String((loadHarnessConfig() as any).toolGating ?? "gated").toLowerCase();
 
 export default function (pi: ExtensionAPI) {
   if (MODE === "off") return; // opt-in: zero effetto finché non abilitato

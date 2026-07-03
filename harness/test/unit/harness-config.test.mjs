@@ -22,7 +22,17 @@ const noFile = join(dir, "assente.json");
   ok(c.messagesWindowN === 8, "DEFAULT: messagesWindowN = 8");
   ok(c.messagesCharCap === 4000, "DEFAULT: messagesCharCap = 4000 (binding constraint della lane)");
   ok(c.messagesExcludeCurrentTurn === true, "DEFAULT: messagesExcludeCurrentTurn = true (P1-B complementarità)");
+  ok(c.secrets.regexIngress === "ask", "DEFAULT: secrets.regexIngress = ask (Ask di promozione, fix C)");
+  ok(c.toolGating === "gated", "DEFAULT: toolGating = gated (regime SLM, msg 807)");
   ok(DEFAULT_HARNESS_CONFIG.trigger.maxDepth === DEFAULT_CFG.maxDepth, "DEFAULT_HARNESS_CONFIG espone DEFAULT_CFG");
+}
+
+// 1b) toolGating: file + env override + valore invalido ignorato (fail-safe) ------------------------
+{
+  writeFileSync(cfgPath, JSON.stringify({ toolGating: "off" }));
+  ok(loadHarnessConfig(cfgPath, { env: {} }).toolGating === "off", "FILE: toolGating overrideato a off (modello grande)");
+  ok(loadHarnessConfig(cfgPath, { env: { HARNESS_TOOL_GATING: "discover" } }).toolGating === "discover", "ENV: HARNESS_TOOL_GATING vince sul file (discover)");
+  ok(loadHarnessConfig(cfgPath, { env: { HARNESS_TOOL_GATING: "banana" } }).toolGating === "off", "ENV: valore invalido ignorato → resta il file (off)");
 }
 
 // 2) FILE opt-in override (profilo "Sonnet": soglie più alte) --------------------------------------

@@ -33,6 +33,8 @@ export const ESSENTIAL_TOOLS = [
   "propose_secret_create", "http_request", // secrets/http d'uso comune
   "list_tasks", "add_task", "set_task_status", "set_curr", // task basics
   "set_var", "get_var", // vars basics
+  "enter_focus", "pop_focus", "focus_status", // focus/matrioska (utente msg 807: enter_focus essenziale; il TRIO
+  // insieme, altrimenti il modello entra in focus e non può uscirne — pop_focus/focus_status stranded)
   "find_tool", "open_category", "list_tool_categories", // meta (scoperta)
 ];
 

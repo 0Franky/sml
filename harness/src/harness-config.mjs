@@ -27,6 +27,9 @@ export const AUTOFOCUS_MODES = ["off", "nudge", "auto"];
 export const SINK_GATING_MODES = ["strict", "warn", "off"];
 /** Modalità di regex-ingress dei secret (msg 578/579): off · ask=chiedi conferma · auto=sigilla high-confidence. */
 export const REGEX_INGRESS_MODES = ["off", "ask", "auto"];
+/** Modalità di tool-gating (msg 801/807): off=nessun effetto · discover=meta-tool senza nascondere · gated=set
+ *  attivo curato che nasconde la coda lunga (DEFAULT, regime SLM 9B — un modello piccolo annega con ~50 tool). */
+export const TOOL_GATING_MODES = ["off", "discover", "gated"];
 
 /** Config di default = soglie trigger (DEFAULT_CFG) + finestra lane messaggi + enforcement gathering. */
 export const DEFAULT_HARNESS_CONFIG = {
@@ -58,6 +61,10 @@ export const DEFAULT_HARNESS_CONFIG = {
   //   allowSecretToFile: true (DEFAULT, opt-OUT, utente msg 638) — il modello può iniettare un sealed-secret in un tool
   //   di scrittura-file (.env provisioning locale); false → bloccato (kill-switch per chi teme exfil-via-file).
   secrets: { sinkGating: "strict", regexIngress: "ask", allowSecretToFile: true },
+  // toolGating (msg 801/807): scoperta tool per modelli piccoli. off | discover | gated (DEFAULT). In `gated` il
+  // set-attivo iniziale = ESSENTIAL (tool-gating.mjs) e la coda lunga si riscopre con find_tool/open_category.
+  // Default `gated` = regime SLM (utente msg 807 "tenerlo attivo di default"); per un modello grande → "off" nel file.
+  toolGating: "gated",
 };
 
 const DEFAULT_PATH = ".pi/harness.config.json";
@@ -138,6 +145,7 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
     gathering: { ...DEFAULT_HARNESS_CONFIG.gathering },
     autofocus: { ...DEFAULT_HARNESS_CONFIG.autofocus },
     secrets: { ...DEFAULT_HARNESS_CONFIG.secrets },
+    toolGating: DEFAULT_HARNESS_CONFIG.toolGating,
   };
   // 2) file opt-in
   try {
@@ -147,6 +155,7 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
       applyGathering(cfg.gathering, f && f.gathering);
       applyAutofocus(cfg.autofocus, f && f.autofocus);
       applySecrets(cfg.secrets, f && f.secrets);
+      if (typeof f?.toolGating === "string" && TOOL_GATING_MODES.includes(f.toolGating)) cfg.toolGating = f.toolGating;
       if (typeof f?.messagesWindowN === "number" && Number.isFinite(f.messagesWindowN) && f.messagesWindowN >= 1) {
         cfg.messagesWindowN = Math.floor(f.messagesWindowN);
       }
@@ -188,6 +197,9 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
   }
   if (typeof env.HARNESS_SECRETS_REGEX_INGRESS === "string" && REGEX_INGRESS_MODES.includes(env.HARNESS_SECRETS_REGEX_INGRESS)) {
     cfg.secrets.regexIngress = env.HARNESS_SECRETS_REGEX_INGRESS;
+  }
+  if (typeof env.HARNESS_TOOL_GATING === "string" && TOOL_GATING_MODES.includes(env.HARNESS_TOOL_GATING)) {
+    cfg.toolGating = env.HARNESS_TOOL_GATING;
   }
   if (env.HARNESS_SECRETS_ALLOW_FILE != null && env.HARNESS_SECRETS_ALLOW_FILE !== "") {
     cfg.secrets.allowSecretToFile = env.HARNESS_SECRETS_ALLOW_FILE !== "false" && env.HARNESS_SECRETS_ALLOW_FILE !== "0";
