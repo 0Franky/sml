@@ -36,6 +36,25 @@ const TOOL_CALLS_N = 8; // azioni recenti mostrate nella lane <last_tool_calls> 
 const MESSAGES_CHAR_CAP = HARNESS_CFG.messagesCharCap; // VINCOLO REALE (binding) sulla dimensione della lane (config, default 4000)
 const EXCLUDE_CURRENT_TURN = HARNESS_CFG.messagesExcludeCurrentTurn; // P1-B: escludi il turno corrente dalla lane (default true)
 
+// <how_memory_works> — AWARENESS-first (utente msg 830): un modello piccolo con keepTurns=1 vede 1 solo messaggio per
+// volta e tratta l'ARRAY NATIVO come "la conversazione", IGNORANDO le lane nel system prompt → amnesia ("è il mio primo
+// messaggio?" con la storia davanti). Qui gli SPIEGHIAMO la situazione + gli diamo una CHECKLIST semplice su come usare
+// le lane come memoria. Config `laneMemoryHint` (default on, regime SLM). È la via da provare PRIMA di alzare keepTurns.
+const MEMORY_AWARENESS = HARNESS_CFG.laneMemoryHint
+  ? `<how_memory_works note="IMPORTANT — how you remember things here. Read this before answering.">
+You run in a harness that gives you only ONE message at a time (the current turn). Your earlier turns are NOT in the chat array — they are kept FOR you in the <context> below. The lanes ARE your memory; treat them as your brain:
+- <messages_with_user> = the whole conversation so far: every earlier message from the user AND your own replies, oldest→newest. This is your record of the dialogue.
+- <last_tool_calls> = the actions you already took and their results.
+- <task_list>, <current_aim>, and your variables = your working state.
+Checklist — before you answer, especially about the past:
+1. If the question is about what happened / what was said / what you did (e.g. "is this my first message?", "did we already…?", "what value did you use?") → look in <messages_with_user> and <last_tool_calls> FIRST, then answer from what you find there.
+2. Do NOT say "this is your first message" or "I have no memory/context": your history is in <messages_with_user>. Read it and count the turns.
+3. Reconstruct the timeline from the lanes (oldest→newest) before responding.
+The lanes are the ground truth about this conversation — trust them over any impression that the chat looks empty.
+</how_memory_works>
+`
+  : "";
+
 const DB_PATH = ".pi/state/vars.db";
 
 function getStore(): VarsQueue {
@@ -125,6 +144,9 @@ export default function (pi: ExtensionAPI) {
       const lane = buildMessagesLane(convStore, convId, { n: MESSAGES_WINDOW_N, charCap: MESSAGES_CHAR_CAP, afterSeq: checkpointSeq, excludeCurrentTurn: EXCLUDE_CURRENT_TURN });
       workspace = (resume ? `${resume}\n` : "") + base + hint + (lane ? `\n${lane}` : "");
     }
+    // <how_memory_works> IN TESTA (AWARENESS-first, msg 830): il modello legge PRIMA la spiegazione, poi vede le lane
+    // che essa descrive. Statico + config-gated (laneMemoryHint). Vale in entrambi i rami (nested e non).
+    if (MEMORY_AWARENESS) workspace = MEMORY_AWARENESS + workspace;
     // <last_tool_calls> (fix amnesia #1, msg 811-817): le ultime azioni del modello (nome+args-sintesi+esito). Vale in
     // ENTRAMBI i rami (nested e non): un modello piccolo con keepTurns:1 altrimenti "non ricorda" cosa ha appena fatto
     // → ri-chiama con placeholder, ri-allucina nomi di tool, flaila. La redazione-egress sotto maschera eventuali segreti.

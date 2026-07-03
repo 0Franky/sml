@@ -126,6 +126,20 @@ const noFile = join(dir, "assente.json");
   ok(loadHarnessConfig(cfgPath, { env: {} }).secrets.sinkGating === "strict", "SECRETS: fuori-enum scartato → resta strict (sicuro)");
 }
 
+// N) nativeKeepTurns + laneMemoryHint (fix amnesia 2026-07-03, verification-loop) -----------------
+{
+  const c = loadHarnessConfig(noFile, { env: {} });
+  ok(c.nativeKeepTurns === 1, "DEFAULT: nativeKeepTurns = 1 (awareness-first; il raise è l'ultima opzione)");
+  ok(c.laneMemoryHint === true, "DEFAULT: laneMemoryHint = true (opt-in ON, regime SLM)");
+  writeFileSync(cfgPath, JSON.stringify({ nativeKeepTurns: 6, laneMemoryHint: false }));
+  const c2 = loadHarnessConfig(cfgPath, { env: {} });
+  ok(c2.nativeKeepTurns === 6, "FILE: nativeKeepTurns overrideato a 6");
+  ok(c2.laneMemoryHint === false, "FILE: laneMemoryHint overrideato a false");
+  ok(loadHarnessConfig(cfgPath, { env: { HARNESS_NATIVE_KEEP_TURNS: "4" } }).nativeKeepTurns === 4, "ENV: HARNESS_NATIVE_KEEP_TURNS vince sul file (4)");
+  ok(loadHarnessConfig(cfgPath, { env: { HARNESS_NATIVE_KEEP_TURNS: "0" } }).nativeKeepTurns === 6, "ENV: nativeKeepTurns=0 (invalido) ignorato → resta il file (6)");
+  ok(loadHarnessConfig(noFile, { env: { HARNESS_LANE_MEMORY_HINT: "false" } }).laneMemoryHint === false, "ENV: HARNESS_LANE_MEMORY_HINT=false disattiva l'awareness");
+}
+
 rmSync(dir, { recursive: true, force: true });
 console.log(`\nharness-config test: ${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);

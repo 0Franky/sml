@@ -39,10 +39,21 @@ export const DEFAULT_HARNESS_CONFIG = {
   // (context-section-sizing-study §messages). Misurato in CHAR ma il budget è in TOKEN: ~3 char/token → 4000 char ≈
   // 1300-1400 token (non ~1000). Esposto a config per A/B; default invariato 4000. (context-bounds-study 2026-06-30.)
   messagesCharCap: 4000,
-  // Strada-2 complementarità (review-full P1-B): la lane <messages_with_user> mostra la STORIA; la native-window
-  // (native-window.ts keepTurns=1) porta il TURNO CORRENTE. true (DEFAULT) = escludi il turno in volo dalla lane →
-  // niente "doppia-chat" (overlap=0). false → la lane include anche il turno corrente (utile solo se si alza keepTurns
-  // nella native-window, o per debug). Opt-out: invariante di complementarità, non toccare se keepTurns resta 1.
+  // nativeKeepTurns (verification-loop amnesia 2026-07-03): quanti turni la native-window tiene nell'array NATIVO.
+  // La causa-radice provata dell'amnesia: keepTurns=1 → il modello (che tratta l'ARRAY NATIVO come "la conversazione"
+  // e IGNORA la lane nel system prompt) rispondeva "è il mio primo messaggio?" con 4 turni davanti. DUE rimedi:
+  //   (A) AWARENESS-first (utente msg 830, DA PROVARE ORA): keepTurns resta 1, si SPIEGA al modello che le lane sono
+  //       la sua memoria (lane <how_memory_works>). (B) alzare keepTurns → complementarità per-seq (nthLastUserSeq) →
+  //       niente doppia-chat. (B) è l'ULTIMA opzione (utente: "alzare deve essere l'ultima"). DEFAULT 1 finché (A) non
+  //       si dimostra insufficiente; il raise poi è 1 valore qui (o env HARNESS_NATIVE_KEEP_TURNS).
+  nativeKeepTurns: 1,
+  // laneMemoryHint (AWARENESS-first, utente msg 830): inietta un blocco <how_memory_works> che SPIEGA al modello
+  // piccolo che vede 1 solo messaggio per volta e che le lane (<messages_with_user>, <last_tool_calls>, …) SONO la
+  // sua memoria, con una checklist su come ragionare. true (DEFAULT ON, regime SLM: "già configurarlo"); false per
+  // modelli grandi che non ne hanno bisogno. È la via da provare PRIMA di alzare nativeKeepTurns.
+  laneMemoryHint: true,
+  // Strada-2 complementarità (legacy, review-full P1-B): usato SOLO se nativeKeepTurns=0 (retro-compat). Con
+  // nativeKeepTurns>0 il confine di complementarità è per-seq (K-esimo msg utente) e questo flag è ignorato.
   messagesExcludeCurrentTurn: true,
   // gathering (focus-gathering v1): QUANTO è forzato il "guarda l'ordine dei task prima di entrare a fuoco".
   //   delegated = il modello decide (default, lean/anti-cerimonia); inject = l'harness inietta la vista ordinata nel
@@ -128,6 +139,7 @@ const ENV_MAP = {
   HARNESS_OUTPUT_RESERVE_PCT: ["trigger", "outputReservePct"],
   HARNESS_MESSAGES_WINDOW_N: ["root", "messagesWindowN"],
   HARNESS_MESSAGES_CHAR_CAP: ["root", "messagesCharCap"],
+  HARNESS_NATIVE_KEEP_TURNS: ["root", "nativeKeepTurns"],
 };
 
 /**
@@ -141,6 +153,8 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
     trigger: { ...DEFAULT_HARNESS_CONFIG.trigger },
     messagesWindowN: DEFAULT_HARNESS_CONFIG.messagesWindowN,
     messagesCharCap: DEFAULT_HARNESS_CONFIG.messagesCharCap,
+    nativeKeepTurns: DEFAULT_HARNESS_CONFIG.nativeKeepTurns,
+    laneMemoryHint: DEFAULT_HARNESS_CONFIG.laneMemoryHint,
     messagesExcludeCurrentTurn: DEFAULT_HARNESS_CONFIG.messagesExcludeCurrentTurn,
     gathering: { ...DEFAULT_HARNESS_CONFIG.gathering },
     autofocus: { ...DEFAULT_HARNESS_CONFIG.autofocus },
@@ -162,6 +176,10 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
       if (typeof f?.messagesCharCap === "number" && Number.isFinite(f.messagesCharCap) && f.messagesCharCap >= 200) {
         cfg.messagesCharCap = Math.floor(f.messagesCharCap);
       }
+      if (typeof f?.nativeKeepTurns === "number" && Number.isFinite(f.nativeKeepTurns) && f.nativeKeepTurns >= 1) {
+        cfg.nativeKeepTurns = Math.floor(f.nativeKeepTurns);
+      }
+      if (typeof f?.laneMemoryHint === "boolean") cfg.laneMemoryHint = f.laneMemoryHint;
       if (typeof f?.messagesExcludeCurrentTurn === "boolean") cfg.messagesExcludeCurrentTurn = f.messagesExcludeCurrentTurn;
     }
   } catch {
@@ -181,6 +199,8 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
       cfg.messagesWindowN = Math.floor(n);
     } else if (field === "messagesCharCap" && n >= 200) {
       cfg.messagesCharCap = Math.floor(n);
+    } else if (field === "nativeKeepTurns" && n >= 1) {
+      cfg.nativeKeepTurns = Math.floor(n);
     }
   }
   // gathering env (mode = stringa-enum, fuori dallo schema numerico di ENV_MAP)
@@ -206,6 +226,9 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
   }
   if (env.HARNESS_MESSAGES_EXCLUDE_CURRENT_TURN != null && env.HARNESS_MESSAGES_EXCLUDE_CURRENT_TURN !== "") {
     cfg.messagesExcludeCurrentTurn = env.HARNESS_MESSAGES_EXCLUDE_CURRENT_TURN !== "false" && env.HARNESS_MESSAGES_EXCLUDE_CURRENT_TURN !== "0";
+  }
+  if (env.HARNESS_LANE_MEMORY_HINT != null && env.HARNESS_LANE_MEMORY_HINT !== "") {
+    cfg.laneMemoryHint = env.HARNESS_LANE_MEMORY_HINT !== "false" && env.HARNESS_LANE_MEMORY_HINT !== "0";
   }
   return cfg;
 }

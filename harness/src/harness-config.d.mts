@@ -29,6 +29,8 @@ export interface HarnessConfig {
   trigger: TriggerConfig;
   messagesWindowN: number;
   messagesCharCap: number;
+  nativeKeepTurns: number;
+  laneMemoryHint: boolean;
   messagesExcludeCurrentTurn: boolean;
   gathering: GatheringConfig;
   autofocus: AutofocusConfig;

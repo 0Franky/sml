@@ -76,6 +76,28 @@ ok(wsResume.includes("<resuming_from") && wsResume.indexOf("<resuming_from") < w
 vq.close();
 cs3.close();
 
+// ── nthLastUserSeq + complementarità nativeKeepTurns (fix amnesia 2026-07-03, verification-loop) ──
+const CK = "ck-native";
+const uA = cs.append(CK, "user", "primo msg", { ts: NOW });
+cs.append(CK, "assistant", "risp uno", { ts: NOW + 1 });
+const uB = cs.append(CK, "user", "secondo msg", { ts: NOW + 2 });
+cs.append(CK, "assistant", "risp due", { ts: NOW + 3 });
+const uC = cs.append(CK, "user", "terzo msg", { ts: NOW + 4 });
+cs.append(CK, "assistant", "risp tre", { ts: NOW + 5 });
+ok(cs.nthLastUserSeq(CK, 1) === uC, "nthLastUserSeq(1) = ultimo user");
+ok(cs.nthLastUserSeq(CK, 2) === uB, "nthLastUserSeq(2) = penultimo user");
+ok(cs.nthLastUserSeq(CK, 3) === uA, "nthLastUserSeq(3) = primo user");
+ok(cs.nthLastUserSeq(CK, 4) === null, "nthLastUserSeq(4) = null (< 4 turni utente)");
+// K=1: lane = tutta la storia tranne l'ultimo turno-utente (equivale a excludeCurrentTurn nel caso interattivo)
+const laneK1 = buildMessagesLane(cs, CK, { n: 10, nativeKeepTurns: 1 });
+ok(laneK1.includes("primo msg") && laneK1.includes("secondo msg") && !laneK1.includes("terzo msg"), "nativeKeepTurns=1: lane = storia tranne l'ultimo turno");
+// K=2: lane = solo il turno più vecchio (dal 2° in poi è nell'array nativo)
+const laneK2 = buildMessagesLane(cs, CK, { n: 10, nativeKeepTurns: 2 });
+ok(laneK2.includes("primo msg") && !laneK2.includes("secondo msg"), "nativeKeepTurns=2: lane = solo il turno più vecchio");
+// K >= turni-utente: tutta la conversazione è nativa → lane VUOTA (niente doppia-chat)
+ok(buildMessagesLane(cs, CK, { n: 10, nativeKeepTurns: 3 }) === "", "nativeKeepTurns=3: conversazione tutta nativa -> lane vuota");
+ok(buildMessagesLane(cs, CK, { n: 10, nativeKeepTurns: 5 }) === "", "nativeKeepTurns>turni: lane vuota");
+
 cs.close();
 console.log(`\nconversation-store smoke-test: ${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);

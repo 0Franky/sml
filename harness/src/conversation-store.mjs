@@ -73,6 +73,20 @@ export class ConversationStore {
     return rows.reverse();
   }
 
+  /**
+   * Seq del K-esimo messaggio UTENTE contando dalla FINE (bound inferiore `afterSeq`). È il confine di
+   * COMPLEMENTARITÀ con la native-window (keepTurns=K, fix amnesia 2026-07-03): gli ultimi K turni-utente sono
+   * nell'array NATIVO, quindi la lane deve mostrare solo ciò che sta PRIMA di questo seq. `null` se i turni-utente
+   * sono < K → l'intera conversazione sta nella finestra nativa (lane complementare vuota, niente doppia-chat).
+   */
+  nthLastUserSeq(convId, k, { afterSeq = 0 } = {}) {
+    if (!(k > 0)) return null;
+    const rows = this.db.prepare(
+      `SELECT seq FROM conversations WHERE conv_id = ? AND seq > ? AND role = 'user' ORDER BY seq DESC LIMIT ?`
+    ).all(convId, afterSeq, k);
+    return rows.length >= k ? rows[rows.length - 1].seq : null;
+  }
+
   /** Max seq della conversazione (0 se vuota) — il confine che un `checkpoint` registra come segment-boundary. */
   lastSeq(convId) {
     const r = this.db.prepare(`SELECT MAX(seq) AS s FROM conversations WHERE conv_id = ?`).get(convId);
@@ -113,11 +127,19 @@ export class ConversationStore {
  * @param {{ n?: number, charCap?: number, afterSeq?: number, excludeCurrentTurn?: boolean }} [opts]
  * @returns {string} blocco "<messages_with_user …>…</messages_with_user>" oppure "" (conversazione vuota)
  */
-export function buildMessagesLane(store, convId, { n = 6, charCap = 4000, afterSeq = 0, excludeCurrentTurn = false } = {}) {
+export function buildMessagesLane(store, convId, { n = 6, charCap = 4000, afterSeq = 0, excludeCurrentTurn = false, nativeKeepTurns = 0 } = {}) {
   // bound superiore: escludi il turno utente in volo (la sua seq è il max della conversazione, appena appeso).
   // untilSeq può legittimamente valere 0 (turno corrente = primissimo messaggio) → lane vuota, corretto.
   let untilSeq = null;
-  if (excludeCurrentTurn) {
+  if (nativeKeepTurns > 0) {
+    // COMPLEMENTARITÀ con la native-window (keepTurns=K, fix amnesia 2026-07-03): gli ultimi K turni-utente sono
+    // nell'array NATIVO — dove il modello guarda DAVVERO (un chat-model tratta l'array messaggi come "la
+    // conversazione", NON la lane nel system prompt). La lane mostra perciò SOLO i turni più VECCHI del K-esimo.
+    // Se i turni-utente sono < K → tutta la conversazione è nell'array nativo → lane VUOTA (niente doppia-chat).
+    const nativeStart = store.nthLastUserSeq(convId, nativeKeepTurns, { afterSeq });
+    if (nativeStart == null) return "";
+    untilSeq = nativeStart - 1;
+  } else if (excludeCurrentTurn) {
     const tail = store.window(convId, 1, { afterSeq });
     if (tail.length && tail[0].role === "user") untilSeq = tail[0].seq - 1;
   }
