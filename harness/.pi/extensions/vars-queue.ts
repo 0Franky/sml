@@ -72,11 +72,24 @@ export default function (pi: ExtensionAPI) {
   pi.registerTool({
     name: "get_var",
     label: "Get persisted variable",
-    description: "Read a persisted variable by id (always the latest version → auto-propagation by reference).",
-    parameters: Type.Object({ id: Type.String() }),
+    // Alias id|name + errore-guida sui TRE store (var/secret/fact): il 9B nella sessione 019f292b chiamava
+    // get_var({name:...}) invece di {id:...} e lo usava sui SECRET → fix DETERMINISTICA che aggira la debolezza
+    // (istruzioni-chiare+tool-tolleranti) invece di sperare che il modello indovini il param giusto.
+    description: "Read a persisted VARIABLE by id (you may also pass 'name' — same key). Always the latest version. This reads variables only (the <vars> lane); it is NOT for secrets (use list_secrets / preview_secret_use) nor for durable facts (those live in the <facts> lane — manage with note/remove_note).",
+    parameters: Type.Object({
+      id: Type.Optional(Type.String({ description: "Variable id (the key you used with set_var). You may pass 'name' instead — same meaning." })),
+      name: Type.Optional(Type.String({ description: "Alias of 'id' (tolerated: it is the same handle)." })),
+    }),
     async execute(_toolCallId: string, params: any) {
-      const v = vq.getVar(params.id);
-      return { content: [{ type: "text", text: JSON.stringify(v) }], details: { found: v != null } };
+      const key = String(params.id ?? params.name ?? "").trim();
+      if (!key) {
+        return { content: [{ type: "text", text: "get_var needs an id (the variable's key). Pass id (or name) = the exact key you used with set_var; existing keys are listed in the <vars> lane." }], details: { ok: false, found: false } };
+      }
+      const v = vq.getVar(key);
+      if (v == null) {
+        return { content: [{ type: "text", text: `No variable '${key}'. Check the exact key in the <vars> lane. If '${key}' is a SECRET, secrets are NOT variables — use list_secrets or preview_secret_use. If it is a durable FACT, read the <facts> lane (managed with note/remove_note).` }], details: { ok: false, found: false } };
+      }
+      return { content: [{ type: "text", text: JSON.stringify(v) }], details: { ok: true, found: true } };
     },
   });
 

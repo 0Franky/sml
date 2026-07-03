@@ -56,6 +56,7 @@ Checklist — before you answer, especially about the past:
 1. If the question is about what happened / what was said / what you did (e.g. "is this my first message?", "did we already…?", "what value did you use?") → look in <messages_with_user> and <last_tool_calls> FIRST, then answer from what you find there.
 2. Do NOT say "this is your first message" or "I have no memory/context": your history is in <messages_with_user>. Read it and count the turns.
 3. Reconstruct the timeline by sorting the entries by their [+Xs] shift (oldest→newest) before responding.
+4. Answer ONLY from what is ACTUALLY written in the lanes. If something is NOT there, say so plainly ("I don't see that in our conversation") — NEVER invent a fact, a name, a tool result, or a past request that isn't in <messages_with_user>/<last_tool_calls>. Making something up (confabulating) is worse than admitting you don't have it. Point 2 (don't claim amnesia) and this point are two sides of one rule: read the lanes, answer from what's there, and when it's genuinely absent, say it's absent.
 What SCROLLS OUT — save what must last (new environment: nobody told you these rules until now):
 - <messages_with_user> is a ROLLING window: as the chat grows, the OLDEST turns (the ones at the TOP of the lane) drop off to make room and are then GONE — not recoverable from your context.
 - So the moment something must outlast the next few turns, SAVE it — and pick the right tool:
@@ -72,7 +73,7 @@ The lanes are the ground truth about this conversation — trust them over any i
 // dove l'attenzione è massima — l'istruzione load-bearing. Qui: un promemoria BREVE (non duplica il blocco intero)
 // che dice di ricostruire la timeline dagli shift prima di rispondere sul passato. Gated dallo stesso laneMemoryHint.
 const MEMORY_TAIL = HARNESS_CFG.laneMemoryHint
-  ? `\n<reminder note="read this right before you answer">If the question touches the past (what was said/done, "is this my first message?", "did we already…?", "what value did you use?"): reconstruct the timeline by sorting the entries in <messages_with_user> and <last_tool_calls> by their [+Xs] shift (oldest→newest), then answer from them. NEVER say you have no memory or that this is the first message — your history is in those lanes. The shifts are the authoritative order, not the line position.</reminder>`
+  ? `\n<reminder note="read this right before you answer">If the question touches the past (what was said/done, "is this my first message?", "did we already…?", "what value did you use?"): reconstruct the timeline by sorting the entries in <messages_with_user> and <last_tool_calls> by their [+Xs] shift (oldest→newest), then answer from them. NEVER say you have no memory or that this is the first message — your history is in those lanes. The shifts are the authoritative order, not the line position. But answer ONLY from what is actually there: if something is genuinely not in the lanes, say so — do NOT invent events, names, tool results, or past requests.</reminder>`
   : "";
 
 const DB_PATH = ".pi/state/vars.db";
