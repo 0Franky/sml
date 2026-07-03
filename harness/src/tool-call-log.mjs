@@ -11,6 +11,8 @@
  * registry segreti qui → l'estensione passa il redattore reale.
  */
 
+import { shiftPrefix } from "./time-shift.mjs";
+
 const RING = [];
 const DEFAULT_MAX = 12; // capienza del buffer (le ultime N call); la lane ne mostra un sottoinsieme
 
@@ -34,9 +36,11 @@ export function summarizeArgs(args) {
 }
 
 /** Registra una tool-call APPENA invocata (stato pending). callId correla il result. */
-export function recordCall({ callId, name, args } = {}) {
+export function recordCall({ callId, name, args, ts } = {}) {
   if (!name) return;
-  RING.push({ callId: callId ?? null, name: String(name), args: summarizeArgs(args), status: "pending", result: "" });
+  // ts (epoch ms) → ANCORAGGIO TEMPORALE della lane (utente msg 848/849): la formatLane lo rende shift dallo start.
+  const stamp = Number.isFinite(ts) ? ts : Date.now();
+  RING.push({ callId: callId ?? null, name: String(name), args: summarizeArgs(args), status: "pending", result: "", ts: stamp });
   while (RING.length > DEFAULT_MAX) RING.shift();
 }
 
@@ -58,18 +62,18 @@ export function getRecent(n = 8) {
 
 /**
  * Lane `<last_tool_calls>` da iniettare nel context. `redact` (default identità) maschera i segreti da args/result.
- * Ritorna "" se non c'è nulla. Il marker è AUTO-DESCRITTO (queste sono le TUE azioni recenti).
- * @param {number} n @param {{ redact?: (s:string)=>string }} [opts]
+ * `sessionStartMs` (opz.) → prefisso SHIFT temporale per riga (ancoraggio, utente msg 848/849). Ritorna "" se vuoto.
+ * @param {number} n @param {{ redact?: (s:string)=>string, sessionStartMs?: number }} [opts]
  */
-export function formatLane(n = 8, { redact = (s) => s } = {}) {
+export function formatLane(n = 8, { redact = (s) => s, sessionStartMs = null } = {}) {
   const items = getRecent(n);
   if (!items.length) return "";
   const rows = items.map((e) => {
     const args = e.args ? redact(e.args) : "";
     const res = e.result ? ` → ${redact(e.result)}` : e.status === "pending" ? " → (running)" : "";
-    return `  [${e.status}] ${e.name}(${args})${res}`;
+    return `  ${shiftPrefix(e.ts, sessionStartMs)}[${e.status}] ${e.name}(${args})${res}`;
   }).join("\n");
-  return `<last_tool_calls count="${items.length}" note="your OWN recent tool calls (oldest first, newest last). Use them to recall what you already did — do NOT repeat a call or contradict a result; if a tool was 'not found', it does not exist (use find_tool).">\n${rows}\n</last_tool_calls>`;
+  return `<last_tool_calls count="${items.length}" note="your OWN recent tool calls. The [+Xs] prefix is the time since session start — the AUTHORITATIVE order is by those timestamps, not by line position. Use them to recall what you already did — do NOT repeat a call or contradict a result; if a tool was 'not found', it does not exist (use find_tool).">\n${rows}\n</last_tool_calls>`;
 }
 
 /** Svuota il buffer (isolamento di sessione: chiamata a session_shutdown). */

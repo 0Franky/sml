@@ -14,6 +14,7 @@
  * Timestamp: Date.now() (epoch ms) — codice runtime Node, non script workflow.
  */
 import { DatabaseSync } from "node:sqlite";
+import { parseSessionStartMs, sessionStartIso, shiftPrefix } from "./time-shift.mjs";
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS conversations (
@@ -172,8 +173,14 @@ export function buildMessagesLane(store, convId, { n = 6, charCap = 4000, afterS
   const shownFrom = win.length ? win[0].seq : afterSeq + total + 1;
   const olderHidden = total - win.length; // più vecchi DENTRO il segmento post-checkpoint
   const ckptAttr = afterSeq > 0 ? ` checkpoint="${afterSeq}"` : "";
-  const lines = [`<messages_with_user conv="${esc(convId)}" shown="${win.length}/${total}"${ckptAttr}>`];
-  for (const t of win) lines.push(`  [${esc(t.role)}] ${esc(t.text)}`);
+  // ANCORAGGIO TEMPORALE (utente msg 848/849): start ASSOLUTO nell'header, ogni riga con SHIFT compatto. Il modello
+  // ricostruisce l'ordine dai timestamp, NON dalla posizione (che può essere buggata). Degrada con grazia (convId
+  // non-`sess-<epoch>` come "main" → nessun attr/prefisso). Lo start-epoch è già nel convId → costo zero.
+  const startMs = parseSessionStartMs(convId);
+  const startIso = sessionStartIso(startMs);
+  const startAttr = startIso ? ` session_start="${startIso}"` : "";
+  const lines = [`<messages_with_user conv="${esc(convId)}"${startAttr} shown="${win.length}/${total}"${ckptAttr}>`];
+  for (const t of win) lines.push(`  ${shiftPrefix(t.ts, startMs)}[${esc(t.role)}] ${esc(t.text)}`);
   if (olderHidden > 0) {
     lines.push(`  (+${olderHidden} older messages in the segment — use get_conversation conv="${esc(convId)}" range=${afterSeq + 1}..${shownFrom - 1})`);
   }

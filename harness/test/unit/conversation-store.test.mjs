@@ -40,6 +40,17 @@ cs.append(C, "user", "usa <script> & co", { ts: NOW + 3000 });
 const lane2 = buildMessagesLane(cs, C, { n: 1 });
 ok(lane2.includes("&lt;script&gt; &amp; co") && !lane2.includes("<script>"), "lane escaping XML");
 
+// ANCORAGGIO TEMPORALE (utente msg 848/849): convId sess-<epoch> → header session_start + shift [+Xs] per riga.
+const CT = "sess-1783000000000-startup";
+cs.append(CT, "user", "primo", { ts: 1783000000000 });
+cs.append(CT, "assistant", "secondo", { ts: 1783000000000 + 47000 });
+const laneT = buildMessagesLane(cs, CT, { n: 5 });
+ok(laneT.includes('session_start="2026-07-02T13:46:40Z"'), "lane: header session_start assoluto dal convId");
+ok(laneT.includes("[+0s] [user] primo"), "lane: primo msg shift +0s");
+ok(laneT.includes("[+47s] [assistant] secondo"), "lane: shift +47s dal delta ts");
+// convId non-sess ('main'/'conv_A') → nessun shift/header (degrada con grazia)
+ok(!buildMessagesLane(cs, C, { n: 2 }).includes("session_start="), "lane: convId non-sess → nessun ancoraggio (graceful)");
+
 // charCap: droppa i più VECCHI, tiene i recenti verbatim, segnala i nascosti
 const C2 = "conv_B";
 for (let i = 0; i < 5; i++) cs.append(C2, "user", "x".repeat(100), { ts: NOW + i });

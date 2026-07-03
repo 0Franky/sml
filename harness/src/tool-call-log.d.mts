@@ -5,12 +5,13 @@ export interface ToolCallEntry {
   args: string;
   status: "pending" | "ok" | "error";
   result: string;
+  ts: number;
 }
 export function summarizeArgs(args: unknown): string;
-export function recordCall(entry: { callId?: string | null; name: string; args?: unknown }): void;
+export function recordCall(entry: { callId?: string | null; name: string; args?: unknown; ts?: number }): void;
 export function recordResult(entry: { callId?: string | null; isError?: boolean; text?: string }): void;
 export function getRecent(n?: number): ToolCallEntry[];
-export function formatLane(n?: number, opts?: { redact?: (s: string) => string }): string;
+export function formatLane(n?: number, opts?: { redact?: (s: string) => string; sessionStartMs?: number | null }): string;
 export function clearToolCallLog(): void;
 
 declare const _default: {

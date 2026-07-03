@@ -21,6 +21,7 @@ import { buildMessagesLane } from "../../src/conversation-store.mjs";
 // non vede le proprie tool-call oltre il turno → le ri-iniettiamo qui (la redazione-egress sotto le copre).
 import { formatLane as formatToolCallsLane } from "../../src/tool-call-log.mjs";
 import { getConvId } from "../../src/session-context.mjs";
+import { parseSessionStartMs } from "../../src/time-shift.mjs"; // ancoraggio temporale lane (msg 848/849)
 import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint, markFocusHintEmitted, shouldEmitReorgHint, markReorgEmitted, maybeAutoFocus } from "../../src/nested-compact.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { redactText } from "../../src/secrets-redact.mjs";
@@ -46,10 +47,11 @@ You run in a harness that gives you only ONE message at a time (the current turn
 - <messages_with_user> = the whole conversation so far: every earlier message from the user AND your own replies, oldest→newest. This is your record of the dialogue.
 - <last_tool_calls> = the actions you already took and their results.
 - <task_list>, <current_aim>, and your variables = your working state.
+TIME: each line carries a [+Xs] shift = seconds since session start (the absolute session_start is in the lane header). The AUTHORITATIVE order is given by these timestamps, NOT by the position of the lines — do not assume the lines are pre-sorted; if a shift is out of order, trust the shift. Reconstruct the real timeline from the [+Xs] values.
 Checklist — before you answer, especially about the past:
 1. If the question is about what happened / what was said / what you did (e.g. "is this my first message?", "did we already…?", "what value did you use?") → look in <messages_with_user> and <last_tool_calls> FIRST, then answer from what you find there.
 2. Do NOT say "this is your first message" or "I have no memory/context": your history is in <messages_with_user>. Read it and count the turns.
-3. Reconstruct the timeline from the lanes (oldest→newest) before responding.
+3. Reconstruct the timeline by sorting the entries by their [+Xs] shift (oldest→newest) before responding.
 The lanes are the ground truth about this conversation — trust them over any impression that the chat looks empty.
 </how_memory_works>
 `
@@ -150,7 +152,7 @@ export default function (pi: ExtensionAPI) {
     // <last_tool_calls> (fix amnesia #1, msg 811-817): le ultime azioni del modello (nome+args-sintesi+esito). Vale in
     // ENTRAMBI i rami (nested e non): un modello piccolo con keepTurns:1 altrimenti "non ricorda" cosa ha appena fatto
     // → ri-chiama con placeholder, ri-allucina nomi di tool, flaila. La redazione-egress sotto maschera eventuali segreti.
-    const toolCallsLane = formatToolCallsLane(TOOL_CALLS_N);
+    const toolCallsLane = formatToolCallsLane(TOOL_CALLS_N, { sessionStartMs: parseSessionStartMs(convId) });
     if (toolCallsLane) workspace = `${workspace}\n${toolCallsLane}`;
     // aim-in-coda (anti position-bias / lost-in-the-middle, msg 518): l'aim corrente è in cima al <context>, ma su
     // contesti lunghi la coda (lane recente) può "schiacciarlo". Lo ri-ancoriamo in CODA — cheap (1 riga), solo se c'è

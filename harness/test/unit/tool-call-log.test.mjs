@@ -65,5 +65,20 @@ ok(summarizeArgs({ v: "x".repeat(100) }).length < 60, "args: valore lungo tronca
   ok(r[0].name === "t8", "cap: le più vecchie sono state droppate (parte da t8)");
 }
 
+// ── ANCORAGGIO TEMPORALE (utente msg 848/849): shift [+Xs] per riga + note su ordine autoritativo ──
+{
+  clearToolCallLog();
+  const start = 1783000000000;
+  recordCall({ callId: "z1", name: "find_tool", args: { query: "git" }, ts: start + 5000 });
+  recordResult({ callId: "z1", isError: false, text: "ok" });
+  recordCall({ callId: "z2", name: "list_secrets", args: {}, ts: start + 130000 });
+  const lane = formatLane(8, { sessionStartMs: start });
+  ok(lane.includes("[+5s] [ok] find_tool"), "shift: prima call +5s");
+  ok(lane.includes("[+2m10s] [pending] list_secrets"), "shift: seconda call +2m10s");
+  ok(/AUTHORITATIVE order is by those timestamps/.test(lane), "note: ordine autoritativo = timestamp");
+  // senza sessionStartMs → nessun prefisso (degrada)
+  ok(!/\[\+\d/.test(formatLane(8)), "shift: senza sessionStartMs → nessun prefisso (graceful)");
+}
+
 console.log(`\ntool-call-log: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);
