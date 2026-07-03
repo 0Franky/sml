@@ -31,6 +31,17 @@ last_updated: 2026-06-30
 > **Metodo** (utente): studi + review-loop (specialized+agnostic) sulle parti critiche. Ogni step: build→test→typecheck→commit→push. **Compact: AVVISARE l'utente prima (msg 775).**
 > **⚠ PENDING CHIARIMENTO (msg 738)**: messaggio pinnato non ancora indicato dall'utente.
 
+### 🧪 TEST COVERAGE BACKLOG (2026-07-03, richiesta utente msg 790 "test per tutte le feature, no rotture")
+> Split: io (B) test, utente (A) TUI live. Fatto: `transcript-scenario.test.mjs` (11, regressione sui 3 fallimenti del transcript, deterministico) + `pre-flight-gate.mjs` estratto+testato (28, buco security). Suite 24 file/0.
+> **Gap ancora scoperti (extension con logica INLINE nel `.ts`, da estrarre in `src/*.mjs` per testabilità)**:
+> - `turn-trace` funzioni pure (isToolResult / messagesInfo / laneOverlap) — load-bearing per il check doppia-chat, facilmente estraibili. **Priorità media-alta.**
+> - `gemini-compat` (mutazione payload per gemini) — inline, no test.
+> - `verifier-sandbox` (`run_verifier` esegue shell) — inline; test deterministico più difficile (exec) → mock del runner.
+> - `checkpoint` (write `_checkpoint_seq`, fold digest) — parziale via context-assembler; logica-boundary inline.
+> - `error-memo` (remember_lesson/recall_lessons) — store testato (vars-queue), formattazione/recall inline.
+> - `conversation-capture` (quali messaggi appendere allo store) — store testato, logica-di-cattura inline.
+> - **pre-flight HARDENING** (gap noti già documentati come test): flag separati `rm -r -f`, long-form `--recursive --force`, `find -delete` — la deny-list non è un parser; l'intento è coperto dal reward area-02 (S). Estendere se si vuole più copertura harness-side (attenzione ai falsi positivi).
+
 ## 🔥 SESSIONE 2026-06-29 (post-compact) — stato corrente
 
 > **🟢 AUTONOMOUS-HANDOFF 2026-06-29 (utente AWAY dal PC, tutto PUSHED @ `55c9991`, working tree PULITO, HEAD==origin/main) — RESUME POINTER**. **STATO HARNESS: code-complete + hardened + DOGFOOD-VALIDATED dal vivo con Sonnet.** Catena commit di oggi: `a8563b5`(grafo 4903)→`e42bb58`(review#3: 10 fix + turn-trace)→`3bfbcab`(gitleaks allowlist fixture-test)→`11ff52a`(3 differiti: convId per-sessione via `getSessionId` + split `native-window` + TB-01/03)→`55c9991`(grafo 4929).
