@@ -24,13 +24,18 @@ import { getConvId } from "../../src/session-context.mjs";
 import { extractSystemText, messagesInfo, messagesDump, laneOverlap } from "../../src/turn-trace-lib.mjs";
 import { redactText } from "../../src/secrets-redact.mjs";
 import { getDynamicSecrets } from "../../src/secrets-registry.mjs";
-import { mkdirSync, writeFileSync, appendFileSync } from "node:fs";
+import { mkdirSync, writeFileSync, appendFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const TRACE_DIR = ".pi/state/trace";
+const EXT_DIR = ".pi/extensions";
 const ENABLED = !["0", "false", "off", "no"].includes(String(process.env.PI_TRACE ?? "").toLowerCase());
+// FLAG per-turno (utente msg 843): PI_TRACE_PERTURN=1 → oltre a last-turn-full.md (overwrite), salva OGNI turno in un
+// file separato `full-NNN.md` (mai più perdere il payload di un turno). Default OFF (evita di riempire la cartella).
+const PERTURN = ["1", "true", "on", "yes"].includes(String(process.env.PI_TRACE_PERTURN ?? "").toLowerCase());
 
 let _last: any = null;
+let _turnCounter = 0;
 
 export default function (pi: ExtensionAPI) {
   if (!ENABLED) return; // disattivato → nessun hook, zero overhead
@@ -97,9 +102,44 @@ export default function (pi: ExtensionAPI) {
         ...dump.map((m, i) => `\n### [${i}] role=${m.role}${m.toolResult ? " (tool_result)" : ""}\n${red(m.text)}`),
       ].join("\n");
       writeFileSync(join(TRACE_DIR, "last-turn-full.md"), full);
+      if (PERTURN) {
+        _turnCounter += 1;
+        const nnn = String(_turnCounter).padStart(3, "0");
+        writeFileSync(join(TRACE_DIR, `full-${nnn}.md`), full); // file separato per-turno (utente msg 843)
+      }
     } catch {
       /* la diagnostica non deve mai rompere la richiesta */
     }
+  });
+
+  // startup-extensions (utente msg 839): all'avvio scrive un MANIFEST di cosa è caricato — i file .ts scoperti in
+  // .pi/extensions/ (cosa DOVREBBE caricare) + i tool/skill effettivamente REGISTRATI (cosa È caricato). Confrontarli
+  // dà la conferma definitiva che tutte le estensioni sono collegate. session_start fire DOPO il load di tutte.
+  pi.on("session_start", () => {
+    try {
+      const api = pi as any;
+      let files: string[] = [];
+      try { files = readdirSync(EXT_DIR).filter((f) => f.endsWith(".ts")).sort(); } catch { /* dir assente */ }
+      const tools = (api.getAllTools?.() ?? []).map((t: any) => t?.name).filter(Boolean).sort();
+      const cmds = (api.getCommands?.() ?? []).map((c: any) => c?.name ?? c?.command).filter(Boolean).sort();
+      const out = [
+        `# turn-trace — estensioni allo startup (${new Date().toISOString()})`,
+        ``,
+        `## File estensione scoperti in ${EXT_DIR}/ (${files.length}) — cosa DOVREBBE caricarsi`,
+        ...files.map((f) => `- ${f}`),
+        ``,
+        `## Tool REGISTRATI (${tools.length}) — riflette le estensioni che registrano tool`,
+        ...tools.map((t: string) => `- ${t}`),
+        ``,
+        `## Skill/comandi registrati (${cmds.length})`,
+        ...cmds.map((c: string) => `- ${c}`),
+        ``,
+        `(NB: estensioni SENZA tool — es. native-window, context-assembly, tool-result-frame — non appaiono nella lista`,
+        ` tool ma il loro effetto è visibile nel trace: sysLen>0 = context-assembly, native<all = native-window, ecc.)`,
+      ].join("\n");
+      mkdirSync(TRACE_DIR, { recursive: true });
+      writeFileSync(join(TRACE_DIR, "startup-extensions.md"), out);
+    } catch { /* la diagnostica non deve mai rompere */ }
   });
 
   pi.registerTool({

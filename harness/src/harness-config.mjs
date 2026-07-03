@@ -40,12 +40,12 @@ export const DEFAULT_HARNESS_CONFIG = {
   // 1300-1400 token (non ~1000). Esposto a config per A/B; default invariato 4000. (context-bounds-study 2026-06-30.)
   messagesCharCap: 4000,
   // nativeKeepTurns (verification-loop amnesia 2026-07-03): quanti turni la native-window tiene nell'array NATIVO.
-  // La causa-radice provata dell'amnesia: keepTurns=1 → il modello (che tratta l'ARRAY NATIVO come "la conversazione"
-  // e IGNORA la lane nel system prompt) rispondeva "è il mio primo messaggio?" con 4 turni davanti. DUE rimedi:
-  //   (A) AWARENESS-first (utente msg 830, DA PROVARE ORA): keepTurns resta 1, si SPIEGA al modello che le lane sono
-  //       la sua memoria (lane <how_memory_works>). (B) alzare keepTurns → complementarità per-seq (nthLastUserSeq) →
-  //       niente doppia-chat. (B) è l'ULTIMA opzione (utente: "alzare deve essere l'ultima"). DEFAULT 1 finché (A) non
-  //       si dimostra insufficiente; il raise poi è 1 valore qui (o env HARNESS_NATIVE_KEEP_TURNS).
+  // Causa-radice PROVATA: con keepTurns=1 il modello (che tratta l'ARRAY NATIVO come "la conversazione" e IGNORA la
+  // lane nel system prompt) rispondeva "non ho accesso alla conversazione" ANCHE con la lane piena + il blocco
+  // <how_memory_works> davanti (sessione 019f2880, lane ricostruita = storia intera, modello l'ha ignorata).
+  // L'AWARENESS-first (opzione A, msg 830) è stata PROVATA e FALLITA con dati puliti. Il raise (opzione B) è pronto ma
+  // SOSPESO (utente msg 840: "aspetta ad alzare, prima test con Sonnet") → prima si isola se è debolezza del 9B o
+  // problema harness. DEFAULT resta 1; flip a 6 (o env HARNESS_NATIVE_KEEP_TURNS) quando si decide di alzare.
   nativeKeepTurns: 1,
   // laneMemoryHint (AWARENESS-first, utente msg 830): inietta un blocco <how_memory_works> che SPIEGA al modello
   // piccolo che vede 1 solo messaggio per volta e che le lane (<messages_with_user>, <last_tool_calls>, …) SONO la
