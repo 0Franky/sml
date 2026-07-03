@@ -42,6 +42,16 @@ last_updated: 2026-06-30
 > - `conversation-capture` (quali messaggi appendere allo store) — store testato, logica-di-cattura inline.
 > - **pre-flight HARDENING** (gap noti già documentati come test): flag separati `rm -r -f`, long-form `--recursive --force`, `find -delete` — la deny-list non è un parser; l'intento è coperto dal reward area-02 (S). Estendere se si vuole più copertura harness-side (attenzione ai falsi positivi).
 
+### 🎯 VERIFICATION-LOOP AMNESIA 2026-07-03 (run `019f2838`, msg 823-831) — CAUSA-RADICE + FIX
+> **Sintomo**: il 9B a msg 19 dice "è il tuo primo messaggio" mentre è il 4°. **Metodo** (utente msg 825/829: "smetti di andare alla cieca, dumpa il payload reale"): (1) query `conversations.db` → i messaggi CI SONO (conv_id `sess-1783086221295-startup`, 6 righe); (2) riproduzione `buildMessagesLane` sul DB reale → assembla la conversazione INTERA e corretta; (3) `turn-trace` (payload reale verso ollama) → **`nativeMessages=1, nativeUserTurns=1`** su ogni richiesta, sysLen 24-26K.
+> **CAUSA-RADICE PROVATA**: `native-window.ts` hardcodava **keepTurns:1** → l'array messaggi NATIVO è ridotto al solo turno corrente; la storia vive SOLO nella lane dentro 24-26K char di system prompt. Il 9B (come ogni chat-model) tratta l'ARRAY NATIVO come "la conversazione" e IGNORA la lane sepolta nel system prompt.
+> **FIX (utente msg 830, AWARENESS-first, one-thing-at-a-time)**:
+> - ✅ `<how_memory_works>` (commit `ed5e35b`): blocco in testa al context che SPIEGA al modello che vede 1 msg/volta e che le lane SONO la sua memoria + CHECKLIST ("leggi <messages_with_user>/<last_tool_calls> prima di rispondere sul passato; mai dire 'primo messaggio' senza controllare"). Config `laneMemoryHint` (default ON regime SLM).
+> - ✅ keepTurns reso config-driven **dormiente** (`nativeKeepTurns`, default 1 = INVARIATO) + complementarità per-seq pronta (`nthLastUserSeq`): alzarlo è l'ULTIMA opzione (utente), sarà 1 valore di config.
+> - ✅ dump COMPLETO payload (commit `9e04952`): `.pi/state/trace/last-turn-full.md` (system prompt + array nativo, redatto) → ground-truth per verificare l'awareness.
+> **DA TESTARE**: riavvio pi → il 9B con `<how_memory_works>` usa la lane come memoria? (probe: "quanti messaggi ci siamo scambiati? ricostruisci la timeline"). Se NO → alzare `nativeKeepTurns` (config).
+> **IDEA PENDENTE (utente msg 827)**: interrogare qwen direttamente (modalità headless pi?) per chiedergli cosa vede/ricostruisce → tooling di osservabilità empirica. Da valutare pi print/json mode.
+
 ### 🔧 FIX SESSIONE LIVE #2 2026-07-03 (run `019f281b` + msg 811-820) — DONE
 > Seconda run col 9B: PROGRESSO (tool-gating rende propose_secret_create visibile, l'Ask di fix C si APRE) ma "ancora non ci siamo": (A) il MODELLO è debole (chiama con valori PLACEHOLDER "NOME_DEL_SEGRETO"; allucina nomi-tool git_log/proposta_secret_create che NON usa find_tool per cercare; off-track legge/edita reddit_post.js) — è il training; (B) BUCO harness = amnesia delle PROPRIE azioni (keepTurns:1, nessuna lane last_tool_calls). Sicurezza OK: il read di .env mostra [REDACTED-SECRET] (redazione backstop funziona anche sui file).
 > **FIX FATTI (lean, mirati — utente msg 820 "harness snello, no framework gigante"):**
