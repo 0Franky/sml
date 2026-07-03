@@ -61,6 +61,26 @@ export function setSecret(name, value, { description = "", allowedSinks = [], re
 }
 
 /**
+ * renewSecretValue — aggiorna SOLO il valore di un secret ESISTENTE, preservando TUTTI i metadata (allowedSinks,
+ * description, redactEgress, allowLocalHttp). È il primitivo del RENEWAL/rotazione (utente msg 799): una chiave
+ * rinnovata via API sostituisce il valore ma NON cambia il patto di fiducia (dove può andare). Il nuovo valore è
+ * ri-registrato per la redazione egress se redactEgress. NON è un widening (i sink restano identici) → il consenso
+ * lo impone il chiamante col vincolo "solo un secret usato in questa stessa richiesta" (vedi executeHttpRequest.capture).
+ * @returns {{ok:boolean, name?:string, warn?:string, reason?:string}}
+ */
+export function renewSecretValue(name, newValue) {
+  const s = SEALED.get(name);
+  if (!s) return { ok: false, reason: "secret does not exist" };
+  if (typeof newValue !== "string" || newValue.length < 1) return { ok: false, reason: "empty new value" };
+  if (s.redactEgress) {
+    if (!registerEgressRaw(newValue)) return { ok: false, reason: "new value not registrable for redaction (egress full)" };
+  }
+  s.value = newValue;
+  s.fingerprint = fingerprint(newValue);
+  return s.redactEgress ? { ok: true, name } : { ok: true, name, warn: `'${name}': redactEgress=false → il nuovo valore NON sarà redatto dagli output` };
+}
+
+/**
  * setAllowLocalHttp — abilita/disabilita il flag `allowLocalHttp` di un secret ESISTENTE (utente msg 668). Il secret
  * diventa usabile su `http://` MA SOLO verso loopback letterale (vedi checkSink). Va chiamata SOLO dopo consenso
  * ESPLICITO dell'utente (Ask della TUI o provisioning out-of-band), MAI per auto-decisione del modello.

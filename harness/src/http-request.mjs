@@ -12,7 +12,8 @@
  * (d) timeout; (e) body di risposta CAP-ato; (f) header di risposta ridotti a un allow-list (no dump di set-cookie).
  * La redazione egress della risposta è garantita a valle dall'hook `tool_result` (dynamic-secrets + pattern statici).
  */
-import { injectTypedRequest } from "./sealed-secrets.mjs";
+import { injectTypedRequest, renewSecretValue } from "./sealed-secrets.mjs";
+import { extractCaptureValue } from "./response-capture.mjs";
 
 const ALLOWED_METHODS = new Set(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]);
 const RESP_HEADER_ALLOWLIST = ["content-type", "content-length", "location", "retry-after", "www-authenticate"];
@@ -88,6 +89,32 @@ export async function executeHttpRequest(params = {}, opts = {}) {
   try { text = typeof resp.text === "function" ? await resp.text() : String(resp.body ?? ""); } catch { text = ""; }
   const truncated = text.length > maxBytes;
 
+  // RENEWAL / response-capture (utente msg 799): estrai un valore aggiornato dalla risposta e RI-SIGILLA in-place un
+  // secret ESISTENTE, senza mai esporlo al modello. Vincolo di consenso (comodità E sicurezza): si può rinnovare SOLO
+  // un secret USATO (injected) in QUESTA stessa richiesta → l'host da cui arriva il nuovo valore era già nei suoi
+  // allowedSinks (stesso patto approvato), e i sink restano INVARIATI (renew ≠ widening). L'estrazione è sul body RAW
+  // (pre-troncamento); il nuovo valore viene registrato per la redazione egress → il body ritornato lo maschera a valle.
+  let captured;
+  const cap = params.capture;
+  if (cap && typeof cap === "object" && cap.secret) {
+    const capName = String(cap.secret);
+    if (status < 200 || status >= 300) {
+      captured = { ok: false, secret: capName, reason: `not captured: response status ${status} is not 2xx` };
+    } else if (!Array.isArray(inj.injected) || !inj.injected.includes(capName)) {
+      captured = { ok: false, secret: capName, reason: `not captured: '${capName}' was not used in this request. To renew, send it as {{secret:${capName}}} to its own allowed endpoint in the SAME call, then capture from the response.` };
+    } else {
+      const ex = extractCaptureValue(text, respHeaders, String(cap.from ?? ""));
+      if (!ex.ok) {
+        captured = { ok: false, secret: capName, reason: ex.reason };
+      } else {
+        const rn = renewSecretValue(capName, ex.value);
+        captured = rn.ok
+          ? { ok: true, secret: capName, from: String(cap.from ?? ""), note: `renewed {{secret:${capName}}} from the response (value sealed, NOT shown); allowedSinks unchanged.`, warn: rn.warn }
+          : { ok: false, secret: capName, reason: rn.reason };
+      }
+    }
+  }
+
   return {
     ok: true,
     status,
@@ -98,6 +125,7 @@ export async function executeHttpRequest(params = {}, opts = {}) {
     location,
     injected: inj.injected,
     warnings: inj.warnings,
+    captured,
     // nota esplicita: i redirect NON sono seguiti (sicurezza); il Location è ridotto a scheme+host.
     note: isRedirect ? "redirect NOT followed (anti exfil); Location reduced to scheme+host. To proceed, issue a new http_request to that host (it will be re-gated)." : undefined,
   };

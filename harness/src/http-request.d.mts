@@ -1,12 +1,30 @@
 /** Type declarations for http-request.mjs — executor del canale tipizzato http_request. */
 import type { SinkMode } from "./sealed-secrets.mjs";
 
+export interface CaptureSpec {
+  /** Nome di un secret ESISTENTE usato in questa stessa richiesta, da rinnovare in-place col valore estratto. */
+  secret: string;
+  /** Dove leggere il nuovo valore: JSON path ("$.access_token"), "regex:PATTERN" (gruppo 1), o "header:NAME". */
+  from: string;
+}
+
+export interface CaptureResult {
+  ok: boolean;
+  secret: string;
+  from?: string;
+  note?: string;
+  warn?: string;
+  reason?: string;
+}
+
 export interface HttpRequestParams {
   url: string;
   method?: string;
   headers?: Record<string, string>;
   body?: string;
   timeoutMs?: number;
+  /** Renewal/response-capture: rinnova un secret sigillato dal valore nella risposta (vedi CaptureSpec). */
+  capture?: CaptureSpec;
 }
 
 export interface HttpRequestOptions {
@@ -29,6 +47,8 @@ export interface HttpRequestResult {
   error?: string;
   hint?: string;
   note?: string;
+  /** Esito del renewal/response-capture, se `capture` era richiesto. */
+  captured?: CaptureResult;
 }
 
 export function executeHttpRequest(params: HttpRequestParams, opts?: HttpRequestOptions): Promise<HttpRequestResult>;

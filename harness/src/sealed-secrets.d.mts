@@ -110,6 +110,7 @@ export function renameSecret(
   newName: string,
 ): { ok: boolean; name?: string; renamed?: boolean; from?: string; reason?: string };
 export function removeSecret(name: string): { ok: boolean; name?: string; removed?: boolean; reason?: string };
+export function renewSecretValue(name: string, newValue: string): { ok: boolean; name?: string; warn?: string; reason?: string };
 export function computeSecretEditDiff(name: string, changes?: SecretEditChanges): SecretEditDiff;
 export function applySecretEdit(
   name: string,
@@ -166,6 +167,7 @@ declare const _default: {
   setSecretDescription: typeof setSecretDescription;
   renameSecret: typeof renameSecret;
   removeSecret: typeof removeSecret;
+  renewSecretValue: typeof renewSecretValue;
   computeSecretEditDiff: typeof computeSecretEditDiff;
   applySecretEdit: typeof applySecretEdit;
   validateSecretRefs: typeof validateSecretRefs;

@@ -292,14 +292,21 @@ export default function (pi: ExtensionAPI) {
       headers: Type.Optional(Type.Record(Type.String(), Type.String(), { description: "Request headers. May contain {{secret:NAME}} (e.g. Authorization: Bearer {{secret:TOKEN}})." })),
       body: Type.Optional(Type.String({ description: "Request body (string). May contain {{secret:NAME}}." })),
       timeout_ms: Type.Optional(Type.Number({ description: "Timeout in ms (default 30000, max 120000)." })),
+      capture: Type.Optional(Type.Object({
+        secret: Type.String({ description: "Name of an EXISTING sealed secret to RENEW in place with a value read from THIS response. It must be a secret you used ({{secret:NAME}}) in THIS same request (e.g. renewing a token against its own endpoint)." }),
+        from: Type.String({ description: "Where to read the new value in the response: a JSON path (\"$.access_token\" / \"data.token\"), \"regex:PATTERN\" (capture group 1), or \"header:NAME\". The captured value is sealed — you never see the old nor the new value." }),
+      }, { description: "Optional: RENEW/rotate a sealed secret from this response. The new value is re-sealed in place (allowedSinks unchanged) and redacted; you receive only a confirmation, never the value." })),
     }),
-    async execute(_t: string, p: any) {
-      const r = await executeHttpRequest(
-        { url: p.url, method: p.method, headers: p.headers, body: p.body, timeoutMs: p.timeout_ms },
+    async execute(_t: string, p: any, _s: any, _u: any, ctx: any) {
+      const r: any = await executeHttpRequest(
+        { url: p.url, method: p.method, headers: p.headers, body: p.body, timeoutMs: p.timeout_ms, capture: p.capture },
         { mode: HARNESS_CFG.secrets.sinkGating },
       );
+      // Renewal: NOTIFICA l'utente (trasparenza) — il valore è sigillato, non mostrato. Nessun re-Ask perché i sink
+      // restano invariati e si rinnova solo un secret usato in questa stessa richiesta (host già consentito).
+      if (r.captured?.ok) ctx?.ui?.notify?.(`secret '${r.captured.secret}' rinnovato dalla risposta (valore sigillato, non mostrato).`, "info");
       // La redazione egress del body è garantita a valle dall'hook tool_result (dynamic-secrets + pattern statici).
-      return { content: [{ type: "text", text: JSON.stringify(r, null, 2) }], details: { ok: !!r.ok, status: r.status, blocked: r.blocked } };
+      return { content: [{ type: "text", text: JSON.stringify(r, null, 2) }], details: { ok: !!r.ok, status: r.status, blocked: r.blocked, captured: r.captured } };
     },
   });
 
