@@ -24,9 +24,10 @@ function isToolResultBlock(b) {
   return !!b && (b.type === "tool_result" || b.type === "tool-result");
 }
 function isToolUseBlock(b) {
-  return !!b && (b.type === "tool_use" || b.type === "tool-use" || b.type === "tool_call" || b.type === "tool-call");
+  return !!b && ["tool_use", "tool-use", "tool_call", "tool-call", "toolCall", "toolUse"].includes(b.type);
 }
-/** Un messaggio è un tool-result "role-based" (formato non-Anthropic: role=tool con contenuto diretto)? */
+/** Un messaggio è un tool-result "role-based"? Copre la shape pi NATIVA (`role:"toolResult"`, toolName/toolCallId
+ * diretti, content array di {type:text}) E il formato wire OpenAI (`role:"tool"`, content stringa). */
 function isToolRoleMessage(m) {
   return !!m && (m.role === "tool" || m.role === "toolResult" || m.role === "tool-result");
 }
@@ -91,13 +92,37 @@ export function frameToolResultsInMessages(messages, opts = {}) {
   let changed = false;
 
   const out = messages.map((m) => {
-    // (A) blocchi tool_result dentro il content
+    // (P) shape pi NATIVA (verificata dal vivo): role="toolResult" con toolName/toolCallId/isError DIRETTI e content
+    //     = array di {type:"text"} (o stringa nel wire OpenAI role="tool"). È il caso REALE al context hook.
+    if (isToolRoleMessage(m) && (typeof m.content === "string" || Array.isArray(m.content))) {
+      const callId = m.toolCallId ?? m.tool_call_id ?? m.tool_use_id ?? m.id ?? null;
+      const name = m.toolName ?? m.name ?? (callId != null ? nameById.get(String(callId)) : null) ?? null;
+      const meta = { name, callId, status: (m.isError || m.is_error) ? "error" : "ok", at: toIso(m.timestamp) || nowIso };
+      if (typeof m.content === "string") {
+        if (ALREADY_FRAMED.test(m.content)) return m;
+        changed = true;
+        return { ...m, content: wrapToolResultText(m.content, meta) };
+      }
+      const first = m.content[0];
+      if (first && first.type === "text" && ALREADY_FRAMED.test(String(first.text ?? ""))) return m; // già avvolto
+      const allText = m.content.length > 0 && m.content.every((b) => b && b.type === "text");
+      if (allText) {
+        // caso comune (tool_result testuale): collassa in UN blocco text avvolto → formattazione garantita sul wire
+        changed = true;
+        return { ...m, content: [{ type: "text", text: wrapToolResultText(m.content.map((b) => String(b.text ?? "")).join(""), meta) }] };
+      }
+      // contenuto misto (es. immagini): header + blocchi originali + close (preserva i non-text)
+      const bytes = m.content.reduce((n, sb) => n + (typeof sb?.text === "string" ? sb.text.length : 0), 0);
+      changed = true;
+      return { ...m, content: [{ type: "text", text: formatToolResultHeader({ ...meta, bytes }) }, ...m.content, { type: "text", text: CLOSE }] };
+    }
+    // (A) blocchi tool_result Anthropic dentro un messaggio (role=user + block) — altri provider/formati
     if (Array.isArray(m?.content) && m.content.some(isToolResultBlock)) {
       const at = toIso(m.timestamp) || nowIso;
       const newContent = m.content.map((b) => {
         if (!isToolResultBlock(b)) return b;
         const callId = b.tool_use_id ?? b.toolUseId ?? b.id ?? null;
-        const meta = { name: callId ? nameById.get(String(callId)) : (b.name ?? null), callId, status: b.is_error ? "error" : "ok", at };
+        const meta = { name: callId != null ? nameById.get(String(callId)) : (b.name ?? null), callId, status: b.is_error ? "error" : "ok", at };
         if (typeof b.content === "string") {
           if (ALREADY_FRAMED.test(b.content)) return b;
           changed = true;
@@ -113,14 +138,6 @@ export function frameToolResultsInMessages(messages, opts = {}) {
         return b;
       });
       return { ...m, content: newContent };
-    }
-    // (B) messaggio role=tool con contenuto diretto (stringa)
-    if (isToolRoleMessage(m) && typeof m.content === "string") {
-      if (ALREADY_FRAMED.test(m.content)) return m;
-      const callId = m.tool_call_id ?? m.tool_use_id ?? m.id ?? null;
-      const meta = { name: callId ? nameById.get(String(callId)) : (m.name ?? null), callId, status: m.is_error ? "error" : "ok", at: toIso(m.timestamp) || nowIso };
-      changed = true;
-      return { ...m, content: wrapToolResultText(m.content, meta) };
     }
     return m;
   });

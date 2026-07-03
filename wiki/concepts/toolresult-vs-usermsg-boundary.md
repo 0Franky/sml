@@ -21,7 +21,16 @@ last_updated: 2026-07-03
 3. **Allucinazione tool.** Ha chiamato `add_secret` con valore-placeholder `YOUR_SECRET_TOKEN_HERE` (inventato), non un valore reale né richiesto.
 4. **Diagnostica `trace_status`** (record 35): `systemLen: 0`, `nativeMessages: 2`, `nativeRoles: ["developer","user"]`, `nativeUserTurns: 1`, `nativeToolResults: 0`, `laneLines: 0`, `laneNativeOverlap: 0`, `tokens: 8392`, `contextFraction: 3.2%`, `convId: "sess-1782904732997-startup"`.
 
-## Causa-radice [INFERRED, fondata sul codice]
+## ⚠️ CORREZIONE (2026-07-03, prove WIRE) — supera l'inferenza sotto
+
+Una **cattura wire diretta** (proxy di logging su una sessione pi reale con gemini, che chiama tool in modo affidabile; la serializzazione è INDIPENDENTE dal modello) ha ribaltato l'inferenza iniziale:
+
+- **pi NON appiattisce**: sul wire openai-completions il tool_result è `{"role":"tool","content":"…","tool_call_id":"…"}` + l'assistant ha `tool_calls` → **il formato OpenAI CORRETTO** (`tool_call_id` è costruito a runtime, per questo il grep del dist non lo trovava). → **NON è un bug di pi, niente PR.**
+- **La shape reale al context hook** è `{role:"toolResult", toolName, toolCallId, isError, content:[{type:"text",…}]}` (verificata dumpando `session.messages`), NON blocchi Anthropic `type:"tool_result"`. Il primo frame che avevo scritto cercava `type:"tool_result"`/content-stringa → **NON faceva fire (no-op)**. Corretto (caso P) e **ri-validato sul wire**: il content ora esce avvolto `<tool_result tool="list_tasks" …>`.
+- **Nel formato reale role=tool, il modello RESISTE già all'injection** (A/B variante A PASS senza marker). Quindi la variante-B "appiattita" che falliva era una shape IPOTETICA che pi non usa. → **il valore primario del framing NON è l'anti-injection**, ma: (1) **meta-info** (tool/orario/stato/bytes); (2) **auto-descrizione dei tool_result ORFANI** — col nostro windowing aggressivo (`keepTurns:1`) la tool_call che ha prodotto il risultato viene finestrata via → un tool_result "nudo" resta senza contesto e un modello piccolo lo mis-attribuisce (È il vero meccanismo del transcript). Il marker `<tool_result tool="add_secret" …>` lo rende auto-descrittivo anche orfano; (3) difesa-in-profondità.
+- **Causa REALE del transcript**: non l'appiattimento, ma l'**amnesia** — il modello vedeva un tool_result orfano (tool_call finestrata via + storia assente, probabile codice-vecchio 2026-07-01) e lo scambiava per input utente. Il framing la mitiga (auto-descrizione); l'amnesia in sé è ortogonale ([[context-turn-lifecycle]]).
+
+## Causa-radice [INFERRED iniziale — vedi CORREZIONE sopra che la supera in parte]
 
 Due failure-mode **distinti ma che si compongono**:
 
@@ -71,8 +80,9 @@ Perché la lane/`<context>` erano vuoti in QUESTA sessione ollama è **da isolar
 **Alternativa considerata** — hook `tool_result` (marca alla SORGENTE, identità certa via `event.toolName`, `emitToolResult` chaina e compone con secrets-guardrail): più robusto se pi un giorno appiattisse i tool_result in stringhe `role=user` PRIMA del context hook (oggi non lo fa: i blocchi sopravvivono fino al wire). Tenuto in riserva; il context-hook è provider-agnostico e non tocca il codice security-critical dei secrets.
 
 ## Residui / validation-pending
-- **Fire su tool-call reale**: `qwen3.5:9b` non ha chiamato tool su richiesta nei test headless (di per sé un finding: il modello è inaffidabile sul tool-calling → rilevante per training/harness). Il fix è validato per costruzione (block-detection + unit) + formato (A/B live) + presenza-blocchi-al-context (turn-trace li vede al wire, downstream), ma il fire dell'estensione su un tool_result generato da un turno pi live va ancora osservato.
-- **Amnesia (A) non ancora isolata**: perché `<context>`/lane fossero vuoti su ollama nel transcript resta da discriminare (3 ipotesi in §Causa). Ortogonale al framing.
+- **Fire su tool-call reale — ✅ RISOLTO (2026-07-03)**: cattura wire su sessione pi reale (gemini, tool-caller affidabile) → il content del tool_result esce **avvolto** `<tool_result tool="list_tasks" call_id="…" status="ok" at="…" bytes="425">…` con tutte le meta corrette. Il fix fa fire in produzione. (Residuo minore: `qwen3.5:9b` non chiama tool su richiesta in headless — finding a sé sul tool-calling, rilevante per training.)
+- **Amnesia (A) — LARGAMENTE SPIEGATA (2026-07-03)**: catturato il system prompt REALE inviato a ollama = **24.553 char CON `<context>`** (rules — inclusa la nuova `tool-result-untrusted` — current_aim, task_list). Quindi **l'iniezione del contesto su ollama FUNZIONA**; il `systemLen:0` del transcript era quasi certamente una **sessione a codice vecchio** (2026-07-01, prima di questi fix) o mis-misura, NON un bug corrente. La lane `<messages_with_user>` è assente solo su **sessione fresca** (nessuna storia in conversations.db per quel convId) — atteso, non un bug. → residuo declassato: verificare la lane con storia reale in una sessione multi-turno live. **Nota polish**: la rule cita `&lt;tool_result&gt;` (XML-escaped dall'assembler) mentre il marker reale è `<tool_result>` non-escaped → riformulare la rule senza angle-bracket per evitare il mismatch (minore).
+- **È un bug di pi upstream?** ~~SÌ~~ → **NO** (smentito dalla cattura wire, vedi §CORREZIONE): pi emette `role:"tool"`+`tool_call_id` correttamente. Niente PR. Il framing resta comunque utile (meta-info + auto-descrizione degli orfani + difesa-in-profondità).
 
 ## Link
 - [[context-turn-lifecycle]] (idee 762-766) · [[sealed-secrets]] (trust-boundary egress; qui è il verso INGRESS del confine) · [[../../memory/feedback_context_window_sizing]] · [[../../memory/feedback_security_and_convenience_both_top]] · transcript `019f1d67`.
