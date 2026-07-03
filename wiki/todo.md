@@ -50,6 +50,7 @@ last_updated: 2026-06-30
 > - ✅ **istruzione anti-placeholder** su propose_secret_create (msg 819, "istruzioni chiare le capiscono anche i modelli scemi"): "mai placeholder, usa nome reale o chiedi; valore in file → load_secrets_from_env". NON un guardrail-pezza (droppato su richiesta utente).
 > - ✅ **recovery-hint** su find_tool: "se un tool è 'not found' NON inventare un altro nome, usa find_tool". Lean (la lane last_tool_calls mostra già il fallimento) — niente interception fragile (la generazione del "not found" di pi non è intercettabile pulita).
 > **DECISIONE checklist (msg 814, "verifica se ha senso")**: analisi data → hints-first (soft, fatti), checklist SOLO su ops critiche/irreversibili, dichiarativa, feedback azionabile, toggleable — **DA COSTRUIRE MIRATA solo se gli hint non bastano** (evidence-first, anti over-engineering). L'Ask è già una checklist-checkpoint.
+> - ✅ **hardening path-traversal** su load_secrets_from_env (commit `7089676`, security-review automatica 2026-07-03): il path è model-controlled → il vecchio `startsWith(cwd)` aveva buco sibling-prefix (slm/ vs slm-evil/) + symlink non risolti. Fix: `validateEnvPath` PURO (rifiuta assoluti/`..`/non-.env, 12 test) + confronto REALPATH col separatore finale (chiude sibling + symlink-escape). env-ingest 27/0.
 > **DA TESTARE**: riavvio pi → verificare col 9B se last_tool_calls+hint riducono placeholder/allucinazioni/flailing. Poi decidere checklist.
 
 ### 🔴 FINDING SESSIONE LIVE 2026-07-03 (utente (A) TUI, sessione `019f27c1` — msg 790-797)
