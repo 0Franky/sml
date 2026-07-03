@@ -39,6 +39,16 @@ Introdurre il tool **`http_request`** (typed: `url`/`method`/`headers`/`body`/`t
 - Il **regex/shell fast-path** (`hasForeignHostToken` & co.) diventa **interim/legacy**: resta per la via bash (che alcuni flussi shell legittimi useranno) ma non è più il percorso raccomandato per i secret.
 - **Residui ACCETTATI** (de-prioritizzati, coerenti col primario "valore-mai-al-provider"): l'**exfil-via-use** resta per costruzione — un secret consentito verso un host PUÒ essere usato per inviare lì dati (è lo scopo); il typed-channel non lo risolve (né lo pretende). Un servizio loopback compromesso può ancora rilanciare (relay/SSRF) — rischio residuo della concessione `allowLocalHttp`, già disclosato nel consenso.
 
+## Anti-overclaim / residui (review multi-agente 2026-07-03, `wm9jksbeu`)
+
+Onestà (regola #2): `http_request` è "più sicuro" **per l'uso dei SEALED-SECRETS** (sink-gating tipizzato), NON un canale a-prova-di-tutto:
+
+- **Egress libero per dati NON-secret**: una richiesta SENZA `{{secret:NAME}}` è inviata a QUALSIASI host senza allow-list — esattamente come `bash`/`curl`. `http_request` NON è un gate di egress generale; sposta solo l'uso-dei-segreti su un canale gateabile. (Un futuro gate di egress generale, se voluto, sarebbe ortogonale.)
+- **Riflessione `redactEgress:false`**: un valore creato con `redactEgress:false` (OTP/corti) che il server rimanda nel body/redirect NON è redatto (non è nel Set di redazione, per scelta). Mitigazione applicata: il **Location** di un redirect è ridotto a scheme+host (niente query/path) prima di tornare al modello.
+- **`preview_secret_use` modella il canale SHELL** (`checkSink`), non quello tipizzato: per un'operazione destinata a `http_request` il verdetto del preview può divergere dal gate reale (`checkSinkTyped`). Trattarlo come indicativo per la shell; il gate autoritativo del typed-channel è indipendente e fail-closed.
+
+Hardening applicato nella stessa review: rifiuto del wildcard `*` in-sessione (P1), frizione type-to-confirm fail-CLOSED + parità create/`request_local_http` (P2), NAME_RE-early anti shell-injection nel ramo headless (P2), wording warn-mode onesto (P2), trim del valore + `redactEgress` esposto in create (P3), `isValidSinkHost` anti host-degeneri (P3).
+
 ## Alternative considerate
 
 - **Rimuovere la via bash** e tenere solo il typed-channel → SCARTATA: regressione (flussi shell esistenti), contro la condizione "stesso comportamento".

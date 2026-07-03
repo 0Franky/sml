@@ -212,14 +212,15 @@ export default function (pi: ExtensionAPI) {
     parameters: Type.Object({
       name: Type.String({ minLength: 1, description: "Name for the new secret, e.g. REDDIT_API_KEY ([A-Za-z0-9_.-], max 64)." }),
       description: Type.Optional(Type.String({ description: "What the secret is for (shown to the user and in list_secrets)." })),
-      allowedSinks: Type.Optional(Type.Array(Type.String(), { description: "Hosts the secret may reach, e.g. ['oauth.reddit.com']. Empty = lockdown until a sink is granted." })),
+      allowedSinks: Type.Optional(Type.Array(Type.String(), { description: "Concrete hosts the secret may reach, e.g. ['oauth.reddit.com']. Empty = lockdown until a sink is granted. '*' (any host) is NOT accepted in-session." })),
       allowLocalHttp: Type.Optional(Type.Boolean({ description: "Allow use over http toward loopback only (localhost/127.0.0.1)." })),
+      redactEgress: Type.Optional(Type.Boolean({ description: "Redact this value from every output (default true). Set false ONLY for short/low-entropy values (OTP/PIN/a date) where global redaction would be noisy." })),
       why: Type.String({ minLength: 1, description: "Why this secret is needed. Required, non-empty." }),
     }),
     async execute(_t: string, p: any, _signal: any, _onUpdate: any, ctx: any) {
       // Il VALORE non transita MAI dal modello: askAndCreate lo raccoglie via ctx.ui.input() (USER→harness). Headless
       // → degrada a provisioning out-of-band. Tutta la logica è node-pura/testabile in secrets-consent.mjs.
-      return askAndCreate(ctx?.ui, !!ctx?.hasUI, { name: p.name, description: p.description, allowedSinks: p.allowedSinks, allowLocalHttp: p.allowLocalHttp }, p.why);
+      return askAndCreate(ctx?.ui, !!ctx?.hasUI, { name: p.name, description: p.description, allowedSinks: p.allowedSinks, allowLocalHttp: p.allowLocalHttp, redactEgress: p.redactEgress }, p.why);
     },
   });
   pi.registerTool({

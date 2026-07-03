@@ -118,9 +118,10 @@ function fakeFetch({ status = 200, headers = {}, body = "OK", throwErr = null } 
 {
   reset();
   setSecret("TKN", "sk-REALVALUE-3333", { allowedSinks: ["api.x.com"] });
-  const f = fakeFetch({ status: 302, headers: { location: "https://evil.com/steal" }, body: "" });
+  const f = fakeFetch({ status: 302, headers: { location: "https://evil.com/steal?code=SECRET123" }, body: "" });
   const r = await executeHttpRequest({ url: "https://api.x.com/go", headers: { Authorization: "Bearer {{secret:TKN}}" } }, { fetchImpl: f, mode: "strict" });
-  ok(r.ok && r.redirected === true && r.location === "https://evil.com/steal", "[C] EXEC redirect: riportato, non seguito");
+  ok(r.ok && r.redirected === true && r.location === "https://evil.com", "[C] EXEC redirect: riportato, non seguito, Location ridotto a scheme+host");
+  ok(!/steal|SECRET123/.test(JSON.stringify(r)), "[C] EXEC redirect: query/path del Location NON riflessi (anti redactEgress:false reflection)");
   ok(f.calls.length === 1, "[C] EXEC redirect: fetch chiamato UNA sola volta (non ha seguito il 302)");
   ok(/not followed/i.test(r.note || ""), "[C] EXEC redirect: nota di sicurezza presente");
 }

@@ -9,30 +9,32 @@ last_updated: 2026-06-30
 
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
 
-## ⏸️ RESUME POINTER (post-compact 2026-06-30, AGGIORNATO) — riprendere DA QUI
-> **Stato**: HEAD==origin/main==`9809edd`, working tree pulito, suite 14-file/0 (sealed-secrets 174, +12 test), typecheck verde.
+## ⏸️ RESUME POINTER (2026-07-03, AGGIORNATO) — riprendere DA QUI
+> **Stato**: HEAD==origin/main==`9f3f478`, tree pulito (solo `harness/reddit_post.js` untracked, non-mio). Suite 21-file/0, typecheck verde. **SESSIONE POST-SPEND-LIMIT (utente a consumo)** → economia: niente workflow costosi, fix inline.
 >
-> **✅ FATTO QUESTA SESSIONE (post-compact)**: (A) **bug-fix load-bearing context** (commit `460686f`): frame slice-direction (shared_state recency + backlog execution-order), verify_queue detail-cap, watchReorder comment, charCap esposto+cablato; (B) **studio bound P3** (8-agenti) → [[concepts/context-bounds-study]] (tabella bound + design-contract + 3 blocker); (C) risposta msg 740 (notes/progress) filed in [[concepts/model-controlled-context]] #8.
-> **✅ FATTO sessione precedente**: secret-lifecycle 5-tool + Ask-con-diff (GAP-1/2 chiusi); studio context-sizing 32-agenti; lane `<secrets>` (chiude FIND-7).
+> **✅ 5 DIFFERITI SECRET FATTI (msg 741 = DO ALL)** — 2 commit: `75e8ff2` (consent node-puro `secrets-consent.mjs` + #2 `propose_secret_create` + #3 frizione type-to-confirm + #4 messaggi-headless-accurati + #5 test 40) e `9f3f478` (#1 `http_request` TIPIZZATO: `checkSinkTyped`+`injectTypedRequest`+`http-request.mjs` executor fetch-iniettabile redirect:manual + ADR `decisions/2026-06-30-typed-http-request.md` + test 45). ADR già in index.
 >
-> **🔴 DECISIONE UTENTE msg 741**: i **5 differiti secret SI FANNO TUTTI** (non più differiti). Solo #1 (ADR consent-path → tool `http_request` TIPIZZATO) è posticipabile, MA da fare se il nuovo metodo è più sicuro + stesso comportamento attuale + extra (verificare regressione). + **"C" (context P3) APPROVATA**: studiare bound+default per-sezione (✅ FATTO = context-bounds-study); ordine confermato (dinamico in coda; gate ad alto valore NON in coda effimera).
+> **🔴 IN CORSO — FIX REVIEW-FINDINGS (review multi-agente `wm9jksbeu` INTERROTTA a metà da spend-limit: 6/6 dim ricerca ok, verifica ok solo su 4 dim SICUREZZA; arch+code-correctness NON verificate). 12 confermati, bug REALI introdotti nei differiti — dettaglio in `wiki/_private/user-ideas-2026-07-03.md §REVIEW-FINDINGS`. Da fixare (batch inline in corso):**
+> - **P1** wildcard `*` type-to-confirm di 1 char (`secrets-consent.mjs` wideningChallenge/askAndApplyEdit) → frizione invertita, reachable via `request_sink(name,'*')`. FIX: rifiutare `*` in-sessione (solo out-of-band).
+> - **P2** `askAndCreate` headless: nome/desc model-controlled in comando shell → shell-injection. FIX: NAME_RE early + istruzione strutturata (no interp).
+> - **P2** `askAndCreate` concede sink esterni/`*` con solo confirm (no type-to-confirm) → create<edit. FIX: type-to-confirm per external sinks.
+> - **P2** `askLocalHttp` no type-to-confirm (routing-bypass vs propose_secret_edit). FIX: aggiungere challenge 'localhost'.
+> - **P2** type-to-confirm fail-OPEN se manca `ui.input`. FIX: fail-closed come askAndCreate.
+> - **P2** warn-mode wording "blocked" mentre `allowed:true` (`checkSink`+`checkSinkTyped`). FIX: wording.
+> - **P3**: trim valore create (newline-paste); esporre `redactEgress` in create; `isValidSinkHost` host-degeneri; ADR anti-overclaim `http_request` egress-libero-non-secret; strip redirect Location a scheme+host; `preview_secret_use` shell-vs-typed (doc).
+> - **NON verificati (spend-limit)**: 6 finding arch/code-correctness (parità https-loopback bash-vs-typed; ADR "parità" overclaim; header-allowlist capitalized-keys). Ri-verificare a budget tornato.
 >
-> **🔜 PROSSIMO — INTEGRAZIONI CONTEXT** (design [[concepts/model-controlled-context]] + bound [[concepts/context-bounds-study]]):
-> 2. **Indicatore BUDGET/occupazione context** (% pieno) — `ctx.getContextUsage()` già disponibile (context-assembly.ts). Quick. (Prereq/embrione del budget-allocator P0.)
-> 3. **seq-id per-messaggio + truncation-marker per-ruolo** — **RIUSA `get_conversation`** (già fa specific-msg + sliding-window) → NIENTE `expand_message`. NB: marker aggregato `+N older` + marker single-giant-turn ESISTONO già (claim studio "silenzioso"=impreciso, verificato); gap reale = **seq-id citabile** + direzione troncamento per-ruolo (assistant→coda).
-> 4. **Current-step lane** (P4): `<current_step>` volatile 1-riga free-text (tool `set_step`), distinto dall'aim, NON nelle note. (Connesso a lane `<progress>` msg 740.)
-> 5. ✅ **FATTO — Bug-fix studio** (commit `460686f`): frame slice-direction, verify_queue detail-cap, watchReorder comment, charCap esposto+cablato. RESIDUI sotto.
-> 6. ✅ **FATTO — `<secrets>` nel ramo NESTED** (commit `9809edd`): `buildNestedWorkspace` ora threada `opts.secrets` ad `assembleContext` (gate-critical, gemello FIND-7); la lane filtra i TASK al subset, non i secret. + test nested. (RESTA: confermare `verify_queue` non filtrato da `focusTaskIds` nel nested — verifica veloce.)
+> **🔜 BACKLOG IDEE UTENTE 2026-07-03 (batch msg 751-768, catturate in `wiki/_private/user-ideas-2026-07-03.md` con verdetto — rispondere su TG + formalizzare)**:
+> - **Context-lifecycle cluster** (msg 762/763/764/766, il più corposo/interrelato): "expand-for-more" nelle lane troncate (§C1, serve tool `expand_section` = blocker P1 self-tuning); hook reorg→update-memory-PRIMA→offload→track-restore (§C2, pezzi già esistono: reorganize_hint/checkpoint/matrioska, manca la sequenza obbligata); turno verboso→compatto a fine-turno + preview-accept via tool (§C3, hook `turn_end`); versioni-multiple/evoluzione-temporale del context (§C4, versione economica = version-tag + recent_changes). → concept dedicato `wiki/concepts/context-turn-lifecycle.md` (DA CREARE).
+> - **Training/RL cluster** (msg 752/760/767/768): classificazione-task nel training + LoRA self-classify + preservare-tracce-Tier1 (§T1, TB-16); RL anti-perdita-di-stato (§T2, TB-17); esercizi-RL-per-tool + strade-alternative (§T3, TB-18); RL-senza-LoRA→search+aggrega+in-context+self-doc (§T4, TB-19). → testbook + training-taxonomy.
+> - **MANIFESTO sicurezza/privacy** (msg 751/771): SÌ con anti-overclaim → `docs/MANIFESTO.md`/`wiki/concepts/security-manifesto.md` (§MANIFESTO). DA SCRIVERE.
+> - **TASK**: analizzare transcript pi `019f1d67-29b5-781f-8e71-f36e5ae10aba` (msg 765, §TASK-TRANSCRIPT) + rispondere "dove si salva la risposta agente" (msg 764a).
 >
-> **➡️ PROSSIMO BLOCCO (priorità utente msg 741)**: i **5 DIFFERITI SECRET** (DO ALL). Richiede di rileggere `sealed-secrets.mjs` + `secrets-guardrail.ts` + `scripts/set-secret.mjs` → blocco corposo (nuovi tool + ADR). Poi le integrazioni context #2 (budget%) / #3 (seq-id) / #4 (current-step).
-> 7. **Self-tuning P3** — ⛔ **BLOCCATO su 3 infra (studio bound)**: (P0) **allocatore budget-token totale** (oggi NON esiste → "alza-tutto" possibile); (P1) tool `set_view`/`expand_section` (NON esistono, grep 0); (P1) **lifecycle reset-to-default** (META + reset pop_focus/nuova-sessione + decay K-turni). + prereq **curva effective-context** 4B. **Superficie tunable = SOLO 4 lane** (vars/recent_changes count, messages n+charCap); task_list/execution_order/frame = FROZEN-config (NON P3). → costruire SOLO dopo i 3 blocker.
+> **🔜 INTEGRAZIONI CONTEXT (pre-esistenti, dopo i fix)**: #2 budget% (`ctx.getContextUsage()` pronto); #3 seq-id+truncation-marker (riusa `get_conversation`); #4 current-step lane (`<current_step>`+`set_step`). **Self-tuning P3** ⛔ BLOCCATO su 3 infra (budget-allocator P0 / set_view+expand_section P1 / reset-lifecycle P1) + curva effective-context 4B. Superficie tunable = SOLO 4 lane.
+> **Context residui** (context-bounds-study §4): messages default 8-vs-6 byte-per-byte; split frame displayCap in 3 cap; GC-on-resolve/abandon verify_queue; charCap→token-accounting; lane `<progress>`/done-summary (msg 740).
 >
-> **Metodo** (utente): studi approfonditi + review-loop (specialized+agnostic) sulle parti critiche. Ogni step: build→test→typecheck→commit→push.
->
-> **🔜 DIFFERITI / RESIDUI tracciati**:
-> - **Secret (msg 741 = DO ALL)**: (1) ADR consent-path→`http_request` tipizzato [condizionale: solo se più-sicuro+stesso-comportamento+extra]; (2) `propose_secret_create` Ask-con-prefill; (3) frizione REALE widening (double-confirm vs solo testo); (4) contratto headless `set-secret.mjs`; (5) test estensione headless (degrade+confirm→false).
-> - **Context residui** (context-bounds-study §4): riconciliare messages default `8`-vs-fallback `6` byte-per-byte [decisione valore]; **split frame displayCap** in 3 cap write-time; **GC-on-resolve/abandon** verify_queue (GC-on-abandon serve `focus_id` nello schema); charCap→token-accounting; lane `<progress>`/done-summary (msg 740, separata dalle note).
-> - **⚠ PENDING CHIARIMENTO (msg 738)**: messaggio pinnato non visibile via Telegram MCP → l'utente NON ha ancora indicato quale; chiedere se rilevante.
+> **Metodo** (utente): studi + review-loop (specialized+agnostic) sulle parti critiche. Ogni step: build→test→typecheck→commit→push. **Compact: AVVISARE l'utente prima (msg 775).**
+> **⚠ PENDING CHIARIMENTO (msg 738)**: messaggio pinnato non ancora indicato dall'utente.
 
 ## 🔥 SESSIONE 2026-06-29 (post-compact) — stato corrente
 

@@ -25,6 +25,7 @@ export interface SecretCreateProposal {
   description?: string;
   allowedSinks?: string[];
   allowLocalHttp?: boolean;
+  redactEgress?: boolean;
 }
 
 export function renderEditDiff(diff: any): string;

@@ -77,6 +77,13 @@ export async function executeHttpRequest(params = {}, opts = {}) {
   } catch { /* header non leggibili → ometti */ }
 
   const isRedirect = status >= 300 && status < 400;
+  // review P3: riduci il Location a scheme+host (NON restituire query/path che potrebbero riflettere un valore
+  // redactEgress:false — quello opt-out NON è nel Set di redazione). Il modello deve comunque ri-emettere verso l'host.
+  let location;
+  if (isRedirect && respHeaders.location) {
+    try { const lu = new URL(respHeaders.location, inj.url); location = `${lu.protocol}//${lu.host}`; } catch { /* relativo/malformato → ometti */ }
+    respHeaders.location = location || "(unparseable redirect target)";
+  }
   let text = "";
   try { text = typeof resp.text === "function" ? await resp.text() : String(resp.body ?? ""); } catch { text = ""; }
   const truncated = text.length > maxBytes;
@@ -88,11 +95,11 @@ export async function executeHttpRequest(params = {}, opts = {}) {
     body: truncated ? text.slice(0, maxBytes) : text,
     truncated,
     redirected: isRedirect,
-    location: isRedirect ? respHeaders.location : undefined,
+    location,
     injected: inj.injected,
     warnings: inj.warnings,
-    // nota esplicita: i redirect NON sono seguiti (sicurezza). Il modello decide se rifare la richiesta sul nuovo host.
-    note: isRedirect ? "redirect NOT followed (anti exfil). To proceed, issue a new http_request to the Location host (it will be re-gated)." : undefined,
+    // nota esplicita: i redirect NON sono seguiti (sicurezza); il Location è ridotto a scheme+host.
+    note: isRedirect ? "redirect NOT followed (anti exfil); Location reduced to scheme+host. To proceed, issue a new http_request to that host (it will be re-gated)." : undefined,
   };
 }
 

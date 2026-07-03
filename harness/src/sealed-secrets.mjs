@@ -83,6 +83,8 @@ export function setAllowLocalHttp(name, allow = true) {
 export function isValidSinkHost(host) {
   const h = String(host ?? "").toLowerCase().trim();
   if (h === "*") return true;
+  // review P3: rifiuta host degeneri (leading/trailing dot: '.com', 'x.com.') → suffix-match asimmetrico/footgun.
+  if (h.startsWith(".") || h.endsWith(".")) return false;
   return h.length > 0 && h.length <= 253 && /^[a-z0-9.\-]+$/.test(h);
 }
 
@@ -477,7 +479,8 @@ export function checkSink(name, opText, mode = "strict") {
         : `'${name}' without allowedSinks: network send blocked (declare allowedSinks to use it toward a host)`
       : null;
   if (reason) {
-    if (mode === "warn") return { allowed: true, warn: reason };
+    // review P2: in warn NON dire "blocked" (il valore VIENE inviato) — messaggio ONESTO che segnala l'egress.
+    if (mode === "warn") return { allowed: true, warn: `'${name}' has no allowedSinks — WARN mode: the value is ALLOWED out (declare allowedSinks to gate it)` };
     return { allowed: false, reason };
   }
   return { allowed: true };
@@ -523,7 +526,8 @@ export function checkSinkTyped(name, urlString, mode = "strict") {
     return { allowed: false, reason: `'${name}' allowed only toward [${s.allowedSinks.join(", ")}]; disallowed host: ${host}` };
   }
   const reason = `'${name}' without allowedSinks: network send blocked (request_sink for ${host} to use it there)`;
-  if (mode === "warn") return { allowed: true, warn: reason };
+  // review P2: warn NON dice "blocked" (il valore VIENE inviato) — messaggio onesto.
+  if (mode === "warn") return { allowed: true, warn: `'${name}' has no allowedSinks — WARN mode: value WILL be sent to ${host} (declare allowedSinks to gate it)` };
   return { allowed: false, reason };
 }
 

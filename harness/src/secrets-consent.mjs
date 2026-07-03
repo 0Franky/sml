@@ -29,6 +29,16 @@ export function renderEditDiff(diff) {
     .join("\n");
 }
 
+/** NAME_RE (allineato a sealed-secrets): valida un nome-secret PRIMA di usarlo in QUALSIASI stringa/istruzione
+ * (nel ramo headless il nome finisce in un comando che l'utente incolla → un nome malformato = shell-injection). */
+const NAME_RE = /^[A-Za-z0-9_.\-]{1,64}$/;
+
+/** Un cambiamento propone il sink wildcard '*'? Il '*' = QUALSIASI host = massimo widening → NON concedibile
+ * in-sessione dal modello (la frizione-di-1-carattere degenererebbe in rubber-stamp, review P1). Solo out-of-band. */
+function proposesWildcard(hosts) {
+  return Array.isArray(hosts) && hosts.some((h) => String(h ?? "").trim() === "*");
+}
+
 /** Tool-result helper (shape pi). */
 function result(text, details) {
   return { content: [{ type: "text", text }], details };
@@ -94,6 +104,10 @@ export function headlessEditInstructions(name, changes) {
  * istruzioni out-of-band ACCURATE per operazione (differito #4). Usato da request_sink e propose_secret_edit.
  */
 export async function askAndApplyEdit(ui, hasUI, name, changes, why, titleVerb) {
+  // review P1: il wildcard '*' (QUALSIASI host) NON è concedibile in-sessione (frizione-1-char = rubber-stamp) → out-of-band.
+  if (proposesWildcard(changes && changes.addSinks)) {
+    return result(`Cannot grant '*' (ANY host) to '${name}' in-session — that is the maximal widening. If truly needed, the user sets it out-of-band: 'node scripts/set-secret.mjs ${name} --allow-host "*"'. Otherwise request a CONCRETE host.`, { ok: false });
+  }
   const diff = computeSecretEditDiff(name, changes);
   if (!diff.exists) return result(`Secret '${name}' does not exist.`, { ok: false });
   if (!diff.changes || !diff.changes.length) {
@@ -123,19 +137,18 @@ export async function askAndApplyEdit(ui, hasUI, name, changes, why, titleVerb) 
       `${header}\n\nMotivo dichiarato dal modello: ${why}\n\nDIFF (prima → dopo):\n${renderEditDiff(diff)}${localHttpDisclosure}\n\n${diff.anyWidening ? "⚠ " : ""}Confermi?`,
     );
     if (!ok) return result(`User DENIED the edit of '${name}'. Nothing changed.`, { ok: false });
-    // FRIZIONE REALE (differito #3): per un widening il solo confirm() è rubber-stampable → richiedi il type-to-confirm.
-    // L'utente deve DIGITARE l'host che sta concedendo: conferma di aver LETTO dove andrà il segreto, non un Invio cieco.
-    if (diff.anyWidening && typeof ui.input === "function") {
-      const challenge = wideningChallenge(diff, changes);
-      if (challenge) {
-        const typed = await ui.input(
-          `Conferma ampliamento di '${name}'`,
-          `digita ESATTAMENTE: ${challenge}`,
-        );
-        if (typed == null || normChallenge(typed) !== normChallenge(challenge)) {
-          notify(ui, `Ampliamento di '${name}' ANNULLATO (conferma digitata non combaciante). Nessuna modifica.`, "warning");
-          return result(`User did NOT type the exact confirmation ('${challenge}') for the widening of '${name}'. ABORTED — nothing changed. Re-propose only if the user really wants to widen.`, { ok: false, aborted: "widening-not-confirmed" });
-        }
+    // FRIZIONE REALE (differito #3 + review P2 fail-CLOSED): per un widening il solo confirm() è rubber-stampable →
+    // type-to-confirm (l'utente DIGITA l'host concesso). Se manca ui.input → FAIL-CLOSED (non applicare) invece di
+    // saltare la frizione in silenzio (era un fail-OPEN in codice security-critical). challenge sempre ≠ "" se anyWidening.
+    if (diff.anyWidening) {
+      const challenge = wideningChallenge(diff, changes) || name;
+      if (typeof ui.input !== "function") {
+        return result(`Widening '${name}' requires an interactive dialog to type '${challenge}', unavailable here. NOT applied.`, { ok: false, aborted: "no-input-ui" });
+      }
+      const typed = await ui.input(`Conferma ampliamento di '${name}'`, `digita ESATTAMENTE: ${challenge}`);
+      if (typed == null || normChallenge(typed) !== normChallenge(challenge)) {
+        notify(ui, `Ampliamento di '${name}' ANNULLATO (conferma digitata non combaciante). Nessuna modifica.`, "warning");
+        return result(`User did NOT type the exact confirmation ('${challenge}') for the widening of '${name}'. ABORTED — nothing changed. Re-propose only if the user really wants to widen.`, { ok: false, aborted: "widening-not-confirmed" });
       }
     }
     const r = applySecretEdit(name, changes);
@@ -189,8 +202,16 @@ export async function askLocalHttp(ui, hasUI, name, why) {
       `⚠ Se acconsenti, il permesso vale per TUTTA QUESTA SESSIONE e per QUALSIASI servizio locale (qualsiasi porta/path su localhost), non solo per l'operazione descritta. Host ESTERNI in http restano sempre bloccati. Il valore resta sigillato (non lo vedi tu né il modello). Un servizio locale compromesso potrebbe però inoltrare il token altrove. Consenti?`,
     );
     if (ok) {
-      // applySecretEdit garantisce atomicità/validazione; allowLocalHttp:true è un widening ma qui il consenso è il
-      // confirm dedicato di questo tool (il dialog disclosa già lo scope) → non si impone un secondo type-to-confirm.
+      // review P2 parità: allowLocalHttp è un widening → stessa frizione type-to-confirm del path propose_secret_edit
+      // (altrimenti il modello aggira scegliendo il tool più economico). Fail-CLOSED se manca ui.input.
+      if (typeof ui.input !== "function") {
+        return result(`Enabling allowLocalHttp for '${name}' requires an interactive dialog (type 'localhost'), unavailable here. NOT enabled.`, { ok: false, aborted: "no-input-ui" });
+      }
+      const typed = await ui.input(`Conferma http-locale per '${name}'`, `digita ESATTAMENTE: localhost`);
+      if (typed == null || normChallenge(typed) !== "localhost") {
+        notify(ui, `allowLocalHttp per '${name}' ANNULLATO (conferma non combaciante).`, "warning");
+        return result(`User did NOT type 'localhost' to confirm allowLocalHttp for '${name}'. ABORTED — not enabled.`, { ok: false, aborted: "localhttp-not-confirmed" });
+      }
       const r = applySecretEdit(name, { allowLocalHttp: true });
       if (!r.ok) return result(`Failed to enable allowLocalHttp: ${r.reason}.`, { ok: false });
       return result(`User APPROVED: '${name}' may now be used over http toward loopback only (localhost/127.0.0.1), for this session. External hosts remain https-only. Use it in a SINGLE clean command (no ';'/'|'/'&&'/redirects), else it stays blocked.`, { ok: true });
@@ -211,17 +232,23 @@ export async function askLocalHttp(ui, hasUI, name, why) {
 export async function askAndCreate(ui, hasUI, proposal, why) {
   const name = String(proposal?.name ?? "").trim();
   if (!name) return result(`Provide a non-empty secret name.`, { ok: false });
+  // review P2: valida NAME_RE PRIMA di costruire QUALSIASI istruzione (il nome finisce in un comando nel ramo headless
+  // che l'utente incolla → un nome malformato = shell-injection verso l'utente). Rifiuta subito.
+  if (!NAME_RE.test(name)) return result(`Invalid secret name '${name}' (use [A-Za-z0-9_.-], max 64).`, { ok: false });
   if (hasSecret(name)) return result(`A secret named '${name}' already exists. Use propose_secret_edit to change it (no re-creation).`, { ok: false });
   const reason = typeof why === "string" ? why.trim() : "";
   if (!reason) return result(`Provide a non-empty 'why'.`, { ok: false });
   // valida gli host proposti PRIMA dell'Ask (niente conferma sprecata su input invalido)
   const sinksRaw = Array.isArray(proposal?.allowedSinks) ? proposal.allowedSinks.map((h) => String(h).toLowerCase().trim()).filter(Boolean) : [];
+  // review P1: niente wildcard in-sessione (come askAndApplyEdit) — il modello conosce sempre un host concreto.
+  if (proposesWildcard(sinksRaw)) return result(`Cannot create '${name}' pre-wired to '*' (ANY host). Propose CONCRETE hosts; a wildcard must be set out-of-band.`, { ok: false });
   const badHost = sinksRaw.find((h) => !isValidSinkHost(h));
-  if (badHost) return result(`Invalid sink host '${badHost}' (use a domain/IP/'*' — no scheme/path/port).`, { ok: false });
+  if (badHost) return result(`Invalid sink host '${badHost}' (use a domain/IP — no scheme/path/port).`, { ok: false });
   const allowedSinks = [...new Set(sinksRaw)];
-  const externalSinks = allowedSinks.filter((h) => h === "*" || !isLoopbackLiteral(h));
+  const externalSinks = allowedSinks.filter((h) => !isLoopbackLiteral(h));
   const description = clean(proposal?.description ?? "");
   const allowLocalHttp = proposal?.allowLocalHttp === true;
+  const redactEgress = proposal?.redactEgress !== false; // default true; false = opt-out per OTP/corti (evita rumore)
 
   if (hasUI && ui && typeof ui.confirm === "function" && typeof ui.input === "function") {
     const extWarn = externalSinks.length ? `\n⚠ allowedSinks ESTERNI: ${externalSinks.join(", ")} → una volta inserito, il valore potrà raggiungere subito questi host.` : "";
@@ -229,28 +256,39 @@ export async function askAndCreate(ui, hasUI, proposal, why) {
     const ok = await ui.confirm(
       `Creare il secret '${name}'?`,
       `Il modello propone di CREARE un sealed-secret (NON ne vede né riceve il valore):\n` +
-      `· nome: ${name}\n· descrizione: ${description || "(none)"}\n· allowedSinks: ${sinkLine}\n· allowLocalHttp: ${allowLocalHttp}\n\n` +
+      `· nome: ${name}\n· descrizione: ${description || "(none)"}\n· allowedSinks: ${sinkLine}\n· allowLocalHttp: ${allowLocalHttp}\n· redactEgress: ${redactEgress}\n\n` +
       `Motivo dichiarato dal modello: ${reason}${extWarn}\n\n` +
       `Se confermi, ti chiederò di DIGITARE TU il valore (resta sigillato: il modello e il provider LLM non lo vedono mai, ed è redatto dai transcript). Procedere?`,
     );
     if (!ok) return result(`User DENIED creation of '${name}'. Nothing was created.`, { ok: false });
-    const value = await ui.input(
-      `Valore per il secret '${name}'`,
-      `incolla il valore reale (resta sigillato; il modello non lo vede)`,
-    );
-    if (value == null || String(value).length < 1) {
-      notify(ui, `Creazione del secret '${name}' annullata (nessun valore inserito).`, "warning");
-      return result(`No value was entered: secret '${name}' was NOT created. Re-propose if still needed.`, { ok: false });
+    // review P2 parità: creare un secret PRE-CABLATO verso host ESTERNI = widening quanto un grant → type-to-confirm.
+    if (externalSinks.length) {
+      const challenge = externalSinks.join(", ");
+      const typed = await ui.input(`Conferma i sink esterni di '${name}'`, `digita ESATTAMENTE: ${challenge}`);
+      if (typed == null || normChallenge(typed) !== normChallenge(challenge)) {
+        notify(ui, `Creazione di '${name}' ANNULLATA (sink esterni non confermati).`, "warning");
+        return result(`User did NOT confirm the external sinks ('${challenge}') for '${name}'. ABORTED — nothing created.`, { ok: false, aborted: "sinks-not-confirmed" });
+      }
     }
-    const set = setSecret(name, String(value), { description, allowedSinks, allowLocalHttp });
+    const raw = await ui.input(`Valore per il secret '${name}'`, `incolla il valore reale (resta sigillato; il modello non lo vede)`);
+    // review P3: trimma (un paste porta spesso newline/spazi finali → romperebbero la redazione-substring e l'injection).
+    const value = raw == null ? "" : String(raw).replace(/^\s+|\s+$/g, "");
+    if (value.length < 1) {
+      notify(ui, `Creazione del secret '${name}' annullata (nessun valore valido inserito).`, "warning");
+      return result(`No (non-whitespace) value was entered: secret '${name}' was NOT created. Re-propose if still needed.`, { ok: false });
+    }
+    const set = setSecret(name, value, { description, allowedSinks, allowLocalHttp, redactEgress });
     if (!set.ok) return result(`Could not create '${name}': ${set.reason}. Nothing was created.`, { ok: false });
     notify(ui, `secret '${name}' creato${allowedSinks.length ? ` (sinks: ${allowedSinks.join(", ")})` : " (nessun sink: lockdown finché non ne concedi uno)"}.`, "info");
     const warnTxt = set.warn ? ` Note: ${set.warn}.` : "";
     return result(`User APPROVED and entered a value. Secret '${name}' created — the value is sealed (you will never see it). Use {{secret:${name}}} now.${allowedSinks.length ? "" : " It has NO allowedSinks yet: in strict mode it is in lockdown until you request a sink."}${warnTxt}`, { ok: true, name });
   }
-  // Headless: il valore non può essere inserito interattivamente → provisioning out-of-band.
-  notify(ui, `Il modello propone di creare il secret '${name}' (${reason}) ma manca l'UI interattiva (headless). Provisionalo TU out-of-band: \`node scripts/set-secret.mjs ${name}${allowedSinks.length ? ` --allow-host "${allowedSinks.join(",")}"` : ""}${description ? ` --desc "${description}"` : ""}${allowLocalHttp ? " --allow-local-http" : ""}\`, poi metti SEALED_SECRET_${name}=<valore> in harness/.env e riavvia pi.`, "warning");
-  return result(`No interactive UI (headless): secret '${name}' was NOT created. Provision it out-of-band: set metadata via \`node scripts/set-secret.mjs ${name}${allowedSinks.length ? ` --allow-host "${allowedSinks.join(",")}"` : ""}\`, put SEALED_SECRET_${name}=<value> in harness/.env, then restart pi.`, { ok: false });
+  // Headless: il valore non è inseribile interattivamente → provisioning out-of-band. name è NAME_RE-safe e i sink sono
+  // isValidSinkHost-safe → interpolabili nel comando; la DESCRIZIONE (control-char strippati ma NON i metacaratteri shell)
+  // NON va dentro il comando → si dà come nota separata da quotare a mano (review P2 shell-injection).
+  const cmd = `node scripts/set-secret.mjs ${name}${allowedSinks.length ? ` --allow-host "${allowedSinks.join(",")}"` : ""}${allowLocalHttp ? " --allow-local-http" : ""}${redactEgress ? "" : " --no-redact-egress"}`;
+  notify(ui, `Il modello propone di creare il secret '${name}' (${reason}) ma manca l'UI interattiva (headless). Provisionalo TU out-of-band:\n  1) ${cmd}\n  2) (descrizione opzionale) aggiungi --desc "…" con: ${description || "(nessuna)"}\n  3) metti SEALED_SECRET_${name}=<valore> in harness/.env\n  4) riavvia pi.`, "warning");
+  return result(`No interactive UI (headless): secret '${name}' was NOT created. Provision out-of-band — run: ${cmd}  (add --desc "…" separately if needed), then put SEALED_SECRET_${name}=<value> in harness/.env and restart pi.`, { ok: false });
 }
 
 export default { renderEditDiff, wideningChallenge, headlessEditInstructions, askAndApplyEdit, askAndDestroy, askLocalHttp, askAndCreate };
