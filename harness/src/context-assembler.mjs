@@ -256,10 +256,13 @@ export function assembleContext(vq, opts = {}) {
   if (secretsMeta.length) {
     lines.push("  <secrets>");
     for (const s of secretsMeta) {
-      const sinks = (s.allowedSinks && s.allowedSinks.length) ? s.allowedSinks.join(",") : "none";
-      lines.push(`    - ${esc(s.name)} sinks=[${esc(sinks)}]${s.allowLocalHttp ? " allowLocalHttp" : ""}${s.description ? ` (${esc(s.description)})` : ""}`);
+      // sinks=[] (LOCKED: NESSUNA destinazione permessa) è l'OPPOSTO di sinks=[*] (QUALSIASI host) — resa DISAMBIGUATA
+      // (utente 2026-07-03): il vecchio "none" era ambiguo → il modello credeva il secret già usabile senza request_sink.
+      const has = s.allowedSinks && s.allowedSinks.length;
+      const sinks = has ? `sinks=[${esc(s.allowedSinks.join(","))}]` : "sinks=[] LOCKED";
+      lines.push(`    - ${esc(s.name)} ${sinks}${s.allowLocalHttp ? " allowLocalHttp" : ""}${s.description ? ` (${esc(s.description)})` : ""}`);
     }
-    lines.push("    - (use {{secret:NAME}} as a value you never see; request_sink to grant a host, preview_secret_use to plan)");
+    lines.push("    - (sinks=[] LOCKED = the secret can be sent NOWHERE until you request_sink a host; sinks=[*] = ANY host — opposite of []. {{secret:NAME}} is a value you never see; preview_secret_use to plan.)");
     lines.push("  </secrets>");
   }
 

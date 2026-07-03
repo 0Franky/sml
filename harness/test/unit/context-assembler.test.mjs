@@ -144,10 +144,13 @@ vq3.close();
   const meta = [
     { name: "REDDIT_TOKEN", description: "reddit", allowedSinks: ["oauth.reddit.com"], allowLocalHttp: false },
     { name: "LOCAL_JWT", description: "", allowedSinks: [], allowLocalHttp: true },
+    { name: "STARK", description: "", allowedSinks: ["*"], allowLocalHttp: false },
   ];
   const ctxS = assembleContext(vqS, { now: NOW, sinceMs: 0, secrets: meta });
   ok(/<secrets>/.test(ctxS) && /REDDIT_TOKEN sinks=\[oauth\.reddit\.com\]/.test(ctxS), "SECRETS: lane render nome+sink");
-  ok(/LOCAL_JWT sinks=\[none\] allowLocalHttp/.test(ctxS), "SECRETS: allowLocalHttp mostrato, sink vuoto=none");
+  ok(/LOCAL_JWT sinks=\[\] LOCKED allowLocalHttp/.test(ctxS), "SECRETS: sink vuoto = '[] LOCKED' (≠ [*]), allowLocalHttp mostrato");
+  ok(/STARK sinks=\[\*\]/.test(ctxS), "SECRETS: wildcard reso come [*] (ANY host), distinto da [] LOCKED");
+  ok(/sinks=\[\] LOCKED = the secret can be sent NOWHERE/.test(ctxS) && /sinks=\[\*\] = ANY host/.test(ctxS), "SECRETS: footer disambigua [] LOCKED vs [*] ANY");
   ok(!/<secrets>/.test(assembleContext(vqS, { now: NOW, sinceMs: 0, secrets: [] })), "SECRETS: nessun secret → lane OMESSA (anti-bloat)");
   ok(!/<secrets>/.test(assembleContext(vqS, { now: NOW, sinceMs: 0 })), "SECRETS: opts.secrets assente → lane OMESSA");
   vqS.close();
