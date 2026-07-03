@@ -28,15 +28,15 @@ import { redactText } from "../../src/secrets-redact.mjs";
 import { addSecret, getDynamicSecrets, clearSecrets } from "../../src/secrets-registry.mjs";
 // SEALED-SECRETS (msg 577/578/579): registry sigillato + reference-injection + sink-gating. Il valore non entra MAI
 // nel context del modello; provisioning out-of-band (env SEALED_SECRET_* + metadata .pi/secrets.config.json).
-import { loadFromEnv, listSecretsMeta, injectIntoStrings, clearSealed, hasSecret, isValidSinkHost, validateSecretRefs, previewSecretUse, ingestEnvContent } from "../../src/sealed-secrets.mjs";
+import { loadFromEnv, listSecretsMeta, injectIntoStrings, clearSealed, hasSecret, isValidSinkHost, validateSecretRefs, previewSecretUse, ingestEnvContent, validateEnvPath } from "../../src/sealed-secrets.mjs";
 // CONSENSO (node-puro, testabile senza jiti): Ask-con-diff + frizione reale (type-to-confirm) + degrade headless
 // accurato + create-con-valore-digitato-dall'utente. Estratto da qui (i rami che prima erano inline nei tool).
 import { askAndApplyEdit, askAndDestroy, askLocalHttp, askAndCreate } from "../../src/secrets-consent.mjs";
 // canale TIPIZZATO http_request (ADR 2026-06-30, arch H2): injection+sink-gating sul SOLO url (new URL, niente shell).
 import { executeHttpRequest } from "../../src/http-request.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
-import { readFileSync, existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { readFileSync, existsSync, realpathSync } from "node:fs";
+import { resolve, sep } from "node:path";
 
 const HARNESS_CFG = loadHarnessConfig();
 // Tool di SCRITTURA-FILE strutturati (il loro sink è un path, non un host → hasFileOrPipeExfil non li vede). Usati dal
@@ -298,18 +298,22 @@ export default function (pi: ExtensionAPI) {
     }),
     async execute(_t: string, p: any, _s: any, _u: any, ctx: any) {
       const raw = String(p.path ?? "").trim();
-      // guard: SOLO dentro il workspace (no path assoluti / traversal ../ verso file di sistema).
+      const deny = (text: string) => ({ content: [{ type: "text" as const, text }], details: { ok: false, loaded: [] as string[], skippedCount: 0 } });
+      // GUARD path-traversal (hardened — il path è model-controlled): confinato al workspace. Difese in ordine:
+      //  (a) niente path assoluti né segmento '..' (intent chiaro, rifiuta prima di toccare l'FS);
+      //  (b) dev'essere un env-file ('*.env') — il tool è per quello, restringe la superficie;
+      //  (c) confronto sul REALPATH col separatore finale → chiude il buco 'startsWith' su dir-sorella con prefisso
+      //      condiviso (slm/ vs slm-evil/) E l'escape via symlink (realpath risolve i link: se il target reale è
+      //      fuori dal workspace, rifiuta). Vedi security-review 2026-07-03.
+      const v = validateEnvPath(raw); // (a)+(b): assoluti / '..' / non-.env → rifiuto puro pre-FS (testato)
+      if (!v.ok) return deny(`Refused: '${raw}' — ${v.reason}.`);
       const abs = resolve(process.cwd(), raw);
-      if (!abs.startsWith(process.cwd())) {
-        return { content: [{ type: "text", text: `Refused: '${raw}' is outside the workspace. Point to a file inside the project (e.g. 'reddit.env').` }], details: { ok: false, loaded: [] as string[], skippedCount: 0 } };
-      }
-      if (!existsSync(abs)) {
-        return { content: [{ type: "text", text: `File '${raw}' not found. Ask the user to create it with the secret(s) as KEY=VALUE (one per line) and tell you the path.` }], details: { ok: false, loaded: [] as string[], skippedCount: 0 } };
-      }
+      if (!existsSync(abs)) return deny(`File '${raw}' not found. Ask the user to create it with the secret(s) as KEY=VALUE (one per line) and tell you the path.`);
+      let real = "", root = "";
+      try { real = realpathSync(abs); root = realpathSync(process.cwd()); } catch { return deny(`Could not resolve '${raw}'.`); }
+      if (!real.startsWith(root + sep)) return deny(`Refused: '${raw}' resolves outside the workspace.`);
       let content = "";
-      try { content = readFileSync(abs, "utf-8"); } catch (e: any) {
-        return { content: [{ type: "text", text: `Could not read '${raw}': ${e?.message ?? "read error"}.` }], details: { ok: false, loaded: [] as string[], skippedCount: 0 } };
-      }
+      try { content = readFileSync(real, "utf-8"); } catch (e: any) { return deny(`Could not read '${raw}': ${e?.message ?? "read error"}.`); }
       const { loaded, skipped } = ingestEnvContent(content, {});
       if (loaded.length) ctx?.ui?.notify?.(`Caricati ${loaded.length} secret sigillati da '${raw}': ${loaded.join(", ")} (lockdown).`, "info");
       const parts = [

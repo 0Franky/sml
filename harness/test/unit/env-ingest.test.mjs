@@ -2,7 +2,7 @@
  * env-ingest — test di ingestEnvContent (utente msg 811): carica i secret da un env-file sigillandoli, SENZA che il
  * valore passi dal modello. Il risultato contiene SOLO nomi/reason, MAI valori.
  */
-import { ingestEnvContent, hasSecret, removeSecret, addAllowedSink, injectTypedRequest } from "../../src/sealed-secrets.mjs";
+import { ingestEnvContent, hasSecret, removeSecret, addAllowedSink, injectTypedRequest, validateEnvPath } from "../../src/sealed-secrets.mjs";
 
 let pass = 0, fail = 0;
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; console.error("  ✗ " + msg); } }
@@ -73,6 +73,22 @@ function currentValue(name, host) {
 {
   ok(ingestEnvContent("", {}).loaded.length === 0, "vuoto: nessun load");
   ok(ingestEnvContent(null, {}).loaded.length === 0, "null: nessun crash");
+}
+
+// 6) validateEnvPath — guard path-traversal PURO (security-review 2026-07-03).
+{
+  ok(validateEnvPath("reddit.env").ok === true, "path: 'reddit.env' ok");
+  ok(validateEnvPath("config/secrets.env").ok === true, "path: subdir '*.env' ok");
+  ok(validateEnvPath(".env").ok === true, "path: '.env' ok");
+  ok(validateEnvPath("/etc/passwd").ok === false, "path: assoluto POSIX rifiutato");
+  ok(validateEnvPath("C:\\Windows\\x.env").ok === false, "path: assoluto Windows (drive) rifiutato");
+  ok(validateEnvPath("\\\\server\\share\\x.env").ok === false, "path: UNC rifiutato");
+  ok(validateEnvPath("../../etc/secrets.env").ok === false, "path: '..' traversal rifiutato");
+  ok(validateEnvPath("a/../../b.env").ok === false, "path: '..' in mezzo rifiutato");
+  ok(validateEnvPath("package.json").ok === false, "path: non-.env rifiutato");
+  ok(validateEnvPath("reddit.ENV").ok === true, "path: estensione case-insensitive");
+  ok(validateEnvPath("").ok === false, "path: vuoto rifiutato");
+  ok(/traversal/.test(validateEnvPath("../x.env").reason), "path: reason menziona traversal");
 }
 
 console.log(`\nenv-ingest: ${pass} pass, ${fail} fail`);

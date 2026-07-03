@@ -680,6 +680,22 @@ export function loadFromEnv(env = process.env, meta = {}) {
 }
 
 /**
+ * validateEnvPath — guard PURO/OS-agnostic sul path di un env-file model-controlled (load_secrets_from_env). Rifiuta
+ * PRIMA di toccare l'FS: path assoluti (drive `C:\`, leading `/`/`\`, UNC `\\`), segmento `..`, o estensione ≠ `.env`.
+ * NON sostituisce il confronto realpath nell'estensione (che chiude sibling-prefix + symlink-escape, FS-dependent);
+ * è la prima linea (intent chiaro + regression-test). Security-review 2026-07-03.
+ * @param {string} raw @returns {{ ok: true } | { ok: false, reason: string }}
+ */
+export function validateEnvPath(raw) {
+  const p = String(raw ?? "").trim();
+  if (!p) return { ok: false, reason: "empty path" };
+  if (/^([a-zA-Z]:[\\/]|[\\/]|\\\\)/.test(p)) return { ok: false, reason: "absolute path not allowed (use a path inside the workspace)" };
+  if (p.split(/[\\/]/).includes("..")) return { ok: false, reason: "'..' path traversal not allowed" };
+  if (!/\.env$/i.test(p)) return { ok: false, reason: "not an env file (expected a '*.env' file, e.g. reddit.env)" };
+  return { ok: true };
+}
+
+/**
  * ingestEnvContent — carica i secret dal CONTENUTO di un env-file (KEY=VALUE per riga), sigillandoli nel registry
  * (utente msg 811). Pensato per un tool `load_secrets_from_env`: l'harness legge il file e chiama questo, così il
  * VALORE non passa MAI dal modello né dal contesto — il risultato contiene SOLO i nomi. LOCKDOWN di default
@@ -781,6 +797,6 @@ export function clearSealed() {
 
 export default { setSecret, setAllowLocalHttp, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp, hasCommandComposition, hasForeignHostToken, hasHostPinning, isLoopbackLiteral, checkSink, injectSecrets, injectIntoStrings, scanIngress, loadFromEnv, clearSealed,
   // lifecycle in-sessione (msg 708/713/715/718) + pre-flight (msg 724) + renewal (msg 799) + env-ingest (msg 811)
-  isValidSinkHost, addAllowedSink, removeAllowedSink, setSecretDescription, renameSecret, removeSecret, renewSecretValue, ingestEnvContent, computeSecretEditDiff, applySecretEdit, validateSecretRefs, previewSecretUse,
+  isValidSinkHost, addAllowedSink, removeAllowedSink, setSecretDescription, renameSecret, removeSecret, renewSecretValue, ingestEnvContent, validateEnvPath, computeSecretEditDiff, applySecretEdit, validateSecretRefs, previewSecretUse,
   // canale TIPIZZATO http_request (ADR 2026-06-30, arch H2): sink-gating su new URL(), niente shell-parsing
   checkSinkTyped, injectTypedRequest };
