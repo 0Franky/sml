@@ -206,9 +206,11 @@ export default function (pi: ExtensionAPI) {
     name: "propose_secret_create",
     label: "Propose creating a new sealed secret (user enters the value)",
     description:
-      "Propose creating a NEW sealed secret. You provide ONLY the metadata (name, description, allowedSinks, allowLocalHttp) and a reason — you do NOT provide and will NEVER see the value. The harness shows the user your proposal and, if they accept, asks THEM to type the value directly (USER→harness, the value never passes through you or the LLM provider; it is sealed and redacted from transcripts). Then use it as {{secret:NAME}}. Use this when the user clearly needs a new credential provisioned for an operation. For a value the user ALREADY pasted (an INGRESS_N), do NOT create a new one — rename/grant it via propose_secret_edit/request_sink.",
+      "Propose creating a NEW sealed secret. You provide ONLY the metadata (name, description, allowedSinks, allowLocalHttp) and a reason — you do NOT provide and will NEVER see the value. The harness shows the user your proposal and, if they accept, asks THEM to type the value directly (USER→harness, the value never passes through you or the LLM provider; it is sealed and redacted from transcripts). Then use it as {{secret:NAME}}. Use this when the user clearly needs a new credential provisioned for an operation. " +
+      "NEVER call this with PLACEHOLDER values (e.g. name='NOME_DEL_SEGRETO', why='REASON') — first get the REAL name (for a Reddit key use 'REDDIT_API_KEY'; if you don't know it, ASK the user), then call. " +
+      "If the value is already in a FILE, use load_secrets_from_env instead. For a value the user ALREADY pasted (an INGRESS_N), do NOT create a new one — rename/grant it via propose_secret_edit/request_sink.",
     promptGuidelines: [
-      "To provision a brand-new secret in-session, call propose_secret_create with the metadata only (never the value): the user types the value into the harness dialog. Headless (no UI) degrades to out-of-band provisioning (env SEALED_SECRET_<NAME> + config). Do not put a real secret value in any tool argument.",
+      "To provision a brand-new secret, call propose_secret_create with REAL metadata (never placeholders like 'NOME_DEL_SEGRETO' — use a real name such as REDDIT_API_KEY, or ask the user for it). You provide only the name/reason; the user types the value into the harness dialog. If the value is in a file, prefer load_secrets_from_env. Never put a real secret value in any tool argument.",
     ],
     parameters: Type.Object({
       name: Type.String({ minLength: 1, description: "Name for the new secret, e.g. REDDIT_API_KEY ([A-Za-z0-9_.-], max 64)." }),

@@ -17,6 +17,9 @@ import { assembleContext, buildResumeDigest, buildAimTail, buildExecutionOrderLi
 // secrets-guardrail/regex-ingress. Chiude FIND-7 (il modello ri-chiamava list_secrets perché non era in context).
 import { listSecretsMeta } from "../../src/sealed-secrets.mjs";
 import { buildMessagesLane } from "../../src/conversation-store.mjs";
+// <last_tool_calls>: memoria delle AZIONI recenti del modello (fix amnesia #1, msg 811-817). Con keepTurns:1 il modello
+// non vede le proprie tool-call oltre il turno → le ri-iniettiamo qui (la redazione-egress sotto le copre).
+import { formatLane as formatToolCallsLane } from "../../src/tool-call-log.mjs";
 import { getConvId } from "../../src/session-context.mjs";
 import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint, markFocusHintEmitted, shouldEmitReorgHint, markReorgEmitted, maybeAutoFocus } from "../../src/nested-compact.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
@@ -29,6 +32,7 @@ import { dirname } from "node:path";
 // (.pi/harness.config.json o env HARNESS_*). Senza config → default (comportamento invariato). Caricato una volta al load.
 const HARNESS_CFG = loadHarnessConfig();
 const MESSAGES_WINDOW_N = HARNESS_CFG.messagesWindowN; // turni verbatim mostrati nella lane <messages_with_user>
+const TOOL_CALLS_N = 8; // azioni recenti mostrate nella lane <last_tool_calls> (memoria delle proprie tool-call)
 const MESSAGES_CHAR_CAP = HARNESS_CFG.messagesCharCap; // VINCOLO REALE (binding) sulla dimensione della lane (config, default 4000)
 const EXCLUDE_CURRENT_TURN = HARNESS_CFG.messagesExcludeCurrentTurn; // P1-B: escludi il turno corrente dalla lane (default true)
 
@@ -121,6 +125,11 @@ export default function (pi: ExtensionAPI) {
       const lane = buildMessagesLane(convStore, convId, { n: MESSAGES_WINDOW_N, charCap: MESSAGES_CHAR_CAP, afterSeq: checkpointSeq, excludeCurrentTurn: EXCLUDE_CURRENT_TURN });
       workspace = (resume ? `${resume}\n` : "") + base + hint + (lane ? `\n${lane}` : "");
     }
+    // <last_tool_calls> (fix amnesia #1, msg 811-817): le ultime azioni del modello (nome+args-sintesi+esito). Vale in
+    // ENTRAMBI i rami (nested e non): un modello piccolo con keepTurns:1 altrimenti "non ricorda" cosa ha appena fatto
+    // → ri-chiama con placeholder, ri-allucina nomi di tool, flaila. La redazione-egress sotto maschera eventuali segreti.
+    const toolCallsLane = formatToolCallsLane(TOOL_CALLS_N);
+    if (toolCallsLane) workspace = `${workspace}\n${toolCallsLane}`;
     // aim-in-coda (anti position-bias / lost-in-the-middle, msg 518): l'aim corrente è in cima al <context>, ma su
     // contesti lunghi la coda (lane recente) può "schiacciarlo". Lo ri-ancoriamo in CODA — cheap (1 riga), solo se c'è
     // un CURR. Via helper node-pure `buildAimTail` (escape XML centralizzato, fix P1/drift: la title è user/model-content).
