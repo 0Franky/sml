@@ -140,6 +140,7 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 - [`concepts/structured-context-sections.md`](concepts/structured-context-sections.md) — formato XML con `<aim>`, `<current_state>`, `<assets>` (hard_limits), `<interconnections>`, etc.
 - [`concepts/external-update-injection.md`](concepts/external-update-injection.md) — inject di update esterni durante il pensiero
 - [`concepts/untrusted-content-delimiting.md`](concepts/untrusted-content-delimiting.md) — confinamento untrusted content, prompt injection mitigation
+- [`concepts/toolresult-vs-usermsg-boundary.md`](concepts/toolresult-vs-usermsg-boundary.md) 🆕🔴 **BUG P0** — il modello piccolo (qwen3.5:9b/ollama) confonde un tool_result (UNTRUSTED) con un messaggio-utente (trusted) + zero state-awareness. Evidenza diretta transcript pi `019f1d67` (2026-07-01) + "NOTA PER OPUS". Fix design: marker esplicito + meta-info sul tool_result + rule always-context; repro amnesia-storia su ollama
 - [`concepts/task-decomposition-adhoc-context.md`](concepts/task-decomposition-adhoc-context.md) — plan-then-execute, context ad-hoc per step
 - [`concepts/temporal-awareness-timestamps.md`](concepts/temporal-awareness-timestamps.md) — senso del tempo: timestamp + tool call timing, multi-day continuity
 - [`concepts/context-limits-explained.md`](concepts/context-limits-explained.md) — limiti di contesto + curva effective-context (§11 make-or-break)
