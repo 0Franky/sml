@@ -124,9 +124,38 @@ export function buildResumeDigest(vq, opts = {}) {
   return lines.join("\n");
 }
 
+/** Testo/importanza robusti di un fatto (value = {text, importance} nuovo, o stringa legacy). */
+function factText(v) { return v && typeof v === "object" && !Array.isArray(v) ? String(v.text ?? "") : String(v ?? ""); }
+function factImp(v)  { return v && typeof v === "object" && Number.isFinite(v.importance) ? Number(v.importance) : 0; }
+
+/**
+ * factsLaneLines — righe della lane <facts> (note-fatto DUREVOLI, namespace 'fact', tool `note`/`remove_note`).
+ * Resa INLINE ("conoscenza già pronta", zero recall), BOUNDED (cap), ordinata per IMPORTANZA stabile poi recency
+ * → i fatti pinned restano in cima. **Nessuna età renderizzata** di proposito: in regime relativo un "Ns ago"
+ * cambierebbe ogni turno e romperebbe la cache; così la lane è BYTE-STABILE finché non si scrive/rimuove un fatto
+ * (cache-friendly, e l'importanza — non un timestamp volatile — domina l'ordine: "importanza >>> cache", msg 880).
+ * Un cap superato NON scarta in silenzio → segnala "+N, consolida". [] se non ci sono fatti.
+ * @param {import("./vars-queue.mjs").VarsQueue} vq
+ * @param {{ maxFacts?: number }} [opts]
+ * @returns {string[]}
+ */
+export function factsLaneLines(vq, { maxFacts = 12 } = {}) {
+  const all = vq.listVars({ namespace: "fact" })
+    .map((v) => ({ key: String(v.id).replace(/^fact:/, ""), text: factText(v.value), imp: factImp(v.value), ts: v.last_modified }))
+    .filter((f) => f.text)
+    .sort((a, b) => (b.imp - a.imp) || (b.ts - a.ts) || a.key.localeCompare(b.key));
+  if (!all.length) return [];
+  const shown = all.slice(0, maxFacts);
+  const lines = ["  <facts>"];
+  for (const f of shown) lines.push(`    - ${esc(f.key)}: ${esc(f.text)}${f.imp ? ` (imp=${f.imp})` : ""}`);
+  if (all.length > shown.length) lines.push(`    - (+${all.length - shown.length} more — consolidate/remove with remove_note)`);
+  lines.push("  </facts>");
+  return lines;
+}
+
 /**
  * @param {import("./vars-queue.mjs").VarsQueue} vq
- * @param {{ sinceMs?: number, maxChanges?: number, includePrivateVars?: boolean, now?: number }} [opts]
+ * @param {{ sinceMs?: number, maxChanges?: number, includePrivateVars?: boolean, now?: number, maxFacts?: number }} [opts]
  *        sinceMs: epoch ms da cui mostrare i change recenti (default: ultimi 15 min relativi a `now`).
  *        now: epoch ms "adesso" (iniettato per test deterministici; default Date.now()).
  * @returns {string} blocco <context> ...</context>
@@ -212,6 +241,11 @@ export function assembleContext(vq, opts = {}) {
     }
     lines.push("  </vars>");
   }
+
+  // --- facts (note-fatto DUREVOLI, namespace 'fact', tool `note`/`remove_note`) — SUBITO dopo <vars>: stessa cadenza
+  //     di scrittura (cambia solo su note/remove_note) e PRIMA del churn per-turno (recent_changes/current_time) →
+  //     resta nel prefisso cacheato nei turni senza scrittura. Ordine per importanza STABILE (pinned in cima). ---
+  for (const l of factsLaneLines(vq, { maxFacts: opts.maxFacts ?? 12 })) lines.push(l);
 
   // --- secrets (inventario SEALED: nome + allowedSinks + flag, MAI il valore) — utente msg 727, chiude FIND-7
   //     (il modello ri-chiamava list_secrets 6× perché il context non glielo ri-mostrava). Renderer PURO: i dati

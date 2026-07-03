@@ -3,7 +3,7 @@
  * Zero dipendenze, zero Docker. Assembla un <context> da un vars-queue popolato e verifica le lane.
  */
 import { VarsQueue } from "../../src/vars-queue.mjs";
-import { assembleContext, buildResumeDigest, buildAimTail, buildExecutionOrderLines } from "../../src/context-assembler.mjs";
+import { assembleContext, buildResumeDigest, buildAimTail, buildExecutionOrderLines, factsLaneLines } from "../../src/context-assembler.mjs";
 
 let passed = 0, failed = 0;
 function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error("  ✗ FAIL:", msg); } }
@@ -164,6 +164,31 @@ vq3.close();
   let shown = 0; for (let i = 0; i < 10; i++) if (ctxV.includes("VN" + i + " (task TV)")) shown++;
   ok(shown === 10 && ctxV.includes("VLONG (task TV)"), "verify_queue: TUTTI gli 11 gate pending mostrati (numero MAI cappato)");
   vqV.close();
+}
+
+// --- <facts> lane (note-fatto durevoli, namespace 'fact', tool note/remove_note) --------------------
+{
+  const vqF = new VarsQueue(":memory:", { agent: "orchestrator" });
+  vqF.setVar("fact:nickname", { text: "Franky", importance: 0 }, { namespace: "fact", scope: "private" });
+  vqF.setVar("fact:pref", { text: "prefers concise answers", importance: 5 }, { namespace: "fact", scope: "private" });
+  vqF.setVar("api_base", "https://x", { scope: "shared" }); // una var normale → nella lane <vars>
+  const ctxF = assembleContext(vqF, { now: NOW, sinceMs: 0 });
+  ok(ctxF.includes("<facts>") && ctxF.includes("nickname: Franky") && ctxF.includes("pref: prefers concise answers"), "facts: lane presente coi fatti");
+  ok(ctxF.indexOf("pref: prefers concise") < ctxF.indexOf("nickname: Franky"), "facts: ordinati per IMPORTANZA (imp=5 prima di imp=0)");
+  ok(ctxF.indexOf("<vars>") < ctxF.indexOf("<facts>") && ctxF.indexOf("<facts>") < ctxF.indexOf("<recent_changes>"), "facts: DOPO <vars> e PRIMA di recent_changes (cache-friendly)");
+  // byte-stabilità: nessuna età volatile renderizzata → la lane è identica tra due assemblaggi (cache-hit)
+  const laneA = factsLaneLines(vqF).join("\n");
+  const laneB = factsLaneLines(vqF).join("\n");
+  ok(laneA === laneB && !/\bago\b/.test(laneA), "facts: lane byte-stabile, nessun timestamp volatile");
+  // cap + segnale +N (mai scarto silenzioso)
+  for (let i = 0; i < 15; i++) vqF.setVar(`fact:x${i}`, { text: `f${i}`, importance: 0 }, { namespace: "fact", scope: "private" });
+  const capped = factsLaneLines(vqF, { maxFacts: 5 });
+  ok(capped.filter((l) => l.trim().startsWith("- ")).length === 6, "facts: cap=5 → 5 fatti + 1 riga-segnale");
+  ok(capped.some((l) => l.includes("more — consolidate")), "facts: segnale +N quando supera il cap");
+  vqF.close();
+  const vqE = new VarsQueue(":memory:", { agent: "x" });
+  ok(factsLaneLines(vqE).length === 0, "facts: nessun fatto → []");
+  vqE.close();
 }
 
 vq.close();

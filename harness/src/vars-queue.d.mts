@@ -101,6 +101,7 @@ export class VarsQueue {
   setVar(id: string, value: unknown, opts?: SetVarOpts): VarRecord;
   getVar(id: string): VarRecord | null;
   listVars(opts?: { scope?: string | null; namespace?: string | null }): VarRecord[];
+  removeVar(id: string, opts?: WhoOpt): boolean;
   gcVars(beforeTs: number, opts?: { scope?: string | null }): number;
 
   // cross-agent

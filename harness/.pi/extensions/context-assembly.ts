@@ -58,7 +58,10 @@ Checklist — before you answer, especially about the past:
 3. Reconstruct the timeline by sorting the entries by their [+Xs] shift (oldest→newest) before responding.
 What SCROLLS OUT — save what must last (new environment: nobody told you these rules until now):
 - <messages_with_user> is a ROLLING window: as the chat grows, the OLDEST turns (the ones at the TOP of the lane) drop off to make room and are then GONE — not recoverable from your context.
-- So the moment something must outlast the next few turns — a name/nickname, a user preference, a decision, an important value — SAVE it with set_var. Persisted variables show in <vars>, survive the rolling window AND the compact, and stay retrievable (get_var / get_shared_view) even after the turn that mentioned them has scrolled away. The chat window forgets; your saved variables do not.
+- So the moment something must outlast the next few turns, SAVE it — and pick the right tool:
+  · a FACT you just need to RE-READ later (a name/nickname, a user preference, a decision) → note("<the fact>", key="<short-id>"). It appears in <facts> and stays there, ready to read, across the rolling window AND the compact. Call note again with the same key to update it; remove_note to drop it.
+  · a structured VALUE you will reference / update / interpolate (a token id, a count, a path) → set_var (shows in <vars>, read back with get_var).
+- The chat window forgets; your saved facts (<facts>) and variables (<vars>) do not.
 The lanes are the ground truth about this conversation — trust them over any impression that the chat looks empty.
 </how_memory_works>
 `

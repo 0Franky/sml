@@ -183,6 +183,21 @@ try {
     q.close();
   }
 
+  // N) FACT namespace (note-fatto durevoli) SILENT + removeVar -------------------------------------
+  {
+    const q = new VarsQueue(dbPath, { agent: "orchestrator" });
+    q.setVar("fact:nickname", { text: "Franky", importance: 1 }, { namespace: "fact", scope: "private" });
+    ok(q.getVar("fact:nickname")?.value?.text === "Franky", "FACT: set/get nel namespace fact");
+    // il cambio di un fact è SILENT → nel change-log per audit, ASSENTE da recent_changes (default esclude i silent)
+    ok(q.getChangeLog({ entity: "vars", entityId: "fact:nickname", includeSilent: true }).length >= 1, "FACT: loggato (audit)");
+    ok(q.getChangeLog({ entity: "vars", entityId: "fact:nickname" }).length === 0, "FACT: NON inquina recent_changes (silent)");
+    // removeVar: rimuove l'esistente (true) + logga il delete (old→null); false su id inesistente
+    ok(q.removeVar("fact:nickname") === true && q.getVar("fact:nickname") === null, "FACT: removeVar rimuove + ritorna true");
+    ok(q.removeVar("fact:nope") === false, "FACT: removeVar su id inesistente → false");
+    ok(q.getChangeLog({ entity: "vars", entityId: "fact:nickname", includeSilent: true }).some((c) => c.new_value === null), "FACT: il delete è loggato (old→null)");
+    q.close();
+  }
+
 } finally {
   rmSync(dir, { recursive: true, force: true });
 }

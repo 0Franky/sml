@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS focus_frames (
  * (recall on-demand con includeSilent) ma NON compaiono in `recent_changes` del <context> → una nota/memo
  * non inquina il contesto finché non è esplicitamente richiamata. (fix 2026-06-29, finding test-suite.)
  */
-const SILENT_NAMESPACES = new Set(["memo"]);
+const SILENT_NAMESPACES = new Set(["memo", "fact"]);
 
 /**
  * Colonne aggiunte a tabelle ESISTENTI dopo la creazione iniziale → vanno ADD-ate via _ensureColumn sui DB su
@@ -247,6 +247,16 @@ export class VarsQueue {
     if (namespace) { where.push("namespace = ?"); args.push(namespace); }
     if (where.length) q += " WHERE " + where.join(" AND ");
     return this.db.prepare(q).all(...args).map(r => ({ ...r, value: r.value == null ? null : JSON.parse(r.value) }));
+  }
+
+  /** Rimuove una var per id (PK) + logga il delete (old→null; silent se namespace silenzioso, es. 'fact'/'memo').
+   *  Ritorna true se la var esisteva. Serve per le note-fatto rimuovibili (remove_note) senza attendere il GC. */
+  removeVar(id, { who = this.agent } = {}) {
+    const prev = this.db.prepare(`SELECT value, namespace FROM vars WHERE id = ?`).get(id);
+    if (!prev) return false;
+    this.db.prepare(`DELETE FROM vars WHERE id = ?`).run(id);
+    this._log("vars", id, "value", prev.value ?? null, null, who, null, SILENT_NAMESPACES.has(prev.namespace) ? 1 : 0);
+    return true;
   }
 
   // -- cross-agent: VIEW read condivisa + proposta/merge (single-writer) ------

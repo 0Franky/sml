@@ -25,6 +25,14 @@ function getStore(): VarsQueue {
   return getVarsQueue(DB_PATH, { agent: "orchestrator" }); // connessione condivisa (no leak)
 }
 
+/** Deriva una key-fatto STABILE: usa quella fornita (slugificata), altrimenti la deriva dal testo (prime ~4 parole). */
+function factKey(provided: unknown, text: string): string {
+  const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
+  const p = typeof provided === "string" ? slug(provided) : "";
+  if (p) return p;
+  return slug(text.split(/\s+/).slice(0, 4).join(" ")) || "fact";
+}
+
 export default function (pi: ExtensionAPI) {
   const vq = getStore();
   pi.on("session_shutdown", () => closeAll()); // rilascia le connessioni DB condivise (fix leak)
@@ -69,6 +77,52 @@ export default function (pi: ExtensionAPI) {
     async execute(_toolCallId: string, params: any) {
       const v = vq.getVar(params.id);
       return { content: [{ type: "text", text: JSON.stringify(v) }], details: { found: v != null } };
+    },
+  });
+
+  // note / remove_note — FATTI durevoli (namespace 'fact') resi INLINE nella lane <facts> (utente msg 876/878/880):
+  // "conoscenza già pronta nel context", complementare a set_var (valori strutturati riferiti/interpolati). Lo split è
+  // insegnato nell'awareness <how_memory_works>: fatto-da-rileggere → note · valore-da-riferire → set_var. Il change-log
+  // del vars-queue dà storia/audit di ogni modifica → mutabile+versionato senza git-patch (valutato e scartato, msg 880).
+  pi.registerTool({
+    name: "note",
+    label: "Remember a durable fact",
+    description:
+      "Save a DURABLE fact you must not forget — a name, a nickname, a user preference, a decision — so it stays visible in the <facts> lane and survives the rolling chat window AND the compact. Pass a short 'key' to update/replace that same fact later (call note again with the same key); omit it and one is derived from the text. 'importance' pins it higher (default 0). Use note for a fact you just need to RE-READ; use set_var for a structured value you reference/update/interpolate.",
+    parameters: Type.Object({
+      text: Type.String({ description: "The fact, in a few words (natural language)." }),
+      key: Type.Optional(Type.String({ description: "Short id to update/dedup this fact later (e.g. 'nickname'). Omit to derive one from the text." })),
+      importance: Type.Optional(Type.Integer({ description: "Higher = pinned higher in <facts> (default 0)." })),
+    }),
+    async execute(_t: string, p: any) {
+      const text = String(p?.text ?? "").replace(/\s+/g, " ").trim();
+      if (!text) return { content: [{ type: "text", text: "Provide a non-empty fact text." }], details: { ok: false, key: "" } };
+      let key = factKey(p?.key, text);
+      // key AUTO-derivata: non clobberare un fatto DIVERSO con lo stesso slug → suffisso incrementale finché libero/uguale.
+      if (typeof p?.key !== "string" || !p.key.trim()) {
+        const base = key;
+        for (let n = 2; ; n++) {
+          const ex = vq.getVar(`fact:${key}`);
+          if (!ex || (ex.value && (ex.value as any).text === text)) break;
+          key = `${base}-${n}`;
+        }
+      }
+      const importance = Number.isFinite(p?.importance) ? Math.trunc(p.importance) : 0;
+      vq.setVar(`fact:${key}`, { text, importance }, { namespace: "fact", scope: "private", who: activeWho() });
+      return { content: [{ type: "text", text: `Saved fact '${key}': ${text}. It is in <facts> now and persists across the window and the compact. Update it by calling note with key='${key}'; drop it with remove_note('${key}').` }], details: { ok: true, key } };
+    },
+  });
+
+  pi.registerTool({
+    name: "remove_note",
+    label: "Remove a durable fact",
+    description: "Remove a fact previously saved with note, by its key (shown in <facts>). Use it to drop a stale fact, or to make room when <facts> is full.",
+    parameters: Type.Object({ key: Type.String({ description: "The fact key shown in <facts>." }) }),
+    async execute(_t: string, p: any) {
+      const key = String(p?.key ?? "").replace(/^fact:/, "").trim();
+      if (!key) return { content: [{ type: "text", text: "Provide the fact key to remove." }], details: { ok: false } };
+      const removed = vq.removeVar(`fact:${key}`, { who: activeWho() });
+      return { content: [{ type: "text", text: removed ? `Removed fact '${key}'.` : `No fact '${key}' found (nothing removed).` }], details: { ok: removed } };
     },
   });
 
