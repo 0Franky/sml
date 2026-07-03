@@ -95,5 +95,12 @@ ok(searchTools(ITEMS, "secret", { limit: 1 }).length === 1, "search: limit rispe
   ok(!active.includes("propose_secret_destroy"), "widen: default NON attiva destroy (deferito)");
 }
 
+// ── get_conversation essenziale: la lane <messages_with_user> lo referenzia esplicitamente (sessione 019f292b) ──
+{
+  ok(ESSENTIAL_TOOLS.includes("get_conversation"), "widen: get_conversation è essenziale (la lane lo indica per i msg vecchi)");
+  const active = computeDefaultActive(["bash", "get_conversation", "enter_focus"]);
+  ok(active.includes("get_conversation"), "widen: default attiva get_conversation quando registrato");
+}
+
 console.log(`\ntool-gating: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

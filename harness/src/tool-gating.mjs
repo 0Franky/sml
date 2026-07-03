@@ -42,6 +42,9 @@ export const ESSENTIAL_TOOLS = [
   "set_var", "get_var", // vars basics
   "enter_focus", "pop_focus", "focus_status", // focus/matrioska (utente msg 807: enter_focus essenziale; il TRIO
   // insieme, altrimenti il modello entra in focus e non può uscirne — pop_focus/focus_status stranded)
+  "get_conversation", // sessione 019f292b: la lane <messages_with_user> istruisce ESPLICITAMENTE "use get_conversation
+  // range=..." per i messaggi più vecchi → dev'essere ATTIVO, altrimenti il modello che obbedisce prende "not found"
+  // (il hint puntava a un tool gated). Read-only, safe. Risponde a "mostrami tutti i miei messaggi".
   "find_tool", "open_category", "list_tool_categories", // meta (scoperta)
 ];
 
