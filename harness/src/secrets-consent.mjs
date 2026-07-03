@@ -14,7 +14,7 @@
  * Ogni funzione ritorna la SHAPE di un tool-result pi: { content: [{type:"text",text}], details: {...} } — così il
  * wrapper `.ts` si limita a passare `ctx.ui`/`ctx.hasUI` e a restituire l'oggetto.
  */
-import { computeSecretEditDiff, applySecretEdit, removeSecret, setSecret, hasSecret, isValidSinkHost, isLoopbackLiteral } from "./sealed-secrets.mjs";
+import { computeSecretEditDiff, applySecretEdit, removeSecret, setSecret, hasSecret, isValidSinkHost, isLoopbackLiteral, renameSecret, addAllowedSink } from "./sealed-secrets.mjs";
 
 /** Sanitizza un valore per la VISUALIZZAZIONE nel dialog (anti UI-redress): strip newline/control-char + glifi-marker
  * (⚠/·/✗) così un campo controllato dal modello non può forgiare righe-diff o mascherare la riga del widening. */
@@ -291,4 +291,72 @@ export async function askAndCreate(ui, hasUI, proposal, why) {
   return result(`No interactive UI (headless): secret '${name}' was NOT created. Provision out-of-band — run: ${cmd}  (add --desc "…" separately if needed), then put SEALED_SECRET_${name}=<value> in harness/.env and restart pi.`, { ok: false });
 }
 
-export default { renderEditDiff, wideningChallenge, headlessEditInstructions, askAndApplyEdit, askAndDestroy, askLocalHttp, askAndCreate };
+/**
+ * promoteSealedIngress — Ask di PROMOZIONE per i valori auto-sigillati da regex-ingress (fix C, utente msg 796/797).
+ *
+ * regex-ingress sigilla un valore secret-shaped incollato in `INGRESS_N` (silenziosamente). Qui, in mode=`ask`+UI,
+ * si dà all'utente un Ask DETERMINISTICO — indipendente dal modello flaky — per (a) RINOMINARE INGRESS_N in un nome
+ * parlante (es. REDDIT_API_KEY) e (b) concedere subito gli host consentiti. È il "comodità E sicurezza entrambe al
+ * top": la frizione di consenso scatta sull'evento di ingresso, non sul routing incerto del 9B.
+ *
+ * NON-throwing (l'hook `input` non deve MAI rompere l'input): ogni errore/skip lascia il secret come INGRESS_N sigillato
+ * (fail-safe: il valore è comunque protetto). Ritorna la mappa dei rename così il chiamante aggiorna il testo
+ * ({{secret:INGRESS_N}} → {{secret:NEWNAME}}).
+ *
+ * @param ui   { input(title,ph)→Promise<string|undefined>, notify(msg,type)→void }
+ * @param hasUI boolean
+ * @param names string[]  i nomi INGRESS_N appena sigillati (in ordine)
+ * @returns {Promise<{renames: Record<string,string>, granted: Record<string,string[]>}>}
+ */
+export async function promoteSealedIngress(ui, hasUI, names) {
+  const renames = {};
+  const granted = {};
+  if (!hasUI || !ui || typeof ui.input !== "function" || !Array.isArray(names)) return { renames, granted };
+  for (const ingressName of names) {
+    if (!hasSecret(ingressName)) continue; // già rimosso/rinominato altrove → skip
+    let finalName = ingressName;
+    try {
+      // (a) RINOMINA opzionale. Vuoto/cancel = tieni INGRESS_N (nessuna perdita).
+      const typedName = await ui.input(
+        `Nome per il secret appena sigillato (${ingressName})?`,
+        `es. REDDIT_API_KEY — vuoto/annulla = tieni ${ingressName}`,
+      );
+      const newName = typeof typedName === "string" ? typedName.trim() : "";
+      if (newName && NAME_RE.test(newName) && !hasSecret(newName)) {
+        const r = renameSecret(ingressName, newName);
+        if (r.ok && r.renamed) { finalName = newName; renames[ingressName] = newName; }
+      } else if (newName && !NAME_RE.test(newName)) {
+        notify(ui, `Nome '${newName}' non valido (usa [A-Za-z0-9_.-], max 64) → tenuto ${ingressName}.`, "warning");
+      } else if (newName && hasSecret(newName)) {
+        notify(ui, `Esiste già un secret '${newName}' → tenuto ${ingressName}.`, "warning");
+      }
+      // (b) GRANT-SINK opzionale (host consentiti). Vuoto = nessun sink (lockdown finché non se ne concede uno).
+      const typedHosts = await ui.input(
+        `Host consentiti per '${finalName}'? (comma-separati)`,
+        `es. oauth.reddit.com — vuoto = nessuno (il secret resta in lockdown)`,
+      );
+      const hosts = typeof typedHosts === "string"
+        ? typedHosts.split(",").map((h) => h.toLowerCase().trim()).filter(Boolean)
+        : [];
+      const ok = [];
+      const bad = [];
+      for (const h of hosts) {
+        if (!isValidSinkHost(h)) { bad.push(h); continue; }
+        const g = addAllowedSink(finalName, h);
+        if (g.ok && g.added) ok.push(h);
+      }
+      if (ok.length) granted[finalName] = ok;
+      if (bad.length) notify(ui, `Host ignorati (formato non valido: dominio/IP, no scheme/path/port): ${bad.join(", ")}.`, "warning");
+      notify(
+        ui,
+        `Secret '${finalName}'${finalName !== ingressName ? ` (era ${ingressName})` : ""} pronto${ok.length ? ` — può raggiungere: ${ok.join(", ")}` : " — nessun sink (lockdown finché non ne concedi uno)"}.`,
+        "info",
+      );
+    } catch {
+      /* fail-safe: in caso di errore, il secret resta come INGRESS_N sigillato (protetto) */
+    }
+  }
+  return { renames, granted };
+}
+
+export default { renderEditDiff, wideningChallenge, headlessEditInstructions, askAndApplyEdit, askAndDestroy, askLocalHttp, askAndCreate, promoteSealedIngress };

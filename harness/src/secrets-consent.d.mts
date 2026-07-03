@@ -36,6 +36,15 @@ export function askAndDestroy(ui: ConsentUI | undefined, hasUI: boolean, name: s
 export function askLocalHttp(ui: ConsentUI | undefined, hasUI: boolean, name: string, why: string): Promise<ConsentResult>;
 export function askAndCreate(ui: ConsentUI | undefined, hasUI: boolean, proposal: SecretCreateProposal, why: string): Promise<ConsentResult>;
 
+/** Esito della promozione dei valori auto-sigillati da regex-ingress (fix C). */
+export interface PromoteIngressResult {
+  /** mappa INGRESS_N → nuovo nome (per riscrivere i {{secret:...}} nel testo). */
+  renames: Record<string, string>;
+  /** mappa nome-secret → host concessi in questa promozione. */
+  granted: Record<string, string[]>;
+}
+export function promoteSealedIngress(ui: Pick<ConsentUI, "input" | "notify"> | undefined, hasUI: boolean, names: string[]): Promise<PromoteIngressResult>;
+
 declare const _default: {
   renderEditDiff: typeof renderEditDiff;
   wideningChallenge: typeof wideningChallenge;
@@ -44,5 +53,6 @@ declare const _default: {
   askAndDestroy: typeof askAndDestroy;
   askLocalHttp: typeof askLocalHttp;
   askAndCreate: typeof askAndCreate;
+  promoteSealedIngress: typeof promoteSealedIngress;
 };
 export default _default;

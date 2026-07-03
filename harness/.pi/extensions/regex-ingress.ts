@@ -25,6 +25,7 @@
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { autoSealIngress, clearSealed } from "../../src/sealed-secrets.mjs";
+import { promoteSealedIngress } from "../../src/secrets-consent.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 
 const HARNESS_CFG = loadHarnessConfig();
@@ -40,19 +41,33 @@ export default function (pi: ExtensionAPI) {
   // col riferimento {{secret:INGRESS_N}} → il VALORE non entra nel context (mai al provider, mai nei transcript
   // nativi). Differenza: `auto` notifica info, `ask` notifica warning (chiede conferma/undo all'utente; il
   // blocco-interattivo vero richiederebbe un prompt TUI non disponibile headless → degrada a seal-provvisorio+notify).
-  pi.on("input", (event, ctx) => {
+  pi.on("input", async (event, ctx) => {
     const mode = HARNESS_CFG.secrets.regexIngress; // off | ask | auto
     if (mode === "off") return { action: "continue" } as const;
     const e = event as any;
     const text = e.text;
     if (typeof text !== "string" || !text.trim() || text.startsWith("/")) return { action: "continue" } as const;
-    const { text: newText, sealed } = autoSealIngress(text);
+    let { text: newText, sealed } = autoSealIngress(text);
     if (!sealed.length) return { action: "continue" } as const;
-    const names = sealed.map((s) => s.name).join(", ");
-    const msg = mode === "ask"
-      ? `regex-ingress (=ask): rilevato e sigillato ${sealed.length} valore secret-shaped → ${names}. Il valore NON va al modello/provider. Se è un falso positivo o vuoi usarlo, gestiscilo (allowedSinks).`
-      : `regex-ingress (=auto): ${sealed.length} valore secret-shaped sigillato (${names}); il valore NON raggiunge il modello/provider.`;
-    ctx?.ui?.notify?.(msg, mode === "ask" ? "warning" : "info");
+    const names = sealed.map((s) => s.name);
+    // mode=`ask` + UI interattiva → Ask DETERMINISTICO (fix C, utente msg 796/797): promuovi ogni valore appena
+    // sigillato (rinomina INGRESS_N→nome-parlante + grant-sink), poi riscrivi i riferimenti nel testo. L'Ask scatta
+    // sull'evento d'ingresso, NON dipende dal routing incerto del modello. `auto` (o headless) resta notify-only.
+    if (mode === "ask" && (ctx as any)?.hasUI && (ctx as any)?.ui) {
+      try {
+        const { renames } = await promoteSealedIngress((ctx as any).ui, true, names);
+        for (const [oldN, newN] of Object.entries(renames)) {
+          newText = newText.split(`{{secret:${oldN}}}`).join(`{{secret:${newN}}}`);
+        }
+      } catch {
+        /* l'hook input non deve MAI rompere l'input: in errore il valore resta sigillato come INGRESS_N */
+      }
+    } else {
+      const msg = mode === "ask"
+        ? `regex-ingress (=ask, headless): ${sealed.length} valore secret-shaped sigillato → ${names.join(", ")}. Nessuna UI per rinominarlo ora; gestiscilo out-of-band.`
+        : `regex-ingress (=auto): ${sealed.length} valore secret-shaped sigillato (${names.join(", ")}); il valore NON raggiunge il modello/provider.`;
+      ctx?.ui?.notify?.(msg, mode === "ask" ? "warning" : "info");
+    }
     return { action: "transform", text: newText, images: e.images } as const;
   });
 }
