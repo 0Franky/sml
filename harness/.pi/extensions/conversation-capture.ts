@@ -111,20 +111,37 @@ export default function (pi: ExtensionAPI) {
       "(you do NOT need seq numbers — seq are GLOBAL ids shared across sessions, they do NOT start at 1 for this chat). " +
       "For a precise slice pass from_seq+to_seq. With none of these, returns the recent window (last N).",
     parameters: Type.Object({
-      conv_id: Type.Optional(Type.String({ description: "Conversation ID (default: the current session's conversation)." })),
+      conv_id: Type.Optional(Type.String({ description: "LEAVE EMPTY for your own conversation (the default — this is what you want for 'my messages'). Do NOT guess a value like 'default' or 'main'. Set this ONLY to read ANOTHER agent's conversation by its exact id." })),
       from_start: Type.Optional(Type.Boolean({ description: "Read the OLDEST turns first (the beginning of THIS conversation). Use for 'give me my first/oldest N messages' — no seq math needed." })),
       from_seq: Type.Optional(Type.Number({ description: "Precise slice: start seq (inclusive). seq are GLOBAL — read the value from a lane marker, don't guess a low number." })),
       to_seq: Type.Optional(Type.Number({ description: "Precise slice: end seq (inclusive)." })),
       n: Type.Optional(Type.Number({ description: "How many turns (default 10) — for from_start and for the default recent window." })),
     }),
     async execute(_t: string, p: any) {
-      const convId = p.conv_id ?? getConvId();
       const n = p.n ?? 10;
+      // RISOLUZIONE ROBUSTA del convId (sessione live 019f292b, causa-radice del []): il 9B a volte passa un
+      // conv_id INVENTATO (es. "default"/"main") che sovrascrive il default corretto → conv vuota. E se lo stato di
+      // sessione non è condiviso col contesto del tool, getConvId() può essere al fallback "main" (anch'esso vuoto).
+      // Difesa: prova nell'ordine [conv_id-richiesto, conv-di-sessione, conv-più-recente] e usa la PRIMA non vuota.
+      // Così "mostrami i miei messaggi" trova sempre la conversazione reale, qualunque cosa il modello indovini.
+      const requested = p.conv_id ? String(p.conv_id) : null;
+      let convId = requested ?? getConvId();
+      let redirected: string | null = null;
+      if (store.count(convId) === 0) {
+        const candidates = [getConvId(), store.mostRecentConvId()].filter((c): c is string => !!c && c !== convId);
+        for (const c of candidates) {
+          if (store.count(c) > 0) { redirected = convId; convId = c; break; }
+        }
+      }
       const rows = p.from_start
         ? store.windowOldest(convId, n)
         : (p.from_seq != null && p.to_seq != null)
           ? store.range(convId, p.from_seq, p.to_seq)
           : store.window(convId, n);
+      // se avevamo ridiretto da un conv_id vuoto a quello reale, annota (aiuta il modello a smettere di indovinare conv_id)
+      if (redirected && rows.length > 0) {
+        return { content: [{ type: "text", text: `(ignored conv_id='${redirected}' — it has no messages; showing YOUR conversation instead. Next time omit conv_id.)\n\n${JSON.stringify(rows, null, 2)}` }], details: { count: rows.length } };
+      }
       // TOLLERANZA (sessione live 019f292b): un [] "nudo" fa confabulare il 9B "non ho storia". Se la query non matcha
       // NIENTE ma la conversazione HA messaggi (range sbagliato — es. seq bassi che sono di ALTRE sessioni), NON tornare
       // []: recupera mostrando i PIÙ VECCHI + i bound REALI + steer a from_start. Così il [] confondente è impossibile.

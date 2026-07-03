@@ -111,6 +111,18 @@ export class ConversationStore {
   }
 
   /**
+   * convId della conversazione ATTIVA più di recente (max ts). Rete di sicurezza per get_conversation quando il
+   * convId risolto è vuoto (es. il modello ha passato un conv_id inventato tipo "default", o lo stato di sessione
+   * non è condiviso col contesto del tool → getConvId() è al fallback). Single-user: è sempre la conversazione
+   * dell'utente. NB isolamento: cross-sessione in teoria (decisione utente 2026-07-03: accettabile ora, tracciato
+   * come futuro multi-user in wiki/concepts/session-isolation-conversation-store.md). Ritorna null se il DB è vuoto.
+   */
+  mostRecentConvId() {
+    const r = this.db.prepare(`SELECT conv_id FROM conversations GROUP BY conv_id ORDER BY MAX(ts) DESC LIMIT 1`).get();
+    return r && r.conv_id != null ? String(r.conv_id) : null;
+  }
+
+  /**
    * Primi N turni (oldest→newest) VERBATIM — "leggi DALL'INIZIO". Il modello (o l'utente) chiede "i più vecchi / i
    * primi della conversazione" senza dover calcolare i seq GLOBALI (che non partono da 1): qui bastano conv_id + n.
    * `afterSeq`/`untilSeq` = stessi bound del segmento della window.

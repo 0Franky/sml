@@ -48,7 +48,13 @@ ok(r.length === 2 && r[0].seq === 1 && r[1].seq === 2, "range per seq");
   const yLane = buildMessagesLane(gs, Y, { n: 1 });
   ok(yLane.includes("from_start=true") && !yLane.includes("range=1.."), "lane header: steera a from_start, non al range=1.. fuorviante");
   ok(yLane.includes("range=3..4"), "lane header: se dà un range usa il firstSeq REALE (3), non 1");
+  // mostRecentConvId = rete di sicurezza per get_conversation quando il modello passa un conv_id INVENTATO (es. "default"):
+  // Y è stato scritto per ultimo (ts +12) → è la conv "più recente" a cui ricadere. (sessione live 019f292b, causa-radice [].)
+  ok(gs.mostRecentConvId() === Y, "mostRecentConvId = la conv attiva più di recente (Y, ts più alto)");
+  ok(gs.count("default") === 0 && gs.count(Y) > 0, "un conv_id inventato ('default') è vuoto → il redirect ricade su una conv reale");
 }
+// mostRecentConvId su store vuoto → null (difensivo, niente crash)
+ok(new ConversationStore(":memory:", { agent: "orchestrator" }).mostRecentConvId() === null, "mostRecentConvId: store vuoto → null");
 
 // lane: verbatim last-N + header shown/total + marker older-by-ID
 const lane = buildMessagesLane(cs, C, { n: 2 });
