@@ -12,7 +12,7 @@
 
 /** Mappa esplicita tool→categoria. Fonte di verità della tassonomia (allineata all'inventario 2026-07-03). */
 export const CATEGORY_TOOLS = {
-  secrets: ["list_secrets", "request_secret", "request_local_http", "request_sink", "propose_secret_edit", "propose_secret_destroy", "propose_secret_create", "check_secret_refs", "preview_secret_use", "add_secret"],
+  secrets: ["list_secrets", "request_secret", "request_local_http", "request_sink", "propose_secret_edit", "propose_secret_destroy", "propose_secret_create", "check_secret_refs", "preview_secret_use", "add_secret", "load_secrets_from_env"],
   http: ["http_request"],
   tasks: ["set_task_status", "add_task", "set_task_deps", "get_execution_order", "set_curr", "list_tasks"],
   vars: ["set_var", "get_var", "propose_var", "merge_proposals", "extract_var", "render_template", "sliding_var_read", "sliding_var_replace", "get_shared_view", "get_changelog"],
@@ -30,7 +30,7 @@ export const CATEGORY_TOOLS = {
  * deferita e si rivela con find_tool/open_category. Il set reale è l'INTERSEZIONE con i tool davvero registrati. */
 export const ESSENTIAL_TOOLS = [
   "bash", "read", "write", "edit", "grep", "find", "ls", "str_replace", "create", "multiedit", // core pi
-  "propose_secret_create", "http_request", // secrets/http d'uso comune
+  "propose_secret_create", "load_secrets_from_env", "http_request", // secrets/http d'uso comune (load_secrets_from_env = provisioning deterministico da file, msg 811)
   "list_tasks", "add_task", "set_task_status", "set_curr", // task basics
   "set_var", "get_var", // vars basics
   "enter_focus", "pop_focus", "focus_status", // focus/matrioska (utente msg 807: enter_focus essenziale; il TRIO

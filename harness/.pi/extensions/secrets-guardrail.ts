@@ -28,7 +28,7 @@ import { redactText } from "../../src/secrets-redact.mjs";
 import { addSecret, getDynamicSecrets, clearSecrets } from "../../src/secrets-registry.mjs";
 // SEALED-SECRETS (msg 577/578/579): registry sigillato + reference-injection + sink-gating. Il valore non entra MAI
 // nel context del modello; provisioning out-of-band (env SEALED_SECRET_* + metadata .pi/secrets.config.json).
-import { loadFromEnv, listSecretsMeta, injectIntoStrings, clearSealed, hasSecret, isValidSinkHost, validateSecretRefs, previewSecretUse } from "../../src/sealed-secrets.mjs";
+import { loadFromEnv, listSecretsMeta, injectIntoStrings, clearSealed, hasSecret, isValidSinkHost, validateSecretRefs, previewSecretUse, ingestEnvContent } from "../../src/sealed-secrets.mjs";
 // CONSENSO (node-puro, testabile senza jiti): Ask-con-diff + frizione reale (type-to-confirm) + degrade headless
 // accurato + create-con-valore-digitato-dall'utente. Estratto da qui (i rami che prima erano inline nei tool).
 import { askAndApplyEdit, askAndDestroy, askLocalHttp, askAndCreate } from "../../src/secrets-consent.mjs";
@@ -36,6 +36,7 @@ import { askAndApplyEdit, askAndDestroy, askLocalHttp, askAndCreate } from "../.
 import { executeHttpRequest } from "../../src/http-request.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { readFileSync, existsSync } from "node:fs";
+import { resolve } from "node:path";
 
 const HARNESS_CFG = loadHarnessConfig();
 // Tool di SCRITTURA-FILE strutturati (il loro sink è un path, non un host → hasFileOrPipeExfil non li vede). Usati dal
@@ -271,6 +272,51 @@ export default function (pi: ExtensionAPI) {
         content: [{ type: "text", text: `secret registered (${r.size} active in the dynamic secrets-map)` }],
         details: { ok: true },
       };
+    },
+  });
+
+  // ───── load_secrets_from_env — provisioning DETERMINISTICO da file (utente msg 811): l'harness legge il file e
+  // SIGILLA ogni KEY=VALUE; il valore NON passa MAI dal modello né dal contesto (aggira il fumbling paste/placeholder
+  // del modello piccolo). Al modello tornano SOLO i nomi. Lockdown di default (nessun sink) → uso verso host = Ask. ───
+  pi.registerTool({
+    name: "load_secrets_from_env",
+    label: "Load sealed secrets from an env file (values never seen)",
+    description:
+      "Read a local env file (KEY=VALUE per line) and SEAL each entry as a secret WITHOUT the value ever reaching you " +
+      "or the context — you get back ONLY the names loaded, then use {{secret:NAME}}. Loaded in lockdown (no allowedSinks): " +
+      "call request_sink(name, host, why) to let one reach a host. Use this to provision credentials the user placed in a " +
+      "file (e.g. the user says 'the reddit token is in reddit.env' → load_secrets_from_env('reddit.env')). This is the " +
+      "PREFERRED, deterministic way to get a user's secret sealed — do NOT ask the user to paste the value to you.",
+    promptSnippet: "load_secrets_from_env(path) — seal all KEY=VALUE from a file as secrets (values never shown to you).",
+    promptGuidelines: [
+      "When the user says a credential/token/key is in a file (or asks to load secrets), call load_secrets_from_env(path) — the harness seals the values without ever showing them to you. Do NOT ask the user to paste a secret value into the chat.",
+    ],
+    parameters: Type.Object({
+      path: Type.String({ minLength: 1, description: "Path to the env file inside the workspace, e.g. 'reddit.env' or 'secrets.env' (KEY=VALUE per line)." }),
+    }),
+    async execute(_t: string, p: any, _s: any, _u: any, ctx: any) {
+      const raw = String(p.path ?? "").trim();
+      // guard: SOLO dentro il workspace (no path assoluti / traversal ../ verso file di sistema).
+      const abs = resolve(process.cwd(), raw);
+      if (!abs.startsWith(process.cwd())) {
+        return { content: [{ type: "text", text: `Refused: '${raw}' is outside the workspace. Point to a file inside the project (e.g. 'reddit.env').` }], details: { ok: false, loaded: [] as string[], skippedCount: 0 } };
+      }
+      if (!existsSync(abs)) {
+        return { content: [{ type: "text", text: `File '${raw}' not found. Ask the user to create it with the secret(s) as KEY=VALUE (one per line) and tell you the path.` }], details: { ok: false, loaded: [] as string[], skippedCount: 0 } };
+      }
+      let content = "";
+      try { content = readFileSync(abs, "utf-8"); } catch (e: any) {
+        return { content: [{ type: "text", text: `Could not read '${raw}': ${e?.message ?? "read error"}.` }], details: { ok: false, loaded: [] as string[], skippedCount: 0 } };
+      }
+      const { loaded, skipped } = ingestEnvContent(content, {});
+      if (loaded.length) ctx?.ui?.notify?.(`Caricati ${loaded.length} secret sigillati da '${raw}': ${loaded.join(", ")} (lockdown).`, "info");
+      const parts = [
+        loaded.length
+          ? `Sealed ${loaded.length} secret(s) from '${raw}': ${loaded.join(", ")}. Use {{secret:NAME}}. They are in lockdown (no allowedSinks) — call request_sink(name, host, why) to let one reach a host.`
+          : `No secrets loaded from '${raw}' (no valid KEY=VALUE lines, or all already exist).`,
+        skipped.length ? `Skipped: ${skipped.map((s) => `${s.key} (${s.reason})`).join("; ")}.` : "",
+      ].filter(Boolean);
+      return { content: [{ type: "text", text: parts.join("\n") }], details: { ok: loaded.length > 0, loaded, skippedCount: skipped.length } };
     },
   });
 

@@ -680,6 +680,38 @@ export function loadFromEnv(env = process.env, meta = {}) {
 }
 
 /**
+ * ingestEnvContent — carica i secret dal CONTENUTO di un env-file (KEY=VALUE per riga), sigillandoli nel registry
+ * (utente msg 811). Pensato per un tool `load_secrets_from_env`: l'harness legge il file e chiama questo, così il
+ * VALORE non passa MAI dal modello né dal contesto — il risultato contiene SOLO i nomi. LOCKDOWN di default
+ * (allowedSinks:[]) → i secret non escono finché non si concede un sink (request_sink, con Ask). Parsing dotenv-lite:
+ * salta righe vuote/commento (#), gestisce `export `, strippa le virgolette bilanciate. NAME_RE-validate le key.
+ * @param {string} content  contenuto del file (mai loggato)
+ * @param {{ defaultSinks?: string[], overwrite?: boolean }} [opts]
+ * @returns {{ loaded: string[], skipped: {key:string, reason:string}[] }}  (MAI valori)
+ */
+export function ingestEnvContent(content, { defaultSinks = [], overwrite = false } = {}) {
+  const loaded = [], skipped = [];
+  for (const raw of String(content ?? "").split(/\r?\n/)) {
+    let line = raw.trim();
+    if (!line || line.startsWith("#")) continue;
+    if (line.startsWith("export ")) line = line.slice("export ".length).trim();
+    const eq = line.indexOf("=");
+    if (eq <= 0) continue; // niente '=' o key vuota → non è un assignment
+    const key = line.slice(0, eq).trim();
+    let val = line.slice(eq + 1).trim();
+    if (val.length >= 2 && ((val[0] === '"' && val.endsWith('"')) || (val[0] === "'" && val.endsWith("'")))) val = val.slice(1, -1);
+    if (!NAME_RE.test(key)) { skipped.push({ key, reason: "invalid name (use [A-Za-z0-9_.-], max 64)" }); continue; }
+    if (val.length < 1) { skipped.push({ key, reason: "empty value" }); continue; }
+    if (SEALED.has(key) && !overwrite) { skipped.push({ key, reason: "already exists (remove/renew first, or pass overwrite)" }); continue; }
+    const r = (overwrite && SEALED.has(key))
+      ? renewSecretValue(key, val)
+      : setSecret(key, val, { description: "loaded from env file", allowedSinks: Array.isArray(defaultSinks) ? defaultSinks : [] });
+    if (r.ok) loaded.push(key); else skipped.push({ key, reason: r.reason || "seal failed" });
+  }
+  return { loaded, skipped };
+}
+
+/**
  * injectIntoStrings — variante multi-arg per il hook tool_call: gate di TUTTI i riferimenti contro il testo
  * COMBINATo (un url in un arg + il ref in un altro vengono visti insieme), poi sostituzione per-stringa. FAIL-CLOSED:
  * se anche UN solo riferimento è bloccato, NON sostituisce NULLA (niente exec parziale). Il valore resta nel modulo.
@@ -748,7 +780,7 @@ export function clearSealed() {
 }
 
 export default { setSecret, setAllowLocalHttp, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp, hasCommandComposition, hasForeignHostToken, hasHostPinning, isLoopbackLiteral, checkSink, injectSecrets, injectIntoStrings, scanIngress, loadFromEnv, clearSealed,
-  // lifecycle in-sessione (msg 708/713/715/718) + pre-flight (msg 724)
-  isValidSinkHost, addAllowedSink, removeAllowedSink, setSecretDescription, renameSecret, removeSecret, computeSecretEditDiff, applySecretEdit, validateSecretRefs, previewSecretUse,
+  // lifecycle in-sessione (msg 708/713/715/718) + pre-flight (msg 724) + renewal (msg 799) + env-ingest (msg 811)
+  isValidSinkHost, addAllowedSink, removeAllowedSink, setSecretDescription, renameSecret, removeSecret, renewSecretValue, ingestEnvContent, computeSecretEditDiff, applySecretEdit, validateSecretRefs, previewSecretUse,
   // canale TIPIZZATO http_request (ADR 2026-06-30, arch H2): sink-gating su new URL(), niente shell-parsing
   checkSinkTyped, injectTypedRequest };
