@@ -119,11 +119,25 @@ export default function (pi: ExtensionAPI) {
     }),
     async execute(_t: string, p: any) {
       const convId = p.conv_id ?? getConvId();
+      const n = p.n ?? 10;
       const rows = p.from_start
-        ? store.windowOldest(convId, p.n ?? 10)
+        ? store.windowOldest(convId, n)
         : (p.from_seq != null && p.to_seq != null)
           ? store.range(convId, p.from_seq, p.to_seq)
-          : store.window(convId, p.n ?? 10);
+          : store.window(convId, n);
+      // TOLLERANZA (sessione live 019f292b): un [] "nudo" fa confabulare il 9B "non ho storia". Se la query non matcha
+      // NIENTE ma la conversazione HA messaggi (range sbagliato — es. seq bassi che sono di ALTRE sessioni), NON tornare
+      // []: recupera mostrando i PIÙ VECCHI + i bound REALI + steer a from_start. Così il [] confondente è impossibile.
+      if (rows.length === 0) {
+        const total = store.count(convId);
+        if (total > 0) {
+          const first = store.firstSeq(convId), last = store.lastSeq(convId);
+          const fallback = store.windowOldest(convId, n);
+          const note = `Your query matched no turns, but this conversation HAS ${total} messages (seq ${first}..${last} — seq are GLOBAL ids, not 1-based, so a low range like 1..N is wrong). Showing the oldest ${fallback.length} below; for more use from_start=true with a bigger n, or a range within ${first}..${last}.`;
+          return { content: [{ type: "text", text: `${note}\n\n${JSON.stringify(fallback, null, 2)}` }], details: { count: fallback.length } };
+        }
+        return { content: [{ type: "text", text: `This conversation (${convId}) has no messages yet.` }], details: { count: 0 } };
+      }
       return { content: [{ type: "text", text: JSON.stringify(rows, null, 2) }], details: { count: rows.length } };
     },
   });
