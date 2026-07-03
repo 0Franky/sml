@@ -24,6 +24,7 @@ import { getConvId } from "../../src/session-context.mjs";
 import { parseSessionStartMs } from "../../src/time-shift.mjs"; // ancoraggio temporale lane (msg 848/849)
 import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint, markFocusHintEmitted, shouldEmitReorgHint, markReorgEmitted, maybeAutoFocus } from "../../src/nested-compact.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
+import { CATEGORY_TOOLS } from "../../src/tool-gating.mjs"; // categorie per la riga di scoperta del tag <resources>
 import { redactText } from "../../src/secrets-redact.mjs";
 import { getDynamicSecrets } from "../../src/secrets-registry.mjs";
 import { mkdirSync } from "node:fs";
@@ -74,6 +75,27 @@ The lanes are the ground truth about this conversation — trust them over any i
 // che dice di ricostruire la timeline dagli shift prima di rispondere sul passato. Gated dallo stesso laneMemoryHint.
 const MEMORY_TAIL = HARNESS_CFG.laneMemoryHint
   ? `\n<reminder note="read this right before you answer">If the question touches the past (what was said/done, "is this my first message?", "did we already…?", "what value did you use?"): reconstruct the timeline by sorting the entries in <messages_with_user> and <last_tool_calls> by their [+Xs] shift (oldest→newest), then answer from them. NEVER say you have no memory or that this is the first message — your history is in those lanes. The shifts are the authoritative order, not the line position. But answer ONLY from what is actually there: if something is genuinely not in the lanes, say so — do NOT invent events, names, tool results, or past requests. And if you need an action but don't see a tool for it — or a tool returned 'not found' — call find_tool('what you want to do') and use a name it returns BEFORE claiming a capability is unavailable.</reminder>`
+  : "";
+
+// <resources> — MAPPA delle affordance/store del modello (utente 2026-07-03). Il 9B confabula "non ho accesso / nessun
+// file di cronologia" (visto a msg [208] della sessione live 019f292b) perché non sa DOVE vive la sua memoria né QUALE
+// tool/lane la raggiunge. Tabella compatta e STATICA (cache-friendly, subito dopo l'awareness) store→accesso→file.
+// Steera al TOOL/LANE, NON al file grezzo (un 9B farebbe `cat` del .db → caos): il path è solo "dove vive". I conteggi
+// dinamici stanno già negli header delle lane → non duplicati qui. Gated come l'awareness; la riga find_tool solo se
+// tool-gating è attivo (altrimenti quei tool non esistono).
+const TOOLGATING_MODE = String((HARNESS_CFG as any).toolGating ?? "gated").toLowerCase();
+const DISCOVERABLE_CATS = Object.keys(CATEGORY_TOOLS).filter((c) => c !== "core" && c !== "meta").join(", ");
+const RESOURCES_LANE = HARNESS_CFG.laneMemoryHint
+  ? `<resources note="where your memory lives and how to reach it — use the TOOL/LANE, do NOT parse raw DB files">
+- conversation (every past message) -> get_conversation(range) tool; the recent ones are already in <messages_with_user>. [.pi/state/conversations.db]
+- your own recent actions -> <last_tool_calls> lane.
+- variables -> <vars> lane; read/write with get_var / set_var. [.pi/state/vars.db]
+- durable facts (a name, a nickname, a preference) -> <facts> lane; save/update with note, drop with remove_note.
+- decisions you recorded -> record_decision / get_decisions_by_agent.
+- secrets (names + permissions only; values are sealed, you never see them) -> <secrets> lane; list_secrets.${TOOLGATING_MODE !== "off" ? `
+- need a capability you don't see a tool for? find_tool('what you want') or open_category(category). Categories: ${DISCOVERABLE_CATS}.` : ""}
+</resources>
+`
   : "";
 
 const DB_PATH = ".pi/state/vars.db";
@@ -167,7 +189,7 @@ export default function (pi: ExtensionAPI) {
     }
     // <how_memory_works> IN TESTA (AWARENESS-first, msg 830): il modello legge PRIMA la spiegazione, poi vede le lane
     // che essa descrive. Statico + config-gated (laneMemoryHint). Vale in entrambi i rami (nested e non).
-    if (MEMORY_AWARENESS) workspace = MEMORY_AWARENESS + workspace;
+    if (MEMORY_AWARENESS) workspace = MEMORY_AWARENESS + RESOURCES_LANE + workspace;
     // <last_tool_calls> (fix amnesia #1, msg 811-817): le ultime azioni del modello (nome+args-sintesi+esito). Vale in
     // ENTRAMBI i rami (nested e non): un modello piccolo con keepTurns:1 altrimenti "non ricorda" cosa ha appena fatto
     // → ri-chiama con placeholder, ri-allucina nomi di tool, flaila. La redazione-egress sotto maschera eventuali segreti.
