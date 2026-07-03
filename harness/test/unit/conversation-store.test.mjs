@@ -2,7 +2,7 @@
  * Smoke-test del conversation-store (Strada 2). Esegui: `node src/conversation-store.test.mjs`
  * Zero dipendenze, zero Docker. Verifica append/window/range + la lane <messages_with_user>.
  */
-import { ConversationStore, buildMessagesLane } from "../../src/conversation-store.mjs";
+import { ConversationStore, buildMessagesLane, isGenuineUserInput } from "../../src/conversation-store.mjs";
 import { VarsQueue } from "../../src/vars-queue.mjs";
 import { buildWorkspace } from "../../src/context-assembler.mjs";
 
@@ -97,6 +97,17 @@ ok(laneK2.includes("primo msg") && !laneK2.includes("secondo msg"), "nativeKeepT
 // K >= turni-utente: tutta la conversazione è nativa → lane VUOTA (niente doppia-chat)
 ok(buildMessagesLane(cs, CK, { n: 10, nativeKeepTurns: 3 }) === "", "nativeKeepTurns=3: conversazione tutta nativa -> lane vuota");
 ok(buildMessagesLane(cs, CK, { n: 10, nativeKeepTurns: 5 }) === "", "nativeKeepTurns>turni: lane vuota");
+
+// ── isGenuineUserInput: accetta interactive+rpc, esclude mid-turn/slash/extension (fix headless-capture 2026-07-03) ──
+ok(isGenuineUserInput({ text: "ciao", source: "interactive" }) === true, "genuine: interactive → true");
+ok(isGenuineUserInput({ text: "ciao", source: "rpc" }) === true, "genuine: rpc → true (fix: prima escluso)");
+ok(isGenuineUserInput({ text: "ciao", source: "extension" }) === false, "genuine: extension (injection) → false");
+ok(isGenuineUserInput({ text: "ciao", source: "interactive", streamingBehavior: "steer" }) === false, "genuine: mid-turn steer → false");
+ok(isGenuineUserInput({ text: "ciao", source: "rpc", streamingBehavior: "followUp" }) === false, "genuine: mid-turn followUp → false");
+ok(isGenuineUserInput({ text: "/help", source: "interactive" }) === false, "genuine: slash-command → false");
+ok(isGenuineUserInput({ text: "   ", source: "rpc" }) === false, "genuine: solo-whitespace → false");
+ok(isGenuineUserInput({ text: 123, source: "rpc" }) === false, "genuine: text non-stringa → false");
+ok(isGenuineUserInput({}) === false, "genuine: evento vuoto → false");
 
 cs.close();
 console.log(`\nconversation-store smoke-test: ${passed} passed, ${failed} failed`);

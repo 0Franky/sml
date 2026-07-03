@@ -13,7 +13,7 @@
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
-import { ConversationStore } from "../../src/conversation-store.mjs";
+import { ConversationStore, isGenuineUserInput } from "../../src/conversation-store.mjs";
 import { getConversationStore, getVarsQueue, closeAll } from "../../src/state-db.mjs";
 import { getConvId, setConvId, resolveConvId } from "../../src/session-context.mjs";
 import { redactText } from "../../src/secrets-redact.mjs";
@@ -70,14 +70,14 @@ export default function (pi: ExtensionAPI) {
     if (persist) meta.setMeta(metaKey, convId);
   });
 
-  // utente → store. SOLO input utente GENUINO: `input` fa fire anche per steer/followUp (mid-turn) e per
-  // i comandi `/` non gestiti → li si filtra (source interattiva, non-streaming, non slash-command), altrimenti
-  // si gonfia la conversazione. Passthrough: non altera l'input. (fix review P0 2026-06-29.)
+  // utente → store. SOLO input utente GENUINO: `input` fa fire anche per steer/followUp (mid-turn) e per i comandi `/`
+  // non gestiti → li si filtra. La logica è in `isGenuineUserInput` (pura/testata): accetta source `interactive` E
+  // `rpc` (driver programmatico/SDK/harness), esclude mid-turn/slash/`extension`. Fix 2026-07-03: prima solo
+  // "interactive" → in rpc/headless la conversazione non veniva catturata (lane vuota). Passthrough: non altera l'input.
   pi.on("input", (event) => {
     const e = event as any;
     const text = e.text;
-    const genuine = typeof text === "string" && text.trim() &&
-      e.source === "interactive" && !e.streamingBehavior && !text.startsWith("/");
+    const genuine = isGenuineUserInput({ text, source: e.source, streamingBehavior: e.streamingBehavior });
     // redazione segreti PRIMA di persistere = DIFESA-IN-PROFONDITÀ best-effort, NON una garanzia: redige i pattern
     // noti (secrets-redact) + i segreti già registrati via add_secret. Un segreto NON-pattern incollato PRIMA di
     // add_secret può ancora finire in conversations.db e nella lane (gap di copertura inerente al redattore

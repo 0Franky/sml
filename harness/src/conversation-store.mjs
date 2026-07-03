@@ -107,6 +107,21 @@ export class ConversationStore {
 }
 
 /**
+ * isGenuineUserInput — un evento `input` è un turno-utente GENUINO da persistere? true SOLO per input TOP-LEVEL reale:
+ *   - source `interactive` (TUI) O `rpc` (driver programmatico / SDK / harness di interrogazione) — entrambi = utente;
+ *   - NON mid-turn (streamingBehavior `steer`/`followUp`), NON slash-command, testo non vuoto;
+ *   - esclude source `extension` (input INIETTATO da un'estensione, non è l'utente che parla).
+ * Fix 2026-07-03: prima il filtro whitelistava SOLO `interactive` → in `rpc`/headless la conversazione NON veniva
+ * catturata (lane <messages_with_user> vuota) → multi-turno non testabile headless + nessuna memoria in produzione SDK.
+ * @param {{ text?: unknown, source?: string, streamingBehavior?: string }} [event]
+ */
+export function isGenuineUserInput({ text, source, streamingBehavior } = {}) {
+  return typeof text === "string" && text.trim().length > 0 &&
+    (source === "interactive" || source === "rpc") &&
+    !streamingBehavior && !String(text).startsWith("/");
+}
+
+/**
  * buildMessagesLane — la lane `<messages_with_user>`: blocco SEPARATO e ULTIMO (zona volatile, dopo il prefisso
  * cache-stable). Mostra gli ultimi N turni VERBATIM (no perdita delle parole esatte recenti) + un marker
  * recuperabile-per-ID per i più vecchi. Cap di dimensione (`charCap`): se la finestra eccede, droppa i più

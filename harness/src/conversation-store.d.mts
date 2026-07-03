@@ -20,6 +20,8 @@ export class ConversationStore {
   all(convId: string): ConversationTurn[];
 }
 
+export function isGenuineUserInput(event?: { text?: unknown; source?: string; streamingBehavior?: string }): boolean;
+
 export function buildMessagesLane(store: ConversationStore, convId: string, opts?: { n?: number; charCap?: number; afterSeq?: number; excludeCurrentTurn?: boolean; nativeKeepTurns?: number }): string;
 
 export function windowNativeMessages<T extends { role?: string }>(messages: T[], opts?: { keepTurns?: number }): T[];
