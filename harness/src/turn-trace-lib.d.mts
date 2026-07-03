@@ -10,6 +10,7 @@ export interface MessagesInfo {
   text: string;
 }
 export function messagesInfo(payload: any): MessagesInfo;
+export function messagesDump(payload: any): { role: string; text: string; toolResult: boolean }[];
 export function laneOverlap(systemText: string, nativeText: string): { laneLines: number; overlap: number };
 
 declare const _default: {
@@ -18,6 +19,7 @@ declare const _default: {
   extractSystemText: typeof extractSystemText;
   isToolResult: typeof isToolResult;
   messagesInfo: typeof messagesInfo;
+  messagesDump: typeof messagesDump;
   laneOverlap: typeof laneOverlap;
 };
 export default _default;

@@ -52,6 +52,17 @@ export function messagesInfo(payload) {
   };
 }
 
+/**
+ * Array messaggi NATIVO come [{role, text, toolResult}] (system/developer escluso) — per il DUMP umano completo del
+ * turno (last-turn-full.md, utente msg 825/827: "vedi turno per turno cosa arriva a ollama"). Difensivo su shape.
+ */
+export function messagesDump(payload) {
+  const msgs = payload && Array.isArray(payload.messages) ? payload.messages : [];
+  return msgs
+    .filter((m) => m && !isSystemRole(m.role))
+    .map((m) => ({ role: String(m.role ?? "?"), text: contentText(m.content), toolResult: isToolResult(m) }));
+}
+
 const norm = (s) => s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
 
 /** Sovrapposizione lane↔native: quante righe della lane <messages_with_user> ricompaiono nell'array nativo. */
@@ -68,4 +79,4 @@ export function laneOverlap(systemText, nativeText) {
   return { laneLines: lines.length, overlap };
 }
 
-export default { contentText, isSystemRole, extractSystemText, isToolResult, messagesInfo, laneOverlap };
+export default { contentText, isSystemRole, extractSystemText, isToolResult, messagesInfo, messagesDump, laneOverlap };

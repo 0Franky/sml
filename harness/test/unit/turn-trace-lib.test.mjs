@@ -5,7 +5,7 @@
  * role="developer", NON "system". Prima extractSystemText cercava solo "system" → systemLen/laneLines SEMPRE 0
  * (trace cieco, ha depistato la diagnosi dell'amnesia). Questi test fissano il riconoscimento di ENTRAMBI i ruoli.
  */
-import { contentText, isSystemRole, extractSystemText, isToolResult, messagesInfo, laneOverlap } from "../../src/turn-trace-lib.mjs";
+import { contentText, isSystemRole, extractSystemText, isToolResult, messagesInfo, messagesDump, laneOverlap } from "../../src/turn-trace-lib.mjs";
 
 let pass = 0, fail = 0;
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; console.error("  ✗ " + msg); } }
@@ -58,6 +58,22 @@ eq(contentText(null), "", "contentText: null → ''");
   eq(mi.userTurns, 1, "messagesInfo: userTurns genuini = 1 (tool-result escluso)");
   eq(mi.toolResults, 1, "messagesInfo: toolResults = 1");
   ok(!mi.roles.includes("developer"), "messagesInfo: roles non contiene developer");
+}
+
+// ── messagesDump: per-messaggio {role,text,toolResult}, developer escluso ──
+{
+  const payload = { messages: [
+    { role: "developer", content: "sys" },
+    { role: "user", content: "domanda" },
+    { role: "assistant", content: [{ type: "text", text: "risposta" }] },
+    { role: "user", content: [{ type: "tool_result", content: "out" }] },
+  ] };
+  const d = messagesDump(payload);
+  eq(d.length, 3, "messagesDump: developer escluso (3)");
+  eq(d[0].role, "user", "messagesDump: [0] role user");
+  eq(d[1].text, "risposta", "messagesDump: testo estratto da blocchi");
+  ok(d[2].toolResult === true, "messagesDump: tool_result flaggato");
+  eq(messagesDump({}).length, 0, "messagesDump: payload senza messages → []");
 }
 
 // ── isToolResult ──

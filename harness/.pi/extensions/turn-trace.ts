@@ -21,7 +21,9 @@ import { Type } from "typebox";
 import { getConvId } from "../../src/session-context.mjs";
 // Funzioni PURE estratte/testate in turn-trace-lib.mjs (unit: turn-trace-lib.test.mjs). Includono il fix
 // role="developer" (OpenAI-completions su pi/ollama/gemini) — prima systemLen/laneLines erano SEMPRE 0 su ollama.
-import { extractSystemText, messagesInfo, laneOverlap } from "../../src/turn-trace-lib.mjs";
+import { extractSystemText, messagesInfo, messagesDump, laneOverlap } from "../../src/turn-trace-lib.mjs";
+import { redactText } from "../../src/secrets-redact.mjs";
+import { getDynamicSecrets } from "../../src/secrets-registry.mjs";
 import { mkdirSync, writeFileSync, appendFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -76,6 +78,25 @@ export default function (pi: ExtensionAPI) {
           `- overlap lane↔native: ${rec.laneNativeOverlap}  → ${dup}\n` +
           `- contesto: ${rec.tokens ?? "?"} token${rec.contextWindow ? ` / ${rec.contextWindow}` : ""}  (${rec.contextFraction != null ? Math.round(rec.contextFraction * 100) + "%" : "?"})\n`,
       );
+      // DUMP COMPLETO (utente msg 825/827: "vedi turno per turno cosa arriva a ollama"). Apri last-turn-full.md per
+      // VEDERE esattamente cosa riceve il modello: system/developer prompt + array messaggi NATIVO (ciò che il modello
+      // tratta come "la conversazione"). REDATTO (egress, secrets-map dinamica + pattern statici). Overwrite per turno.
+      const dyn = getDynamicSecrets();
+      const red = (s: string) => redactText(String(s ?? ""), dyn, { staticPatterns: true }).redacted;
+      const dump = messagesDump(payload);
+      const full = [
+        `# turn-trace — payload COMPLETO (ultimo turno)`,
+        `- ts: ${rec.ts}  ·  convId: ${rec.convId}`,
+        `- native messages: ${rec.nativeMessages} (${rec.nativeRoles.join(", ")})  ·  user turns: ${rec.nativeUserTurns}  ·  tokens: ${rec.tokens ?? "?"}`,
+        ``,
+        `## SYSTEM / DEVELOPER prompt (${sys.length} char) — qui vivono le lane (<how_memory_works>, <messages_with_user>, <last_tool_calls>, …)`,
+        ``,
+        red(sys),
+        ``,
+        `## NATIVE messages array (${dump.length}) — ciò che il modello tratta come "la conversazione"`,
+        ...dump.map((m, i) => `\n### [${i}] role=${m.role}${m.toolResult ? " (tool_result)" : ""}\n${red(m.text)}`),
+      ].join("\n");
+      writeFileSync(join(TRACE_DIR, "last-turn-full.md"), full);
     } catch {
       /* la diagnostica non deve mai rompere la richiesta */
     }
