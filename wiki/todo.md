@@ -18,9 +18,10 @@ last_updated: 2026-06-30
 
 ## 🟡 AUDIT estensioni 2026-07-04 — follow-up aperti ([[audit-2026-07-04-extensions]])
 
-> 4 subagent paralleli hanno auditato le 20 estensioni post bug-P0. **7 fix già applicati** (C2 redazione-tool_result fail-closed, A1 context-assembly try/catch anti-amnesia-totale, D1 verifier-sandbox timeout, B1 focus-scope-who ×2, B2 message_end fail-closed, D2 eviction-nudge canale user) + awareness INFORMAZIONE-non-DATO. Report completo con stato per finding: `wiki/audit-2026-07-04-extensions.md`. **Aperti:**
-- **[P1 sicurezza] C1 — lockdown/INGRESS secret esfiltrabile via tool MCP strutturati** (telegram/gmail/drive): ✅ CONFERMATO a mano (`checkSink` fa fail-OPEN a `sealed-secrets.mjs:519` quando manca sia file-write sia host — asimmetrico vs il ramo allowedSinks che fail-closa). Fix ARCHITETTURALE (non patch): threddare tipo-tool in checkSink + classificare tool-egress vs local-only → block lockdown-secret verso egress senza sink. **Ciclo dedicato** (non affrettare: non rompere l'uso locale legittimo). Dettaglio: [[audit-2026-07-04-extensions]] C1.
-- **[P1] C3 — envelope untrusted tool_result aggirabile** (idempotenza su contenuto attacker + no-escape di `</tool_result>`) → injection annidata. `src/tool-result-envelope.mjs`.
+> 4 subagent paralleli hanno auditato le 20 estensioni post bug-P0. **9 fix applicati** (inclusi i DUE P1 sicurezza C1+C3) + awareness INFORMAZIONE-non-DATO. Tutti con test; suite 36/0, typecheck 0. Report completo con stato per finding: `wiki/audit-2026-07-04-extensions.md`.
+- ✅ **[P1] C1 FIXATO** — lockdown-secret exfil via tool MCP: flag `externalEgress` + classificazione tool-locali (`LOCAL_INJECTION_TOOLS`) → fail-closed verso egress esterno, uso locale bash preservato. Test 4 asserzioni.
+- ✅ **[P1] C3 FIXATO** — envelope tool_result aggirabile: idempotenza banner-aware (`FRAME_SIGNATURE`) + `neutralizeEnvelopeTokens` (anti-breakout). Test 8 asserzioni.
+- ✅ **[P1] C2/D1/B1** già fixati (redazione fail-closed, sandbox timeout, focus-scope-who) + A1/B2/D2. **Aperti (solo P2):**
 - **[P2] C5 — regex-ingress fail-open** in 3 edge (slash-command / throw non-wrappato / registry pieno). `regex-ingress.ts` + `sealed-secrets.mjs:788`.
 - **[P2] B3 — set_task_status no-op silenzioso** su task inesistente → entry fantasma. `vars-queue.ts:152`.
 - **[P2] B4 — tool-gating `revealed` non resettato** su session_shutdown.

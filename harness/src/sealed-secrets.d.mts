@@ -46,11 +46,12 @@ export function hasCommandComposition(opText: string): boolean;
 export function hasForeignHostToken(opText: string): boolean;
 export function hasHostPinning(opText: string): boolean;
 export function isLoopbackLiteral(host: string): boolean;
-export function checkSink(name: string, opText: string, mode?: SinkMode): SinkVerdict;
+export function checkSink(name: string, opText: string, mode?: SinkMode, opts?: { externalEgress?: boolean }): SinkVerdict;
 export function injectSecrets(opText: string, mode?: SinkMode): InjectResult;
 export function injectIntoStrings(
   strings: string[],
   mode?: SinkMode,
+  opts?: { externalEgress?: boolean },
 ): { strings: string[]; injected: string[]; blocked: { name: string; reason: string }[]; warnings: string[] };
 export function scanIngress(text: string): IngressHit[];
 export function autoSealIngress(

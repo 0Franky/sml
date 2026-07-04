@@ -460,7 +460,7 @@ export function isLoopbackLiteral(host) {
  *   - 'off': nessun gating.
  * @returns {{allowed:boolean, reason?:string, warn?:string}}
  */
-export function checkSink(name, opText, mode = "strict") {
+export function checkSink(name, opText, mode = "strict", opts = {}) {
   const s = SEALED.get(name);
   if (!s) return { allowed: false, reason: "secret does not exist" };
   if (mode === "off") return { allowed: true };
@@ -510,7 +510,13 @@ export function checkSink(name, opText, mode = "strict") {
         // host loopback ma flag OFF (es. https://localhost): due rimedi possibili → li nomino entrambi (anti-cerimonia M4)
         ? `'${name}' without allowedSinks: blocked toward localhost. Either add the loopback host to allowedSinks, or (for http) enable allowLocalHttp via request_local_http.`
         : `'${name}' without allowedSinks: network send blocked (declare allowedSinks to use it toward a host)`
-      : null;
+      : opts.externalEgress
+        // C1 fix (audit 2026-07-04): tool-egress STRUTTURATO (telegram/gmail/drive/MCP) → il sink NON è un host nel
+        // content, quindi il gating content-based è CIECO → prima cadeva a `null` = allowed (fail-OPEN, il buco C1). Un
+        // lockdown-secret qui uscirebbe verso una destinazione non verificabile → fail-CLOSED. NB: per l'uso LOCALE
+        // (bash hostless, provisioning file) il chiamante passa externalEgress=false → resta permesso (no over-gating).
+        ? `'${name}' without allowedSinks: blocked toward an external tool sink (destination not verifiable from the tool args). Grant a sink with request_sink(name, host, why), or use the secret only locally.`
+        : null;
   if (reason) {
     // review P2: in warn NON dire "blocked" (il valore VIENE inviato) — messaggio ONESTO che segnala l'egress.
     if (mode === "warn") return { allowed: true, warn: `'${name}' has no allowedSinks — WARN mode: the value is ALLOWED out (declare allowedSinks to gate it)` };
@@ -746,7 +752,7 @@ export function ingestEnvContent(content, { defaultSinks = [], overwrite = false
  * se anche UN solo riferimento è bloccato, NON sostituisce NULLA (niente exec parziale). Il valore resta nel modulo.
  * @param {string[]} strings @param {SinkMode} [mode] @returns {{strings:string[], injected:string[], blocked:{name,reason}[], warnings:string[]}}
  */
-export function injectIntoStrings(strings, mode = "strict") {
+export function injectIntoStrings(strings, mode = "strict", opts = {}) {
   const arr = Array.isArray(strings) ? strings.map((s) => String(s ?? "")) : [];
   const combined = arr.join("\n");
   const refs = referencedSecrets(combined);
@@ -755,7 +761,7 @@ export function injectIntoStrings(strings, mode = "strict") {
   const valueMap = {};
   for (const name of refs) {
     if (!SEALED.has(name)) { blocked.push({ name, reason: "secret does not exist" }); continue; }
-    const gate = checkSink(name, combined, mode);
+    const gate = checkSink(name, combined, mode, opts);
     if (!gate.allowed) { blocked.push({ name, reason: gate.reason }); continue; }
     if (gate.warn) warnings.push(`${name}: ${gate.warn}`);
     valueMap[name] = SEALED.get(name).value;

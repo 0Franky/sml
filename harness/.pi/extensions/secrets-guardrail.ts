@@ -42,6 +42,11 @@ const HARNESS_CFG = loadHarnessConfig();
 // Tool di SCRITTURA-FILE strutturati (il loro sink è un path, non un host → hasFileOrPipeExfil non li vede). Usati dal
 // gating opt-out allowSecretToFile. (I redirect bash `>`/`tee` sono già coperti da hasFileOrPipeExfil nel sink-gating.)
 const FILE_WRITE_TOOLS = new Set(["write", "create", "write_file", "str_replace_editor", "edit", "apply_patch", "new_file", "str_replace", "insert"]);
+// C1 fix (audit 2026-07-04): tool "LOCALI" per cui iniettare un lockdown-secret NON è egress esterno — `bash` (il
+// content-gating di checkSink rileva URL/redirect nel comando) + i built-in FS di pi (lettura/scrittura). Ogni ALTRO
+// tool (telegram/gmail/drive/MCP/custom) spedisce verso un sink NON presente negli args → egress esterno → un
+// lockdown-secret (no allowedSinks) NON vi viene iniettato (fail-closed). http_request ha il proprio gating tipizzato.
+const LOCAL_INJECTION_TOOLS = new Set([...FILE_WRITE_TOOLS, "bash", "read", "grep", "find", "ls", "multiedit"]);
 const SECRETS_CONFIG_PATH = ".pi/secrets.config.json"; // SOLO metadata (nome→{description,allowedSinks}); MAI valori.
 
 /** Carica la metadata dei sealed-secrets (no valori) da .pi/secrets.config.json. Fail-safe a {}. */
@@ -417,7 +422,9 @@ export default function (pi: ExtensionAPI) {
     if (toolName === "http_request") return;
     const slots: { get: () => string; set: (v: string) => void }[] = [];
     collectStringSlots(input, slots);
-    const r = injectIntoStrings(slots.map((s) => s.get()), HARNESS_CFG.secrets.sinkGating);
+    // externalEgress: tutto ciò che NON è un tool locale → un lockdown-secret senza sink concesso non vi viene iniettato.
+    const externalEgress = !LOCAL_INJECTION_TOOLS.has(toolName);
+    const r = injectIntoStrings(slots.map((s) => s.get()), HARNESS_CFG.secrets.sinkGating, { externalEgress });
     if (r.blocked.length) {
       return {
         block: true,

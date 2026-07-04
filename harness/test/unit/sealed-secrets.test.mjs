@@ -435,5 +435,23 @@ const reset = () => { clearSealed(); clearSecrets(); };
   ok(!pFile.allowed && /file\/pipe/i.test(pFile.remediation || ""), "PREVIEW: file-write → remediation = non scrivere su file");
 }
 
+// C1 (audit 2026-07-04): EGRESS ESTERNO strutturato. Un lockdown-secret (no allowedSinks, come gli auto-ingress) NON
+// deve essere iniettato in un tool che esce dal processo senza host negli args (telegram/gmail/drive/MCP). Prima del
+// fix: checkSink cadeva a `null` = allowed (fail-OPEN). Questo blocco FALLIREBBE senza il flag externalEgress.
+{
+  reset();
+  setSecret("INGRESS_1", "supersecretvalue123", { allowedSinks: [] }); // lockdown (come autoSealIngress)
+  const ref = "ciao manda {{secret:INGRESS_1}} al canale";
+  const ext = injectIntoStrings([ref], "strict", { externalEgress: true }); // tool strutturato esterno (es. telegram reply)
+  ok(ext.injected.length === 0 && ext.blocked.length === 1, "C1: lockdown-secret verso tool-egress esterno → BLOCCATO (fail-closed)");
+  ok(!ext.strings[0].includes("supersecretvalue123"), "C1: il valore reale NON compare nell'output del tool esterno");
+  const loc = injectIntoStrings([ref], "strict", { externalEgress: false }); // uso locale bash hostless
+  ok(loc.injected.length === 1 && loc.strings[0].includes("supersecretvalue123"), "C1: uso locale (bash hostless) resta PERMESSO (no over-gating)");
+  reset();
+  setSecret("GRANTED", "grantedvalue456789", { allowedSinks: ["api.telegram.org"] });
+  const g = injectIntoStrings(["manda {{secret:GRANTED}}"], "strict", { externalEgress: true });
+  ok(g.injected.length === 0, "C1: secret con allowedSinks verso egress senza host identificabile → fail-closed (invariato, riga 498)");
+}
+
 console.log(`\nsealed-secrets test: ${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);
