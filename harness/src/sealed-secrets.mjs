@@ -130,6 +130,19 @@ export function removeAllowedSink(name, host) {
   return { ok: true, name, allowedSinks: s.allowedSinks, removed: s.allowedSinks.length < before };
 }
 
+/** Unione degli host-sink ESTERNI già fidati (tutti i secret), esclusi loopback e wildcard. È il "set di fiducia"
+ * dell'utente: un nuovo host che ne è un sosia/typosquat è il caso pericoloso da segnalare. @returns {string[]} */
+export function listSinkHosts() {
+  const out = new Set();
+  for (const s of SEALED.values()) {
+    for (const raw of s.allowedSinks || []) {
+      const h = String(raw).toLowerCase().trim();
+      if (h && h !== "*" && !isLoopbackLiteral(h)) out.add(h);
+    }
+  }
+  return [...out];
+}
+
 /** Aggiorna la descrizione (BENIGN). @returns {{ok, name?, description?, reason?}} */
 export function setSecretDescription(name, description) {
   const s = SEALED.get(name);

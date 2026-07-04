@@ -2,6 +2,8 @@
 
 /** Interfaccia UI minimale richiesta (sottoinsieme di ExtensionUIContext di pi). */
 export interface ConsentUI {
+  /** Selettore 3-vie nativo (opzionale): usato per sì/modifica/annulla sul widening; se assente si degrada a confirm. */
+  select?(title: string, options: string[]): Promise<string | undefined>;
   confirm(title: string, message: string): Promise<boolean>;
   input(title: string, placeholder?: string): Promise<string | undefined>;
   notify(message: string, type?: "info" | "warning" | "error"): void;
@@ -30,6 +32,7 @@ export interface SecretCreateProposal {
 
 export function renderEditDiff(diff: any): string;
 export function wideningChallenge(diff: any, changes: SecretEditChanges): string;
+export function isSuspiciousHost(host: string, knownHosts?: string[]): { suspicious: boolean; reason?: string };
 export function headlessEditInstructions(name: string, changes: SecretEditChanges): string;
 export function askAndApplyEdit(ui: ConsentUI | undefined, hasUI: boolean, name: string, changes: SecretEditChanges, why: string, titleVerb: string): Promise<ConsentResult>;
 export function askAndDestroy(ui: ConsentUI | undefined, hasUI: boolean, name: string, why: string): Promise<ConsentResult>;
@@ -48,6 +51,7 @@ export function promoteSealedIngress(ui: Pick<ConsentUI, "input" | "notify"> | u
 declare const _default: {
   renderEditDiff: typeof renderEditDiff;
   wideningChallenge: typeof wideningChallenge;
+  isSuspiciousHost: typeof isSuspiciousHost;
   headlessEditInstructions: typeof headlessEditInstructions;
   askAndApplyEdit: typeof askAndApplyEdit;
   askAndDestroy: typeof askAndDestroy;

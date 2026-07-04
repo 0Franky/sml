@@ -7,14 +7,15 @@
  *   - un flag `hasUI` (true in TUI/RPC; false in print/json headless)
  *   - il core sealed-secrets (validazione/diff/apply): nessun import di pi.
  *
- * INVARIANTE: il modello non muta MAI un secret da sé. Ogni mutazione passa da un Ask con DIFF chiaro, e l'ampliamento
- * dei permessi (widening) richiede una **frizione REALE** (type-to-confirm) — non basta premere Invio (anti rubber-stamp).
+ * INVARIANTE: il modello non muta MAI un secret da sé. Ogni mutazione passa da un Ask con DIFF chiaro. Per un WIDENING
+ * la scelta è **sì / modifica / annulla** (msg 954/955): il sì INFORMATO è il consenso (niente ri-digitazione), "modifica"
+ * dà CONTROLLO sulla lista sink, e la frizione type-to-confirm resta SOLO come escalation sugli host SOSPETTI (isSuspiciousHost).
  * Gemello di `request_local_http`. Design: ../../wiki/concepts/sealed-secrets.md §4ter/§4quater. Idea utente msg 708-724.
  *
  * Ogni funzione ritorna la SHAPE di un tool-result pi: { content: [{type:"text",text}], details: {...} } — così il
  * wrapper `.ts` si limita a passare `ctx.ui`/`ctx.hasUI` e a restituire l'oggetto.
  */
-import { computeSecretEditDiff, applySecretEdit, removeSecret, setSecret, hasSecret, isValidSinkHost, isLoopbackLiteral, renameSecret, addAllowedSink } from "./sealed-secrets.mjs";
+import { computeSecretEditDiff, applySecretEdit, removeSecret, setSecret, hasSecret, isValidSinkHost, isLoopbackLiteral, renameSecret, addAllowedSink, listSinkHosts } from "./sealed-secrets.mjs";
 
 /** Sanitizza un valore per la VISUALIZZAZIONE nel dialog (anti UI-redress): strip newline/control-char + glifi-marker
  * (⚠/·/✗) così un campo controllato dal modello non può forgiare righe-diff o mascherare la riga del widening. */
@@ -69,6 +70,61 @@ function normChallenge(s) {
   return String(s ?? "").toLowerCase().trim().replace(/\s*,\s*/g, ", ").replace(/\s+/g, " ");
 }
 
+/** Host "sensibili" comuni: un nuovo sink che li contiene come sotto-dominio NON-tail (api.openai.com.evil.com) è
+ * sospetto. Lista NON esaustiva — solo un aiuto anti sosia/typosquat, non una allow/deny-list. */
+const BUILTIN_SENSITIVE_HOSTS = [
+  "github.com", "api.github.com", "gitlab.com", "api.openai.com", "api.anthropic.com", "googleapis.com",
+  "amazonaws.com", "api.stripe.com", "slack.com", "hooks.slack.com", "discord.com", "api.telegram.org", "api.twilio.com",
+];
+
+/** Distanza di Levenshtein cappata (oltre `cap` → cap+1). Piccola, per il rilevamento typo. */
+function levenshtein(a, b, cap = 2) {
+  a = String(a); b = String(b);
+  if (a === b) return 0;
+  if (Math.abs(a.length - b.length) > cap) return cap + 1;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    let best = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+      if (cur[j] < best) best = cur[j];
+    }
+    if (best > cap) return cap + 1;
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
+/**
+ * isSuspiciousHost — euristica DETERMINISTICA anti sosia/typosquat per un host che si sta per concedere. Segnala
+ * (NON blocca: alza solo la frizione, escalation type-to-confirm) quando: (1) IDN/punycode `xn--` (homograph);
+ * (2) contiene un host noto/fidato come sotto-dominio ma NON vi termina (`api.openai.com.evil.com`); (3) è a distanza
+ * ≤2 da un host GIÀ FIDATO dall'utente (`gihub.com` per `github.com`). `knownHosts` = i sink già fidati (listSinkHosts).
+ * @returns {{ suspicious: boolean, reason?: string }}
+ */
+export function isSuspiciousHost(host, knownHosts = []) {
+  const h = String(host ?? "").toLowerCase().trim();
+  if (!h || h === "*" || isLoopbackLiteral(h)) return { suspicious: false };
+  if (/(^|\.)xn--/.test(h)) return { suspicious: true, reason: "dominio IDN/punycode (xn--): rischio homograph" };
+  const known = knownHosts.map((k) => String(k ?? "").toLowerCase().trim()).filter(Boolean);
+  // (2) brand noto/fidato incastonato ma NON in coda → il dominio REALE è un altro.
+  for (const k of [...BUILTIN_SENSITIVE_HOSTS, ...known]) {
+    if (!k || k === h) continue;
+    if ((h.startsWith(k + ".") || h.includes("." + k + ".")) && !h.endsWith("." + k)) {
+      return { suspicious: true, reason: `contiene '${k}' come sotto-dominio ma il dominio reale è diverso` };
+    }
+  }
+  // (3) typo di un host GIÀ FIDATO (solo i known dell'utente, non i builtin → niente falsi-positivi su host nuovi legittimi).
+  for (const k of known) {
+    if (k === h) continue;
+    const d = levenshtein(h, k, 2);
+    if (d >= 1 && d <= 2) return { suspicious: true, reason: `molto simile a '${k}' già fidato (possibile typo)` };
+  }
+  return { suspicious: false };
+}
+
 /**
  * Istruzioni OUT-OF-BAND ACCURATE per un edit in headless (FIX differito #4): `scripts/set-secret.mjs` gestisce SOLO
  * metadata (desc/allow-host/redact-egress/allow-local-http). NON sa fare rename né destroy → non promettiamo che possa.
@@ -97,11 +153,68 @@ export function headlessEditInstructions(name, changes) {
   return parts.length ? parts.join("\n") : `edit .pi/secrets.config.json for '${name}' and restart pi.`;
 }
 
+/** applica l'edit + ritorna il tool-result (ramo comune sì-informato / edit / escalation-superata). */
+function applyAndReturn(ui, name, changes) {
+  const r = applySecretEdit(name, changes);
+  if (!r.ok) return result(`Edit failed: ${r.reason}. Nothing was changed (atomic).`, { ok: false });
+  notify(ui, `secret '${name}' aggiornato: ${(r.applied || []).join(", ")}${r.name !== name ? ` (ora '${r.name}')` : ""}`, "info");
+  return result(`User APPROVED. Applied to '${r.name}': ${(r.applied || []).join(", ")}. Use {{secret:${r.name}}} now.`, { ok: true, applied: r.applied, name: r.name });
+}
+
 /**
- * askAndApplyEdit — consenso ESPLICITO (mai auto) per una proposta di edit. Calcola il diff, mostra un Ask con il diff
- * prima→dopo; se il diff è AMPLIANTE (widening) impone una **frizione reale** (type-to-confirm: l'utente DIGITA l'host
- * concesso, altrimenti abort). Solo allora applica via applySecretEdit (ATOMICO). Headless → degrada a notify con
- * istruzioni out-of-band ACCURATE per operazione (differito #4). Usato da request_sink e propose_secret_edit.
+ * chooseWideningAction — scelta sì/modifica/annulla per un widening (msg 954/955: "al più sì/no/edit"). Usa il
+ * selettore 3-vie NATIVO di pi (`ui.select`) se presente (diff nel titolo); altrimenti degrada a `ui.confirm` sì/no
+ * (senza select non c'è "modifica" → sì=apply, no=deny). Ritorna "apply" | "edit" | "deny".
+ */
+async function chooseWideningAction(ui, title, body) {
+  const APPLY = "Sì, applica", EDIT = "Modifica i sink", DENY = "No, annulla";
+  if (typeof ui.select === "function") {
+    const pick = await ui.select(`${title}\n\n${body}`, [APPLY, EDIT, DENY]);
+    if (pick === APPLY) return "apply";
+    if (pick === EDIT) return "edit";
+    return "deny"; // DENY o annullato (undefined)
+  }
+  const ok = await ui.confirm(title, `${body}\n\nOK = applica · Annulla = rifiuta`);
+  return ok ? "apply" : "deny";
+}
+
+/**
+ * editSinksAndApply — ramo "modifica": l'utente RISCRIVE la lista di host da concedere (VUOTO = annulla). La lista che
+ * DIGITA è consenso esplicito → si applica (control, non ostacolo). Notifica se resta qualcosa di sospetto (l'ha scelto lui).
+ */
+async function editSinksAndApply(ui, name, changes, known) {
+  if (typeof ui.input !== "function") {
+    return result(`Editing the sink list for '${name}' needs an interactive input, unavailable here. NOT applied.`, { ok: false, aborted: "no-input-ui" });
+  }
+  const prefill = (changes.addSinks || []).map((h) => String(h).toLowerCase().trim()).filter(Boolean).join(", ");
+  const edited = await ui.input(`Modifica i sink per '${name}'`, `host separati da virgola (tieni solo quelli voluti); VUOTO = annulla [${prefill}]`);
+  if (edited == null || !String(edited).trim()) {
+    return result(`User chose to edit but left it empty — widening of '${name}' CANCELLED. Nothing changed.`, { ok: false, aborted: "edit-empty" });
+  }
+  const newHosts = String(edited).split(",").map((h) => h.toLowerCase().trim()).filter(Boolean);
+  const editedChanges = { ...changes, addSinks: newHosts };
+  const d2 = computeSecretEditDiff(name, editedChanges);
+  if (d2.anyInvalid) {
+    const bad = (d2.changes || []).filter((c) => c.invalid).map((c) => c.after).join("; ");
+    return result(`Your edited sink list has invalid host(s): ${bad}. Nothing changed. Re-propose with valid hosts.`, { ok: false, aborted: "edit-invalid" });
+  }
+  if (!d2.changes || !d2.changes.length) {
+    return result(`Your edited list adds nothing new to '${name}'. Nothing changed.`, { ok: false });
+  }
+  const stillSusp = newHosts.map((h) => ({ h, ...isSuspiciousHost(h, known) })).filter((x) => x.suspicious);
+  const r = applySecretEdit(name, editedChanges);
+  if (!r.ok) return result(`Edit failed: ${r.reason}. Nothing changed (atomic).`, { ok: false });
+  if (stillSusp.length) notify(ui, `⚠ '${name}': concessi host che sembrano sosia/typosquat (${stillSusp.map((s) => s.h).join(", ")}) — li hai digitati tu.`, "warning");
+  notify(ui, `secret '${name}' aggiornato: ${(r.applied || []).join(", ")}`, "info");
+  return result(`User APPROVED (edited). Applied to '${name}': ${(r.applied || []).join(", ")}. Use {{secret:${name}}} now.`, { ok: true, applied: r.applied, name });
+}
+
+/**
+ * askAndApplyEdit — consenso ESPLICITO (mai auto) per una proposta di edit. Calcola il diff, mostra un Ask col diff
+ * prima→dopo. Benigno → confirm sì/no. WIDENING → scelta **sì / modifica / annulla** (msg 954/955): il sì INFORMATO
+ * (il dialog mostra già host+⚠+diff) È il consenso, niente ri-digitazione ridondante; "modifica" dà CONTROLLO sulla
+ * lista sink; la frizione type-to-confirm resta SOLO come escalation su host SOSPETTI (sosia/typosquat, isSuspiciousHost).
+ * Applica via applySecretEdit (ATOMICO). Headless → notify con istruzioni out-of-band ACCURATE. Usato da request_sink/propose_secret_edit.
  */
 export async function askAndApplyEdit(ui, hasUI, name, changes, why, titleVerb) {
   // review P1: il wildcard '*' (QUALSIASI host) NON è concedibile in-sessione (frizione-1-char = rubber-stamp) → out-of-band.
@@ -132,29 +245,40 @@ export async function askAndApplyEdit(ui, hasUI, name, changes, why, titleVerb) 
     : `Modifica del secret '${name}' (nessun ampliamento di permessi).`;
 
   if (hasUI && ui && typeof ui.confirm === "function") {
-    const ok = await ui.confirm(
-      `${titleVerb} '${name}'?`,
-      `${header}\n\nMotivo dichiarato dal modello: ${why}\n\nDIFF (prima → dopo):\n${renderEditDiff(diff)}${localHttpDisclosure}\n\n${diff.anyWidening ? "⚠ " : ""}Confermi?`,
-    );
-    if (!ok) return result(`User DENIED the edit of '${name}'. Nothing changed.`, { ok: false });
-    // FRIZIONE REALE (differito #3 + review P2 fail-CLOSED): per un widening il solo confirm() è rubber-stampable →
-    // type-to-confirm (l'utente DIGITA l'host concesso). Se manca ui.input → FAIL-CLOSED (non applicare) invece di
-    // saltare la frizione in silenzio (era un fail-OPEN in codice security-critical). challenge sempre ≠ "" se anyWidening.
-    if (diff.anyWidening) {
-      const challenge = wideningChallenge(diff, changes) || name;
+    // BENIGNO (nessun ampliamento di permessi): confirm sì/no.
+    if (!diff.anyWidening) {
+      const ok = await ui.confirm(
+        `${titleVerb} '${name}'?`,
+        `${header}\n\nMotivo dichiarato dal modello: ${why}\n\nDIFF (prima → dopo):\n${renderEditDiff(diff)}${localHttpDisclosure}\n\nConfermi?`,
+      );
+      if (!ok) return result(`User DENIED the edit of '${name}'. Nothing changed.`, { ok: false });
+      return applyAndReturn(ui, name, changes);
+    }
+    // WIDENING → sì / modifica / annulla (msg 954/955). Il sì INFORMATO (dialog con host+⚠+diff) È il consenso: niente
+    // ri-digitazione ridondante. La frizione type-to-confirm resta SOLO come escalation su host SOSPETTI (typosquat/homograph).
+    const known = listSinkHosts();
+    const flags = externalSinks.map((h) => ({ host: h, ...isSuspiciousHost(h, known) }));
+    const suspicious = flags.filter((f) => f.suspicious);
+    const sinkLines = flags.length
+      ? "\n\nHost esterni da concedere:\n" + flags.map((f) => `  ${f.suspicious ? "⚠⚠ SOSPETTO" : "·"} ${clean(f.host)}${f.suspicious ? ` — ${clean(f.reason)}` : ""}`).join("\n")
+      : "";
+    const body = `${header}${sinkLines}\n\nMotivo dichiarato dal modello: ${why}\n\nDIFF (prima → dopo):\n${renderEditDiff(diff)}${localHttpDisclosure}`;
+    const action = await chooseWideningAction(ui, `${titleVerb} '${name}'?`, body);
+    if (action === "deny") return result(`User DENIED the widening of '${name}'. Nothing changed.`, { ok: false });
+    if (action === "edit") return editSinksAndApply(ui, name, changes, known);
+    // action === "apply": type-to-confirm SOLO se c'è un host sospetto (fail-CLOSED se manca ui.input, come prima).
+    if (suspicious.length) {
       if (typeof ui.input !== "function") {
-        return result(`Widening '${name}' requires an interactive dialog to type '${challenge}', unavailable here. NOT applied.`, { ok: false, aborted: "no-input-ui" });
+        return result(`Widening '${name}' includes a SUSPICIOUS host (${suspicious.map((s) => s.host).join(", ")}); confirming it needs an interactive dialog, unavailable here. NOT applied.`, { ok: false, aborted: "no-input-ui" });
       }
-      const typed = await ui.input(`Conferma ampliamento di '${name}'`, `digita ESATTAMENTE: ${challenge}`);
+      const challenge = suspicious.map((s) => normChallenge(s.host)).join(", ");
+      const typed = await ui.input(`⚠ Host sospetto per '${name}'`, `Sembra un possibile sosia/typosquat. Per procedere digita ESATTAMENTE: ${challenge}`);
       if (typed == null || normChallenge(typed) !== normChallenge(challenge)) {
-        notify(ui, `Ampliamento di '${name}' ANNULLATO (conferma digitata non combaciante). Nessuna modifica.`, "warning");
-        return result(`User did NOT type the exact confirmation ('${challenge}') for the widening of '${name}'. ABORTED — nothing changed. Re-propose only if the user really wants to widen.`, { ok: false, aborted: "widening-not-confirmed" });
+        notify(ui, `Ampliamento di '${name}' ANNULLATO (host sospetto non riconfermato). Nessuna modifica.`, "warning");
+        return result(`User did NOT type the exact confirmation ('${challenge}') for the SUSPICIOUS host(s) in the widening of '${name}'. ABORTED — nothing changed.`, { ok: false, aborted: "suspicious-not-confirmed" });
       }
     }
-    const r = applySecretEdit(name, changes);
-    if (!r.ok) return result(`Edit failed: ${r.reason}. Nothing was changed (atomic).`, { ok: false });
-    notify(ui, `secret '${name}' aggiornato: ${(r.applied || []).join(", ")}${r.name !== name ? ` (ora '${r.name}')` : ""}`, "info");
-    return result(`User APPROVED. Applied to '${r.name}': ${(r.applied || []).join(", ")}. Use {{secret:${r.name}}} now.`, { ok: true, applied: r.applied, name: r.name });
+    return applyAndReturn(ui, name, changes);
   }
   // Headless: istruzioni out-of-band ACCURATE per operazione (FIX #4: niente più 'usa set-secret.mjs' per rename/destroy).
   notify(ui, `Il modello propone una modifica al secret '${name}' (${why}) ma manca l'UI interattiva (headless). Applicala TU out-of-band, poi RIAVVIA pi:\n${headlessEditInstructions(name, changes)}`, "warning");
@@ -202,16 +326,9 @@ export async function askLocalHttp(ui, hasUI, name, why) {
       `⚠ Se acconsenti, il permesso vale per TUTTA QUESTA SESSIONE e per QUALSIASI servizio locale (qualsiasi porta/path su localhost), non solo per l'operazione descritta. Host ESTERNI in http restano sempre bloccati. Il valore resta sigillato (non lo vedi tu né il modello). Un servizio locale compromesso potrebbe però inoltrare il token altrove. Consenti?`,
     );
     if (ok) {
-      // review P2 parità: allowLocalHttp è un widening → stessa frizione type-to-confirm del path propose_secret_edit
-      // (altrimenti il modello aggira scegliendo il tool più economico). Fail-CLOSED se manca ui.input.
-      if (typeof ui.input !== "function") {
-        return result(`Enabling allowLocalHttp for '${name}' requires an interactive dialog (type 'localhost'), unavailable here. NOT enabled.`, { ok: false, aborted: "no-input-ui" });
-      }
-      const typed = await ui.input(`Conferma http-locale per '${name}'`, `digita ESATTAMENTE: localhost`);
-      if (typed == null || normChallenge(typed) !== "localhost") {
-        notify(ui, `allowLocalHttp per '${name}' ANNULLATO (conferma non combaciante).`, "warning");
-        return result(`User did NOT type 'localhost' to confirm allowLocalHttp for '${name}'. ABORTED — not enabled.`, { ok: false, aborted: "localhttp-not-confirmed" });
-      }
+      // localhost è loopback FISSO → un type-to-confirm "digita localhost" sarebbe puro RITO (stringa costante, zero
+      // valore anti-typosquat: msg 954). Il confirm sì/no INFORMATO (scope dichiarato sopra) È il consenso; qui NON si
+      // concede alcun host esterno (gli host esterni in http restano sempre bloccati). Comodità E sicurezza, entrambe.
       const r = applySecretEdit(name, { allowLocalHttp: true });
       if (!r.ok) return result(`Failed to enable allowLocalHttp: ${r.reason}.`, { ok: false });
       return result(`User APPROVED: '${name}' may now be used over http toward loopback only (localhost/127.0.0.1), for this session. External hosts remain https-only. Use it in a SINGLE clean command (no ';'/'|'/'&&'/redirects), else it stays blocked.`, { ok: true });
@@ -355,4 +472,4 @@ export async function promoteSealedIngress(ui, hasUI, names) {
   return { renames, granted };
 }
 
-export default { renderEditDiff, wideningChallenge, headlessEditInstructions, askAndApplyEdit, askAndDestroy, askLocalHttp, askAndCreate, promoteSealedIngress };
+export default { renderEditDiff, wideningChallenge, isSuspiciousHost, headlessEditInstructions, askAndApplyEdit, askAndDestroy, askLocalHttp, askAndCreate, promoteSealedIngress };

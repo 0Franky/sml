@@ -101,6 +101,7 @@ export function removeAllowedSink(
   name: string,
   host: string,
 ): { ok: boolean; name?: string; allowedSinks?: string[]; removed?: boolean; reason?: string };
+export function listSinkHosts(): string[];
 export function setSecretDescription(
   name: string,
   description: string,
