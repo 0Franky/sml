@@ -16,7 +16,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { getVarsQueue, getConversationStore, closeAll } from "../../src/state-db.mjs";
-import { getConvId } from "../../src/session-context.mjs";
+import { convIdFor } from "../../src/session-context.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
@@ -48,10 +48,10 @@ export default function (pi: ExtensionAPI) {
     parameters: Type.Object({
       note: Type.Optional(Type.String({ description: "Where you are / next step (narrative handoff for the resume)." })),
     }),
-    async execute(_t: string, p: any) {
+    async execute(_t: string, p: any, _signal?: any, _onUpdate?: any, ctx?: any) {
      try { // A3 (audit 2026-07-04): le due write (handoff + boundary) NON sono atomiche → se la 2ª lancia il checkpoint
        // resta mezzo-applicato; meglio un fallimento ESPLICITO (ok:false) che un ok:true su stato inconsistente.
-      const convId = getConvId();
+      const convId = convIdFor(ctx);
       const boundary = store.lastSeq(convId); // tutto ciò che precede questo seq verrà ripiegato nella lane
       // snapshot durevole (oltre alla note del modello) per un resume ricco anche senza note.
       const currId = vq.getCurr();

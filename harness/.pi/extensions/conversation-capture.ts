@@ -15,13 +15,15 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { ConversationStore, isGenuineUserInput } from "../../src/conversation-store.mjs";
 import { getConversationStore, getVarsQueue, closeAll } from "../../src/state-db.mjs";
-import { getConvId, setConvId, resolveConvId } from "../../src/session-context.mjs";
+import { convIdFor, setConvIdForSession, sessionIdOf, clearSession, resolveConvId } from "../../src/session-context.mjs";
+import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { redactText } from "../../src/secrets-redact.mjs";
 import { getDynamicSecrets } from "../../src/secrets-registry.mjs";
 import { mkdirSync, appendFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 const META_CONV = "_conv_id"; // convId persistito (vars.db meta) → riusato cross-reload/resume
+const HCFG = loadHarnessConfig(); // singleUser gate per il fallback mostRecentConvId (D3)
 const CAPTURE_ERR_LOG = ".pi/state/trace/capture-errors.log"; // diagnostica: ogni fallimento di cattura finisce qui
 
 /** Redige i segreti (pattern statici + dynamic) dal testo PRIMA di persisterlo/ri-iniettarlo. */
@@ -65,7 +67,7 @@ function messageText(message: any): string {
 
 export default function (pi: ExtensionAPI) {
   const store = getStore();
-  pi.on("session_shutdown", () => closeAll()); // rilascia le connessioni DB condivise (fix leak)
+  pi.on("session_shutdown", (_e, ctx) => { clearSession(sessionIdOf(ctx)); closeAll(); }); // libera la Map per-sessione + le connessioni DB condivise (fix leak)
   // convId PERSISTITO e keyato PER-SESSIONE: lo slot meta è `_conv_id:<sessionId>` (ctx.sessionManager.getSessionId)
   // → ogni sessione pi ha il suo convId isolato. Reload/resume della STESSA sessione riusano il suo convId (la lane
   // <messages_with_user> non va a vuoto, ADR principio-3); /new e /fork (sessionId nuovo) ottengono una conversazione
@@ -80,7 +82,7 @@ export default function (pi: ExtensionAPI) {
       const sessionId = (ctx as any)?.sessionManager?.getSessionId?.() ?? null;
       const metaKey = sessionId ? `${META_CONV}:${sessionId}` : META_CONV;
       const { convId, persist } = resolveConvId(reason, meta.getMeta(metaKey), Date.now(), { perSession: !!sessionId });
-      setConvId(convId);
+      setConvIdForSession(sessionId, convId); // D3: registra il convId SOTTO il sessionId (no più global condivisa)
       if (persist) meta.setMeta(metaKey, convId);
     } catch (e) {
       logCaptureError("session_start", e); // convId non risolto → cascata sui drop; almeno lo si vede
@@ -91,7 +93,7 @@ export default function (pi: ExtensionAPI) {
   // non gestiti → li si filtra. La logica è in `isGenuineUserInput` (pura/testata): accetta source `interactive` E
   // `rpc` (driver programmatico/SDK/harness), esclude mid-turn/slash/`extension`. Fix 2026-07-03: prima solo
   // "interactive" → in rpc/headless la conversazione non veniva catturata (lane vuota). Passthrough: non altera l'input.
-  pi.on("input", (event) => {
+  pi.on("input", (event, ctx) => {
     try {
       const e = event as any;
       const text = e.text;
@@ -100,7 +102,7 @@ export default function (pi: ExtensionAPI) {
       // noti (secrets-redact) + i segreti già registrati via add_secret. Un segreto NON-pattern incollato PRIMA di
       // add_secret può ancora finire in conversations.db e nella lane (gap di copertura inerente al redattore
       // pattern+registry — l'utente usi add_secret). (review-loop #3 2026-06-29, P2 secret-coverage.)
-      if (genuine) store.append(getConvId(), "user", redactSafe(text));
+      if (genuine) store.append(convIdFor(ctx), "user", redactSafe(text));
     } catch (e) {
       logCaptureError("input", e); // bug P0: prima un throw qui droppava il turno-UTENTE in silenzio → amnesia
     }
@@ -110,7 +112,7 @@ export default function (pi: ExtensionAPI) {
   // assistant → store. Su `agent_end` (fire UNA volta a fine loop), NON su `turn_end` (fire una volta per ROUND
   // LLM → una risposta multi-tool darebbe N righe assistant, corrompendo window/range). Si prende l'ULTIMO
   // messaggio assistant del loop = la risposta finale visibile all'utente. (fix review P0 2026-06-29.)
-  pi.on("agent_end", (event) => {
+  pi.on("agent_end", (event, ctx) => {
     try {
       const msgs = (event as any).messages;
       if (!Array.isArray(msgs)) return;
@@ -121,7 +123,7 @@ export default function (pi: ExtensionAPI) {
           if (t.trim()) lastAssistantText = t;
         }
       }
-      if (lastAssistantText.trim()) store.append(getConvId(), "assistant", redactSafe(lastAssistantText));
+      if (lastAssistantText.trim()) store.append(convIdFor(ctx), "assistant", redactSafe(lastAssistantText));
     } catch (e) {
       logCaptureError("agent_end", e); // bug P0: prima un throw qui droppava la risposta-ASSISTANT in silenzio
     }
@@ -142,7 +144,7 @@ export default function (pi: ExtensionAPI) {
       to_seq: Type.Optional(Type.Number({ description: "Precise slice: end seq (inclusive)." })),
       n: Type.Optional(Type.Number({ description: "How many turns (default 10) — for from_start and for the default recent window." })),
     }),
-    async execute(_t: string, p: any) {
+    async execute(_t: string, p: any, _signal?: any, _onUpdate?: any, ctx?: any) {
       const n = p.n ?? 10;
       // RISOLUZIONE ROBUSTA del convId (sessione live 019f292b, causa-radice del []): il 9B a volte passa un
       // conv_id INVENTATO (es. "default"/"main") che sovrascrive il default corretto → conv vuota. E se lo stato di
@@ -150,10 +152,13 @@ export default function (pi: ExtensionAPI) {
       // Difesa: prova nell'ordine [conv_id-richiesto, conv-di-sessione, conv-più-recente] e usa la PRIMA non vuota.
       // Così "mostrami i miei messaggi" trova sempre la conversazione reale, qualunque cosa il modello indovini.
       const requested = p.conv_id ? String(p.conv_id) : null;
-      let convId = requested ?? getConvId();
+      let convId = requested ?? convIdFor(ctx);
       let redirected: string | null = null;
       if (store.count(convId) === 0) {
-        const candidates = [getConvId(), store.mostRecentConvId()].filter((c): c is string => !!c && c !== convId);
+        // fallback: la conv di sessione, poi (SOLO singleUser) la più recente globale. In multi-sessione
+        // mostRecentConvId() = MAX(ts) su TUTTE le conv → leak cross-sessione: gated dietro HCFG.singleUser (D3).
+        const candidates = [convIdFor(ctx), ...(HCFG.singleUser ? [store.mostRecentConvId()] : [])]
+          .filter((c): c is string => !!c && c !== convId);
         for (const c of candidates) {
           if (store.count(c) > 0) { redirected = convId; convId = c; break; }
         }

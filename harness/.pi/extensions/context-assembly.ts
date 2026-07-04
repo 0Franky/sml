@@ -20,7 +20,7 @@ import { buildMessagesLane } from "../../src/conversation-store.mjs";
 // <last_tool_calls>: memoria delle AZIONI recenti del modello (fix amnesia #1, msg 811-817). Con keepTurns:1 il modello
 // non vede le proprie tool-call oltre il turno → le ri-iniettiamo qui (la redazione-egress sotto le copre).
 import { formatLane as formatToolCallsLane } from "../../src/tool-call-log.mjs";
-import { getConvId } from "../../src/session-context.mjs";
+import { convIdFor } from "../../src/session-context.mjs";
 import { parseSessionStartMs } from "../../src/time-shift.mjs"; // ancoraggio temporale lane (msg 848/849)
 import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint, markFocusHintEmitted, shouldEmitReorgHint, markReorgEmitted, maybeAutoFocus } from "../../src/nested-compact.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
@@ -141,7 +141,7 @@ export default function (pi: ExtensionAPI) {
     const usage = ctx?.getContextUsage?.();
     const tokens = usage?.tokens ?? null;
     const contextWindow = usage?.contextWindow ?? null;
-    const convId = getConvId();
+    const convId = convIdFor(ctx);
 
     // segment-boundary del checkpoint (scritto dal tool `checkpoint`, vedi checkpoint.ts): la lane mostra SOLO i
     // messaggi DOPO l'ultimo checkpoint per questa conversazione (la chat pre-checkpoint è ripiegata nel digest).

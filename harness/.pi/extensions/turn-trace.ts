@@ -18,7 +18,7 @@
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
-import { getConvId } from "../../src/session-context.mjs";
+import { convIdFor } from "../../src/session-context.mjs";
 // Funzioni PURE estratte/testate in turn-trace-lib.mjs (unit: turn-trace-lib.test.mjs). Includono il fix
 // role="developer" (OpenAI-completions su pi/ollama/gemini) — prima systemLen/laneLines erano SEMPRE 0 su ollama.
 import { extractSystemText, messagesInfo, messagesDump, laneOverlap } from "../../src/turn-trace-lib.mjs";
@@ -42,6 +42,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("before_provider_request", (event, ctx) => {
     try {
+      const convId = convIdFor(ctx); // D3: convId per-sessione dal ctx (non più global)
       const payload: any = (event as any).payload;
       const sys = extractSystemText(payload);
       const mi = messagesInfo(payload);
@@ -55,7 +56,7 @@ export default function (pi: ExtensionAPI) {
         tokens != null && contextWindow ? tokens / contextWindow : usage?.percent != null ? usage.percent / 100 : null;
       const rec = {
         ts: new Date().toISOString(),
-        convId: getConvId(),
+        convId,
         systemLen: sys.length,
         nativeMessages: mi.count,
         nativeRoles: mi.roles,
@@ -70,7 +71,7 @@ export default function (pi: ExtensionAPI) {
       };
       _last = rec;
       mkdirSync(TRACE_DIR, { recursive: true });
-      appendFileSync(join(TRACE_DIR, `trace-${getConvId()}.jsonl`), JSON.stringify(rec) + "\n");
+      appendFileSync(join(TRACE_DIR, `trace-${convId}.jsonl`), JSON.stringify(rec) + "\n");
       const dup = ov.overlap <= 1 ? "OK (no doppia-chat)" : `⚠ overlap=${ov.overlap} (possibile doppia-chat)`;
       writeFileSync(
         join(TRACE_DIR, "last-turn.md"),

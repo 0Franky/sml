@@ -32,6 +32,7 @@ export interface HarnessConfig {
   nativeKeepTurns: number;
   laneMemoryHint: boolean;
   messagesExcludeCurrentTurn: boolean;
+  singleUser: boolean;
   gathering: GatheringConfig;
   autofocus: AutofocusConfig;
   secrets: SecretsConfig;

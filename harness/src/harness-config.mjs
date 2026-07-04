@@ -57,6 +57,10 @@ export const DEFAULT_HARNESS_CONFIG = {
   // Strada-2 complementarità (legacy, review-full P1-B): usato SOLO se nativeKeepTurns=0 (retro-compat). Con
   // nativeKeepTurns>0 il confine di complementarità è per-seq (K-esimo msg utente) e questo flag è ignorato.
   messagesExcludeCurrentTurn: true,
+  // singleUser (D3, 2026-07-04): un solo utente / una sola sessione-logica per questo processo. true (DEFAULT) →
+  // get_conversation può ripiegare su mostRecentConvId (MAX(ts) su TUTTE le conv) quando la conv della sessione è
+  // vuota. false → più sessioni nello stesso processo: NIENTE fallback cross-conv (isola le sessioni, no leak).
+  singleUser: true,
   // gathering (focus-gathering v1): QUANTO è forzato il "guarda l'ordine dei task prima di entrare a fuoco".
   //   delegated = il modello decide (default, lean/anti-cerimonia); inject = l'harness inietta la vista ordinata nel
   //   focus_hint (anti-cecità, low-ceremony); require = enter_focus è bloccato finché non chiami get_execution_order.
@@ -158,6 +162,7 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
     nativeKeepTurns: DEFAULT_HARNESS_CONFIG.nativeKeepTurns,
     laneMemoryHint: DEFAULT_HARNESS_CONFIG.laneMemoryHint,
     messagesExcludeCurrentTurn: DEFAULT_HARNESS_CONFIG.messagesExcludeCurrentTurn,
+    singleUser: DEFAULT_HARNESS_CONFIG.singleUser,
     gathering: { ...DEFAULT_HARNESS_CONFIG.gathering },
     autofocus: { ...DEFAULT_HARNESS_CONFIG.autofocus },
     secrets: { ...DEFAULT_HARNESS_CONFIG.secrets },
@@ -183,6 +188,7 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
       }
       if (typeof f?.laneMemoryHint === "boolean") cfg.laneMemoryHint = f.laneMemoryHint;
       if (typeof f?.messagesExcludeCurrentTurn === "boolean") cfg.messagesExcludeCurrentTurn = f.messagesExcludeCurrentTurn;
+      if (typeof f?.singleUser === "boolean") cfg.singleUser = f.singleUser;
     }
   } catch {
     /* config malformata → default (fail-safe) */
@@ -231,6 +237,9 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
   }
   if (env.HARNESS_LANE_MEMORY_HINT != null && env.HARNESS_LANE_MEMORY_HINT !== "") {
     cfg.laneMemoryHint = env.HARNESS_LANE_MEMORY_HINT !== "false" && env.HARNESS_LANE_MEMORY_HINT !== "0";
+  }
+  if (env.HARNESS_SINGLE_USER != null && env.HARNESS_SINGLE_USER !== "") {
+    cfg.singleUser = env.HARNESS_SINGLE_USER !== "false" && env.HARNESS_SINGLE_USER !== "0";
   }
   return cfg;
 }

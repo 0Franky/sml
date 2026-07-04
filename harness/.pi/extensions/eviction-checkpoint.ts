@@ -32,7 +32,7 @@ import {
 } from "../../src/eviction-checkpoint.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { getVarsQueue, getConversationStore, closeAll } from "../../src/state-db.mjs";
-import { getConvId } from "../../src/session-context.mjs";
+import { convIdFor } from "../../src/session-context.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
@@ -57,9 +57,9 @@ export default function (pi: ExtensionAPI) {
     console.error("[eviction-checkpoint] rung 'require' (OOB) non ancora wired: uso 'inject' come interim (spike endpoint pending).");
   }
 
-  pi.on("context", (event) => {
+  pi.on("context", (event, ctx) => {
     const messages = ((event as any).messages as any[]) || [];
-    const convId = getConvId();
+    const convId = convIdFor(ctx);
 
     // CONTEGGIO DALLO STORE, non da event.messages: native-window gira nello stesso hook `context` e finestra
     // l'array PRIMA (contarlo da lì darebbe ≤ keepTurns → eviction MAI rilevata, bug sessione 019f2ab9). (fix 2026-07-04)

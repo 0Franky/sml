@@ -1,23 +1,68 @@
 /**
- * session-context — identità di sessione CONDIVISA tra le extension pi (singleton ESM per-realm).
+ * session-context — identità di sessione CONDIVISA tra le extension pi.
  *
- * Il `convId` indicizza la conversazione in `conversations.db`. Era hard-coded "main" → sessioni/fork
- * concorrenti si interlacciavano nello stesso flusso (review-loop 2026-06-29, P1). Qui è impostato per-sessione
- * (su `session_start` da conversation-capture) e LETTO da context-assembly per assemblare la lane
- * <messages_with_user> sulla STESSA conversazione → i due lati concordano senza round-trip sul DB.
+ * Il `convId` indicizza la conversazione in `conversations.db`. Era un GLOBAL-di-processo mutabile (`let _convId`)
+ * scritto una volta su session_start e letto no-arg: due AgentSession vive nello STESSO realm Node (SDK
+ * multi-sessione, `SessionManager.inMemory()` ×2) collidevano — la 2ª session_start sovrascriveva la cella e i
+ * hook della 1ª leggevano il convId della 2ª (interleave P1, review-loop 2026-06-29; D3, audit 2026-07-04).
  *
- * Fallback "main" se `session_start` non scatta (es. SDK headless minimale) → comportamento legacy, mai rotto.
+ * FIX D3 (2026-07-04): il convId è ora SESSION-scoped in `Map<sessionId, convId>`; ogni hook/tool lo risolve dal
+ * PROPRIO ctx via `convIdFor(ctx)` (`ctx.sessionManager.getSessionId()`, esposto per-runner da pi → identifica
+ * esattamente la sessione che fira, anche con N sessioni concorrenti). La connessione DB resta CONDIVISA (è
+ * arg-driven e session-agnostica): si de-globalizza SOLO il valore convId, non la connessione. Lo slot persistito
+ * `_conv_id:<sessionId>` in vars.db (source-of-truth durevole per resume) è invariato: la Map è cache runtime.
+ *
+ * `_fallbackConvId` copre il caso davvero headless (ctx senza sessionManager) e i vecchi shim getConvId/setConvId;
+ * è tenuto allineato all'ULTIMA sessione registrata → il bare getConvId() ha la semantica retro-compatibile del
+ * vecchio global (mai peggiore: non degrada a "main" in una TUI single-session).
  */
-let _convId = "main";
 
-/** Imposta il convId della sessione corrente (idempotente; chiamato una volta su session_start). */
-export function setConvId(id) { if (id) _convId = String(id); }
+/** @type {Map<string, string>} sessionId → convId (una entry per sessione viva nel processo). */
+const _bySession = new Map();
+/** convId di fallback: caso headless (ctx senza sessionManager) + shim legacy. Segue l'ultima sessione registrata. */
+let _fallbackConvId = "main";
 
-/** convId della sessione corrente (default "main"). */
-export function getConvId() { return _convId; }
+/** Estrae il sessionId dal ctx dell'hook/tool pi in modo difensivo (null se assente/headless). */
+export function sessionIdOf(ctx) {
+  try {
+    const sid = ctx?.sessionManager?.getSessionId?.();
+    return sid ? String(sid) : null;
+  } catch {
+    return null;
+  }
+}
 
 /**
- * resolveConvId — decide il convId (e se PERSISTERLO) per una session_start.
+ * Registra il convId di una sessione (chiamato una volta su session_start, con l'output di resolveConvId).
+ * Aggiorna sia la Map per-sessione (se c'è sessionId) sia `_fallbackConvId` (ultima sessione → retro-compat shim).
+ */
+export function setConvIdForSession(sessionId, convId) {
+  if (!convId) return;
+  const cid = String(convId);
+  if (sessionId) _bySession.set(String(sessionId), cid);
+  _fallbackConvId = cid;
+}
+
+/** convId della sessione che possiede questo ctx; fallback all'ultima registrata (o "main") se headless. */
+export function convIdFor(ctx) {
+  const sid = sessionIdOf(ctx);
+  if (sid && _bySession.has(sid)) return _bySession.get(sid);
+  return _fallbackConvId;
+}
+
+/** Rimuove la entry di una sessione (su session_shutdown) per evitare crescita della Map. */
+export function clearSession(sessionId) {
+  if (sessionId) _bySession.delete(String(sessionId));
+}
+
+/** @deprecated shim legacy: opera su `_fallbackConvId` (solo path headless-senza-sessionManager + test). Usa convIdFor(ctx). */
+export function setConvId(id) { if (id) _fallbackConvId = String(id); }
+
+/** @deprecated shim legacy: ritorna `_fallbackConvId`. Usa convIdFor(ctx) nel codice runtime. */
+export function getConvId() { return _fallbackConvId; }
+
+/**
+ * resolveConvId — decide il convId (e se PERSISTERLO) per una session_start. INVARIATA dal fix D3.
  *
  * MODO PER-SESSIONE (`opts.perSession=true`, quando pi espone `getSessionId()`): lo slot è keyato per-sessione
  * (`_conv_id:<sessionId>`), quindi `persisted` = il convId DI QUESTA sessione. Se presente → RIUSA (reload/resume
@@ -49,4 +94,4 @@ export function resolveConvId(reason, persisted, stamp, opts = {}) {
   return { convId: String(persisted), isNew: false, persist: false }; // riusa il persistito
 }
 
-export default { setConvId, getConvId, resolveConvId };
+export default { setConvId, getConvId, resolveConvId, sessionIdOf, setConvIdForSession, convIdFor, clearSession };
