@@ -1,0 +1,206 @@
+/**
+ * eviction-checkpoint (NEW-A) — RETE DI SICUREZZA per i FATTI DUREVOLI in uscita dalla finestra nativa.
+ *
+ * Problema (caso "Lupo", todo NEW-A): un fatto che serve MOLTI turni dopo esce dalla finestra nativa
+ * (keepTurns=K) e il modello non l'ha salvato → lo ripesca a fatica o confabula. I tool note/set_var e
+ * l'istruzione ESISTONO già; il 9B non li USA. Questa è la rete che lo SPINGE a salvare PRIMA della perdita.
+ *
+ * Design (utente msg 908/925/928/930/936/939, todo.md sezione NEW-A):
+ *  - trigger DETERMINISTICO (soluzione B): scatta quando un turno-utente supera il bordo visibile (eviction dal
+ *    nativo), NON su content-detection (scartata: "pezza + non enumerabile a mano"). Copertura per costruzione.
+ *  - rung ladder (riusa il pattern `gathering` delegated/inject/require):
+ *      off     = no-op (DEFAULT finché non validato live sul 9B)
+ *      nudge   = direttiva PASSIVA appesa all'array uscente (cheap, order-independent)
+ *      inject  = nudge + DIGEST dei turni in uscita (concreto)
+ *      require = chiamata-modello DEDICATA out-of-band (Impl-2) — SEPARATA dalla conversazione
+ *  - "sparisce dalla storia" = **MAI ENTRARCI** (non iniettare-poi-cancellare): nudge/inject via context-hook
+ *    (non-persistito, effimero per costruzione); require via chiamata OOB (fuori-conversazione: persiste solo
+ *    l'EFFETTO = i fatti salvati, l'exchange non tocca mai la storia). Vedi VERDETTO todo NEW-A 2026-07-04.
+ *  - anti-hack ([[feedback_reward_hacking_principle]]): il gate verifica solo la PARTECIPAZIONE (scaffold
+ *    runtime), MAI un reward — un reward "hai salvato qualcosa" premierebbe il salvare spazzatura. Reward = strato-3.
+ *  - EFFIMERO-al-modello ≠ EFFIMERO-nei-log: ogni evento va LOGGATO (è la supervisione strato-3, data-factory).
+ *  - scaffold che RECEDE (L3 anti-pezza): metrica = frazione di eviction dove il modello aveva GIÀ salvato → sale
+ *    con lo strato-3 → si declassa il rung require→inject→nudge→off.
+ *
+ * Node-puro + testabile (fetchImpl iniettabile per l'OOB, come http-request.mjs). Zero import pesanti.
+ */
+
+/** Scala dei rung, dal più economico. off = capability presente ma inerte (default). */
+export const EVICTION_RUNGS = ["off", "nudge", "inject", "require"];
+
+/**
+ * Config del rung. DEFAULT `off`: la sola presenza dell'estensione NON cambia il comportamento live finché non
+ * abiliti un rung (env `HARNESS_EVICTION_CHECKPOINT`). Fail-safe: valore ignoto → off.
+ * @param {Record<string,string|undefined>} [env]
+ * @returns {{ rung: string, enabled: boolean }}
+ */
+export function loadEvictionConfig(env = typeof process !== "undefined" && process.env ? process.env : {}) {
+  const raw = String(env.HARNESS_EVICTION_CHECKPOINT || "").trim().toLowerCase();
+  const rung = EVICTION_RUNGS.includes(raw) ? raw : "off";
+  return { rung, enabled: rung !== "off" };
+}
+
+/**
+ * evictionEvent — dato il n° di turni-utente correnti (`userTurnCount`), la finestra nativa (`keepTurns=K`) e
+ * l'ultimo ordinale già evacuato (`lastEvictedOrdinal`, persistito), calcola quali turni-utente sono APPENA
+ * usciti dal nativo. Semantica allineata a `windowNativeMessages` (tiene gli ultimi K turni-utente).
+ * Gli ordinali sono 1-based in ordine cronologico (1 = primo turno-utente della conversazione).
+ * Puro. Idempotente: se già evacuati (prev ≥ evictedThrough) → newlyEvicted vuoto.
+ * @param {{ userTurnCount:number, keepTurns:number, lastEvictedOrdinal?:number }} args
+ * @returns {{ evictedThrough:number, newlyEvicted:number[] }}
+ */
+export function evictionEvent({ userTurnCount, keepTurns, lastEvictedOrdinal = 0 } = {}) {
+  const K = Math.max(1, Math.floor(Number(keepTurns) || 1));
+  const U = Math.max(0, Math.floor(Number(userTurnCount) || 0));
+  const prev = Math.max(0, Math.floor(Number(lastEvictedOrdinal) || 0));
+  const evictedThrough = Math.max(0, U - K); // ordinali 1..evictedThrough sono FUORI dall'array nativo
+  const newlyEvicted = [];
+  for (let o = prev + 1; o <= evictedThrough; o++) newlyEvicted.push(o);
+  return { evictedThrough, newlyEvicted };
+}
+
+/**
+ * summarizeEvicting — digest COMPATTO dei turni in uscita (per la direttiva inject / il prompt OOB).
+ * @param {Array<{ordinal?:number,role?:string,text?:string}>} turns
+ * @param {{ maxCharsPerTurn?:number, maxTurns?:number }} [opts]
+ * @returns {string}
+ */
+export function summarizeEvicting(turns, { maxCharsPerTurn = 240, maxTurns = 6 } = {}) {
+  if (!Array.isArray(turns) || turns.length === 0) return "";
+  const slice = turns.slice(0, Math.max(1, maxTurns));
+  const lines = slice.map((t) => {
+    const role = t && t.role ? String(t.role) : "user";
+    let text = t && t.text != null ? String(t.text) : "";
+    text = text.replace(/\s+/g, " ").trim();
+    if (text.length > maxCharsPerTurn) text = text.slice(0, Math.max(0, maxCharsPerTurn - 1)) + "…";
+    const ord = t && t.ordinal != null ? `#${t.ordinal} ` : "";
+    return `- ${ord}[${role}] ${text}`;
+  });
+  const more = turns.length > slice.length ? `\n- (+${turns.length - slice.length} more leaving)` : "";
+  return lines.join("\n") + more;
+}
+
+/** Frase-guida condivisa (model-facing, EN). Outcome, non cerimonia: "salva o non fare nulla". */
+const SAVE_HINT =
+  'save it NOW with note("<fact>") (or set_var for a structured value). If nothing here is durable, do nothing. Do not restate this notice.';
+
+/**
+ * buildEvictionDirective — testo model-facing (EN) per i rung nudge/inject. Stringa vuota per off/require.
+ * @param {string} rung
+ * @param {{ digest?:string }} [opts]
+ * @returns {string}
+ */
+export function buildEvictionDirective(rung, { digest = "" } = {}) {
+  if (rung !== "nudge" && rung !== "inject") return "";
+  const head =
+    "MEMORY EVICTION — the earlier message(s) are leaving your working window; after this turn you will NOT see " +
+    "them verbatim. If they contain a DURABLE fact worth remembering later (a name/nickname, a decision, a " +
+    "constraint, a stable preference, an open thread), " +
+    SAVE_HINT;
+  if (rung === "inject" && digest) return head + "\n\nLeaving the window:\n" + digest;
+  return head;
+}
+
+/**
+ * buildOobPrompt — messaggi per la chiamata DEDICATA out-of-band (rung require, Impl-2). Focalizzata SOLO sul
+ * salvare (attenzione piena = "escala il vincolo non il contesto"). L'output è vincolato a `SAVE:`/`NONE`.
+ * @param {{ digest?:string }} [opts]
+ * @returns {Array<{role:string,content:string}>}
+ */
+export function buildOobPrompt({ digest = "" } = {}) {
+  return [
+    {
+      role: "system",
+      content:
+        "You extract DURABLE facts to remember from messages that are leaving a chat's memory window. A durable " +
+        "fact is a name/nickname, a decision, a constraint, a stable preference, or an open thread — something " +
+        "that will matter many turns later. Ignore small talk and transient details. Reply with ONLY the facts " +
+        "to save, one per line, each as `SAVE: <fact>`. If nothing is durable, reply with exactly `NONE`.",
+    },
+    { role: "user", content: "Messages leaving the window:\n" + digest },
+  ];
+}
+
+/**
+ * parseOobSave — estrae i fatti da salvare dalla risposta OOB (lenient). `NONE` (in qualsiasi riga) → [].
+ * @param {string} responseText
+ * @returns {Array<{text:string}>}
+ */
+export function parseOobSave(responseText) {
+  if (typeof responseText !== "string") return [];
+  const out = [];
+  for (const rawLine of responseText.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    if (/^none\b/i.test(line)) return [];
+    const m = line.match(/^save\s*:\s*(.+)$/i);
+    if (m && m[1].trim()) out.push({ text: m[1].trim() });
+  }
+  return out;
+}
+
+/**
+ * extractChatText — testo dell'assistant da una risposta OpenAI-compatible (vLLM) o ollama (/api/chat|/api/generate).
+ * @param {unknown} data
+ * @returns {string}
+ */
+export function extractChatText(data) {
+  if (!data || typeof data !== "object") return "";
+  const d = /** @type {any} */ (data);
+  const choice = Array.isArray(d.choices) ? d.choices[0] : null; // OpenAI-compatible
+  if (choice && choice.message && typeof choice.message.content === "string") return choice.message.content;
+  if (d.message && typeof d.message.content === "string") return d.message.content; // ollama /api/chat
+  if (typeof d.response === "string") return d.response; // ollama /api/generate
+  return "";
+}
+
+/**
+ * callModelOutOfBand — chiamata DEDICATA fuori-conversazione all'endpoint del modello (Impl-2 / spike OOB).
+ * NON tocca la conversazione: la richiesta non entra mai nella storia; persiste solo l'EFFETTO (i fatti salvati
+ * dal caller via note/set_var). `fetchImpl` iniettabile → testabile senza rete (come http-request.mjs).
+ * ⚠ La RISOLUZIONE dell'endpoint dal config di pi è il passo di validazione LIVE residuo (vedi todo NEW-A).
+ * @param {{ endpoint:string, model?:string, messages:Array<{role:string,content:string}>, apiKey?:string,
+ *           fetchImpl?:Function, timeoutMs?:number }} args
+ * @returns {Promise<{ok:boolean, text?:string, saves?:Array<{text:string}>, error?:string}>}
+ */
+export async function callModelOutOfBand({ endpoint, model, messages, apiKey, fetchImpl, timeoutMs = 20000 } = {}) {
+  const fetchFn = fetchImpl || (typeof globalThis !== "undefined" ? globalThis.fetch : undefined);
+  if (typeof fetchFn !== "function") return { ok: false, error: "no fetch implementation available" };
+  if (typeof endpoint !== "string" || !endpoint) return { ok: false, error: "endpoint required" };
+  if (!Array.isArray(messages) || messages.length === 0) return { ok: false, error: "messages required" };
+  const headers = { "content-type": "application/json" };
+  if (apiKey) headers["authorization"] = `Bearer ${apiKey}`;
+  const ms = Number.isFinite(timeoutMs) ? Math.min(Math.max(timeoutMs, 1), 120_000) : 20_000;
+  let resp;
+  try {
+    resp = await fetchFn(endpoint, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ model: model || "local", messages, temperature: 0, stream: false }),
+      signal: typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(ms) : undefined,
+    });
+  } catch (e) {
+    const msg = e && e.name === "TimeoutError" ? `oob request timed out after ${ms}ms` : `oob request failed: ${e && e.message ? e.message : String(e)}`;
+    return { ok: false, error: msg };
+  }
+  let data;
+  try {
+    data = typeof resp.json === "function" ? await resp.json() : JSON.parse(String(resp.body ?? ""));
+  } catch {
+    return { ok: false, error: "oob response not JSON" };
+  }
+  const text = extractChatText(data);
+  return { ok: true, text, saves: parseOobSave(text) };
+}
+
+export default {
+  EVICTION_RUNGS,
+  loadEvictionConfig,
+  evictionEvent,
+  summarizeEvicting,
+  buildEvictionDirective,
+  buildOobPrompt,
+  parseOobSave,
+  extractChatText,
+  callModelOutOfBand,
+};
