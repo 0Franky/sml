@@ -37,7 +37,7 @@ function makeNative() {
   const trMsg = framed.find((m) => m.role === "toolResult");
   const trText = trMsg.content[0].text;
   ok(trText.startsWith("<tool_result ") && /tool="add_secret"/.test(trText), "F1: tool_result auto-descritto (tool=add_secret) → attribuibile, non confabulabile come msg utente");
-  ok(/untrusted tool output/.test(trText), "F1: banner untrusted presente (riga load-bearing)");
+  ok(/UNTRUSTED ZONE/.test(trText), "F1: banner untrusted presente (riga load-bearing)");
   ok(/secret registered \(1 active/.test(trText), "F1: contenuto reale del tool preservato dentro l'envelope");
   ok(/status="ok"/.test(trText) && /call_id="call_add"/.test(trText), "F1: meta-info (status/call_id) presenti");
 }
