@@ -20,15 +20,15 @@ sources:
 2. **COSA MISURA `getContextUsage()`** [EXTRACTED] — pi `agent-session.js:2405-2444`. `contextWindow = model.contextWindow` (finestra PIENA). `tokens = estimateContextTokens(this.messages)`. **CRUCIALE**: `estimateContextTokens` (`compaction.js:123-148`) NON somma ingenuamente la history: àncora su `getLastAssistantUsageInfo` = **la usage REALE fatturata dall'ultima richiesta** (già finestrata da native-window), + i soli messaggi trailing. Compaction nativa OFF (`.pi/settings.json`) → nessuna compaction-entry, path stabile.
    - ⇒ **L'ipotesi "la history-fantasma non-vista gonfia `percent`" è REFUTATA**: i turni più vecchi di keepTurns sono windowed-out del billing E stanno prima dell'anchor → non entrano nel conteggio. Se manca una usage valida → `tokens=null` → `percent=null` → asse-token=none (fail-safe).
 3. **METRICHE** — `collectMetrics` (`nested-compact.mjs:51-66`): `percent = tokens / (contextWindow*(1-outputReservePct))`; `watchCount = openTasks + pendingVerifs`. `sharedVars`/`recentChanges` calcolati ma NON usati nella classificazione.
-4. **CLASSIFICAZIONE** — `classifyPressure` (`nested-compact.mjs:69-80`): due ladder in **OR-max**. Token: `percent≥tokenMatrioskaPct(0.75)`→matrioska, `≥tokenReorderPct(0.55)`→reorder. Watch: `watchCount≥watchMatrioska(25)`→matrioska, `≥watchReorder(12)`→reorder. `evaluateTrigger` degrada matrioska→reorder a depth saturo.
-5. **SOGLIE** (`DEFAULT_CFG`, `nested-compact.mjs:27-41`): tokenReorderPct=0.55, tokenMatrioskaPct=0.75, watchReorder=12, watchMatrioska=25, focusK=5, maxDepth=3, cooldownMs=90000, outputReservePct=0.
+4. **CLASSIFICAZIONE** — due ladder. Token/occupancy: `percent≥tokenMatrioskaPct(0.75)`→matrioska, `≥tokenReorderPct(0.55)`→reorder. Watch/work: `watchCount≥watchMatrioska(25)`→matrioska, `≥watchReorder(12)`→reorder. `evaluateTrigger` degrada matrioska→reorder a depth saturo. **✅ A2 (fatto 2026-07-04, commit `e3710fe`)**: `classifyAxes`→`{work, occ}` espone i 2 assi SEPARATI; `pickDriver(work,occ,cfg.pressureDriver)` seleziona il livello (`"max"`=OR-max storico, DEFAULT invariato · `"work"` · `"occupancy"`); `classifyPressure` resta backward-compat (stringa-livello via pickDriver); `evaluateTrigger` espone additivamente `work/occ/driver/reason`.
+5. **SOGLIE** (`DEFAULT_CFG`, `nested-compact.mjs`): tokenReorderPct=0.55, tokenMatrioskaPct=0.75, watchReorder=12, watchMatrioska=25, focusK=5, maxDepth=3, cooldownMs=90000, outputReservePct=0, **pressureDriver="max"** (A2, enum validato in harness-config, env `HARNESS_PRESSURE_DRIVER`).
 
 ## Consumatori del segnale [EXTRACTED]
 
 - **maybeAutoFocus** (autofocus.mode='auto', `context-assembly.ts:152`→`nested-compact.mjs:182-198`): se recommend=='matrioska' e nessuno scope aperto → ENTRA in focus da solo sui top-focusK task ready.
-- **`<focus_hint>`** (autofocus.mode='nudge', DEFAULT, `context-assembly.ts:168-181`): emesso su recommend=='matrioska' & cooldown; mostra al modello `ctx="<round(percent*100)>%"` + `watch=watchCount`.
-- **`<reorganize_hint>`** (`context-assembly.ts:182-186`): su recommend=='reorder'; anch'esso mostra `ctx="X%"` + watch.
-- **focus_status** tool (`nested-compact.ts:97-110`): on-demand, pressure=recommend + watch.
+- **`<focus_hint>`** (autofocus.mode='nudge', DEFAULT, `context-assembly.ts`): emesso su recommend=='matrioska' & cooldown. **A2**: mostra `reason=` (task-backlog/context-fill/both) + `watch="N/soglia"` azionabile + `ctx=X%` SOLO se `occ≠none`.
+- **`<reorganize_hint>`** (`context-assembly.ts`): su recommend=='reorder'; **A2**: stesso reporting onesto (reason + watch=N/soglia + ctx% condizionale).
+- **focus_status** tool (`nested-compact.ts`): on-demand; **A2**: pressure=recommend + reason + driver + work/occ + watch=N/soglia + ctx_pct (se occ≠none).
 - **turn-trace** (`turn-trace.ts:43-55`): consumatore PASSIVO/diagnostico; registra `contextFraction=tokens/contextWindow` + `systemLen` reale in `.pi/state/trace/`.
 - **session_before_compact** (`nested-compact.ts:116-119`): NON legge percent; annulla solo su reason=='threshold' (con compaction OFF non scatta mai).
 
@@ -41,7 +41,7 @@ sources:
 ## keepTurns — stato REALE (attenzione ai commenti stale) [EXTRACTED]
 
 - **Default REALE = 6** (`harness-config.mjs:51 nativeKeepTurns: 6`; raise utente msg 863). Config-driven via `.pi/harness.config.json` o env `HARNESS_NATIVE_KEEP_TURNS`.
-- **DEBITO**: `context-assembly.ts:43`, `native-window.ts:22`, `eviction-checkpoint.ts:46` hanno fallback `?? 1` (literal statico incoerente col default 6 — dead fallback perché `loadHarnessConfig` popola sempre il campo) + MOLTI commenti dicono "keepTurns:1" (stale, dall'era pre-raise). Da rendere config-driven (fallback = `DEFAULT_HARNESS_CONFIG.nativeKeepTurns`, mai un magic 6/1). [feedback utente msg 993]
+- **✅ DEBITO RISOLTO** (refactor SSOT/DRY, commit `e3c426b`): i fallback `?? 1` + `as any` in `context-assembly.ts`/`native-window.ts`/`eviction-checkpoint.ts` RIMOSSI → leggono `HARNESS_CFG.nativeKeepTurns` diretto (`loadHarnessConfig` garantisce intero ≥1); commenti stale "keepTurns:1" corretti. La difesa (clamp) vive UNA volta in loadHarnessConfig (CLAUDE.md #16, SSOT/DRY). [era feedback utente msg 993/1000]
 - Complementarità: la lane `<messages_with_user>` mostra SOLO i turni più vecchi del K-esimo (`nthLastUserSeq`); l'array nativo mostra gli ultimi K → niente doppia-chat.
 
 ## Misure reali (driver RPC, qwen3.5:9b, finestra riportata 262144) [EXTRACTED]
@@ -53,13 +53,18 @@ sources:
 
 **Letture**: (a) floor STABILE ~3.3-3.6K tok; (b) su finestra grande l'**asse-token è INERTE** (3%, mai vicino a 0.55/0.75) → il firing verrebbe SOLO dall'asse-watch; (c) il "floor fisso 6-8K token" era SOVRASTIMATO (l'intero system è ~3.5K tok). ⇒ [[project_test_model_vs_target|target 27B a finestra grande]]: occupancy praticamente inerte in uso normale; **watchCount è il driver realistico** di focus/reorg. (D3 convId isolation ri-validato: ogni run = un solo conv_id.)
 
-## Il DIFETTO reale (non quello ipotizzato)
+## Il DIFETTO reale (non quello ipotizzato) → ✅ RISOLTO da A2
 
-Non "focus spurio da history-fantasma" (refutato). Il difetto è: **l'OR-max fonde due assi ORTOGONALI** — `work` (carico-lavoro = watchCount, illimitato) e `occupancy` (pienezza fisica del contesto) — in un solo `recommend`, e mostra al modello un `ctx=X%` **fuorviante** (i token anche quando a scattare è stato il carico-task). Su finestra grande l'asse-token è morto → tutto è watch-driven ma il modello vede una % che non c'entra. [EXTRACTED dal workflow + confermato dalle misure]
+Non "focus spurio da history-fantasma" (refutato). Il difetto era: **l'OR-max fondeva due assi ORTOGONALI** — `work` (carico-lavoro = watchCount, illimitato) e `occupancy` (pienezza fisica del contesto) — in un solo `recommend`, e mostrava al modello un `ctx=X%` **fuorviante** (i token anche quando a scattare è stato il carico-task). Su finestra grande l'asse-token è morto → tutto è watch-driven ma il modello vedeva una % che non c'entra. [EXTRACTED dal workflow + confermato dalle misure] → **A2** (sotto) espone i 2 assi separati + `reason=` + nasconde il `ctx%` quando non è il driver.
 
-## Decisione A2 (fix, 2026-07-04) → [[decisions/2026-07-04-a2-context-pressure-honest-split]]
+## Decisione A2 → ✅ IMPLEMENTATA (2026-07-04, commit `e3710fe`) → [[decisions/2026-07-04-a2-context-pressure-honest-split]]
 
-**Split onesto, config-driven, backward-compatible** (strategia scelta dopo delega utente msg 997): `classifyPressure` ritorna `{work, occ, recommend}` (2 assi separati); nuovo config `pressureDriver` (default "max" = firing attuale invariato = zero nuovi problemi; opzioni "work"/"occupancy"); reporting ONESTO al modello (`watch=N/soglia` intero quando work-driven, `ctx=X%` quando occupancy-driven); keepTurns-dependent → `cfg.nativeKeepTurns`, mai literal. **NON** si costruisce la macchina floor-decomposition/reducibility-gate (over-engineering per il regime reale; tracciata in [[todo]]). Casi limite (keepTurns=1, percent=null, watch=0) analizzati + testati.
+**Split onesto, config-driven, backward-compatible** (strategia scelta dopo delega utente msg 997), FATTO:
+- **Core**: `classifyAxes`→`{work, occ}` (2 assi separati) + `pickDriver(work,occ,driver)` + `pressureReason(...)`; `classifyPressure` backward-compat; `evaluateTrigger` espone `work/occ/driver/reason`.
+- **Config**: `pressureDriver` in `DEFAULT_CFG` (default `"max"` = firing INVARIATO; opzioni `"work"`/`"occupancy"`), validato file+env.
+- **Reporting ONESTO**: `focus_hint`/`reorganize_hint` mostrano `reason=` + `watch="N/soglia"` azionabile + `ctx=X%` SOLO se `occ≠none` (niente % red-herring quando scatta il task-backlog); `focus_status` arricchito con reason/driver/work/occ.
+- **keepTurns**: già config-driven (debito risolto sopra).
+- **NON** costruita la macchina floor-decomposition/reducibility-gate (over-engineering per il regime reale; tracciata in [[todo]]). Casi limite (percent=null→occ=none, watch=0→work=none, driver isola l'asse, max=OR) testati (nested-compact 105/0 + harness-config 58/0).
 
 ## Links
 

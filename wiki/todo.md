@@ -53,8 +53,9 @@ last_updated: 2026-06-30
 
 </details>
 
-### ⏭️ PROSSIMO (post-SSOT/DRY): A2 split onesto della pressione-contesto
-> ADR `wiki/decisions/2026-07-04-a2-context-pressure-honest-split.md` (accepted). `classifyPressure` → `{work, occ, recommend}`; config `pressureDriver` (default "max" = firing INVARIATO); reporting onesto (watch=N/soglia quando driver=work, ctx=X% quando occupancy); edge keepTurns=1/percent=null/watch=0 + test. NON costruire la macchina-floor (over-engineering, occupancy inerte su finestra grande). Ora la config è SSOT-pulita → il campo `pressureDriver` si aggiunge in `DEFAULT_HARNESS_CONFIG.trigger` + clamp in loadHarnessConfig.
+### ✅ A2 split onesto della pressione-contesto — FATTO (2026-07-04, commit `e3710fe`)
+> ADR `wiki/decisions/2026-07-04-a2-context-pressure-honest-split.md` (implementato). `classifyAxes`→{work,occ} + `pickDriver` + `pressureReason`; `classifyPressure` backward-compat; `evaluateTrigger` espone work/occ/driver/reason. Config `pressureDriver` (DEFAULT_CFG="max"=firing INVARIATO) validato file+env (`HARNESS_PRESSURE_DRIVER`) + example.json. Reporting onesto in focus_hint/reorganize_hint/focus_status (reason + watch=N/soglia + ctx% solo se occ≠none). Test: +22 (nested-compact 105/0) +5 (harness-config 58/0). typecheck 0, suite 37/0. NON costruita la macchina-floor (over-engineering).
+> **⏳ RESIDUO**: validazione driver LIVE della RESA del nudge sotto pressione (≥25 task open) col 9B — non ancora eseguita (il firing è default-preserving + backward-compat testato, quindi basso rischio).
 - **eviction-nudge efficacia**: D2 ha spostato il nudge sul canale user (che il 9B legge), ma l'EFFICACIA (il modello salva davvero?) va validata con un test eviction DEDICATO multi-turno (>keepTurns). + valutare fire-until-saved invece di fire-once (boundary avanza prima del successo).
 - **[WONTFIX/track] D4 — verifier-sandbox isolamento debole** (no Docker) → gate dietro flag config finché non containerizzato.
 
