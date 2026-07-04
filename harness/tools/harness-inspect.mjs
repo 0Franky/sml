@@ -87,7 +87,9 @@ function sessionConvMapping() {
   if (!db || db._err) return [];
   try {
     if (!tablesOf(db).includes("meta")) return [];
-    return db.prepare(`SELECT key, value FROM meta WHERE key LIKE '${CONV_ID_META}%' ORDER BY key`).all();
+    // schema meta = (k, v) — NON (key, value): alias per il display (m.key/m.value a valle). Bug pre-esistente: la
+    // query key/value lanciava "no such column: key" → catch → sempre []. (Tracciato in wiki/todo.md, fix 2026-07-04.)
+    return db.prepare(`SELECT k AS key, v AS value FROM meta WHERE k LIKE '${CONV_ID_META}%' ORDER BY k`).all();
   } catch { return []; }
   finally { if (db && !db._err) db.close(); }
 }
