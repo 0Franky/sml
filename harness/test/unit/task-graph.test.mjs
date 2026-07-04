@@ -146,5 +146,29 @@ function throws(fn, msg) { try { fn(); failed++; console.error("  ✗ FAIL (no t
   vq.close();
 }
 
+// 12) task-validation (utente msg 1076): enum-guard + deps-guard su in_progress ------------------
+{
+  const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+  vq.addTask("V1", "v1"); vq.addTask("V2", "v2", { deps: ["V1"] }); // V2 bloccato (V1 non done)
+  // enum-guard: status arbitrario rifiutato
+  throws(() => vq.setTaskStatus("V1", "doing"), "ENUM: status-spazzatura 'doing' → throw");
+  throws(() => vq.setTaskStatus("V1", "WIP"), "ENUM: 'WIP' non nell'enum → throw");
+  // deps-guard: NON attivabile V2 finché V1 non è done
+  throws(() => vq.setTaskStatus("V2", "in_progress"), "DEPS-GUARD: in_progress su task con deps non-done → throw");
+  ok(vq.getTask("V2").status === "pending", "DEPS-GUARD: V2 resta 'pending' dopo il rifiuto (nessuna scrittura)");
+  // 'blocked'/'cancelled' NON sono attivazione → ammessi anche con deps aperte
+  ok(vq.setTaskStatus("V2", "blocked")?.status === "blocked", "DEPS-GUARD: 'blocked' ammesso (non è attivazione)");
+  // sblocco: V1 done → V2 attivabile
+  vq.setTaskStatus("V1", "done");
+  ok(vq.setTaskStatus("V2", "in_progress")?.status === "in_progress", "DEPS-GUARD: V1 done → V2 attivabile");
+  ok(vq.setTaskStatus("V1", "cancelled")?.status === "cancelled", "ENUM: 'cancelled' accettato");
+  // forward-ref: dep su task inesistente → non attivabile (coerente con la vista ready)
+  vq.addTask("V3", "v3", { deps: ["GHOST-X"] });
+  throws(() => vq.setTaskStatus("V3", "in_progress"), "DEPS-GUARD: dep forward-ref inesistente → non attivabile");
+  // task inesistente resta no-op (B3) anche con la validazione
+  ok(vq.setTaskStatus("nope", "done") === null, "B3: task inesistente → null (no-op), non throw");
+  vq.close();
+}
+
 console.log(`\ntask-graph test: ${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);

@@ -18,7 +18,7 @@ last_updated: 2026-06-30
 - [ ] (decidere) email autore nei metadata commit: rewrite sì/no (default: lasciata).
 
 **🟡 BUILD stanotte (autonomo — wiring+test+commit, ADR [[decisions/2026-07-05-slm-scaffolding-extension]]):**
-- [ ] **1. Task-validation deps-aware** (utente msg 1076): enum stati {pending,in_progress,done,blocked,cancelled} in `setTaskStatus` (oggi accetta stringa libera) + **NON attivabile (in_progress) un task con deps non-`done`** (rispetta `_checkDeps`/`ready`/`unblocks` esistenti — RAFFORZA, non tocca) + status-spazzatura rifiutato. Core (meccanismo). Unit + wiring-test.
+- [x] **1. Task-validation deps-aware** (utente msg 1076) ✅ **FATTO**: `TASK_STATUSES` SSOT {pending,in_progress,done,blocked,cancelled}; `setTaskStatus` rifiuta status arbitrari (enum-guard) + **NON attiva (in_progress) un task con deps non-`done`** (deps-guard, rispetta `_checkDeps`/`ready`, non lo bypassa; forward-ref → blocca); `set_task_status` tool try/catch → rifiuto azionabile. Test task-graph +10 asserzioni; **suite unit 30/0, typecheck 0**.
 - [ ] **2. Scheletro estensione `slm`** + sposta+**semplifica** `how_memory_works` (assenza-lane=segnale, togli "non è il primo messaggio"). ⚠️ il 9B dipende da how_memory_works per l'amnesia → ri-test driver prima di rimuovere dal core.
 - [ ] **3. Categorizza `<rules>`** per header ([safety]=core / [memory]=`slm`) + nudge "set aim/task_list" → `slm`.
 - [ ] **4. (design) context-invariant checker** RL-time: aim non-vuoto a task attivo, stati∈enum, no in_progress con deps aperte, timestamp monotoni. Reward OUTCOME-anchored (non cerimonia).

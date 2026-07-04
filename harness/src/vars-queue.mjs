@@ -141,6 +141,13 @@ function parseDeps(raw) {
   try { const a = JSON.parse(raw); return Array.isArray(a) ? a.map(String) : []; } catch { return []; }
 }
 
+/**
+ * TASK_STATUSES — SSOT (regola #16) degli stati task ammessi. Il modello NON può settare stati arbitrari
+ * (anti status-spazzatura, utente msg 1076). `blocked` = marcatura MANUALE (distinta dal `ready` deps-computed
+ * di listTasksOrdered); `cancelled` = task annullato. Lifecycle ≈ TODO(pending)→WIP(in_progress)→DONE(done).
+ */
+export const TASK_STATUSES = Object.freeze(["pending", "in_progress", "done", "blocked", "cancelled"]);
+
 export class VarsQueue {
   /**
    * @param {string} dbPath  ":memory:" oppure un path file (es. ".pi/state/vars.db").
@@ -372,13 +379,24 @@ export class VarsQueue {
   }
 
   setTaskStatus(id, status, { who = this.agent } = {}) {
-    const prev = this.db.prepare(`SELECT status FROM tasks WHERE id = ?`).get(id);
-    // B3 (audit 2026-07-04): task inesistente → no-op REALE. Prima si eseguiva un UPDATE a 0 righe + un _log FANTASMA
-    // (entry fuorviante in recent_changes) e si ritornava null che il tool spacciava per ok:true. Ora: niente write, null.
-    if (!prev) return null;
+    // B3 (audit 2026-07-04): task inesistente → no-op REALE (niente write né _log fantasma), ritorna null.
+    // Il check-esistenza resta PRIMA della validazione: uno status invalido su task inesistente = no-op, non throw.
+    const cur = this.getTask(id);
+    if (!cur) return null;
+    // Enum-guard (utente msg 1076): status ∈ TASK_STATUSES, mai stringa arbitraria (anti status-spazzatura).
+    if (!TASK_STATUSES.includes(status))
+      throw new Error(`status invalido '${status}' — ammessi: ${TASK_STATUSES.join("|")}`);
+    // Deps-guard (utente msg 1076): NON si ATTIVA (in_progress) un task bloccato da deps non-'done'. Rispetta il
+    // sistema deps/ready esistente (_checkDeps + listTasksOrdered.ready), non lo bypassa. forward-ref (dep inesistente)
+    // → status !== 'done' → blocca, coerente con la vista `ready`.
+    if (status === "in_progress") {
+      const unmet = (cur.deps ?? []).filter((d) => this.getTask(String(d))?.status !== "done");
+      if (unmet.length)
+        throw new Error(`task '${id}' non attivabile: bloccato da deps non ancora 'done': ${unmet.join(", ")}`);
+    }
     this.db.prepare(`UPDATE tasks SET status = ?, updated = ?, updated_by = ? WHERE id = ?`)
       .run(status, Date.now(), who, id);
-    this._log("tasks", id, "status", prev.status ?? null, status, who);
+    this._log("tasks", id, "status", cur.status ?? null, status, who);
     return this.getTask(id);
   }
 

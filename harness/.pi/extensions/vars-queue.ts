@@ -140,16 +140,23 @@ export default function (pi: ExtensionAPI) {
     name: "set_task_status",
     label: "Update task status",
     description:
-      "Update a task's status (pending|in_progress|done|blocked) + change-log. Creates the task if it does not exist and 'title' is provided.",
+      "Update a task's status (pending|in_progress|done|blocked|cancelled) + change-log. Creates the task if it does not exist and 'title' is provided. Rejected if the status is not one of the allowed values, or if you set 'in_progress' on a task whose dependencies are not all 'done' yet (it is blocked by them).",
     parameters: Type.Object({
       id: Type.String(),
-      status: Type.String({ description: "pending | in_progress | done | blocked" }),
+      status: Type.String({ description: "pending | in_progress | done | blocked | cancelled" }),
       title: Type.Optional(Type.String({ description: "If the task does not exist, creates it with this title." })),
     }),
     async execute(_toolCallId: string, params: any) {
       const who = activeWho();
       if (!vq.getTask(params.id) && params.title) vq.addTask(params.id, params.title, { who });
-      const t = vq.setTaskStatus(params.id, params.status, { who });
+      let t: any;
+      try {
+        t = vq.setTaskStatus(params.id, params.status, { who });
+      } catch (e: any) {
+        // Enum-guard / deps-guard (utente msg 1076): status invalido, o attivazione di un task bloccato da deps →
+        // rifiuto AZIONABILE (mai un successo fantasma). Stesso pattern di add_task.
+        return { content: [{ type: "text", text: `set_task_status rejected: ${e?.message ?? e}` }], details: { ok: false } };
+      }
       // B3 (audit 2026-07-04): task inesistente (e non creato per mancanza di 'title') → setTaskStatus è un no-op e
       // ritorna null; NON riportare ok:true (successo fantasma + entry fuorviante in recent_changes). Segnala azionabile.
       if (!t) return { content: [{ type: "text", text: `task '${params.id}' does not exist (pass 'title' to create it).` }], details: { ok: false } };
