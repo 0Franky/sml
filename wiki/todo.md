@@ -29,7 +29,18 @@ last_updated: 2026-06-30
 - **[adiacente-a-D3, track] closeAll() è process-global** (`state-db.mjs`): ogni extension registra `session_shutdown→closeAll()` che chiude le connessioni DB CONDIVISE dell'INTERO processo → in un processo multi-sessione il shutdown di UNA sessione rompe le sorelle vive. IRRILEVANTE per driver+TUI (processi OS separati, connessioni proprie) → il caso live non è colpito. Per il vero multi-sessione-in-1-realm serve ref-counting sulle connessioni o connessioni per-runner/state-dir per-sessione. Blocca il test-C end-to-end 2-sessioni-in-1-processo (fallirebbe per closeAll, non per convId). Trovato dal review-loop D3.
 - **[isolamento driver, track] state-dir separata per drive-qwen** (raccomandazione review D3 + busy_timeout): dare al driver una `.pi/state/` distinta (env/flag) → zero contesa E zero cross-talk col DB della TUI viva; busy_timeout torna rete-di-sicurezza invece di dipendenza load-bearing. ~9 estensioni hardcodano i path DB → serve un `HARNESS_STATE_DIR`. **NB**: il fix SSOT/DRY sotto (Gruppo 0: esportare i path da state-db.mjs) è il PREREQUISITO naturale di questo isolamento.
 
-## 🔧 SSOT/DRY refactor — piano ordinato (audit workflow `wf_89200f87`, 2026-07-04, CLAUDE.md #16)
+## ✅ SSOT/DRY refactor — FATTO+PUSHATO (2026-07-04, audit `wf_89200f87`, CLAUDE.md #16)
+
+> **COMPLETO — tutte le 12 violazioni.** 5 commit (origin==`69f79e8`), typecheck 0, suite 37/0.
+> - `5f9c406` Gruppo 0: leaf `src/{meta-keys,state-paths,db-pragmas,lane-defaults}.mjs` (+ `.d.mts`) + export `VARS_DB_PATH`/`CONV_DB_PATH`/`ORCHESTRATOR_AGENT` da state-db + mkdir-in-accessor + `applyConcurrencyPragmas`.
+> - `e3c426b` HIGH: ~13 siti path DB → accessor no-arg; via `?? 1`/`?? "gated"`/`as any` (keepTurns/toolGating, config garantisce); `CHECKPOINT_SEQ_META` da meta-keys; busy_timeout via `DB_BUSY_TIMEOUT_MS`. + test accessor (strada2).
+> - `caf21df` meta-keys (`GATHER_TOKEN_META`/`EVICTION_ORDINAL_META`/`CONV_ID_META`) + dirs (`TRACE_DIR`/`REPORTS_DIR`) + `REDACTION_MARKER`.
+> - `c88a185` MED: leaf `lane-defaults` (evita il ciclo che l'audit segnalava) → allineato `messagesWindowN` 6→8 + `maxFacts/Changes/Vars` nominati. Test-lock strada2 (default lane=8).
+> - `69f79e8` LOW: `harness.config.example.json` via prosa "Default N" + puntatore SSOT + completo.
+>
+> **🐛 BUG LATENTE TROVATO durante l'audit (da fixare a parte, PRE-esistente):** `harness-inspect.mjs` `sessionConvMapping()` fa `SELECT key, value FROM meta` ma lo schema reale della tabella `meta` (vars-queue.mjs) è `k, v` → la query THROW-a ed è catchata → ritorna SEMPRE `[]` (la mappa sessione→convId nell'inspector è muta). Non toccato nel refactor SSOT (colonne, non un literal duplicato). Fix: `SELECT k, v ...` + validare col tool live. Il LIKE `_conv_id%` è già SSOT (CONV_ID_META).
+
+<details><summary>Piano originale (storico)</summary>
 
 > 12 violazioni dedupate+ranked (output completo in `.output` del task). Regola: UNA sorgente per valore; `loadHarnessConfig` clampa/garantisce, i consumatori leggono `cfg.campo` senza `?? literal`/`as any`. Ordine: prima i moduli-leaf SSOT (Gruppo 0), poi i consumatori li referenziano. `[MECC]`=meccanico no-behavior; `[RISCHIO]`=cambio-comportamento → test.
 >
@@ -39,6 +50,11 @@ last_updated: 2026-06-30
 > **LOW**: (10) `_eviction_ordinal:`/`_conv_id` nei tool → da `meta-keys.mjs` `[MECC]`. (11) `[REDACTED-SECRET]` → `export REDACTION_MARKER` da secrets-redact.mjs `[MECC]`. (12) `harness.config.example.json` prosa "Default N" duplicata+incompleta → rigenerare da DEFAULT_HARNESS_CONFIG o togliere i numeri `[DOC]`.
 > **NON confermato**: `DEFAULT_CFG` (nested-compact) vs `DEFAULT_HARNESS_CONFIG.trigger` NON sono duplicati (sorgenti separate legittime) — l'audit l'ha escluso.
 > **Poi**: A2 split (ADR `2026-07-04-a2-context-pressure-honest-split`, collegato — tocca la stessa config). Test (DB + isolamento + A2 edge keepTurns=1) + typecheck + validazione driver + graphify --update.
+
+</details>
+
+### ⏭️ PROSSIMO (post-SSOT/DRY): A2 split onesto della pressione-contesto
+> ADR `wiki/decisions/2026-07-04-a2-context-pressure-honest-split.md` (accepted). `classifyPressure` → `{work, occ, recommend}`; config `pressureDriver` (default "max" = firing INVARIATO); reporting onesto (watch=N/soglia quando driver=work, ctx=X% quando occupancy); edge keepTurns=1/percent=null/watch=0 + test. NON costruire la macchina-floor (over-engineering, occupancy inerte su finestra grande). Ora la config è SSOT-pulita → il campo `pressureDriver` si aggiunge in `DEFAULT_HARNESS_CONFIG.trigger` + clamp in loadHarnessConfig.
 - **eviction-nudge efficacia**: D2 ha spostato il nudge sul canale user (che il 9B legge), ma l'EFFICACIA (il modello salva davvero?) va validata con un test eviction DEDICATO multi-turno (>keepTurns). + valutare fire-until-saved invece di fire-once (boundary avanza prima del successo).
 - **[WONTFIX/track] D4 — verifier-sandbox isolamento debole** (no Docker) → gate dietro flag config finché non containerizzato.
 
