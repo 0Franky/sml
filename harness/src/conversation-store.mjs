@@ -16,6 +16,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { parseSessionStartMs, sessionStartIso, shiftPrefix } from "./time-shift.mjs";
 import { applyConcurrencyPragmas } from "./db-pragmas.mjs";
+import { DEFAULT_MESSAGES_WINDOW_N, DEFAULT_MESSAGES_CHAR_CAP } from "./lane-defaults.mjs"; // SSOT default lane messaggi
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS conversations (
@@ -207,7 +208,7 @@ export function isGenuineUserInput({ text, source, streamingBehavior } = {}) {
  * @param {{ n?: number, charCap?: number, afterSeq?: number, excludeCurrentTurn?: boolean }} [opts]
  * @returns {string} blocco "<messages_with_user …>…</messages_with_user>" oppure "" (conversazione vuota)
  */
-export function buildMessagesLane(store, convId, { n = 6, charCap = 4000, afterSeq = 0, excludeCurrentTurn = false, nativeKeepTurns = 0 } = {}) {
+export function buildMessagesLane(store, convId, { n = DEFAULT_MESSAGES_WINDOW_N, charCap = DEFAULT_MESSAGES_CHAR_CAP, afterSeq = 0, excludeCurrentTurn = false, nativeKeepTurns = 0 } = {}) {
   // bound superiore: escludi il turno utente in volo (la sua seq è il max della conversazione, appena appeso).
   // untilSeq può legittimamente valere 0 (turno corrente = primissimo messaggio) → lane vuota, corretto.
   let untilSeq = null;

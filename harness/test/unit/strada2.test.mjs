@@ -223,6 +223,16 @@ function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error(
   rmSync(tmp, { recursive: true, force: true });
 }
 
+// 6c) SSOT lane-defaults: buildMessagesLane senza `n` mostra fino a 8 turni (era 6 → ora allineato al config) --
+{
+  const s = new ConversationStore(":memory:");
+  for (let i = 0; i < 10; i++) s.append("w", i % 2 ? "assistant" : "user", `m${i}`);
+  const lane = buildMessagesLane(s, "w"); // no n → default SSOT (DEFAULT_MESSAGES_WINDOW_N)
+  const shown = (lane.match(/shown="(\d+)\//) || [])[1];
+  ok(shown === "8", `SSOT: buildMessagesLane default n = 8 (lane-defaults), non 6 — mostrato "${shown}"`);
+  s.close();
+}
+
 // 7) session-context default ----------------------------------------------------------------------
 {
   setConvId("main"); // reset (sezioni precedenti non l'hanno toccato, ma garantiamo lo stato)

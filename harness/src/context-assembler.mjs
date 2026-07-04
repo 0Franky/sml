@@ -16,6 +16,13 @@
  */
 
 import { buildMessagesLane } from "./conversation-store.mjs";
+import { DEFAULT_MESSAGES_WINDOW_N } from "./lane-defaults.mjs"; // SSOT finestra lane messaggi (buildWorkspace)
+
+// Display-cap delle lane (context-section-sizing): quante entry mostrare per lane prima del marker "+N nascosti".
+// Nominati una volta (audit SSOT/DRY 2026-07-04, CLAUDE.md #16): erano 4 literal `12` sparsi + un `?? 12` ridondante.
+const DEFAULT_MAX_FACTS = 12;
+const DEFAULT_MAX_CHANGES = 12;
+const DEFAULT_MAX_VARS = 12;
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -139,7 +146,7 @@ function factImp(v)  { return v && typeof v === "object" && Number.isFinite(v.im
  * @param {{ maxFacts?: number }} [opts]
  * @returns {string[]}
  */
-export function factsLaneLines(vq, { maxFacts = 12 } = {}) {
+export function factsLaneLines(vq, { maxFacts = DEFAULT_MAX_FACTS } = {}) {
   const all = vq.listVars({ namespace: "fact" })
     .map((v) => ({ key: String(v.id).replace(/^fact:/, ""), text: factText(v.value), imp: factImp(v.value), ts: v.last_modified }))
     .filter((f) => f.text)
@@ -163,7 +170,7 @@ export function factsLaneLines(vq, { maxFacts = 12 } = {}) {
 export function assembleContext(vq, opts = {}) {
   const now = opts.now ?? Date.now();
   const sinceMs = opts.sinceMs ?? (now - RECENT_WINDOW_MS);
-  const maxChanges = opts.maxChanges ?? 12;
+  const maxChanges = opts.maxChanges ?? DEFAULT_MAX_CHANGES;
   const abs = opts.absoluteTimestamps ?? false; // cache-stable-prefix: età assolute @ISO invece di "Ns fa"
 
   const lines = ["<context>"];
@@ -225,7 +232,7 @@ export function assembleContext(vq, opts = {}) {
 
   // --- vars (shared + opzionalmente private dell'agente) — WINDOWED: cap alle più recenti (lane bounded
   //     anche su sessioni lunghe; le più vecchie restano nel datastore, richiamabili con get_shared_view) ---
-  const maxVars = opts.maxVars ?? 12;
+  const maxVars = opts.maxVars ?? DEFAULT_MAX_VARS;
   const shared = vq.getSharedView();
   const priv = opts.includePrivateVars ? vq.listVars({ scope: "private", namespace: vq.agent }) : [];
   const allVars = [...shared, ...priv].sort((a, b) =>
@@ -245,7 +252,7 @@ export function assembleContext(vq, opts = {}) {
   // --- facts (note-fatto DUREVOLI, namespace 'fact', tool `note`/`remove_note`) — SUBITO dopo <vars>: stessa cadenza
   //     di scrittura (cambia solo su note/remove_note) e PRIMA del churn per-turno (recent_changes/current_time) →
   //     resta nel prefisso cacheato nei turni senza scrittura. Ordine per importanza STABILE (pinned in cima). ---
-  for (const l of factsLaneLines(vq, { maxFacts: opts.maxFacts ?? 12 })) lines.push(l);
+  for (const l of factsLaneLines(vq, { maxFacts: opts.maxFacts })) lines.push(l);
 
   // --- secrets (inventario SEALED: nome + allowedSinks + flag, MAI il valore) — utente msg 727, chiude FIND-7
   //     (il modello ri-chiamava list_secrets 6× perché il context non glielo ri-mostrava). Renderer PURO: i dati
@@ -316,7 +323,7 @@ export function buildWorkspace(vq, opts = {}) {
   parts.push(assembleContext(vq, opts));
   if (opts.store && opts.convId) {
     // excludeCurrentTurn: la native-window porta già il turno corrente (keepTurns=1) → la lane mostra solo la storia.
-    const lane = buildMessagesLane(opts.store, opts.convId, { n: opts.messagesN ?? 6, charCap: opts.messagesCharCap, excludeCurrentTurn: opts.excludeCurrentTurn });
+    const lane = buildMessagesLane(opts.store, opts.convId, { n: opts.messagesN ?? DEFAULT_MESSAGES_WINDOW_N, charCap: opts.messagesCharCap, excludeCurrentTurn: opts.excludeCurrentTurn });
     if (lane) parts.push(lane);
   }
   return parts.join("\n");

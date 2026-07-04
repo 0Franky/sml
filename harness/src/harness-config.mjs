@@ -16,6 +16,7 @@
  */
 import { readFileSync, existsSync } from "node:fs";
 import { DEFAULT_CFG } from "./nested-compact.mjs";
+import { DEFAULT_MESSAGES_WINDOW_N, DEFAULT_MESSAGES_CHAR_CAP } from "./lane-defaults.mjs"; // SSOT default lane messaggi
 
 /** Modalità di enforcement del gathering pre-focus (msg 528/531). */
 export const GATHERING_MODES = ["delegated", "inject", "require"];
@@ -34,11 +35,11 @@ export const TOOL_GATING_MODES = ["off", "discover", "gated"];
 /** Config di default = soglie trigger (DEFAULT_CFG) + finestra lane messaggi + enforcement gathering. */
 export const DEFAULT_HARNESS_CONFIG = {
   trigger: { ...DEFAULT_CFG }, // tokenReorderPct, tokenMatrioskaPct, watchReorder, watchMatrioska, maxDepth, focusK
-  messagesWindowN: 8, // turni verbatim mostrati nella lane <messages_with_user>
+  messagesWindowN: DEFAULT_MESSAGES_WINDOW_N, // turni verbatim mostrati nella lane <messages_with_user> (SSOT lane-defaults)
   // charCap della lane <messages_with_user>: è il VINCOLO REALE (binding) sulla dimensione, più del numero di turni N
   // (context-section-sizing-study §messages). Misurato in CHAR ma il budget è in TOKEN: ~3 char/token → 4000 char ≈
   // 1300-1400 token (non ~1000). Esposto a config per A/B; default invariato 4000. (context-bounds-study 2026-06-30.)
-  messagesCharCap: 4000,
+  messagesCharCap: DEFAULT_MESSAGES_CHAR_CAP,
   // nativeKeepTurns (verification-loop amnesia 2026-07-03): quanti turni la native-window tiene nell'array NATIVO.
   // Causa-radice PROVATA: con keepTurns=1 il modello (che tratta l'ARRAY NATIVO come "la conversazione" e IGNORA la
   // lane nel system prompt) rispondeva "non ho accesso alla conversazione" ANCHE con la lane piena + il blocco

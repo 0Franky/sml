@@ -21,6 +21,7 @@ import { assembleContext } from "./context-assembler.mjs";
 import { buildMessagesLane } from "./conversation-store.mjs";
 import { GATHER_TOKEN_META } from "./meta-keys.mjs"; // SSOT chiave gather (reader ↔ writer vars-queue/nested-compact.ts)
 import { REPORTS_DIR } from "./state-paths.mjs"; // SSOT dir report matrioska
+import { DEFAULT_MESSAGES_WINDOW_N } from "./lane-defaults.mjs"; // SSOT finestra lane messaggi
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const sanitizeScope = (s) => String(s).replace(/[^A-Za-z0-9_.-]/g, "_");
@@ -436,7 +437,7 @@ export function buildNestedWorkspace(vq, opts = {}) {
   parts.push(assembleContext(vq, { now, focusTaskIds, absoluteTimestamps: opts.absoluteTimestamps, secrets: opts.secrets }));
 
   if (opts.store && opts.convId) {
-    const lane = buildMessagesLane(opts.store, opts.convId, { n: opts.messagesN ?? 6, charCap: opts.messagesCharCap, afterSeq: opts.afterSeq, excludeCurrentTurn: opts.excludeCurrentTurn, nativeKeepTurns: opts.nativeKeepTurns });
+    const lane = buildMessagesLane(opts.store, opts.convId, { n: opts.messagesN ?? DEFAULT_MESSAGES_WINDOW_N, charCap: opts.messagesCharCap, afterSeq: opts.afterSeq, excludeCurrentTurn: opts.excludeCurrentTurn, nativeKeepTurns: opts.nativeKeepTurns });
     if (lane) parts.push(lane);
   }
   return parts.join("\n");
