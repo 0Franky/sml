@@ -55,7 +55,7 @@ last_updated: 2026-06-30
 
 ### ✅ A2 split onesto della pressione-contesto — FATTO (2026-07-04, commit `e3710fe`)
 > ADR `wiki/decisions/2026-07-04-a2-context-pressure-honest-split.md` (implementato). `classifyAxes`→{work,occ} + `pickDriver` + `pressureReason`; `classifyPressure` backward-compat; `evaluateTrigger` espone work/occ/driver/reason. Config `pressureDriver` (DEFAULT_CFG="max"=firing INVARIATO) validato file+env (`HARNESS_PRESSURE_DRIVER`) + example.json. Reporting onesto in focus_hint/reorganize_hint/focus_status (reason + watch=N/soglia + ctx% solo se occ≠none). Test: +22 (nested-compact 105/0) +5 (harness-config 58/0). typecheck 0, suite 37/0. NON costruita la macchina-floor (over-engineering).
-> **⏳ RESIDUO**: validazione driver LIVE della RESA del nudge sotto pressione (≥25 task open) col 9B — non ancora eseguita (il firing è default-preserving + backward-compat testato, quindi basso rischio).
+> **✅ RESIDUO CHIUSO 2026-07-04**: validazione driver LIVE col 9B (watchCount=32 seedato) → contesto reale a ollama = `<focus_hint reason="task-backlog" watch="32/25">` (onesto, no ctx% fuorviante); `driver=occupancy` stesso stato → 0 focus_hint (asse work ignorato = knob wired end-to-end). DB ripristinati (rollback pulito). Vedi ADR.
 - **eviction-nudge efficacia**: D2 ha spostato il nudge sul canale user (che il 9B legge), ma l'EFFICACIA (il modello salva davvero?) va validata con un test eviction DEDICATO multi-turno (>keepTurns). + valutare fire-until-saved invece di fire-once (boundary avanza prima del successo).
 - **[WONTFIX/track] D4 — verifier-sandbox isolamento debole** (no Docker) → gate dietro flag config finché non containerizzato.
 
