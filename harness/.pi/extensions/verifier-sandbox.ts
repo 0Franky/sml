@@ -46,17 +46,22 @@ export default function (pi: ExtensionAPI) {
       // P0 (review-full): NON passare `process.env` al comando — conterrebbe GEMINI_API_KEY / SEALED_SECRET_* / token
       // che il codice eseguito (anche ostile) potrebbe esfiltrare. Env MINIMALE esplicito (no secret dell'host).
       const SANDBOX_ENV: Record<string, string> = { PATH: process.env.PATH ?? "", HOME: dir, TMPDIR: dir, LANG: process.env.LANG ?? "C" };
+      // D1 (audit 2026-07-04): timeout + maxBuffer + killSignal OBBLIGATORI. Senza timeout un comando che blocca
+      // (curl a host irraggiungibile, read su stdin, sleep) freeza l'INTERO event-loop sincrono → l'agente muore,
+      // l'abort `_signal` è ignorato, recupero solo con kill del processo. maxBuffer esplicito: output >1MB (default)
+      // farebbe ENOBUFS → un assert legittimamente verboso verrebbe contato come FAIL. 60s/16MB sono ampi ma limitati.
+      const EXEC_OPTS = { cwd: dir, stdio: "pipe" as const, env: SANDBOX_ENV, timeout: 60_000, maxBuffer: 16 * 1024 * 1024, killSignal: "SIGKILL" as const };
       const results: Array<{ cmd: string; passed: boolean; exit: number; output: string }> = [];
       try {
         for (const c of params.setup ?? []) {
-          execFileSync("bash", ["-lc", c], { cwd: dir, stdio: "pipe", env: SANDBOX_ENV });
+          execFileSync("bash", ["-lc", c], EXEC_OPTS);
         }
         for (const a of params.asserts ?? []) {
           const want = typeof a.expect_exit === "number" ? a.expect_exit : 0;
           let exit = 0;
           let output = "";
           try {
-            output = execFileSync("bash", ["-lc", a.cmd], { cwd: dir, stdio: "pipe", env: SANDBOX_ENV }).toString();
+            output = execFileSync("bash", ["-lc", a.cmd], EXEC_OPTS).toString();
           } catch (e: any) {
             exit = typeof e?.status === "number" ? e.status : 1;
             output = (e?.stdout?.toString?.() ?? "") + (e?.stderr?.toString?.() ?? "");

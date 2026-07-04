@@ -55,6 +55,8 @@ export default function (pi: ExtensionAPI) {
       const r: any = slidingReplace(vq, params.var_id, params.start, params.end, params.new_content, {
         contextAround: params.context_around ?? 0,
         previewOnly: params.preview_only !== false,
+        // B1 (audit 2026-07-04): attribuisci la write allo scope focus attivo → non omessa dal pop-report matrioska.
+        who: vq.getActiveScope() ?? vq.agent,
       });
       return { content: [{ type: "text", text: JSON.stringify(r, null, 2) }], details: { applied: r.applied ?? false } };
     },

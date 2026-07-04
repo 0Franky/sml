@@ -16,6 +16,20 @@ last_updated: 2026-06-30
 > **NB metodo**: il driver print-mode NON riproduceva (un processo/turno, no contesa); il driver RPC (un processo, 8 turni) NON droppava (single-process pulito). Il drop richiede accesso CONCORRENTE cross-processo → riprodotto solo con 2 writer paralleli. Lezione: [[feedback_handoff_validation_gate]] — la fedeltà del driver non basta se il bug è ambientale (concorrenza).
 > **TODO residuo**: (a) isolare lo state del driver (env `HARNESS_STATE_DIR` per non toccare `.pi/state` reale → no test-pollution; il busy_timeout già rende SICURA la contesa, questo è per la pulizia); (b) valutare retry-on-busy esplicito oltre al timeout.
 
+## 🟡 AUDIT estensioni 2026-07-04 — follow-up aperti ([[audit-2026-07-04-extensions]])
+
+> 4 subagent paralleli hanno auditato le 20 estensioni post bug-P0. **7 fix già applicati** (C2 redazione-tool_result fail-closed, A1 context-assembly try/catch anti-amnesia-totale, D1 verifier-sandbox timeout, B1 focus-scope-who ×2, B2 message_end fail-closed, D2 eviction-nudge canale user) + awareness INFORMAZIONE-non-DATO. Report completo con stato per finding: `wiki/audit-2026-07-04-extensions.md`. **Aperti:**
+- **[P1 sicurezza] C1 — lockdown/INGRESS secret esfiltrabile via tool MCP strutturati** (telegram/gmail/drive): `checkSink` fa fail-OPEN quando non vede un host. DA VERIFICARE a mano + fix (default-DENY iniezione per secret in lockdown salvo shell locale). `src/sealed-secrets.mjs:504-519`.
+- **[P1] C3 — envelope untrusted tool_result aggirabile** (idempotenza su contenuto attacker + no-escape di `</tool_result>`) → injection annidata. `src/tool-result-envelope.mjs`.
+- **[P2] C5 — regex-ingress fail-open** in 3 edge (slash-command / throw non-wrappato / registry pieno). `regex-ingress.ts` + `sealed-secrets.mjs:788`.
+- **[P2] B3 — set_task_status no-op silenzioso** su task inesistente → entry fantasma. `vars-queue.ts:152`.
+- **[P2] B4 — tool-gating `revealed` non resettato** su session_shutdown.
+- **[P2] A2 — token-pressure legge history piena** non payload finestrato → focus/reorg/compact spuri. `context-assembly.ts:138`.
+- **[P2low] A3 — checkpoint.ts execute non-guardato** (2 key non-atomiche).
+- **[P2latent] D3 — session-context `_convId` module-global** → cross-session se 2 sessioni/processo.
+- **eviction-nudge efficacia**: D2 ha spostato il nudge sul canale user (che il 9B legge), ma l'EFFICACIA (il modello salva davvero?) va validata con un test eviction DEDICATO multi-turno (>keepTurns). + valutare fire-until-saved invece di fire-once (boundary avanza prima del successo).
+- **[WONTFIX/track] D4 — verifier-sandbox isolamento debole** (no Docker) → gate dietro flag config finché non containerizzato.
+
 ## 🔴 (storico, ora risolto sopra) diagnosi iniziale drop-turni
 
 > **Sintomo**: sessione `019f2b19` (conv `sess-1783134498573-startup`) — JSONL LINEARE (0 branch abbandonati) con 10 user + 10 assistant, ma `conversations.db` ha SOLO 5 record (u1,u3,a-Elio,u5,a-ultimo). I ~15 turni persi NON sono sotto `main` (0 record) né altro conv_id (ricerca cross-convId di "discord/oauth/che tool hai" → assenti per questa sessione) → **droppati del tutto**. Verificato via ricostruzione albero+path-attivo (`/tmp/tree.mjs`) + query cross-conv_id.

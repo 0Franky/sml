@@ -41,7 +41,7 @@ export function slidingRead(vq, varId, start, end, contextAround = 0) {
  * @returns {{var_id, preview, diff_summary, applied, new_total_length} | {error:string}}
  */
 export function slidingReplace(vq, varId, start, end, newContent, opts = {}) {
-  const { contextAround = 0, previewOnly = true } = opts;
+  const { contextAround = 0, previewOnly = true, who } = opts;
   const v = vq.getVar(varId);
   if (!v) return { error: `var '${varId}' non trovata` };
   const s = asString(v.value);
@@ -52,7 +52,7 @@ export function slidingReplace(vq, varId, start, end, newContent, opts = {}) {
   const ca = clamp(a + String(newContent ?? "").length + contextAround, 0, next.length);
   let applied = false;
   if (!previewOnly) {
-    vq.setVar(varId, next, { scope: v.scope, namespace: v.namespace });
+    vq.setVar(varId, next, { scope: v.scope, namespace: v.namespace, who: who ?? vq.agent });
     applied = true;
   }
   return {

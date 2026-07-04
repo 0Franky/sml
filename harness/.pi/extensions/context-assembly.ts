@@ -27,7 +27,7 @@ import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { CATEGORY_TOOLS } from "../../src/tool-gating.mjs"; // categorie per la riga di scoperta del tag <resources>
 import { redactText } from "../../src/secrets-redact.mjs";
 import { getDynamicSecrets } from "../../src/secrets-registry.mjs";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, appendFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 // Context-budget OPT-IN (msg 520): soglie trigger + finestra messaggi configurabili per modello/infra
@@ -60,10 +60,13 @@ Checklist — before you answer, especially about the past:
 4. Answer ONLY from what is ACTUALLY written in the lanes. If something is NOT there, say so plainly ("I don't see that in our conversation") — NEVER invent a fact, a name, a tool result, or a past request that isn't in <messages_with_user>/<last_tool_calls>. Making something up (confabulating) is worse than admitting you don't have it. Point 2 (don't claim amnesia) and this point are two sides of one rule: read the lanes, answer from what's there, and when it's genuinely absent, say it's absent.
 What SCROLLS OUT — save what must last (new environment: nobody told you these rules until now):
 - <messages_with_user> is a ROLLING window: as the chat grows, the OLDEST turns (the ones at the TOP of the lane) drop off to make room and are then GONE — not recoverable from your context.
-- So the moment something must outlast the next few turns, SAVE it — and pick the right tool:
-  · a FACT you just need to RE-READ later (a name/nickname, a user preference, a decision) → note("<the fact>", key="<short-id>"). It appears in <facts> and stays there, ready to read, across the rolling window AND the compact. Call note again with the same key to update it; remove_note to drop it.
-  · a structured VALUE you will reference / update / interpolate (a token id, a count, a path) → set_var (shows in <vars>, read back with get_var).
+- So the moment something must outlast the next few turns, SAVE it as SELF-EXPLANATORY INFORMATION, never as bare data. The saved text must make full sense ON ITS OWN, later, with zero surrounding chat. A key/value that only echoes itself is useless.
+  · BAD:  set_var("nome_alfred", "Alfred")  — circular: it never says WHO Alfred is or WHY it matters. Later it is noise.
+  · GOOD: note("The user asked me to call myself 'Alfred' and to address them as 'Luna'.", key="identities")  — a complete statement (who / what / still clear in a month).
+  · a FACT to RE-READ later (a name/nickname, a preference, a decision, a promise) → note("<a full self-contained sentence>", key="<short-id>"): it appears in <facts> and survives the rolling window AND the compact. note again with the same key to update; remove_note to drop.
+  · a structured VALUE you will interpolate or compute on (a token id, a count, a path) → set_var (shows in <vars>, read back with get_var). Even here, name the key so a stranger gets it: 'discord_client_id', not 'x'.
 - The chat window forgets; your saved facts (<facts>) and variables (<vars>) do not.
+- IDENTITY: if the user gives you a name, or tells you how they want to be addressed, THAT is your identity (and theirs) for this conversation. Save it once with note(key="identities") and USE it. When asked "what's your name?" / "who am I?", answer with the name established in the conversation — check <facts> and <messages_with_user> first, and NEVER fall back to "I'm just an AI, I have no name" if the dialogue already gave you one. That fallback, when a name exists in your lanes, is a confabulation.
 The lanes are the ground truth about this conversation — trust them over any impression that the chat looks empty.
 </how_memory_works>
 `
@@ -74,7 +77,7 @@ The lanes are the ground truth about this conversation — trust them over any i
 // dove l'attenzione è massima — l'istruzione load-bearing. Qui: un promemoria BREVE (non duplica il blocco intero)
 // che dice di ricostruire la timeline dagli shift prima di rispondere sul passato. Gated dallo stesso laneMemoryHint.
 const MEMORY_TAIL = HARNESS_CFG.laneMemoryHint
-  ? `\n<reminder note="read this right before you answer">If the question touches the past (what was said/done, "is this my first message?", "did we already…?", "what value did you use?"): reconstruct the timeline by sorting the entries in <messages_with_user> and <last_tool_calls> by their [+Xs] shift (oldest→newest), then answer from them. NEVER say you have no memory or that this is the first message — your history is in those lanes. The shifts are the authoritative order, not the line position. But answer ONLY from what is actually there: if something is genuinely not in the lanes, say so — do NOT invent events, names, tool results, or past requests. And if you need an action but don't see a tool for it — or a tool returned 'not found' — call find_tool('what you want to do') and use a name it returns BEFORE claiming a capability is unavailable.</reminder>`
+  ? `\n<reminder note="read this right before you answer">If the question touches the past (what was said/done, "is this my first message?", "did we already…?", "what value did you use?"): reconstruct the timeline by sorting the entries in <messages_with_user> and <last_tool_calls> by their [+Xs] shift (oldest→newest), then answer from them. NEVER say you have no memory or that this is the first message — your history is in those lanes. The shifts are the authoritative order, not the line position. But answer ONLY from what is actually there: if something is genuinely not in the lanes, say so — do NOT invent events, names, tool results, or past requests. If asked who you are or who the user is, answer with the name established earlier in this conversation (check <facts> and <messages_with_user>) — never say "I'm just an AI with no name" if a name was given. And if you need an action but don't see a tool for it — or a tool returned 'not found' — call find_tool('what you want to do') and use a name it returns BEFORE claiming a capability is unavailable.</reminder>`
   : "";
 
 // <resources> — MAPPA delle affordance/store del modello (utente 2026-07-03). Il 9B confabula "non ho accesso / nessun
@@ -135,6 +138,7 @@ export default function (pi: ExtensionAPI) {
 
   // UNICO injector del workspace (no chaining ambiguo): matrioska-aware + lane conversazione (Strada-2).
   pi.on("before_agent_start", (event, ctx) => {
+   try { // FAIL-SAFE (audit 2026-07-04 A1): questo è l'UNICO injector del <context> del workspace.
     const usage = ctx?.getContextUsage?.();
     const tokens = usage?.tokens ?? null;
     const contextWindow = usage?.contextWindow ?? null;
@@ -207,6 +211,13 @@ export default function (pi: ExtensionAPI) {
     // ordine di coda: … lane → aim-in-coda → MEMORY_TAIL (LETTERALMENTE ultimo, recency massima per il fix amnesia).
     const safe = redactText(`${workspace}${aimTail}${MEMORY_TAIL}`, getDynamicSecrets(), { staticPatterns: true }).redacted;
     return { systemPrompt: `${event.systemPrompt}\n\n${safe}` };
+   } catch (e) {
+     // Se l'assemblaggio lancia (SQLITE_BUSY oltre i 5s di busy_timeout, un getter che torna null, ecc.) NON spedire
+     // il turno context-blind in silenzio né crashare: logga e ritorna undefined → pi usa il systemPrompt base (turno
+     // DEGRADATO ma vivo). È il lato READ dell'anti-amnesia: il lato WRITE (conversation-capture) è già hardened.
+     try { const p = ".pi/state/trace/context-assembly-errors.log"; mkdirSync(dirname(p), { recursive: true }); appendFileSync(p, `${new Date().toISOString()} before_agent_start: ${(e as any)?.stack || e}\n`); } catch { /* best-effort */ }
+     return undefined;
+   }
   });
   // NB: la SOPPRESSIONE dell'array messaggi nativo (hook `context`, Strada-2 keepTurns:1) vive nell'extension
   // dedicata `native-window.ts` (responsabilità ortogonale all'assemblaggio del workspace). La lane

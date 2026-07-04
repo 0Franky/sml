@@ -388,7 +388,11 @@ export default function (pi: ExtensionAPI) {
       }
     } catch { /* details non-clonabile → si redige comunque il content; details resta l'originale */ }
     if (!anyHit) return; // nessun match → lascia passare l'output originale
-    ctx.ui.notify("secrets-guardrail: output redatto (match secrets-map)", "warning");
+    // FAIL-CLOSED (audit 2026-07-04 C2): il notify NON deve poter buttare via la redazione già calcolata. Un
+    // `ctx.ui.notify` non-guardato che lancia (ctx.ui assente/parziale nel path headless drive-qwen) DOPO il redact
+    // ma PRIMA del return farebbe riprendere pi col content ORIGINALE non-redatto → leak proprio quando un secret ha
+    // fatto match. Optional-chaining + try/catch: qualunque errore nel notify, ritorniamo comunque il content redatto.
+    try { ctx?.ui?.notify?.("secrets-guardrail: output redatto (match secrets-map)", "warning"); } catch { /* non-bloccante */ }
     return details !== (event as any).details ? { content, details } : { content };
   });
 

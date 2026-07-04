@@ -21,5 +21,5 @@ export function slidingRead(
 ): SlidingReadResult | { error: string };
 export function slidingReplace(
   vq: VarsQueue, varId: string, start: number, end: number, newContent: string,
-  opts?: { contextAround?: number; previewOnly?: boolean },
+  opts?: { contextAround?: number; previewOnly?: boolean; who?: string },
 ): SlidingReplaceResult | { error: string };

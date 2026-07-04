@@ -79,9 +79,12 @@ export default function (pi: ExtensionAPI) {
     // avanza il boundary PRIMA di ritornare → fire-once per turno-in-uscita (idempotente sui request ripetuti).
     vq.setMeta(metaKey, String(evictedThrough));
 
-    // appende la direttiva come messaggio SISTEMA effimero, SOLO per questo request (il context-hook non persiste).
+    // D2 (audit 2026-07-04): canale USER, non SYSTEM. harness-config.mjs:44-50 ha PROVATO che questo stesso 9B legge il
+    // canale user/nativo e IGNORA il system → un nudge-a-salvare consegnato in system è INERTE (stessa non-lettura del
+    // resto dell'awareness). Messaggio effimero (solo per questo request, il context-hook non persiste); il tag
+    // <eviction_checkpoint> lo marca come direttiva harness (non voce umana). Efficacia: da validare con test eviction dedicato.
     const injected = messages.concat([
-      { role: "system", content: "<eviction_checkpoint>\n" + directive + "\n</eviction_checkpoint>" },
+      { role: "user", content: "<eviction_checkpoint>\n" + directive + "\n</eviction_checkpoint>" },
     ]);
     return { messages: injected };
   });

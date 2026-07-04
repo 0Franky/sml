@@ -17,6 +17,7 @@ import { VarsQueue } from "../../src/vars-queue.mjs";
 import { getVarsQueue, closeAll } from "../../src/state-db.mjs";
 import { extractVar, emitToUser } from "../../src/var-ops.mjs";
 import { getDynamicSecrets } from "../../src/secrets-registry.mjs";
+import { redactText } from "../../src/secrets-redact.mjs"; // fallback statico throw-proof per il fail-closed (B2)
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
@@ -45,7 +46,9 @@ export default function (pi: ExtensionAPI) {
       dest: Type.String({ description: "Destination var where the extracted field is saved." }),
     }),
     async execute(_t: string, p: any) {
-      const r = extractVar(vq, p.src, p.path, p.dest);
+      // B1 (audit 2026-07-04): attribuisci la write allo SCOPE FOCUS attivo (come fa activeWho() in vars-queue.ts),
+      // non a "orchestrator" di default → altrimenti in focus la write è omessa dal pop-report matrioska (silent-omission).
+      const r = extractVar(vq, p.src, p.path, p.dest, { who: vq.getActiveScope() ?? vq.agent });
       if (!r.ok) return { content: [{ type: "text", text: `error: ${r.error}` }], details: { ok: false } };
       return { content: [{ type: "text", text: JSON.stringify({ dest: r.dest, value: r.value }) }], details: { ok: true } };
     },
@@ -88,6 +91,7 @@ export default function (pi: ExtensionAPI) {
   // blocchi `type:"text"` (non gli argomenti dei tool_call emessi dall'assistant). L'egress via argomenti tool_call è
   // coperto separatamente dall'hook `tool_call` in secrets-guardrail (redazione dynamic-secrets in-place).
   pi.on("message_end", (event) => {
+   try {
     const m = event.message as any;
     if (!m || m.role !== "assistant") return;
     const dynamicSecrets = getDynamicSecrets();
@@ -109,5 +113,20 @@ export default function (pi: ExtensionAPI) {
     }
     if (!changed) return; // nessun {{var:x}} risolvibile né segreto → passthrough (nessuna sostituzione)
     return { message: { ...m, content: newContent } };
+   } catch {
+     // FAIL-CLOSED (audit 2026-07-04 B2): canale del TESTO FINALE all'utente. Se la redazione lancia (getDynamicSecrets/
+     // vq) NON lasciar passare l'originale (può contenere un secret): degrada a redazione STATICA throw-proof (solo
+     // pattern-shape, niente DB/dynamic-set). Se anche quella fallisce → undefined (residuo trascurabile: redactText è regex pura).
+     try {
+       const m = event.message as any;
+       if (!m || m.role !== "assistant") return undefined;
+       const red = (s: string) => redactText(String(s), [], { staticPatterns: true }).redacted;
+       let nc: any;
+       if (typeof m.content === "string") nc = red(m.content);
+       else if (Array.isArray(m.content)) nc = m.content.map((b: any) => (b && b.type === "text" && typeof b.text === "string" ? { ...b, text: red(b.text) } : b));
+       else return undefined;
+       return { message: { ...m, content: nc } };
+     } catch { return undefined; }
+   }
   });
 }
