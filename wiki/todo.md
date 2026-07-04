@@ -9,7 +9,14 @@ last_updated: 2026-06-30
 
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
 
-## 🔴 P0 BUG (2026-07-04, VERIFICATO, NON fixato) — conversation-capture PERDE turni del path vivo → amnesia
+## ✅ P0 BUG (2026-07-04, VERIFICATO + FIXATO + VALIDATO) — store SQLite perdevano turni per contesa concorrente → amnesia
+
+> **CAUSA-RADICE (confermata, non ipotesi)**: `ConversationStore` e `VarsQueue` aprivano in `journal_mode=WAL` ma SENZA `busy_timeout` → default 0. In WAL c'è UN SOLO writer: due processi pi concorrenti (o driver headless + TUI) → `SQLITE_BUSY` "database is locked" IMMEDIATO (nessuna attesa) → `append`/`setVar`/`setMeta` in throw → operazione persa in silenzio (nessun try/catch a monte). Riprodotto: 2 writer concorrenti → crash secco / 0 tabella. **Trigger nel session `019f2b19`**: i driver di test (che scrivevano la stessa `conversations.db`) contendevano con la TUI live.
+> **FIX**: `PRAGMA busy_timeout = 5000` nel constructor di ENTRAMBI gli store (`conversation-store.mjs`, `vars-queue.mjs`), PRIMA di WAL/schema. + 3 try/catch con log (`.pi/state/trace/capture-errors.log`) in `conversation-capture.ts` (input/agent_end/session_start) → residui loggati, mai più drop muto. **VALIDATO**: 2 writer concorrenti ora 300/300 scritture, 0 busy (prima: crash). Test regressione `test/unit/db-busy-timeout.test.mjs` (2/0). Suite 36-file/0, typecheck 0.
+> **NB metodo**: il driver print-mode NON riproduceva (un processo/turno, no contesa); il driver RPC (un processo, 8 turni) NON droppava (single-process pulito). Il drop richiede accesso CONCORRENTE cross-processo → riprodotto solo con 2 writer paralleli. Lezione: [[feedback_handoff_validation_gate]] — la fedeltà del driver non basta se il bug è ambientale (concorrenza).
+> **TODO residuo**: (a) isolare lo state del driver (env `HARNESS_STATE_DIR` per non toccare `.pi/state` reale → no test-pollution; il busy_timeout già rende SICURA la contesa, questo è per la pulizia); (b) valutare retry-on-busy esplicito oltre al timeout.
+
+## 🔴 (storico, ora risolto sopra) diagnosi iniziale drop-turni
 
 > **Sintomo**: sessione `019f2b19` (conv `sess-1783134498573-startup`) — JSONL LINEARE (0 branch abbandonati) con 10 user + 10 assistant, ma `conversations.db` ha SOLO 5 record (u1,u3,a-Elio,u5,a-ultimo). I ~15 turni persi NON sono sotto `main` (0 record) né altro conv_id (ricerca cross-convId di "discord/oauth/che tool hai" → assenti per questa sessione) → **droppati del tutto**. Verificato via ricostruzione albero+path-attivo (`/tmp/tree.mjs`) + query cross-conv_id.
 > **Impatto**: la lane `<messages_with_user>` si COSTRUISCE da questo store → turni persi = amnesia nelle conversazioni lunghe. Rompe anche l'eviction-checkpoint (`countUserTurns` sballato → non scatta). = causa-radice (parziale) dell'amnesia, PIÙ fondamentale del "modello ignora il contesto". Corregge l'overclaim msg 970 ("harness a posto").

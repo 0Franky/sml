@@ -18,14 +18,27 @@ import { getConversationStore, getVarsQueue, closeAll } from "../../src/state-db
 import { getConvId, setConvId, resolveConvId } from "../../src/session-context.mjs";
 import { redactText } from "../../src/secrets-redact.mjs";
 import { getDynamicSecrets } from "../../src/secrets-registry.mjs";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, appendFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 const META_CONV = "_conv_id"; // convId persistito (vars.db meta) → riusato cross-reload/resume
+const CAPTURE_ERR_LOG = ".pi/state/trace/capture-errors.log"; // diagnostica: ogni fallimento di cattura finisce qui
 
 /** Redige i segreti (pattern statici + dynamic) dal testo PRIMA di persisterlo/ri-iniettarlo. */
 function redactSafe(s: string): string {
   return redactText(s, getDynamicSecrets()).redacted;
+}
+
+/**
+ * Log di un fallimento di cattura (bug P0 2026-07-04: turni droppati in silenzio). Best-effort, non-throwing:
+ * un errore QUI non deve a sua volta rompere l'hook. Serve a PINNARE la causa dei drop (redact? DB-busy? convId?).
+ */
+function logCaptureError(where: string, e: unknown): void {
+  try {
+    mkdirSync(dirname(CAPTURE_ERR_LOG), { recursive: true });
+    const msg = e instanceof Error ? `${e.message} | ${(e.stack || "").split("\n").slice(0, 4).join(" ⏎ ")}` : String(e);
+    appendFileSync(CAPTURE_ERR_LOG, `[${new Date().toISOString()}] ${where}: ${msg}\n`, "utf8");
+  } catch { /* best-effort: se persino il log fallisce, ingoia (non far crashare l'hook) */ }
 }
 
 const DB_PATH = ".pi/state/conversations.db";
@@ -59,15 +72,19 @@ export default function (pi: ExtensionAPI) {
   // nuova SENZA mischiarsi con le altre. Fallback a slot globale se getSessionId non è disponibile (SDK headless).
   // Condiviso con context-assembly via session-context. (review-loop #3 2026-06-29, P2 convId-cross-sessione — fix pieno.)
   pi.on("session_start", (event, ctx) => {
-    const reason = (event as any).reason ?? "startup";
-    // STESSO path+opts delle altre 7 extension → il singleton vars.db non nasce mai con agent='main' per via di
-    // questa call-site, qualunque sia l'ordine di load (review-loop #3 2026-06-29, P2 singleton-agent).
-    const meta = getVarsQueue(VARS_DB_PATH, { agent: "orchestrator" });
-    const sessionId = (ctx as any)?.sessionManager?.getSessionId?.() ?? null;
-    const metaKey = sessionId ? `${META_CONV}:${sessionId}` : META_CONV;
-    const { convId, persist } = resolveConvId(reason, meta.getMeta(metaKey), Date.now(), { perSession: !!sessionId });
-    setConvId(convId);
-    if (persist) meta.setMeta(metaKey, convId);
+    try {
+      const reason = (event as any).reason ?? "startup";
+      // STESSO path+opts delle altre 7 extension → il singleton vars.db non nasce mai con agent='main' per via di
+      // questa call-site, qualunque sia l'ordine di load (review-loop #3 2026-06-29, P2 singleton-agent).
+      const meta = getVarsQueue(VARS_DB_PATH, { agent: "orchestrator" });
+      const sessionId = (ctx as any)?.sessionManager?.getSessionId?.() ?? null;
+      const metaKey = sessionId ? `${META_CONV}:${sessionId}` : META_CONV;
+      const { convId, persist } = resolveConvId(reason, meta.getMeta(metaKey), Date.now(), { perSession: !!sessionId });
+      setConvId(convId);
+      if (persist) meta.setMeta(metaKey, convId);
+    } catch (e) {
+      logCaptureError("session_start", e); // convId non risolto → cascata sui drop; almeno lo si vede
+    }
   });
 
   // utente → store. SOLO input utente GENUINO: `input` fa fire anche per steer/followUp (mid-turn) e per i comandi `/`
@@ -75,14 +92,18 @@ export default function (pi: ExtensionAPI) {
   // `rpc` (driver programmatico/SDK/harness), esclude mid-turn/slash/`extension`. Fix 2026-07-03: prima solo
   // "interactive" → in rpc/headless la conversazione non veniva catturata (lane vuota). Passthrough: non altera l'input.
   pi.on("input", (event) => {
-    const e = event as any;
-    const text = e.text;
-    const genuine = isGenuineUserInput({ text, source: e.source, streamingBehavior: e.streamingBehavior });
-    // redazione segreti PRIMA di persistere = DIFESA-IN-PROFONDITÀ best-effort, NON una garanzia: redige i pattern
-    // noti (secrets-redact) + i segreti già registrati via add_secret. Un segreto NON-pattern incollato PRIMA di
-    // add_secret può ancora finire in conversations.db e nella lane (gap di copertura inerente al redattore
-    // pattern+registry — l'utente usi add_secret). (review-loop #3 2026-06-29, P2 secret-coverage.)
-    if (genuine) store.append(getConvId(), "user", redactSafe(text));
+    try {
+      const e = event as any;
+      const text = e.text;
+      const genuine = isGenuineUserInput({ text, source: e.source, streamingBehavior: e.streamingBehavior });
+      // redazione segreti PRIMA di persistere = DIFESA-IN-PROFONDITÀ best-effort, NON una garanzia: redige i pattern
+      // noti (secrets-redact) + i segreti già registrati via add_secret. Un segreto NON-pattern incollato PRIMA di
+      // add_secret può ancora finire in conversations.db e nella lane (gap di copertura inerente al redattore
+      // pattern+registry — l'utente usi add_secret). (review-loop #3 2026-06-29, P2 secret-coverage.)
+      if (genuine) store.append(getConvId(), "user", redactSafe(text));
+    } catch (e) {
+      logCaptureError("input", e); // bug P0: prima un throw qui droppava il turno-UTENTE in silenzio → amnesia
+    }
     return { action: "continue" } as const;
   });
 
@@ -90,16 +111,20 @@ export default function (pi: ExtensionAPI) {
   // LLM → una risposta multi-tool darebbe N righe assistant, corrompendo window/range). Si prende l'ULTIMO
   // messaggio assistant del loop = la risposta finale visibile all'utente. (fix review P0 2026-06-29.)
   pi.on("agent_end", (event) => {
-    const msgs = (event as any).messages;
-    if (!Array.isArray(msgs)) return;
-    let lastAssistantText = "";
-    for (const m of msgs) {
-      if (m && m.role === "assistant") {
-        const t = messageText(m);
-        if (t.trim()) lastAssistantText = t;
+    try {
+      const msgs = (event as any).messages;
+      if (!Array.isArray(msgs)) return;
+      let lastAssistantText = "";
+      for (const m of msgs) {
+        if (m && m.role === "assistant") {
+          const t = messageText(m);
+          if (t.trim()) lastAssistantText = t;
+        }
       }
+      if (lastAssistantText.trim()) store.append(getConvId(), "assistant", redactSafe(lastAssistantText));
+    } catch (e) {
+      logCaptureError("agent_end", e); // bug P0: prima un throw qui droppava la risposta-ASSISTANT in silenzio
     }
-    if (lastAssistantText.trim()) store.append(getConvId(), "assistant", redactSafe(lastAssistantText));
   });
 
   // recupero per ID + range (subagent / by-reference). È ciò che il marker della lane suggerisce.

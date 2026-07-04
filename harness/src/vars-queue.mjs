@@ -148,6 +148,10 @@ export class VarsQueue {
   constructor(dbPath = ":memory:", opts = {}) {
     this.agent = opts.agent ?? "main";
     this.db = new DatabaseSync(dbPath);
+    // busy_timeout PRIMA di tutto (bug P0 2026-07-04): con WAL, WAL-mode ammette 1 solo writer → due processi pi
+    // (o driver+TUI) che scrivono vars/meta/secrets concorrentemente danno "database is locked" IMMEDIATO senza
+    // attesa → l'operazione (setVar/setMeta/append) fa throw e lo stato si perde. 5s di attesa assorbe la contesa.
+    this.db.exec("PRAGMA busy_timeout = 5000;");
     this.db.exec("PRAGMA journal_mode = WAL;"); // concorrenza: lettori non bloccano lo scrittore
     this.db.exec(SCHEMA);
     // Migrazione difensiva IDEMPOTENTE per DB pre-esistenti su disco: `CREATE TABLE IF NOT EXISTS` NON aggiunge

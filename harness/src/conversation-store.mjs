@@ -37,6 +37,10 @@ export class ConversationStore {
   constructor(dbPath = ":memory:", opts = {}) {
     this.agent = opts.agent ?? "main";
     this.db = new DatabaseSync(dbPath);
+    // busy_timeout PRIMA di tutto (bug P0 2026-07-04): con WAL due writer concorrenti (2 processi pi, o driver+TUI)
+    // e busy_timeout=0 → "database is locked" IMMEDIATO → append/PRAGMA in throw → turno droppato in silenzio (amnesia).
+    // 5s di attesa assorbe la contesa (le scritture durano ms); vale per il constructor stesso e per ogni INSERT.
+    this.db.exec("PRAGMA busy_timeout = 5000;");
     this.db.exec("PRAGMA journal_mode = WAL;");
     this.db.exec(SCHEMA);
   }
