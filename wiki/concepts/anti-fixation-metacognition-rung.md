@@ -66,5 +66,21 @@ La decomposizione + i tried-and-failed vanno nelle **note** (error-memo + subtas
 - **Fattibilità**: ALTA — hook `context` esistente (inject on-demand), error-memo già a concept, pattern-escalation già usato (eviction-checkpoint).
 - **EFFICACIA**: ⚠️ DA VALIDARE con l'A/B — NON ancora provato che il rung aiuti davvero. Prima si prototipa + A/B sui task-fissazione, poi si decide.
 
+## Situational table + abilità-da-addestrare IMPRESCINDIBILE (utente msg 1072)
+
+**La capacità di mantenere/gestire il contesto in modo affidabile è un'abilità da ADDESTRARE nel nostro modello in modo IMPRESCINDIBILE** (utente 1072) — non un nice-to-have. Il rung + l'awareness sono lo SCAFFOLD che la insegna finché il modello non la interiorizza (poi recede via estensione `slm`, [[decisions/2026-07-05-slm-scaffolding-extension]]).
+
+**Situational table** (utente 1072: "spiegare al modello ESATTAMENTE come funziona, quando conviene, quando no, quando evitare; fargli riconoscere segnali che qualcosa non va → riduci i turni ecc."). È la forma CONDENSATA e teachable della metacognizione: mappa **segnale-auto-osservato → significato → azione**. Bozza [AMBIGUOUS — ogni riga va OUTCOME-validata, non hard-coded a intuizione]:
+
+| Segnale auto-osservato | Significato probabile | Azione |
+|---|---|---|
+| Stesso test fallisce dopo ~3 tentativi variando solo piccoli parametri | fissazione sul sotto-problema sbagliato | step-back → questiona l'assunzione centrale, decomponi |
+| Turni che crescono senza progresso (pass-count fermo) | thrashing | riduci scope, isola il caso che fallisce, debug sistematico |
+| Contesto grande ma task self-contained | rumore-scaffolding (H6) | fidati del tuo ragionamento, non over-leggere le lane |
+| Task genuinamente multi-step/stateful e perdo il filo | serve working memory | persisti stato nelle note / (se addestrato) alza keepTurns |
+| Sto per dire "primo messaggio"/"non ho memoria" | hai le lane | controlla `<messages_with_user>`/`<last_tool_calls>` prima |
+
+**Valutazione (regola #2 + anti-hack)**: ✅ è il posto giusto per "spiegare al modello quando conviene fare cosa" (risolve la Cautela-2 del keepTurns-control: distinguere "stateful→più memoria" da "fissazione→step-back"). ⚠️ **Caveat**: (a) va nell'estensione `slm` + on-demand/toggle, NON in core sempre-on (altrimenti ri-gonfia il contesto = H6); (b) rischio pattern-matching RITUALE sui segnali di superficie → il reward premia l'ESITO del cambio-comportamento, non l'aver "consultato la tabella"; (c) **ogni riga è un'IPOTESI da validare empiricamente** (l'azione Y su segnale X migliora davvero l'outcome?) — non hard-coded a naso. → è insieme awareness-`slm` E curriculum di training.
+
 ## Links
-[[concepts/adaptive-context-injection]] · [[architecture/ab-eval-harness]] · [[architecture/context-pressure-mechanism]] · [[concepts/harness-capabilities-as-files]] · [[feedback_reward_hacking_principle]] · [[feedback_training_vs_harness_classification]] · [[feedback_optimization_first]]
+[[concepts/adaptive-context-injection]] · [[decisions/2026-07-05-slm-scaffolding-extension]] · [[architecture/ab-eval-harness]] · [[architecture/context-pressure-mechanism]] · [[concepts/harness-capabilities-as-files]] · [[feedback_reward_hacking_principle]] · [[feedback_training_vs_harness_classification]] · [[feedback_optimization_first]]

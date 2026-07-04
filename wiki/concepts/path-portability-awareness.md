@@ -11,6 +11,8 @@ confidence: provisional
 
 # Path Portability Awareness
 
+> **⚠️ IL REPO `0Franky/sml` È PUBLIC** (verificato `gh repo view` 2026-07-05: `isPrivate:false`). Ogni push è visibile pubblicamente → un path assoluto con username (`D:\Users\<user>\…`) committato **leaka l'identità in pubblico**. Incident 2026-07-05: l'username reale era in `CLAUDE.md:246` (l'esempio di questa stessa regola) → redatto `<user>` + purge storia programmato. Prevenzione: scan PII sull'INTERO tree ad ogni push, non solo sul diff. Vedi memory `feedback_no_pii_in_repo`.
+
 > **Demoted 2026-06-27** → vedi [[secret-section-exfiltration-defense]] (gold-example "path assoluto = leak username (PII)"). Questa pagina è una **micro-regola** (già `CLAUDE.md` regola permanente #7), non un'area di competenza autonoma. Mantiene solo: (a) la why-chain utente come gold-example didattico, (b) la decisione context-aware, (c) il verifier bilanciato.
 
 ## Gold-example: la why-chain (didattica)

@@ -9,6 +9,26 @@ last_updated: 2026-06-30
 
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
 
+## 🔝 TOP OF STACK — 2026-07-05 (riorganizzazione richiesta utente msg 1083)
+
+> ⚠️ **Repo `0Franky/sml` è PUBLIC** — scan PII full-tree ad ogni push, redigere dump prima di inviarli. Vedi `feedback_no_pii_in_repo` + [[concepts/path-portability-awareness]].
+
+**🔴 PII — bloccato su UTENTE (reminder impostato per domani 2026-07-05):**
+- [ ] **Lanciare il purge storia** (`scratchpad/purge-pii-history.sh`): filter-repo che sostituisce l'username reale → `<user>` su tutti i 269 commit + force-push. Backup: `scratchpad/slm-full-backup.bundle`. Bloccato in auto-mode (rewrite+force-push da canale esterno) → lo lancia l'utente via `!`/terminale. Comando in TG msg 1080.
+- [ ] (decidere) email autore nei metadata commit: rewrite sì/no (default: lasciata).
+
+**🟡 BUILD stanotte (autonomo — wiring+test+commit, ADR [[decisions/2026-07-05-slm-scaffolding-extension]]):**
+- [ ] **1. Task-validation deps-aware** (utente msg 1076): enum stati {pending,in_progress,done,blocked,cancelled} in `setTaskStatus` (oggi accetta stringa libera) + **NON attivabile (in_progress) un task con deps non-`done`** (rispetta `_checkDeps`/`ready`/`unblocks` esistenti — RAFFORZA, non tocca) + status-spazzatura rifiutato. Core (meccanismo). Unit + wiring-test.
+- [ ] **2. Scheletro estensione `slm`** + sposta+**semplifica** `how_memory_works` (assenza-lane=segnale, togli "non è il primo messaggio"). ⚠️ il 9B dipende da how_memory_works per l'amnesia → ri-test driver prima di rimuovere dal core.
+- [ ] **3. Categorizza `<rules>`** per header ([safety]=core / [memory]=`slm`) + nudge "set aim/task_list" → `slm`.
+- [ ] **4. (design) context-invariant checker** RL-time: aim non-vuoto a task attivo, stati∈enum, no in_progress con deps aperte, timestamp monotoni. Reward OUTCOME-anchored (non cerimonia).
+
+**🔵 DA VALIDARE (quando riprende l'eval, n≥5):**
+- [ ] H6 su HE/145 ×5/braccio (gap ours-vs-vanilla significativo o rumore?) — [[harness-experiment-log]] §7.
+- [ ] Situational table ([[concepts/anti-fixation-metacognition-rung]]): ogni riga outcome-validata, non hard-coded.
+- [ ] Rung anti-fissazione: prototipo + A/B vs harness-plain sui task-fissazione.
+- [ ] Modo-2 full long-horizon {vanilla, ours@1, ours@8}.
+
 ## ✅ P0 BUG (2026-07-04, VERIFICATO + FIXATO + VALIDATO) — store SQLite perdevano turni per contesa concorrente → amnesia
 
 > **CAUSA-RADICE (confermata, non ipotesi)**: `ConversationStore` e `VarsQueue` aprivano in `journal_mode=WAL` ma SENZA `busy_timeout` → default 0. In WAL c'è UN SOLO writer: due processi pi concorrenti (o driver headless + TUI) → `SQLITE_BUSY` "database is locked" IMMEDIATO (nessuna attesa) → `append`/`setVar`/`setMeta` in throw → operazione persa in silenzio (nessun try/catch a monte). Riprodotto: 2 writer concorrenti → crash secco / 0 tabella. **Trigger nel session `019f2b19`**: i driver di test (che scrivevano la stessa `conversations.db`) contendevano con la TUI live.
