@@ -10,8 +10,15 @@
  * delle connessioni, qui solo le directory pure.
  */
 
-/** Root dello stato persistito dell'harness. */
-export const STATE_DIR = ".pi/state";
+/**
+ * Root dello stato persistito dell'harness. Override via env `HARNESS_STATE_DIR` (path assoluto consigliato)
+ * → RILOCALIZZA l'intera catena derivata (TRACE_DIR/REPORTS_DIR qui + VARS_DB_PATH/CONV_DB_PATH in state-db.mjs,
+ * che deriva anch'esso da STATE_DIR). Serve a ISOLARE i run (A/B vanilla-vs-nostro, driver headless) senza
+ * inquinare il `.pi/state` reale della TUI viva (test-pollution) né far contendere i DB tra processi (il
+ * busy_timeout torna rete-di-sicurezza invece di dipendenza load-bearing). Valutato all'import: nel modello
+ * "pi subprocess con env preimpostato" (driver/eval) ogni processo ha il suo state-dir disgiunto.
+ */
+export const STATE_DIR = process.env.HARNESS_STATE_DIR || ".pi/state";
 
 /** Trace per-turno + log diagnostici (capture-errors.log, context-assembly-errors.log). */
 export const TRACE_DIR = `${STATE_DIR}/trace`;
