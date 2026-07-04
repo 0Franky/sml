@@ -21,6 +21,7 @@ import { buildMessagesLane } from "../../src/conversation-store.mjs";
 // non vede le proprie tool-call oltre il turno → le ri-iniettiamo qui (la redazione-egress sotto le copre).
 import { formatLane as formatToolCallsLane } from "../../src/tool-call-log.mjs";
 import { convIdFor } from "../../src/session-context.mjs";
+import { CHECKPOINT_SEQ_META } from "../../src/meta-keys.mjs"; // SSOT del prefisso segment-boundary (reader ↔ writer checkpoint.ts)
 import { parseSessionStartMs } from "../../src/time-shift.mjs"; // ancoraggio temporale lane (msg 848/849)
 import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint, markFocusHintEmitted, shouldEmitReorgHint, markReorgEmitted, maybeAutoFocus } from "../../src/nested-compact.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
@@ -40,7 +41,7 @@ const EXCLUDE_CURRENT_TURN = HARNESS_CFG.messagesExcludeCurrentTurn; // P1-B: es
 // COMPLEMENTARITÀ native↔lane (raise attivo, utente msg 863): gli ultimi K turni-utente sono nell'array NATIVO
 // (native-window keepTurns=K, dove il 9B legge davvero — provato dall'esperimento ollama); la lane mostra SOLO i
 // turni più VECCHI del K-esimo (nthLastUserSeq → niente doppia-chat). K>0 ha precedenza su EXCLUDE_CURRENT_TURN.
-const NATIVE_KEEP_TURNS = Number((HARNESS_CFG as any).nativeKeepTurns ?? 1);
+const NATIVE_KEEP_TURNS = HARNESS_CFG.nativeKeepTurns; // SSOT harness-config: intero ≥1 garantito (no `?? 1`/as any)
 
 // <how_memory_works> — AWARENESS-first (utente msg 830): un modello piccolo con keepTurns=1 vede 1 solo messaggio per
 // volta e tratta l'ARRAY NATIVO come "la conversazione", IGNORANDO le lane nel system prompt → amnesia ("è il mio primo
@@ -85,7 +86,7 @@ const MEMORY_TAIL = HARNESS_CFG.laneMemoryHint
 // Steera al TOOL/LANE, NON al file grezzo (un 9B farebbe `cat` del .db → caos): il path è solo "dove vive". I conteggi
 // dinamici stanno già negli header delle lane → non duplicati qui. Gated come l'awareness; la riga find_tool solo se
 // tool-gating è attivo (altrimenti quei tool non esistono).
-const TOOLGATING_MODE = String((HARNESS_CFG as any).toolGating ?? "gated").toLowerCase();
+const TOOLGATING_MODE = HARNESS_CFG.toolGating; // SSOT harness-config: enum lowercase validato (no `?? "gated"`/toLowerCase)
 const DISCOVERABLE_CATS = Object.keys(CATEGORY_TOOLS).filter((c) => c !== "core" && c !== "meta").join(", ");
 const RESOURCES_LANE = HARNESS_CFG.laneMemoryHint
   ? `<resources note="where your memory lives and how to reach it — use the TOOL/LANE, do NOT parse raw DB files">
@@ -100,11 +101,8 @@ const RESOURCES_LANE = HARNESS_CFG.laneMemoryHint
 `
   : "";
 
-const DB_PATH = ".pi/state/vars.db";
-
 function getStore(): VarsQueue {
-  mkdirSync(dirname(DB_PATH), { recursive: true });
-  const vq = getVarsQueue(DB_PATH, { agent: "orchestrator" }); // connessione condivisa (no leak)
+  const vq = getVarsQueue(); // vars.db dell'orchestratore (path+mkdir+agent nel singleton state-db)
   // Seed delle RULES always-context (idempotente: addRule fa upsert per id).
   if (vq.listRules().length === 0) {
     vq.addRule(
@@ -145,7 +143,7 @@ export default function (pi: ExtensionAPI) {
 
     // segment-boundary del checkpoint (scritto dal tool `checkpoint`, vedi checkpoint.ts): la lane mostra SOLO i
     // messaggi DOPO l'ultimo checkpoint per questa conversazione (la chat pre-checkpoint è ripiegata nel digest).
-    const checkpointSeq = Number(vq.getMeta(`_checkpoint_seq:${convId}`)) || 0;
+    const checkpointSeq = Number(vq.getMeta(`${CHECKPOINT_SEQ_META}${convId}`)) || 0;
 
     // autofocus.mode=auto (OQ-A, msg 551): l'harness entra in focus DA SOLO sotto pressione matrioska, PRIMA di
     // leggere lo stack → il workspace di QUESTO turno riflette già lo scope aperto. No-op in off/nudge (default nudge).

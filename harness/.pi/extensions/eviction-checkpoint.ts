@@ -33,19 +33,15 @@ import {
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { getVarsQueue, getConversationStore, closeAll } from "../../src/state-db.mjs";
 import { convIdFor } from "../../src/session-context.mjs";
-import { mkdirSync } from "node:fs";
-import { dirname } from "node:path";
 
-const VARS_DB_PATH = ".pi/state/vars.db";
 const LAST_EVICTED_META = "_eviction_ordinal:";
 
 export default function (pi: ExtensionAPI) {
   const { rung, enabled } = loadEvictionConfig();
   if (!enabled) return; // DEFAULT off → no-op TOTALE (nessun hook, nessun DB): push sicuro, zero cambio live.
 
-  const keepTurns = Math.max(1, Number((loadHarnessConfig() as any).nativeKeepTurns ?? 1));
-  mkdirSync(dirname(VARS_DB_PATH), { recursive: true });
-  const vq = getVarsQueue(VARS_DB_PATH, { agent: "orchestrator" });
+  const keepTurns = loadHarnessConfig().nativeKeepTurns; // SSOT harness-config: intero ≥1 garantito (no `?? 1`/as any)
+  const vq = getVarsQueue(); // vars.db dell'orchestratore (path+mkdir+agent nel singleton state-db)
   const store = getConversationStore(); // FONTE AUTORITATIVA del conteggio turni (condivisa con conversation-capture)
   pi.on("session_shutdown", () => closeAll());
 

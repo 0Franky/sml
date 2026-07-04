@@ -18,14 +18,9 @@ import { getVarsQueue, closeAll } from "../../src/state-db.mjs";
 import { extractVar, emitToUser } from "../../src/var-ops.mjs";
 import { getDynamicSecrets } from "../../src/secrets-registry.mjs";
 import { redactText } from "../../src/secrets-redact.mjs"; // fallback statico throw-proof per il fail-closed (B2)
-import { mkdirSync } from "node:fs";
-import { dirname } from "node:path";
-
-const DB_PATH = ".pi/state/vars.db";
 
 function getStore(): VarsQueue {
-  mkdirSync(dirname(DB_PATH), { recursive: true });
-  return getVarsQueue(DB_PATH, { agent: "orchestrator" }); // connessione condivisa (no leak)
+  return getVarsQueue(); // vars.db dell'orchestratore (path+mkdir+agent nel singleton state-db)
 }
 
 export default function (pi: ExtensionAPI) {

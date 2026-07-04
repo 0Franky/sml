@@ -9,13 +9,9 @@ import { Type } from "typebox";
 import { VarsQueue } from "../../src/vars-queue.mjs";
 import { getVarsQueue, closeAll } from "../../src/state-db.mjs";
 import { slidingRead, slidingReplace } from "../../src/sliding-var.mjs";
-import { mkdirSync } from "node:fs";
-import { dirname } from "node:path";
 
-const DB_PATH = ".pi/state/vars.db";
 function store(): VarsQueue {
-  mkdirSync(dirname(DB_PATH), { recursive: true });
-  return getVarsQueue(DB_PATH, { agent: "orchestrator" }); // connessione condivisa (no leak)
+  return getVarsQueue(); // vars.db dell'orchestratore (path+mkdir+agent nel singleton state-db)
 }
 
 export default function (pi: ExtensionAPI) {

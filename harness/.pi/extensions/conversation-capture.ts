@@ -43,12 +43,8 @@ function logCaptureError(where: string, e: unknown): void {
   } catch { /* best-effort: se persino il log fallisce, ingoia (non far crashare l'hook) */ }
 }
 
-const DB_PATH = ".pi/state/conversations.db";
-const VARS_DB_PATH = ".pi/state/vars.db"; // DB dello stato (distinto da conversations.db) — meta convId condiviso
-
 function getStore(): ConversationStore {
-  mkdirSync(dirname(DB_PATH), { recursive: true });
-  return getConversationStore(DB_PATH, { agent: "orchestrator" }); // connessione condivisa (no leak)
+  return getConversationStore(); // conversations.db dell'orchestratore (path+mkdir+agent nel singleton state-db)
 }
 
 /** Estrae il testo da un AgentMessage (content = array di blocchi {type,text} | stringa). Difensivo. */
@@ -76,9 +72,9 @@ export default function (pi: ExtensionAPI) {
   pi.on("session_start", (event, ctx) => {
     try {
       const reason = (event as any).reason ?? "startup";
-      // STESSO path+opts delle altre 7 extension → il singleton vars.db non nasce mai con agent='main' per via di
-      // questa call-site, qualunque sia l'ordine di load (review-loop #3 2026-06-29, P2 singleton-agent).
-      const meta = getVarsQueue(VARS_DB_PATH, { agent: "orchestrator" });
+      // STESSO default (orchestrator) delle altre extension → il singleton vars.db non nasce mai con agent='main'
+      // per via di questa call-site, qualunque sia l'ordine di load (review-loop #3 2026-06-29, P2 singleton-agent).
+      const meta = getVarsQueue(); // vars.db dell'orchestratore (path+mkdir+agent nel singleton state-db)
       const sessionId = (ctx as any)?.sessionManager?.getSessionId?.() ?? null;
       const metaKey = sessionId ? `${META_CONV}:${sessionId}` : META_CONV;
       const { convId, persist } = resolveConvId(reason, meta.getMeta(metaKey), Date.now(), { perSession: !!sessionId });

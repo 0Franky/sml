@@ -7,9 +7,12 @@
  */
 import { windowNativeMessages, buildMessagesLane, ConversationStore } from "../../src/conversation-store.mjs";
 import { shouldEmitFocusHint, markFocusHintEmitted } from "../../src/nested-compact.mjs";
-import { getVarsQueue, getConversationStore, closeAll } from "../../src/state-db.mjs";
+import { getVarsQueue, getConversationStore, closeAll, VARS_DB_PATH, CONV_DB_PATH, ORCHESTRATOR_AGENT } from "../../src/state-db.mjs";
 import { getConvId, setConvId, resolveConvId } from "../../src/session-context.mjs";
 import { VarsQueue } from "../../src/vars-queue.mjs";
+import { mkdtempSync, existsSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 let passed = 0, failed = 0;
 function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error("  ✗ FAIL:", msg); } }
@@ -202,6 +205,22 @@ function ok(cond, msg) { if (cond) { passed++; } else { failed++; console.error(
   const c = getVarsQueue(":memory:");
   ok(c !== a, "SINGLETON: dopo closeAll → nuova istanza (connessioni rilasciate)");
   closeAll();
+}
+
+// 6b) state-db SSOT: costanti path + default agent=orchestrator + mkdir-in-accessor (audit 2026-07-04) ----
+{
+  ok(VARS_DB_PATH === ".pi/state/vars.db" && CONV_DB_PATH === ".pi/state/conversations.db",
+     "SSOT: VARS_DB_PATH/CONV_DB_PATH esportati col valore atteso (guard anti-drift)");
+  ok(ORCHESTRATOR_AGENT === "orchestrator", "SSOT: ORCHESTRATOR_AGENT esportato");
+  // path-esplicito SENZA opts → agent di default = orchestrator (i call-site diventano getVarsQueue()) +
+  // la dir di stato è creata dall'ACCESSOR alla prima apertura (mkdir spostato via dall'extension). Temp-dir: non tocca .pi/state reale.
+  const tmp = mkdtempSync(join(tmpdir(), "statedb-"));
+  const dbp = join(tmp, "sub", "vars.db"); // la dir "sub" NON esiste ancora → l'accessor deve crearla
+  const vq = getVarsQueue(dbp);
+  ok(vq.agent === "orchestrator", "ACCESSOR: getVarsQueue(path) senza opts → agent=orchestrator (default SSOT)");
+  ok(existsSync(join(tmp, "sub")), "ACCESSOR: mkdir della dir di stato alla PRIMA apertura file-backed (spostato dall'extension)");
+  closeAll();
+  rmSync(tmp, { recursive: true, force: true });
 }
 
 // 7) session-context default ----------------------------------------------------------------------

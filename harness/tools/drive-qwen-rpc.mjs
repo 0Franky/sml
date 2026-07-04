@@ -18,11 +18,13 @@
 import { spawn } from "node:child_process";
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
+import { CONV_DB_PATH, VARS_DB_PATH } from "../src/state-db.mjs"; // SSOT path DB
+import { DB_BUSY_TIMEOUT_MS } from "../src/db-pragmas.mjs"; // SSOT valore di contesa (bug P0)
 
 const PI = "node_modules/@earendil-works/pi-coding-agent/dist/cli.js";
 const MODEL = process.env.DRIVE_MODEL || "qwen3.5:9b";
-const CONV_DB = ".pi/state/conversations.db";
-const VARS_DB = ".pi/state/vars.db";
+const CONV_DB = CONV_DB_PATH;
+const VARS_DB = VARS_DB_PATH;
 const SID = process.argv[2];
 const turns = JSON.parse(readFileSync(process.argv[3], "utf8"));
 
@@ -70,11 +72,11 @@ function cleanup() {
   if (process.env.KEEP_TEST_DATA === "1") { console.log("\n[cleanup] saltata (KEEP_TEST_DATA=1)"); return; }
   let convDel = 0, varDel = 0;
   try {
-    const d = new DatabaseSync(CONV_DB); d.exec("PRAGMA busy_timeout=5000;");
+    const d = new DatabaseSync(CONV_DB); d.exec(`PRAGMA busy_timeout=${DB_BUSY_TIMEOUT_MS};`);
     convDel = d.prepare("DELETE FROM conversations WHERE seq > ?").run(baseSeq).changes; d.close();
   } catch (e) { console.log("[cleanup] conv:", String(e.message || e).slice(0, 80)); }
   try {
-    const d = new DatabaseSync(VARS_DB); d.exec("PRAGMA busy_timeout=5000;");
+    const d = new DatabaseSync(VARS_DB); d.exec(`PRAGMA busy_timeout=${DB_BUSY_TIMEOUT_MS};`);
     const now = d.prepare("SELECT id FROM vars").all().map((r) => r.id);
     for (const id of now) if (!baseVarIds.has(id)) varDel += d.prepare("DELETE FROM vars WHERE id=?").run(id).changes;
     d.close();

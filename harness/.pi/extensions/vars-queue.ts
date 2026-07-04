@@ -14,15 +14,11 @@ import { Type } from "typebox";
 import { VarsQueue } from "../../src/vars-queue.mjs";
 import { getVarsQueue, closeAll } from "../../src/state-db.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
-import { mkdirSync } from "node:fs";
-import { dirname } from "node:path";
 
-const DB_PATH = ".pi/state/vars.db";
 const HARNESS_CFG = loadHarnessConfig(); // per gathering.mode (write del token solo in require-mode)
 
 function getStore(): VarsQueue {
-  mkdirSync(dirname(DB_PATH), { recursive: true });
-  return getVarsQueue(DB_PATH, { agent: "orchestrator" }); // connessione condivisa (no leak)
+  return getVarsQueue(); // vars.db dell'orchestratore (path+mkdir+agent nel singleton state-db)
 }
 
 /** Deriva una key-fatto STABILE: usa quella fornita (slugificata), altrimenti la deriva dal testo (prime ~4 parole). */

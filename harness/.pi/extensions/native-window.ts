@@ -15,11 +15,11 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { windowNativeMessages } from "../../src/conversation-store.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 
-// keepTurns da config. DEFAULT 1 (INVARIATO): l'utente (msg 830) vuole prima provare la via AWARENESS — spiegare al
-// modello che vede 1 solo messaggio per volta e che le LANE sono la sua memoria (vedi lane <how_memory_works> in
-// context-assembly). ALZARE keepTurns è l'ULTIMA opzione, da flippare via config SOLO se l'awareness non basta.
-// Config-driven (env HARNESS_NATIVE_KEEP_TURNS) → il futuro raise è un cambio di 1 valore, con complementarità già pronta.
-const KEEP_TURNS = Math.max(1, Number((loadHarnessConfig() as any).nativeKeepTurns ?? 1));
+// keepTurns dalla config (SSOT: harness-config.mjs — default reale 6, raise ATTIVO msg 863; env HARNESS_NATIVE_KEEP_TURNS
+// per l'A/B). loadHarnessConfig GARANTISCE già un intero ≥1 (clamp file/env) → si legge il campo diretto, niente
+// `?? 1`/`as any`/Math.max al call-site (la difesa vive nella config, CLAUDE.md #16). La lane <messages_with_user>
+// resta COMPLEMENTARE (solo i turni più vecchi del K-esimo, via nthLastUserSeq → niente doppia-chat).
+const KEEP_TURNS = loadHarnessConfig().nativeKeepTurns;
 
 export default function (pi: ExtensionAPI) {
   pi.on("context", (event) => {

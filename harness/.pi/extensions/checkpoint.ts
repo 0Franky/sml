@@ -17,18 +17,13 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { getVarsQueue, getConversationStore, closeAll } from "../../src/state-db.mjs";
 import { convIdFor } from "../../src/session-context.mjs";
-import { mkdirSync } from "node:fs";
-import { dirname } from "node:path";
-
-const VARS_DB_PATH = ".pi/state/vars.db";
-const CONV_DB_PATH = ".pi/state/conversations.db";
-/** Prefisso del meta che marca il segment-boundary per-conversazione (letto da context-assembly per la lane). */
-export const CHECKPOINT_SEQ_META = "_checkpoint_seq:";
+// Prefisso del segment-boundary per-conversazione: SSOT in meta-keys.mjs (modulo neutro) → il reader in
+// context-assembly.ts importa la STESSA costante, writer/reader non divergono in silenzio. (audit SSOT/DRY 2026-07-04.)
+import { CHECKPOINT_SEQ_META } from "../../src/meta-keys.mjs";
 
 export default function (pi: ExtensionAPI) {
-  mkdirSync(dirname(VARS_DB_PATH), { recursive: true });
-  const vq = getVarsQueue(VARS_DB_PATH, { agent: "orchestrator" });
-  const store = getConversationStore(CONV_DB_PATH, { agent: "orchestrator" });
+  const vq = getVarsQueue(); // vars.db dell'orchestratore (path+mkdir+agent nel singleton state-db)
+  const store = getConversationStore(); // conversations.db dell'orchestratore (idem)
   pi.on("session_shutdown", () => closeAll());
 
   pi.registerTool({
