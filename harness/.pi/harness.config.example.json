@@ -18,7 +18,9 @@
     "_cooldownMs": "millisecondi di cooldown anti-thrash tra due auto-focus (autofocus.mode='auto') → evita entra/esci ripetuti.",
     "cooldownMs": 90000,
     "_outputReservePct": "frazione 0..0.9 di finestra RISERVATA a output+thinking (che condividono la window dell'input). I trigger si calcolano su window*(1-reserve) → scattano PRIMA. Riserva FISICA, distinta da tokenMatrioskaPct (soglia comportamentale). Per un modello con thinking lungo: prova 0.15.",
-    "outputReservePct": 0
+    "outputReservePct": 0,
+    "_pressureDriver": "A2: quale ASSE guida il firing della pressione. 'max' (OR delle 2 scale = storico, default) · 'work' (solo carico-task watchCount, ignora i token) · 'occupancy' (solo riempimento-token). Su finestra grande l'asse-token è ~inerte → 'work' evita nudge con un ctx=X% fuorviante. env: HARNESS_PRESSURE_DRIVER.",
+    "pressureDriver": "max"
   },
   "_messagesWindowN": "quanti turni recenti mostrare VERBATIM nella lane <messages_with_user>. Più alto = più storia verbatim (più token).",
   "messagesWindowN": 8,

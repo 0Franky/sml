@@ -15,7 +15,7 @@
  * Fail-safe: config malformata / fuori-range → ignorata, si ricade sui default (mai rompere il boot).
  */
 import { readFileSync, existsSync } from "node:fs";
-import { DEFAULT_CFG } from "./nested-compact.mjs";
+import { DEFAULT_CFG, PRESSURE_DRIVERS } from "./nested-compact.mjs";
 import { DEFAULT_MESSAGES_WINDOW_N, DEFAULT_MESSAGES_CHAR_CAP } from "./lane-defaults.mjs"; // SSOT default lane messaggi
 
 /** Modalità di enforcement del gathering pre-focus (msg 528/531). */
@@ -111,6 +111,10 @@ function applyTrigger(dst, src) {
   for (const key of Object.keys(TRIGGER_BOUNDS)) {
     const v = clampField(key, src[key]);
     if (v !== undefined) dst[key] = v;
+  }
+  // pressureDriver (A2): enum, NON numerico → fuori da TRIGGER_BOUNDS. Fuori-enum → ignorato (resta il default "max").
+  if (typeof src.pressureDriver === "string" && PRESSURE_DRIVERS.includes(src.pressureDriver)) {
+    dst.pressureDriver = src.pressureDriver;
   }
 }
 
@@ -220,6 +224,9 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
   if (Number.isFinite(minT) && minT >= 1) cfg.gathering.minTasksForForce = Math.floor(minT);
   if (typeof env.HARNESS_AUTOFOCUS_MODE === "string" && AUTOFOCUS_MODES.includes(env.HARNESS_AUTOFOCUS_MODE)) {
     cfg.autofocus.mode = env.HARNESS_AUTOFOCUS_MODE;
+  }
+  if (typeof env.HARNESS_PRESSURE_DRIVER === "string" && PRESSURE_DRIVERS.includes(env.HARNESS_PRESSURE_DRIVER)) {
+    cfg.trigger.pressureDriver = env.HARNESS_PRESSURE_DRIVER; // A2: quale asse guida il firing (default "max")
   }
   if (typeof env.HARNESS_SECRETS_SINK_GATING === "string" && SINK_GATING_MODES.includes(env.HARNESS_SECRETS_SINK_GATING)) {
     cfg.secrets.sinkGating = env.HARNESS_SECRETS_SINK_GATING;

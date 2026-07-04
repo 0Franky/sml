@@ -165,7 +165,10 @@ export default function (pi: ExtensionAPI) {
       // focus_hint = il NUDGE: emesso SOLO in autofocus.mode='nudge' (default). In 'off' niente segnale; in 'auto'
       // l'auto-enter sopra ha già gestito (o siamo passati al ramo nested). Il reorg_hint resta indipendente (anti-cecità).
       if (HARNESS_CFG.autofocus.mode === "nudge" && trig.recommend === "matrioska" && shouldEmitFocusHint(vq)) {
-        hint = `\n<focus_hint watch="${trig.metrics.watchCount}"${trig.metrics.percent != null ? ` ctx="${Math.round(trig.metrics.percent * 100)}%"` : ""}>Context under pressure: consider enter_focus on a subset of tasks to work in focus (pop_focus when done).</focus_hint>`;
+        // A2 reporting ONESTO: `reason` (task-backlog/context-fill/both) dice PERCHÉ è scattato; `watch=N/soglia` è
+        // l'intero azionabile; `ctx=X%` si mostra SOLO se l'asse occupancy contribuisce davvero (occ≠none) → niente
+        // ctx% red-herring quando a scattare è il carico-task. (ADR 2026-07-04-a2-context-pressure-honest-split.)
+        hint = `\n<focus_hint reason="${trig.reason}" watch="${trig.metrics.watchCount}/${HARNESS_CFG.trigger.watchMatrioska}"${trig.occ !== "none" ? ` ctx="${Math.round((trig.metrics.percent ?? 0) * 100)}%"` : ""}>Under pressure (${trig.reason}): consider enter_focus on a subset of tasks to work in focus (pop_focus when done).</focus_hint>`;
         // gathering.mode=inject (msg 531): allega INLINE la vista ordinata, così quando l'harness nudga il focus il
         // modello non sceglie il subset alla cieca. Low-ceremony (niente focus dedicato). Gate proporzionalità: solo
         // con ≥ minTasksForForce task open. Vedi wiki/concepts/focus-task-prioritization.md §gathering-enforcement.
@@ -181,7 +184,7 @@ export default function (pi: ExtensionAPI) {
       } else if (trig.recommend === "reorder" && shouldEmitReorgHint(vq)) {
         // anti-cecità (msg 515): nella banda di pressione REORDER (contesto in accumulo, non ancora da matrioska) nudga
         // il modello a CONSOLIDARE il backlog. Event-driven dalla pressione, non wall-clock. Cooldown proprio.
-        hint = `\n<reorganize_hint watch="${trig.metrics.watchCount}"${trig.metrics.percent != null ? ` ctx="${Math.round(trig.metrics.percent * 100)}%"` : ""}>Context accumulating: consolidate the backlog — close 'done' tasks, group similar ones, and re-check priority/dependencies (set_task_deps) so the execution order stays correct.</reorganize_hint>`;
+        hint = `\n<reorganize_hint reason="${trig.reason}" watch="${trig.metrics.watchCount}/${HARNESS_CFG.trigger.watchReorder}"${trig.occ !== "none" ? ` ctx="${Math.round((trig.metrics.percent ?? 0) * 100)}%"` : ""}>Consolidate the backlog (${trig.reason}): close 'done' tasks, group similar ones, and re-check priority/dependencies (set_task_deps) so the execution order stays correct.</reorganize_hint>`;
         markReorgEmitted(vq);
       }
       // excludeCurrentTurn (config, default true): la native-window (native-window.ts) tiene keepTurns=1 = il turno

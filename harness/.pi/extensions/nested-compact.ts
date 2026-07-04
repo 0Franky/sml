@@ -100,7 +100,8 @@ export default function (pi: ExtensionAPI) {
       const trig = evaluateTrigger(vq, { tokens: usage?.tokens ?? null, contextWindow: usage?.contextWindow ?? null }, HARNESS_CFG.trigger);
       const stack = getFocusStack(vq).map((f) => ({ scope_id: f.scope_id, depth: f.depth, subset: f.task_subset }));
       return {
-        content: [{ type: "text", text: JSON.stringify({ depth: currentDepth(vq), max_depth: HARNESS_CFG.trigger.maxDepth, pressure: trig.recommend, watch: trig.metrics.watchCount, stack }, null, 2) }],
+        // A2 reporting onesto: reason/driver/work/occ espliciti; watch=N/soglia azionabile; ctx% SOLO se l'asse occupancy contribuisce.
+        content: [{ type: "text", text: JSON.stringify({ depth: currentDepth(vq), max_depth: HARNESS_CFG.trigger.maxDepth, pressure: trig.recommend, reason: trig.reason, driver: trig.driver, work: trig.work, occ: trig.occ, watch: `${trig.metrics.watchCount}/${HARNESS_CFG.trigger.watchMatrioska}`, ...(trig.occ !== "none" ? { ctx_pct: Math.round((trig.metrics.percent ?? 0) * 100) } : {}), stack }, null, 2) }],
         details: { ok: true },
       };
     },

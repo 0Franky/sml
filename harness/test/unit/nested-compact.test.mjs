@@ -7,7 +7,7 @@
  *   realignParent (aim chiuso→non ripristina) · buildNestedWorkspace (frame + context filtrato al subset).
  */
 import {
-  DEFAULT_CFG, collectMetrics, classifyPressure, currentDepth, canEnter, evaluateTrigger,
+  DEFAULT_CFG, collectMetrics, classifyPressure, classifyAxes, pickDriver, pressureReason, currentDepth, canEnter, evaluateTrigger,
   buildFrame, serializeFrame, getFocusStack, enterFocus, popFocus, realignParent, buildNestedWorkspace,
   shouldEmitReorgHint, markReorgEmitted, requireGateBlocks, maybeAutoFocus,
 } from "../../src/nested-compact.mjs";
@@ -34,6 +34,50 @@ try {
     ok(classifyPressure({ watchCount: 30, percent: 0.30 }) === "matrioska", "OR: watch-alto vince");
     ok(classifyPressure({ watchCount: 0, percent: 0.90 }) === "matrioska", "OR: token-alto vince");
     ok(classifyPressure({ watchCount: 13, percent: null }) === "reorder", "NULL-percent: asse-token = none");
+  }
+
+  // 1b) A2 — split onesto: classifyAxes / pickDriver / pressureReason + config pressureDriver ------
+  {
+    // classifyAxes: le due scale ORTOGONALI, esposte separate
+    const a1 = classifyAxes({ watchCount: 30, percent: 0.30 });
+    ok(a1.work === "matrioska" && a1.occ === "none", "AXES: watch-alto + token-basso → work=matrioska, occ=none");
+    const a2 = classifyAxes({ watchCount: 0, percent: 0.80 });
+    ok(a2.work === "none" && a2.occ === "matrioska", "AXES: watch-basso + token-alto → work=none, occ=matrioska");
+    ok(classifyAxes({ watchCount: 0, percent: null }).occ === "none", "AXES: percent=null → occ=none (fail-safe)");
+    ok(classifyAxes({ watchCount: 0, percent: 0.90 }).work === "none", "AXES: watchCount=0 → work=none");
+
+    // pickDriver: max (OR storico) / work / occupancy + fallback su valore non valido
+    ok(pickDriver("matrioska", "none", "max") === "matrioska", "DRIVER max: OR (work vince)");
+    ok(pickDriver("none", "reorder", "max") === "reorder", "DRIVER max: OR (occ vince)");
+    ok(pickDriver("matrioska", "none", "work") === "matrioska", "DRIVER work: solo work");
+    ok(pickDriver("matrioska", "none", "occupancy") === "none", "DRIVER occupancy: IGNORA work (occ=none)");
+    ok(pickDriver("none", "matrioska", "work") === "none", "DRIVER work: IGNORA occ");
+    ok(pickDriver("reorder", "matrioska", "bogus") === "matrioska", "DRIVER non valido → fallback max");
+
+    // classifyPressure con pressureDriver via cfg (default = max → INVARIATO)
+    ok(classifyPressure({ watchCount: 30, percent: 0.30 }, { pressureDriver: "occupancy" }) === "none",
+       "classifyPressure(driver=occupancy): watch-alto ma occ-basso → none");
+    ok(classifyPressure({ watchCount: 30, percent: 0.30 }) === "matrioska",
+       "classifyPressure(default): pressureDriver='max' → OR-max invariato");
+
+    // pressureReason: onesto, driver-aware
+    ok(pressureReason("matrioska", "none", "matrioska", "max") === "task-backlog", "REASON max: solo work → task-backlog");
+    ok(pressureReason("none", "reorder", "reorder", "max") === "context-fill", "REASON max: solo occ → context-fill");
+    ok(pressureReason("matrioska", "matrioska", "matrioska", "max") === "both", "REASON max: entrambi → both");
+    ok(pressureReason("matrioska", "matrioska", "none", "max") === "none", "REASON: level none → none");
+    ok(pressureReason("matrioska", "matrioska", "reorder", "work") === "task-backlog", "REASON work: sempre task-backlog");
+    ok(pressureReason("matrioska", "matrioska", "reorder", "occupancy") === "context-fill", "REASON occupancy: sempre context-fill");
+
+    // evaluateTrigger espone work/occ/reason/driver (additivo). watchCount 30 → work=matrioska; ctx 3% → occ=none.
+    const vqA = new VarsQueue(":memory:");
+    for (let i = 0; i < 30; i++) vqA.addTask("a" + i, "x");
+    const tW = evaluateTrigger(vqA, { tokens: 300, contextWindow: 10000, currentDepth: 0 });
+    ok(tW.work === "matrioska" && tW.occ === "none", "evaluateTrigger: espone work/occ separati");
+    ok(tW.reason === "task-backlog" && tW.driver === "max", "evaluateTrigger: reason=task-backlog (ctx 3% non è il driver)");
+    ok(tW.recommend === "matrioska", "evaluateTrigger: firing invariato col default max");
+    const tO = evaluateTrigger(vqA, { tokens: 9500, contextWindow: 10000, currentDepth: 0 }, { ...DEFAULT_CFG, pressureDriver: "occupancy" });
+    ok(tO.recommend === "matrioska" && tO.reason === "context-fill", "evaluateTrigger(driver=occupancy): firing dall'asse token");
+    vqA.close();
   }
 
   // 2) evaluateTrigger — depth-saturation degrada matrioska → reorder -----------

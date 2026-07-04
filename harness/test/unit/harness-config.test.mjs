@@ -140,6 +140,17 @@ const noFile = join(dir, "assente.json");
   ok(loadHarnessConfig(noFile, { env: { HARNESS_LANE_MEMORY_HINT: "false" } }).laneMemoryHint === false, "ENV: HARNESS_LANE_MEMORY_HINT=false disattiva l'awareness");
 }
 
+// P) A2 — pressureDriver (default max = firing INVARIATO; file + env + invalido → default) -----------
+{
+  const c = loadHarnessConfig(noFile, { env: {} });
+  ok(c.trigger.pressureDriver === "max", "DEFAULT: trigger.pressureDriver = max (OR-max storico, firing invariato)");
+  writeFileSync(cfgPath, JSON.stringify({ trigger: { pressureDriver: "work" } }));
+  ok(loadHarnessConfig(cfgPath, { env: {} }).trigger.pressureDriver === "work", "FILE: pressureDriver overrideato a work");
+  ok(loadHarnessConfig(cfgPath, { env: { HARNESS_PRESSURE_DRIVER: "occupancy" } }).trigger.pressureDriver === "occupancy", "ENV: HARNESS_PRESSURE_DRIVER vince sul file (occupancy)");
+  ok(loadHarnessConfig(cfgPath, { env: { HARNESS_PRESSURE_DRIVER: "bogus" } }).trigger.pressureDriver === "work", "ENV: valore invalido ignorato → resta il file (work)");
+  ok(loadHarnessConfig(noFile, { env: { HARNESS_PRESSURE_DRIVER: "bogus" } }).trigger.pressureDriver === "max", "ENV: fuori-enum + no file → default max");
+}
+
 rmSync(dir, { recursive: true, force: true });
 console.log(`\nharness-config test: ${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);

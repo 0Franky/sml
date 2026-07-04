@@ -3,6 +3,8 @@ import type { VarsQueue, FocusFrameRecord, TaskRecord, DecisionRecord, RuleRecor
 import type { ConversationStore } from "./conversation-store.mjs";
 
 export type PressureLevel = "none" | "reorder" | "matrioska";
+export type PressureDriver = "max" | "work" | "occupancy";
+export type PressureReasonKind = "none" | "task-backlog" | "context-fill" | "both";
 
 export interface NestedCfg {
   tokenReorderPct: number;
@@ -12,8 +14,11 @@ export interface NestedCfg {
   focusK: number;
   maxDepth: number;
   cooldownMs: number;
+  outputReservePct: number;
+  pressureDriver: PressureDriver;
 }
 export const DEFAULT_CFG: NestedCfg;
+export const PRESSURE_DRIVERS: PressureDriver[];
 
 export interface Metrics {
   openTasks: number;
@@ -34,7 +39,10 @@ export interface Frame {
   frameTs: number;
 }
 
-export function collectMetrics(vq: VarsQueue, opts?: { now?: number; tokens?: number | null; contextWindow?: number | null }): Metrics;
+export function collectMetrics(vq: VarsQueue, opts?: { now?: number; tokens?: number | null; contextWindow?: number | null; outputReservePct?: number }): Metrics;
+export function classifyAxes(metrics: Metrics, cfg?: Partial<NestedCfg>): { work: PressureLevel; occ: PressureLevel };
+export function pickDriver(work: PressureLevel, occ: PressureLevel, driver?: PressureDriver): PressureLevel;
+export function pressureReason(work: PressureLevel, occ: PressureLevel, level: PressureLevel, driver?: PressureDriver): PressureReasonKind;
 export function classifyPressure(metrics: Metrics, cfg?: Partial<NestedCfg>): PressureLevel;
 export function currentDepth(vq: VarsQueue): number;
 export function canEnter(vq: VarsQueue, cfg?: Partial<NestedCfg>): { ok: boolean; depth: number; reason?: string };
@@ -42,7 +50,10 @@ export function evaluateTrigger(
   vq: VarsQueue,
   opts?: { now?: number; tokens?: number | null; contextWindow?: number | null; currentDepth?: number },
   cfg?: Partial<NestedCfg>,
-): { level: PressureLevel; recommend: PressureLevel; depthSaturated: boolean; metrics: Metrics };
+): {
+  level: PressureLevel; recommend: PressureLevel; depthSaturated: boolean; metrics: Metrics;
+  work: PressureLevel; occ: PressureLevel; driver: PressureDriver; reason: PressureReasonKind;
+};
 
 export function shouldEmitFocusHint(vq: VarsQueue, opts?: { now?: number; cooldownMs?: number }): boolean;
 export function markFocusHintEmitted(vq: VarsQueue, opts?: { now?: number }): void;

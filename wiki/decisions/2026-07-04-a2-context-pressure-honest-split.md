@@ -35,13 +35,15 @@ La macchina **floor-decomposition + reducibility-gate + EWMA-calibration** (cand
 
 `pressureDriver` default `"max"` = identico OR-max attuale per il FIRING; cambia SOLO il reporting (onesto) e la struttura (2 assi esposti). Nessuna regressione; il valore (onestà del segnale + config-drivenness + keepTurns pulito) è realizzato a prescindere. Il tuning del driver ("work" per target a finestra grande) è una scelta successiva sul dato.
 
-## Stato implementazione
+## Stato implementazione — ✅ FATTO 2026-07-04 (commit A2, dopo il refactor SSOT/DRY)
 
 - [x] Meccanismo documentato ([[architecture/context-pressure-mechanism]]).
-- [ ] Refactor `classifyPressure`/`evaluateTrigger` → `{work,occ,recommend}` + `pressureDriver`.
-- [ ] Reporting onesto in `context-assembly.ts` (focus_hint/reorganize_hint) + focus_status.
-- [ ] keepTurns literal → config default (3 file) + commenti.
-- [ ] Test (split + edge keepTurns=1) + typecheck + validazione driver.
+- [x] Refactor: `classifyAxes(metrics,cfg) → {work,occ}` + `pickDriver(work,occ,driver)` + `pressureReason(...)`; `classifyPressure` resta BACKWARD-COMPAT (ritorna la stringa-livello, ora `pickDriver(...cfg.pressureDriver)`, default "max" = OR-max INVARIATO); `evaluateTrigger` espone additivamente `work/occ/driver/reason`. (`src/nested-compact.mjs` + `.d.mts`.)
+- [x] Config `pressureDriver` in `DEFAULT_CFG` (trigger) = "max"; validazione enum file+env (`PRESSURE_DRIVERS`, `HARNESS_PRESSURE_DRIVER`) in `harness-config.mjs`; esposto nell'example.json.
+- [x] Reporting ONESTO: `focus_hint`/`reorganize_hint` (`context-assembly.ts`) mostrano `reason=` + `watch="N/soglia"` azionabile + `ctx=X%` SOLO se `occ≠none` (niente % red-herring quando scatta il task-backlog); `focus_status` arricchito con reason/driver/work/occ.
+- [x] keepTurns literal → config: già fatto nel refactor SSOT/DRY (commit `e3c426b`, `?? 1`/as any rimossi).
+- [x] Test: 22 A2 (classifyAxes/pickDriver/pressureReason + evaluateTrigger espone assi + edge percent=null→occ=none, watchCount=0→work=none, driver isola l'asse, max=OR) in `nested-compact.test.mjs` (105/0) + 5 config (`harness-config.test.mjs` 58/0). typecheck 0, suite 37/0.
+- [ ] **Validazione driver LIVE (residua)**: il firing è default-preserving (max) + backward-compat testato; la RESA del nudge sotto pressione (reason/watch-soglia) va confermata con un run del driver 9B in stato di pressione (≥25 task open) — non ancora eseguita.
 
 ## Links
 

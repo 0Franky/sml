@@ -41,10 +41,18 @@ export const DEFAULT_CFG = {
   // stessa window dell'input). È una RISERVA FISICA, distinta dalla soglia *comportamentale* tokenMatrioskaPct:
   // il `percent` è calcolato su contextWindow*(1-reserve) → i trigger scattano PRIMA. Default 0 = off (invariato).
   outputReservePct: 0,
+  // A2 (2026-07-04): quale ASSE guida il firing della pressione — "max" (OR delle 2 scale = comportamento storico,
+  // DEFAULT invariato) · "work" (solo watchCount = carico-task; ignora l'occupancy-token) · "occupancy" (solo il
+  // riempimento-token). Le 2 scale sono ORTOGONALI: su finestra grande l'asse-token è ~inerte (ADR a2-honest-split)
+  // → esporle separate + reporting driver-aware evita il ctx=X% fuorviante. Enum validato in harness-config.
+  pressureDriver: "max",
 };
 
 const RANK = { none: 0, reorder: 1, matrioska: 2 };
 const maxLevel = (a, b) => (RANK[a] >= RANK[b] ? a : b);
+
+/** Driver del firing della pressione (A2): quale asse decide. "max"=OR storico (default). */
+export const PRESSURE_DRIVERS = ["max", "work", "occupancy"];
 
 /**
  * Metriche misurabili dallo stato + (opz.) dal context-usage di pi.
@@ -68,18 +76,55 @@ export function collectMetrics(vq, opts = {}) {
   return { openTasks, pendingVerifs, sharedVars, recentChanges, watchCount, percent };
 }
 
-/** Classifica la pressione: ladder token + ladder watch, OR-semantics (max). null percent → asse-token=none. */
+/**
+ * classifyAxes — le DUE scale di pressione ORTOGONALI, separate (A2 2026-07-04):
+ *  - `occ` (occupancy): riempimento-token `percent` vs token{Reorder,Matrioska}Pct. null percent → "none" (fail-safe).
+ *  - `work`: carico-task `watchCount` (openTasks+pendingVerifs) vs watch{Reorder,Matrioska}.
+ * Esporle separate (invece del solo max opaco) abilita il reporting driver-aware + il tuning per-target. Pura/testabile.
+ * @returns {{ work: "none"|"reorder"|"matrioska", occ: "none"|"reorder"|"matrioska" }}
+ */
+export function classifyAxes(metrics, cfg = DEFAULT_CFG) {
+  const c = { ...DEFAULT_CFG, ...cfg };
+  let occ = "none";
+  if (metrics.percent != null) {
+    if (metrics.percent >= c.tokenMatrioskaPct) occ = "matrioska";
+    else if (metrics.percent >= c.tokenReorderPct) occ = "reorder";
+  }
+  let work = "none";
+  if (metrics.watchCount >= c.watchMatrioska) work = "matrioska";
+  else if (metrics.watchCount >= c.watchReorder) work = "reorder";
+  return { work, occ };
+}
+
+/** Seleziona il livello secondo il driver: "max"=OR delle due (storico) · "work"=solo work · "occupancy"=solo occ. */
+export function pickDriver(work, occ, driver = "max") {
+  if (driver === "work") return work;
+  if (driver === "occupancy") return occ;
+  return maxLevel(work, occ); // "max" (default) + fallback per valori non validi
+}
+
+/**
+ * pressureReason — reporting ONESTO: PERCHÉ è scattata la pressione al livello `level`, driver-aware. Il fine è che
+ * il modello (e i nudge) NON leggano un ctx=X% fuorviante quando a scattare è il carico-task. Valori:
+ * "task-backlog" (carico-task) · "context-fill" (riempimento-token) · "both" · "none".
+ */
+export function pressureReason(work, occ, level, driver = "max") {
+  if (level === "none") return "none";
+  if (driver === "work") return "task-backlog";
+  if (driver === "occupancy") return "context-fill";
+  const w = RANK[work] >= RANK[level], o = RANK[occ] >= RANK[level];
+  return w && o ? "both" : w ? "task-backlog" : "context-fill";
+}
+
+/**
+ * Classifica la pressione in UN livello secondo `cfg.pressureDriver` (default "max" = OR-max storico → INVARIATO).
+ * Backward-compat: ritorna la stringa-livello come prima. Per le due scale separate → classifyAxes. null percent →
+ * asse-occupancy=none (l'asse-work resta valutabile).
+ */
 export function classifyPressure(metrics, cfg = DEFAULT_CFG) {
   const c = { ...DEFAULT_CFG, ...cfg };
-  let tokenLevel = "none";
-  if (metrics.percent != null) {
-    if (metrics.percent >= c.tokenMatrioskaPct) tokenLevel = "matrioska";
-    else if (metrics.percent >= c.tokenReorderPct) tokenLevel = "reorder";
-  }
-  let watchLevel = "none";
-  if (metrics.watchCount >= c.watchMatrioska) watchLevel = "matrioska";
-  else if (metrics.watchCount >= c.watchReorder) watchLevel = "reorder";
-  return maxLevel(tokenLevel, watchLevel);
+  const { work, occ } = classifyAxes(metrics, c);
+  return pickDriver(work, occ, c.pressureDriver);
 }
 
 /** Depth corrente = max depth degli scope APERTI (0 = nessuno). */
@@ -97,18 +142,23 @@ export function canEnter(vq, cfg = DEFAULT_CFG) {
 
 /**
  * Valuta il trigger: pressione + raccomandazione (degrada matrioska→reorder a depth saturo, graceful).
- * @returns {{ level:"none"|"reorder"|"matrioska", recommend:"none"|"reorder"|"matrioska", depthSaturated:boolean, metrics:object }}
+ * A2: espone le 2 scale ORTOGONALI (`work`/`occ`), il `driver` effettivo e la `reason` (reporting onesto).
+ * @returns {{ level:"none"|"reorder"|"matrioska", recommend:"none"|"reorder"|"matrioska", depthSaturated:boolean,
+ *   metrics:object, work:"none"|"reorder"|"matrioska", occ:"none"|"reorder"|"matrioska",
+ *   driver:"max"|"work"|"occupancy", reason:"none"|"task-backlog"|"context-fill"|"both" }}
  */
 export function evaluateTrigger(vq, opts = {}, cfg = DEFAULT_CFG) {
   const c = { ...DEFAULT_CFG, ...cfg };
   const now = opts.now ?? Date.now();
   const metrics = collectMetrics(vq, { now, tokens: opts.tokens ?? null, contextWindow: opts.contextWindow ?? null, outputReservePct: c.outputReservePct });
-  const level = classifyPressure(metrics, c);
+  const { work, occ } = classifyAxes(metrics, c);
+  const level = pickDriver(work, occ, c.pressureDriver);
   const depth = opts.currentDepth ?? currentDepth(vq);
   const depthSaturated = depth >= c.maxDepth;
   // a depth saturo NON si raccomanda di scendere ancora → si degrada a reorder (riordino in-place).
   const recommend = level === "matrioska" && depthSaturated ? "reorder" : level;
-  return { level, recommend, depthSaturated, metrics };
+  const reason = pressureReason(work, occ, level, c.pressureDriver); // perché è scattato (onesto, driver-aware)
+  return { level, recommend, depthSaturated, metrics, work, occ, driver: c.pressureDriver, reason };
 }
 
 /**
@@ -444,7 +494,8 @@ export function buildNestedWorkspace(vq, opts = {}) {
 }
 
 export default {
-  DEFAULT_CFG, collectMetrics, classifyPressure, currentDepth, canEnter, evaluateTrigger,
+  DEFAULT_CFG, PRESSURE_DRIVERS, collectMetrics, classifyAxes, pickDriver, pressureReason, classifyPressure,
+  currentDepth, canEnter, evaluateTrigger,
   shouldEmitFocusHint, markFocusHintEmitted,
   buildFrame, serializeFrame, getFocusStack, enterFocus, popFocus, realignParent, buildNestedWorkspace,
 };
