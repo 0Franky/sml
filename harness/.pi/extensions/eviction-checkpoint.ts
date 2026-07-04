@@ -16,10 +16,12 @@
  * anti-hack: qui c'è SOLO lo scaffold runtime (spinta a salvare), MAI un reward — il reward è strato-3,
  * ancorato all'OUTCOME (il fatto è ripescabile dopo?), non alla partecipazione. Vedi todo NEW-A + memory.
  *
- * ⚠ VALIDAZIONI LIVE residue (default-off finché non passano, evidence-first): (1) ordine-hook — per il DIGEST
- * di `inject` serve che questa estensione veda la storia COMPLETA (giri PRIMA di native-window); se gira dopo,
- * il digest degrada ma il nudge resta valido; (2) trailing system-message — confermare che il provider accetti
- * un messaggio `system` in coda (altrimenti ripiegare sul last-user); (3) require/OOB endpoint resolution.
+ * RISOLTO 2026-07-04 (bug sessione 019f2ab9: non scattava MAI): conteggio-turni + digest ora dallo STORE autoritativo
+ * (store.countUserTurns / userTurnsByOrdinal), NON da event.messages → indipendente dall'ordine-hook. native-window
+ * gira nello stesso hook `context` e finestra l'array PRIMA: contare da lì dava sempre ≤ keepTurns → eviction nulla.
+ *
+ * ⚠ VALIDAZIONI LIVE residue (evidence-first): (1) trailing system-message — confermare che il provider accetti un
+ * messaggio `system` in coda (altrimenti ripiegare sul last-user); (2) require/OOB endpoint resolution.
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import {
@@ -29,21 +31,13 @@ import {
   buildEvictionDirective,
 } from "../../src/eviction-checkpoint.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
-import { getVarsQueue, closeAll } from "../../src/state-db.mjs";
+import { getVarsQueue, getConversationStore, closeAll } from "../../src/state-db.mjs";
 import { getConvId } from "../../src/session-context.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
 const VARS_DB_PATH = ".pi/state/vars.db";
 const LAST_EVICTED_META = "_eviction_ordinal:";
-
-/** Testo di un messaggio pi (content stringa o parti tipizzate). */
-function textOf(m: any): string {
-  if (!m) return "";
-  if (typeof m.content === "string") return m.content;
-  if (Array.isArray(m.content)) return m.content.map((c: any) => (c && typeof c.text === "string" ? c.text : "")).join(" ");
-  return "";
-}
 
 export default function (pi: ExtensionAPI) {
   const { rung, enabled } = loadEvictionConfig();
@@ -52,6 +46,7 @@ export default function (pi: ExtensionAPI) {
   const keepTurns = Math.max(1, Number((loadHarnessConfig() as any).nativeKeepTurns ?? 1));
   mkdirSync(dirname(VARS_DB_PATH), { recursive: true });
   const vq = getVarsQueue(VARS_DB_PATH, { agent: "orchestrator" });
+  const store = getConversationStore(); // FONTE AUTORITATIVA del conteggio turni (condivisa con conversation-capture)
   pi.on("session_shutdown", () => closeAll());
 
   // require (OOB) non ancora wired live → degrada a inject con avviso una-tantum (interim, vedi spike todo NEW-A).
@@ -64,19 +59,19 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("context", (event) => {
     const messages = ((event as any).messages as any[]) || [];
-    const userMsgs = messages.filter((m) => m && m.role === "user");
-    const userTurnCount = userMsgs.length;
-
     const convId = getConvId();
+
+    // CONTEGGIO DALLO STORE, non da event.messages: native-window gira nello stesso hook `context` e finestra
+    // l'array PRIMA (contarlo da lì darebbe ≤ keepTurns → eviction MAI rilevata, bug sessione 019f2ab9). (fix 2026-07-04)
+    const userTurnCount = store.countUserTurns(convId);
     const metaKey = LAST_EVICTED_META + convId;
     const lastEvictedOrdinal = Number(vq.getMeta(metaKey) ?? 0) || 0;
 
     const { evictedThrough, newlyEvicted } = evictionEvent({ userTurnCount, keepTurns, lastEvictedOrdinal });
     if (newlyEvicted.length === 0) return; // niente è appena uscito dal nativo → nessuna direttiva
 
-    // digest dei turni appena usciti (ordinale 1-based → userMsgs[ord-1]). Se l'ordine-hook li ha già tolti,
-    // il testo è vuoto → il nudge resta valido, l'inject degrada con grazia.
-    const turns = newlyEvicted.map((ord) => ({ ordinal: ord, role: "user", text: textOf(userMsgs[ord - 1]) }));
+    // digest dei turni appena usciti, ripescati DALLO STORE (non sono più nell'array finestrato).
+    const turns = store.userTurnsByOrdinal(convId, newlyEvicted[0], newlyEvicted[newlyEvicted.length - 1]);
     const digest = summarizeEvicting(turns);
     const directive = buildEvictionDirective(effRung, { digest });
     if (!directive) return;

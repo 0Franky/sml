@@ -9,6 +9,14 @@ last_updated: 2026-06-30
 
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
 
+## 🆕 2026-07-04 — eviction-checkpoint FIXATO + lezione-test + CLAUDE.md pollution
+
+> **🐛 BUG eviction-checkpoint (sessione pi `019f2ab9`) → FIXATO.** L'estensione NON scattava MAI: contava i turni-utente da `event.messages`, che native-window (STESSO hook `context`) aveva già finestrato a `keepTurns` → `userTurnCount ≡ keepTurns` → `evictionEvent` non rilevava mai eviction (meta `_eviction_ordinal` ASSENTE nel vars.db lo provò). **Fix**: conteggio + digest dallo STORE autoritativo (`ConversationStore.countUserTurns` / `userTurnsByOrdinal`), indipendente dal windowing. Test di WIRING nuovo `test/integration/eviction-wiring.test.mjs` (12/0) che riproduce bug+fix. Suite 35-file/0, typecheck 0.
+>
+> **⚠️ CLAUDE.md POLLUTION (scoperta utente, confermata dal codice pi).** pi (`resource-loader.loadProjectContextFiles`) RISALE tutti i parent da cwd e carica ogni `CLAUDE.md`/`AGENTS.md`: lanciando pi da `harness/` il 9B si mangia `slm/CLAUDE.md` (schema di ricerca gigante) → contesto inutile/fuorviante che sballa TUTTE le sessioni live (probabile co-fattore di confabulazioni/derive). **Mitigazione**: lanciare pi con `-nc` / `--no-context-files` (in `harness/` non c'è alcun CLAUDE.md locale → non toglie nulla al 9B; le sue istruzioni vere arrivano dalla context-assembly). **TODO**: valutare renderlo permanente (alias/config di pi).
+>
+> **📏 LEZIONE→REGOLA (utente msg 962, → CLAUDE.md #14 + [[feedback_validate_wiring_before_handoff]]).** Unit-test su funzioni PURE = FALSA sicurezza se il bug vive nel WIRING (fonte-dato / ordine-hook / pipeline). Prima di far testare LIVE all'utente, validare al livello dove il bug può vivere (integration/wiring test che riproduce la pipeline reale). Il test manuale dell'utente è l'ULTIMA linea di difesa, non la prima.
+
 ## ⏸️ RESUME POINTER (2026-07-03, AGGIORNATO) — riprendere DA QUI
 > **Stato**: HEAD==origin/main==`f559022`, tree pulito (solo `harness/reddit_post.js` untracked, non-mio). Suite 21-file/0, typecheck verde. **SESSIONE POST-SPEND-LIMIT (utente a consumo)** → economia: niente workflow costosi, fix inline.
 >

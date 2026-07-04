@@ -187,7 +187,7 @@ async function editSinksAndApply(ui, name, changes, known) {
     return result(`Editing the sink list for '${name}' needs an interactive input, unavailable here. NOT applied.`, { ok: false, aborted: "no-input-ui" });
   }
   const prefill = (changes.addSinks || []).map((h) => String(h).toLowerCase().trim()).filter(Boolean).join(", ");
-  const edited = await ui.input(`Modifica i sink per '${name}'`, `host separati da virgola (tieni solo quelli voluti); VUOTO = annulla [${prefill}]`);
+  const edited = await ui.input(`Scegli quali host concedere a '${name}'`, `Elenca gli host da concedere, separati da virgola (togli quelli che NON vuoi). Invia per applicare · lascia VUOTO per annullare. Proposti: ${prefill}`);
   if (edited == null || !String(edited).trim()) {
     return result(`User chose to edit but left it empty — widening of '${name}' CANCELLED. Nothing changed.`, { ok: false, aborted: "edit-empty" });
   }
@@ -272,7 +272,7 @@ export async function askAndApplyEdit(ui, hasUI, name, changes, why, titleVerb) 
         return result(`Widening '${name}' includes a SUSPICIOUS host (${suspicious.map((s) => s.host).join(", ")}); confirming it needs an interactive dialog, unavailable here. NOT applied.`, { ok: false, aborted: "no-input-ui" });
       }
       const challenge = suspicious.map((s) => normChallenge(s.host)).join(", ");
-      const typed = await ui.input(`⚠ Host sospetto per '${name}'`, `Sembra un possibile sosia/typosquat. Per procedere digita ESATTAMENTE: ${challenge}`);
+      const typed = await ui.input(`⚠ Host sospetto — conferma per '${name}'`, `'${challenge}' sembra un imitatore (typosquat) di un host di cui ti fidi. Se lo VUOI davvero, riscrivi qui l'host per confermare; lascia VUOTO per annullare.`);
       if (typed == null || normChallenge(typed) !== normChallenge(challenge)) {
         notify(ui, `Ampliamento di '${name}' ANNULLATO (host sospetto non riconfermato). Nessuna modifica.`, "warning");
         return result(`User did NOT type the exact confirmation ('${challenge}') for the SUSPICIOUS host(s) in the widening of '${name}'. ABORTED — nothing changed.`, { ok: false, aborted: "suspicious-not-confirmed" });

@@ -16,6 +16,8 @@ export class ConversationStore {
   window(convId: string, n?: number, opts?: { afterSeq?: number; untilSeq?: number | null }): ConversationTurn[];
   nthLastUserSeq(convId: string, k: number, opts?: { afterSeq?: number }): number | null;
   lastSeq(convId: string): number;
+  countUserTurns(convId: string, opts?: { afterSeq?: number }): number;
+  userTurnsByOrdinal(convId: string, fromOrd: number, toOrd: number, opts?: { afterSeq?: number }): ConversationTurn[];
   firstSeq(convId: string, opts?: { afterSeq?: number }): number;
   mostRecentConvId(): string | null;
   range(convId: string, fromSeq: number, toSeq: number): ConversationTurn[];

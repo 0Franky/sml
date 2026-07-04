@@ -94,6 +94,32 @@ export class ConversationStore {
     return r && r.s != null ? Number(r.s) : 0;
   }
 
+  /**
+   * Conta i turni-utente della conversazione (ordinal-space 1..N). Fonte AUTORITATIVA per l'eviction-checkpoint:
+   * native-window gira nello STESSO hook `context` e FINESTRA l'array PRIMA, quindi contare da `event.messages` dà
+   * sempre ≤ keepTurns e l'eviction non si rileva mai (bug 2026-07-04, sessione 019f2ab9). Qui si conta dallo store.
+   */
+  countUserTurns(convId, { afterSeq = 0 } = {}) {
+    const r = this.db.prepare(
+      `SELECT COUNT(*) AS n FROM conversations WHERE conv_id = ? AND seq > ? AND role = 'user'`
+    ).get(convId, afterSeq);
+    return r && r.n != null ? Number(r.n) : 0;
+  }
+
+  /**
+   * Testo dei turni-utente per intervallo di ORDINALE 1-based inclusivo (`fromOrd`..`toOrd`). Serve al digest degli
+   * evicted: quei turni NON sono più nell'array finestrato, quindi il testo va ripescato dallo store. `[]` se vuoto.
+   */
+  userTurnsByOrdinal(convId, fromOrd, toOrd, { afterSeq = 0 } = {}) {
+    const from = Math.max(1, Math.floor(Number(fromOrd) || 0));
+    const to = Math.floor(Number(toOrd) || 0);
+    if (!(to >= from)) return [];
+    const rows = this.db.prepare(
+      `SELECT seq, text FROM conversations WHERE conv_id = ? AND seq > ? AND role = 'user' ORDER BY seq ASC LIMIT ? OFFSET ?`
+    ).all(convId, afterSeq, to - from + 1, from - 1);
+    return rows.map((r, i) => ({ ordinal: from + i, role: "user", text: r.text || "" }));
+  }
+
   /** Turni per range di `seq` (inclusivo) — è il recupero-per-ID che un subagent chiama (passa conv_id + range). */
   range(convId, fromSeq, toSeq) {
     return this.db.prepare(
