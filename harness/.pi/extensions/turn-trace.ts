@@ -26,8 +26,8 @@ import { redactText } from "../../src/secrets-redact.mjs";
 import { getDynamicSecrets } from "../../src/secrets-registry.mjs";
 import { mkdirSync, writeFileSync, appendFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { TRACE_DIR } from "../../src/state-paths.mjs"; // SSOT dir trace
 
-const TRACE_DIR = ".pi/state/trace";
 const EXT_DIR = ".pi/extensions";
 const ENABLED = !["0", "false", "off", "no"].includes(String(process.env.PI_TRACE ?? "").toLowerCase());
 // FLAG per-turno (utente msg 843): PI_TRACE_PERTURN=1 → oltre a last-turn-full.md (overwrite), salva OGNI turno in un

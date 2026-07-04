@@ -22,6 +22,7 @@ import { buildMessagesLane } from "../../src/conversation-store.mjs";
 import { formatLane as formatToolCallsLane } from "../../src/tool-call-log.mjs";
 import { convIdFor } from "../../src/session-context.mjs";
 import { CHECKPOINT_SEQ_META } from "../../src/meta-keys.mjs"; // SSOT del prefisso segment-boundary (reader ↔ writer checkpoint.ts)
+import { TRACE_DIR } from "../../src/state-paths.mjs"; // SSOT dir trace/log
 import { parseSessionStartMs } from "../../src/time-shift.mjs"; // ancoraggio temporale lane (msg 848/849)
 import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint, markFocusHintEmitted, shouldEmitReorgHint, markReorgEmitted, maybeAutoFocus } from "../../src/nested-compact.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
@@ -29,7 +30,7 @@ import { CATEGORY_TOOLS } from "../../src/tool-gating.mjs"; // categorie per la 
 import { redactText } from "../../src/secrets-redact.mjs";
 import { getDynamicSecrets } from "../../src/secrets-registry.mjs";
 import { mkdirSync, appendFileSync } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
 
 // Context-budget OPT-IN (msg 520): soglie trigger + finestra messaggi configurabili per modello/infra
 // (.pi/harness.config.json o env HARNESS_*). Senza config → default (comportamento invariato). Caricato una volta al load.
@@ -212,7 +213,7 @@ export default function (pi: ExtensionAPI) {
      // Se l'assemblaggio lancia (SQLITE_BUSY oltre i 5s di busy_timeout, un getter che torna null, ecc.) NON spedire
      // il turno context-blind in silenzio né crashare: logga e ritorna undefined → pi usa il systemPrompt base (turno
      // DEGRADATO ma vivo). È il lato READ dell'anti-amnesia: il lato WRITE (conversation-capture) è già hardened.
-     try { const p = ".pi/state/trace/context-assembly-errors.log"; mkdirSync(dirname(p), { recursive: true }); appendFileSync(p, `${new Date().toISOString()} before_agent_start: ${(e as any)?.stack || e}\n`); } catch { /* best-effort */ }
+     try { const p = join(TRACE_DIR, "context-assembly-errors.log"); mkdirSync(dirname(p), { recursive: true }); appendFileSync(p, `${new Date().toISOString()} before_agent_start: ${(e as any)?.stack || e}\n`); } catch { /* best-effort */ }
      return undefined;
    }
   });

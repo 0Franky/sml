@@ -21,6 +21,8 @@
 import { spawnSync } from "node:child_process";
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
+import { VARS_DB_PATH, CONV_DB_PATH } from "../src/state-db.mjs"; // SSOT path DB
+import { EVICTION_ORDINAL_META } from "../src/meta-keys.mjs"; // SSOT prefisso ordinale evicted
 
 const PI = "node_modules/@earendil-works/pi-coding-agent/dist/cli.js";
 const MODEL = process.env.DRIVE_MODEL || "qwen3.5:9b";
@@ -34,9 +36,9 @@ function q(dbPath, sql, ...args) {
 }
 function groundTruth() {
   return {
-    eviction: q(".pi/state/vars.db", "SELECT k,v FROM meta WHERE k LIKE '_eviction_ordinal:%'"),
-    vars: q(".pi/state/vars.db", "SELECT id,value FROM vars WHERE namespace='orchestrator' ORDER BY last_modified DESC LIMIT 8"),
-    convTurns: q(".pi/state/conversations.db", "SELECT conv_id, COUNT(*) n FROM conversations WHERE role='user' GROUP BY conv_id ORDER BY MAX(seq) DESC LIMIT 3"),
+    eviction: q(VARS_DB_PATH, `SELECT k,v FROM meta WHERE k LIKE '${EVICTION_ORDINAL_META}%'`),
+    vars: q(VARS_DB_PATH, "SELECT id,value FROM vars WHERE namespace='orchestrator' ORDER BY last_modified DESC LIMIT 8"),
+    convTurns: q(CONV_DB_PATH, "SELECT conv_id, COUNT(*) n FROM conversations WHERE role='user' GROUP BY conv_id ORDER BY MAX(seq) DESC LIMIT 3"),
   };
 }
 function runTurn(msg) {

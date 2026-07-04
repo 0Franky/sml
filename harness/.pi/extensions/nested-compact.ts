@@ -19,8 +19,8 @@ import { VarsQueue } from "../../src/vars-queue.mjs";
 import { getVarsQueue, closeAll } from "../../src/state-db.mjs";
 import { enterFocus, popFocus, getFocusStack, currentDepth, evaluateTrigger, requireGateBlocks } from "../../src/nested-compact.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
-
-const REPORT_DIR = ".pi/state/reports";
+import { GATHER_TOKEN_META } from "../../src/meta-keys.mjs"; // SSOT chiave gather
+import { REPORTS_DIR } from "../../src/state-paths.mjs"; // SSOT dir report matrioska
 // Context-budget OPT-IN (msg 520): stesse soglie configurabili usate da context-assembly (.pi/harness.config.json / env).
 const HARNESS_CFG = loadHarnessConfig();
 
@@ -55,7 +55,7 @@ export default function (pi: ExtensionAPI) {
         }
         const parentScopeId = vq.getActiveScope();
         const r = enterFocus(vq, { taskSubset: p.task_ids ?? [], parentScopeId }, HARNESS_CFG.trigger); // maxDepth configurabile
-        if (g.mode === "require") vq.setMeta("_gather_token", ""); // consuma il token: il prossimo focus richiede una nuova gather
+        if (g.mode === "require") vq.setMeta(GATHER_TOKEN_META, ""); // consuma il token: il prossimo focus richiede una nuova gather
         return {
           content: [{ type: "text", text: JSON.stringify({ scope_id: r.scopeId, depth: r.depth, focus: p.task_ids }) }],
           details: { ok: true },
@@ -79,7 +79,7 @@ export default function (pi: ExtensionAPI) {
       const scopeId = p.scope_id ?? (stack.length ? stack[stack.length - 1].scope_id : null);
       if (!scopeId) return { content: [{ type: "text", text: "pop_focus: no open scope" }], details: { ok: false } };
       try {
-        const r = popFocus(vq, scopeId, { reportDir: REPORT_DIR });
+        const r = popFocus(vq, scopeId, { reportDir: REPORTS_DIR });
         return {
           content: [{ type: "text", text: JSON.stringify({ summary: r.summary, report_path: r.report_path, restored_aim: r.restoredCurr }) }],
           details: { ok: true },

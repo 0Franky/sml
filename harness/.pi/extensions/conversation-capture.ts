@@ -20,11 +20,12 @@ import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { redactText } from "../../src/secrets-redact.mjs";
 import { getDynamicSecrets } from "../../src/secrets-registry.mjs";
 import { mkdirSync, appendFileSync } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
+import { CONV_ID_META } from "../../src/meta-keys.mjs"; // SSOT prefisso convId (tool harness-inspect)
+import { TRACE_DIR } from "../../src/state-paths.mjs"; // SSOT dir trace/log
 
-const META_CONV = "_conv_id"; // convId persistito (vars.db meta) → riusato cross-reload/resume
 const HCFG = loadHarnessConfig(); // singleUser gate per il fallback mostRecentConvId (D3)
-const CAPTURE_ERR_LOG = ".pi/state/trace/capture-errors.log"; // diagnostica: ogni fallimento di cattura finisce qui
+const CAPTURE_ERR_LOG = join(TRACE_DIR, "capture-errors.log"); // diagnostica: ogni fallimento di cattura finisce qui
 
 /** Redige i segreti (pattern statici + dynamic) dal testo PRIMA di persisterlo/ri-iniettarlo. */
 function redactSafe(s: string): string {
@@ -76,7 +77,7 @@ export default function (pi: ExtensionAPI) {
       // per via di questa call-site, qualunque sia l'ordine di load (review-loop #3 2026-06-29, P2 singleton-agent).
       const meta = getVarsQueue(); // vars.db dell'orchestratore (path+mkdir+agent nel singleton state-db)
       const sessionId = (ctx as any)?.sessionManager?.getSessionId?.() ?? null;
-      const metaKey = sessionId ? `${META_CONV}:${sessionId}` : META_CONV;
+      const metaKey = sessionId ? `${CONV_ID_META}:${sessionId}` : CONV_ID_META;
       const { convId, persist } = resolveConvId(reason, meta.getMeta(metaKey), Date.now(), { perSession: !!sessionId });
       setConvIdForSession(sessionId, convId); // D3: registra il convId SOTTO il sessionId (no più global condivisa)
       if (persist) meta.setMeta(metaKey, convId);

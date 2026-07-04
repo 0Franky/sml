@@ -14,6 +14,7 @@ import { Type } from "typebox";
 import { VarsQueue } from "../../src/vars-queue.mjs";
 import { getVarsQueue, closeAll } from "../../src/state-db.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
+import { GATHER_TOKEN_META } from "../../src/meta-keys.mjs"; // SSOT chiave gather (reader in nested-compact.mjs)
 
 const HARNESS_CFG = loadHarnessConfig(); // per gathering.mode (write del token solo in require-mode)
 
@@ -34,7 +35,7 @@ export default function (pi: ExtensionAPI) {
   pi.on("session_shutdown", () => closeAll()); // rilascia le connessioni DB condivise (fix leak)
   // gathering.mode=require (review P2 #10): azzera il marker gather a inizio sessione → un token "fresco" non
   // sopravvive cross-sessione (niente gather-in-S1 che sblocca un focus in S2 con backlog cambiato).
-  pi.on("session_start", () => { try { vq.setMeta("_gather_token", ""); } catch { /* best-effort */ } });
+  pi.on("session_start", () => { try { vq.setMeta(GATHER_TOKEN_META, ""); } catch { /* best-effort */ } });
 
   // Routing dell'attribuzione: se uno scope-figlio (matrioska) è aperto, le mutazioni sono attribuite allo scope
   // (who=scopeId) → il pop-report deriva i delta del figlio. Altrimenti = l'agente base. Vedi nested-compact.mjs.
@@ -210,7 +211,7 @@ export default function (pi: ExtensionAPI) {
       }));
       // marker per gathering.mode='require' (review P3 #6): scritto SOLO in require-mode → in delegated/inject la
       // vista resta una pura LETTURA (coerente con "read-only"). Il token è consumato da enter_focus.
-      if (HARNESS_CFG.gathering.mode === "require") vq.setMeta("_gather_token", String(vq.currentChangeSeq()));
+      if (HARNESS_CFG.gathering.mode === "require") vq.setMeta(GATHER_TOKEN_META, String(vq.currentChangeSeq()));
       return { content: [{ type: "text", text: JSON.stringify({ structured, order }, null, 2) }], details: { count: order.length, structured } };
     },
   });

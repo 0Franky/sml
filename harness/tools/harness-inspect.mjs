@@ -24,6 +24,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { CONV_ID_META } from "../src/meta-keys.mjs"; // SSOT prefisso convId (writer conversation-capture)
 
 // --- redattore segreti (best-effort, solo pattern statici — niente registry in-process da un altro processo) ---
 let redactText = null;
@@ -86,7 +87,7 @@ function sessionConvMapping() {
   if (!db || db._err) return [];
   try {
     if (!tablesOf(db).includes("meta")) return [];
-    return db.prepare("SELECT key, value FROM meta WHERE key LIKE '_conv_id%' ORDER BY key").all();
+    return db.prepare(`SELECT key, value FROM meta WHERE key LIKE '${CONV_ID_META}%' ORDER BY key`).all();
   } catch { return []; }
   finally { if (db && !db._err) db.close(); }
 }

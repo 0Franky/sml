@@ -19,6 +19,8 @@
 import { buildPopReport } from "./pop-report.mjs";
 import { assembleContext } from "./context-assembler.mjs";
 import { buildMessagesLane } from "./conversation-store.mjs";
+import { GATHER_TOKEN_META } from "./meta-keys.mjs"; // SSOT chiave gather (reader ↔ writer vars-queue/nested-compact.ts)
+import { REPORTS_DIR } from "./state-paths.mjs"; // SSOT dir report matrioska
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const sanitizeScope = (s) => String(s).replace(/[^A-Za-z0-9_.-]/g, "_");
@@ -165,7 +167,7 @@ export function requireGateBlocks(vq, cfg = {}) {
   if (cfg.mode !== "require") return false;
   const open = vq.listTasks({ status: "pending" }).length + vq.listTasks({ status: "in_progress" }).length;
   if (open < (cfg.minTasksForForce ?? Infinity)) return false;
-  return !vq.getMeta("_gather_token");
+  return !vq.getMeta(GATHER_TOKEN_META);
 }
 
 /**
@@ -355,7 +357,7 @@ export function popFocus(vq, scopeId, opts = {}) {
   //    dal `since_seq` MONOTONO (non dal wall-clock frame.entered: immune a clock-skew/NTP-step e al same-ms).
   //    (review-loop 2026-06-29, P1 delta-per-timestamp.)
   const { summary, report_path } = buildPopReport(vq, scopeId, {
-    reportDir: opts.reportDir ?? ".pi/state/reports",
+    reportDir: opts.reportDir ?? REPORTS_DIR,
     sinceSeq: frame.since_seq,
     reportId: now,
   });

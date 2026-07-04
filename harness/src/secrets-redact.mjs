@@ -66,6 +66,9 @@ export const SECRET_PATTERNS = [
   /-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP |ENCRYPTED )?PRIVATE KEY-----/g, // fallback: header senza footer
 ];
 
+/** Marker inerte con cui si sostituisce ogni segreto redatto. SSOT: riusato dal fail-closed di sealed-secrets. */
+export const REDACTION_MARKER = "[REDACTED-SECRET]";
+
 /**
  * Redige da `text` i match dei pattern statici + i segreti dinamici (literal match).
  * @param {string} text
@@ -82,7 +85,7 @@ export function redactText(text, dynamicSecrets = [], opts = {}) {
       re.lastIndex = 0; // reset stato della regex globale prima di test()
       if (re.test(out)) {
         hit = true;
-        out = out.replace(re, "[REDACTED-SECRET]");
+        out = out.replace(re, REDACTION_MARKER);
       }
     }
   }
@@ -90,7 +93,7 @@ export function redactText(text, dynamicSecrets = [], opts = {}) {
   for (const s of [...dynamicSecrets].sort((a, b) => b.length - a.length)) {
     if (s && out.includes(s)) {
       hit = true;
-      out = out.split(s).join("[REDACTED-SECRET]");
+      out = out.split(s).join(REDACTION_MARKER);
     }
   }
   return { redacted: out, hit };

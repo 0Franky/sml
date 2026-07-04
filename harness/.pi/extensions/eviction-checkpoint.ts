@@ -33,8 +33,7 @@ import {
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { getVarsQueue, getConversationStore, closeAll } from "../../src/state-db.mjs";
 import { convIdFor } from "../../src/session-context.mjs";
-
-const LAST_EVICTED_META = "_eviction_ordinal:";
+import { EVICTION_ORDINAL_META } from "../../src/meta-keys.mjs"; // SSOT prefisso ordinale evicted (tool drive-qwen)
 
 export default function (pi: ExtensionAPI) {
   const { rung, enabled } = loadEvictionConfig();
@@ -60,7 +59,7 @@ export default function (pi: ExtensionAPI) {
     // CONTEGGIO DALLO STORE, non da event.messages: native-window gira nello stesso hook `context` e finestra
     // l'array PRIMA (contarlo da lì darebbe ≤ keepTurns → eviction MAI rilevata, bug sessione 019f2ab9). (fix 2026-07-04)
     const userTurnCount = store.countUserTurns(convId);
-    const metaKey = LAST_EVICTED_META + convId;
+    const metaKey = EVICTION_ORDINAL_META + convId;
     const lastEvictedOrdinal = Number(vq.getMeta(metaKey) ?? 0) || 0;
 
     const { evictedThrough, newlyEvicted } = evictionEvent({ userTurnCount, keepTurns, lastEvictedOrdinal });

@@ -14,6 +14,7 @@
  */
 import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { REPORTS_DIR } from "./state-paths.mjs"; // SSOT dir report matrioska
 
 const fwd = (p) => String(p).replace(/\\/g, "/");
 const sanitize = (id) => String(id).replace(/[^A-Za-z0-9_.-]/g, "_");
@@ -31,7 +32,7 @@ function truncate(s, n) {
  */
 export function buildPopReport(vq, childAgentId, opts = {}) {
   const {
-    reportDir = ".pi/state/reports",
+    reportDir = REPORTS_DIR,
     since = 0,
     sinceSeq = null,
     reportId = Date.now(),

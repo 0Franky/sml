@@ -1,4 +1,5 @@
 export const SECRET_PATTERNS: RegExp[];
+export const REDACTION_MARKER: string;
 export function redactText(
   text: string,
   dynamicSecrets?: Iterable<string>,
