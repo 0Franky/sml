@@ -18,13 +18,13 @@ last_updated: 2026-06-29
 ## ✅ IMPLEMENTATO (2026-06-29)
 
 Build completo (suite harness 15 file verde, typecheck verde, 28 tool 0-collisioni). File reali:
-- **Core node-pure** `harness/src/nested-compact.mjs` (+ `.d.mts`): `DEFAULT_CFG`, `collectMetrics`, `classifyPressure`, `currentDepth`, `canEnter`, `evaluateTrigger`, `buildFrame`, `serializeFrame`, `getFocusStack`, `enterFocus`, `popFocus`, `realignParent`, `buildNestedWorkspace` — **firme esatte come §7**.
+- **Core node-pure** `harness/src/nested-compact.mjs` (+ `.d.mts`): `DEFAULT_CFG`, `collectMetrics`, `classifyPressure` (+ **A2 2026-07-04**: `classifyAxes`/`pickDriver`/`pressureReason`/`PRESSURE_DRIVERS`), `currentDepth`, `canEnter`, `evaluateTrigger`, `buildFrame`, `serializeFrame`, `getFocusStack`, `enterFocus`, `popFocus`, `realignParent`, `buildNestedWorkspace` — **firme esatte come §7**.
 - **Datastore** `harness/src/vars-queue.mjs`: tabella `focus_frames` + CRUD (`createFocusFrame`/`getFocusFrame`/`listFocusFrames`/`closeFocusFrame`/`currentChangeSeq`) + **`active_scope`** (`setActiveScope`/`getActiveScope`, routing dell'attribuzione `who` in-scope — vedi sotto).
 - **Context** `harness/src/context-assembler.mjs`: opt `focusTaskIds` → `<task_list>` filtrata al subset a fuoco.
 - **Extension** `.pi/extensions/nested-compact.ts`: tool `enter_focus`/`pop_focus`/`focus_status` (F+S) + `session_before_compact` defensive (cancel SOLO su `threshold`, non su `manual`/`overflow` per non brickare il turno).
 - **Injector unico** `.pi/extensions/context-assembly.ts`: matrioska-aware — se uno scope è aperto inietta `buildNestedWorkspace` (frame + context filtrato); altrimenti resume + context + `<focus_hint>` quando `evaluateTrigger` (token reale via `ctx.getContextUsage()` + watch) raccomanda matrioska.
 - **Routing who** `.pi/extensions/vars-queue.ts`: i tool di mutazione (`set_var`/`set_task_status`/`record_decision`/`propose_var`/`send_message`) usano `who = getActiveScope() ?? agent` → le mutazioni in-scope sono attribuite allo scope-figlio → `buildPopReport` deriva i delta (floor-F mai vuoto). **Risolve in produzione il "handle-swap" dello spec §3 senza una 2ª connessione DB.**
-- **Test** `harness/test/unit/nested-compact.test.mjs` (49): classifyPressure (tabella+OR+null-percent), depth-saturation→reorder, enterFocus depth-guard (×3 ok ×4 throw + nesting via active_scope), serializeFrame (constraints MAI troncate), popFocus round-trip (figlio→who=scope→report deriva · padre ottiene decisione promossa · task done esce dall'open-loop · CURR ripristinato · active_scope torna a root), realignParent (aim done→non ripristina), buildNestedWorkspace.
+- **Test** `harness/test/unit/nested-compact.test.mjs` (105): classifyPressure (tabella+OR+null-percent) + **A2 split** (classifyAxes work/occ · pickDriver max/work/occupancy · pressureReason · evaluateTrigger espone work/occ/driver/reason · edge percent=null→occ=none · watchCount=0→work=none · driver isola l'asse), depth-saturation→reorder, enterFocus depth-guard (×3 ok ×4 throw + nesting via active_scope), serializeFrame (constraints MAI troncate), popFocus round-trip (figlio→who=scope→report deriva · padre ottiene decisione promossa · task done esce dall'open-loop · CURR ripristinato · active_scope torna a root), realignParent (aim done→non ripristina), buildNestedWorkspace.
 
 > **Variazione vs spec**: lo spec §3 prevedeva `new VarsQueue(DB, {agent: scopeId})` come handle in-scope; in implementazione si usa **`active_scope` in `meta`** (condiviso cross-extension via lo stesso file DB) + routing `who` nei tool — stessa semantica (attribuzione per-scope, no rollup, no double-count), senza aprire una seconda connessione (evita il leak del refactor DB-singleton pendente). il pop-report delimita i delta del figlio per **`since_seq` MONOTONO** (review-loop #2 2026-06-29: era `frame.entered` wall-clock → fragile a clock-skew/NTP-step; ora `getChangesByAgent`+`buildPopReport` accettano `sinceSeq` e filtrano `seq > ?`). LIFO-guard sul pop (no scope non-top con figli aperti); `enter_focus` rifiuta subset vuoto/ghost.
 
@@ -72,8 +72,11 @@ Nuova table `focus_frames(scope_id PK, parent_id, depth, aim_task, task_subset J
 
 ```
 collectMetrics(vq, {now, tokens, contextWindow}) -> {openTasks,pendingVerifs,sharedVars,recentChanges,watchCount,percent}
-classifyPressure(metrics, cfg) -> "none"|"reorder"|"matrioska"
-evaluateTrigger(vq, {now,tokens,contextWindow,currentDepth}, cfg) -> {level, recommend, depthSaturated}
+classifyPressure(metrics, cfg) -> "none"|"reorder"|"matrioska"   (A2: ora via pickDriver, backward-compat)
+classifyAxes(metrics, cfg) -> {work, occ}         (A2: le 2 scale ORTOGONALI separate)
+pickDriver(work, occ, driver) -> PressureLevel    (A2: "max"=OR storico · "work" · "occupancy")
+pressureReason(work, occ, level, driver) -> "none"|"task-backlog"|"context-fill"|"both"
+evaluateTrigger(vq, {now,tokens,contextWindow,currentDepth}, cfg) -> {level, recommend, depthSaturated, work, occ, driver, reason}
 buildFrame(vq, {now}) -> {aim,decisions,constraints,sharedState,backlog,depth,frameTs}
 serializeFrame(frame, {absoluteTimestamps}) -> "<frame>…</frame>"
 currentDepth(vq) -> int   ·   canEnter(vq, cfg) -> {ok,depth,reason?}
@@ -82,7 +85,7 @@ getFocusStack(vq) -> [...]
 popFocus(vq, scopeId, {reportDir,now}) -> {summary, report_path, promotedDecisionId, restoredCurr}
 realignParent(vq, {parentScopeId, savedAimTask}) -> {aim, frame}
 buildNestedWorkspace(vq, {store,convId,focusScopeId,now,absoluteTimestamps}) -> string
-DEFAULT_CFG = {tokenReorderPct:0.55, tokenMatrioskaPct:0.75, watchReorder:12, watchMatrioska:25, focusK:5, maxDepth:3, cooldownMs:90_000}
+DEFAULT_CFG = {tokenReorderPct:0.55, tokenMatrioskaPct:0.75, watchReorder:12, watchMatrioska:25, focusK:5, maxDepth:3, cooldownMs:90_000, outputReservePct:0, pressureDriver:"max"}
 ```
 Test node-pure (in-memory VarsQueue): classifyPressure (tabella + OR + depth-saturation→reorder) · enterFocus depth-guard (×3 ok, ×4 throw) · buildFrame (constraints mai troncati) · popFocus round-trip (figlio muta who=scope → report deriva i delta · padre ottiene decisione promossa · task done escono · CURR ripristinato) · realignParent (aim chiuso→non ripristina). **E2e (API-gated)**: registrazione tool + model che li chiama + `getContextUsage` reale + `session_before_compact {cancel:true}`.
 

@@ -44,3 +44,6 @@ lm/**/__pycache__/
 lm/**/checkpoints/
 lm/**/runs/
 lm/**/wandb/
+
+# script generatori dei template taxonomy (non-conoscenza, apparivano come nodi orfani nel grafo)
+wiki/training-taxonomy/templates/*.py
