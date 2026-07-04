@@ -800,7 +800,9 @@ export function autoSealIngress(text, { redactEgress = true } = {}) {
     if (!name) {
       name = `INGRESS_${++ingressCounter}`;
       const r = setSecret(name, h.value, { description: `auto-ingress regex (${h.confidence})`, allowedSinks: [], redactEgress });
-      if (!r.ok) continue;
+      // C5 (audit 2026-07-04): se il seal fallisce (es. registry pieno, MAX_SEALED) NON lasciare il valore RAW nel
+      // testo (era fail-OPEN: il segreto raggiungeva il provider). Sostituiscilo con un marker inerte → fail-CLOSED.
+      if (!r.ok) { out = out.split(h.value).join("[REDACTED-SECRET]"); continue; }
     }
     out = out.split(h.value).join(`{{secret:${name}}}`);
     sealed.push({ name, confidence: h.confidence });

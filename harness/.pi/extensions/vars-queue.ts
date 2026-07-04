@@ -153,6 +153,9 @@ export default function (pi: ExtensionAPI) {
       const who = activeWho();
       if (!vq.getTask(params.id) && params.title) vq.addTask(params.id, params.title, { who });
       const t = vq.setTaskStatus(params.id, params.status, { who });
+      // B3 (audit 2026-07-04): task inesistente (e non creato per mancanza di 'title') → setTaskStatus è un no-op e
+      // ritorna null; NON riportare ok:true (successo fantasma + entry fuorviante in recent_changes). Segnala azionabile.
+      if (!t) return { content: [{ type: "text", text: `task '${params.id}' does not exist (pass 'title' to create it).` }], details: { ok: false } };
       return { content: [{ type: "text", text: JSON.stringify(t) }], details: { ok: true } };
     },
   });

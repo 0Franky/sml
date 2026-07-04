@@ -25,6 +25,7 @@
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { autoSealIngress, clearSealed } from "../../src/sealed-secrets.mjs";
+import { redactText } from "../../src/secrets-redact.mjs"; // fallback statico throw-proof per il fail-closed (C5)
 import { promoteSealedIngress } from "../../src/secrets-consent.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 
@@ -46,7 +47,10 @@ export default function (pi: ExtensionAPI) {
     if (mode === "off") return { action: "continue" } as const;
     const e = event as any;
     const text = e.text;
+    // NB (C5-a, accettato): gli slash-command sono SALTATI di proposito — trasformare `/cmd …` romperebbe il dispatch
+    // del comando. È un fail-open NARROW e documentato (un segreto raramente apre un messaggio con `/`); non lo cambio.
     if (typeof text !== "string" || !text.trim() || text.startsWith("/")) return { action: "continue" } as const;
+    try {
     let { text: newText, sealed } = autoSealIngress(text);
     if (!sealed.length) return { action: "continue" } as const;
     const names = sealed.map((s) => s.name);
@@ -69,5 +73,14 @@ export default function (pi: ExtensionAPI) {
       ctx?.ui?.notify?.(msg, mode === "ask" ? "warning" : "info");
     }
     return { action: "transform", text: newText, images: e.images } as const;
+    } catch {
+      // C5-b (audit 2026-07-04): l'hook input NON deve fallire-OPEN. Se il sealing lancia, non mandare il testo RAW al
+      // provider: applica una redazione STATICA throw-proof e trasforma a quella; se anche quella fallisce, continue.
+      try {
+        const { redacted, hit } = redactText(text, [], { staticPatterns: true });
+        if (hit) { ctx?.ui?.notify?.("regex-ingress: sealing fallito → redazione statica d'emergenza applicata", "warning"); return { action: "transform", text: redacted, images: e.images } as const; }
+      } catch { /* best-effort */ }
+      return { action: "continue" } as const;
+    }
   });
 }

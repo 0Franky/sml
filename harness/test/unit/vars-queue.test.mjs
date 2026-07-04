@@ -202,5 +202,15 @@ try {
   rmSync(dir, { recursive: true, force: true });
 }
 
+// B3 (audit 2026-07-04): set_task_status su task INESISTENTE = no-op reale (null + nessun changelog fantasma).
+{
+  const q = new VarsQueue(":memory:", { agent: "test" });
+  ok(q.setTaskStatus("ghost-task", "done") === null, "B3: setTaskStatus su task inesistente → null (no-op)");
+  ok(q.getChangeLog({ entity: "tasks", entityId: "ghost-task", includeSilent: true }).length === 0, "B3: nessuna entry changelog fantasma per task inesistente");
+  q.addTask("t1", "reale");
+  ok(q.setTaskStatus("t1", "done")?.status === "done", "B3: setTaskStatus su task esistente → aggiorna");
+  q.close();
+}
+
 console.log(`\nvars-queue smoke-test: ${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);

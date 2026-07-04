@@ -49,6 +49,8 @@ export default function (pi: ExtensionAPI) {
       note: Type.Optional(Type.String({ description: "Where you are / next step (narrative handoff for the resume)." })),
     }),
     async execute(_t: string, p: any) {
+     try { // A3 (audit 2026-07-04): le due write (handoff + boundary) NON sono atomiche → se la 2ª lancia il checkpoint
+       // resta mezzo-applicato; meglio un fallimento ESPLICITO (ok:false) che un ok:true su stato inconsistente.
       const convId = getConvId();
       const boundary = store.lastSeq(convId); // tutto ciò che precede questo seq verrà ripiegato nella lane
       // snapshot durevole (oltre alla note del modello) per un resume ricco anche senza note.
@@ -76,6 +78,9 @@ export default function (pi: ExtensionAPI) {
         content: [{ type: "text", text: `✓ ${summary}${note ? ` · note: "${note}"` : ""}. Conversation folded (retrievable via get_conversation).` }],
         details: { ok: true, checkpoint_seq: boundary, open_tasks: open.length },
       };
+     } catch (e) {
+       return { content: [{ type: "text", text: `checkpoint non riuscito: ${(e as any)?.message || e}` }], details: { ok: false, checkpoint_seq: -1, open_tasks: 0 } };
+     }
     },
   });
 }

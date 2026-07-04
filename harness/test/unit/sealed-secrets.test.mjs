@@ -453,5 +453,18 @@ const reset = () => { clearSealed(); clearSecrets(); };
   ok(g.injected.length === 0, "C1: secret con allowedSinks verso egress senza host identificabile → fail-closed (invariato, riga 498)");
 }
 
+// C5-c (audit 2026-07-04): registry PIENO (MAX_SEALED=256) → autoSealIngress NON lascia il valore raw nel testo: lo
+// sostituisce col marker inerte [REDACTED-SECRET] (fail-closed). Prima era `continue` → il valore raw andava al provider.
+{
+  reset();
+  for (let i = 0; i < 256; i++) setSecret(`FILL_${i}`, `fillvalue-${i}-padding-xyz-longenough`, { allowedSinks: [] });
+  const VAL = "AIzaSyA1234567890123456789012345678901234";
+  const { text, sealed } = autoSealIngress(`ecco la chiave ${VAL} fine`);
+  ok(sealed.length === 0, "C5-c: registry pieno → nessun nuovo seal");
+  ok(!text.includes(VAL), "C5-c: il valore RAW NON resta nel testo (fail-closed)");
+  ok(/\[REDACTED-SECRET\]/.test(text), "C5-c: valore sostituito col marker inerte");
+  reset();
+}
+
 console.log(`\nsealed-secrets test: ${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);

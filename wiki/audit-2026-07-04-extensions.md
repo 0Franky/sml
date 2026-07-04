@@ -52,7 +52,8 @@ tags: [harness, security, audit, extensions, fail-open, amnesia]
 ---
 
 ## Sintesi
-- **Fixati (9)**: **C1 + C3 (i due P1 sicurezza)** + C2, B1, B2, A1, D1, D2 + il P0 busy_timeout (`ed453d2`). Tutti con test; suite 36/0, typecheck 0.
-- **Tracciati (P2)**: C5, B3, B4, A2, A3, D3 (nessun P1 residuo).
+- **Fixati (13)**: **C1 + C3 (i due P1 sicurezza)** + C2, B1, B2, A1, D1, D2 + **batch P2: B3, B4, A3, C5** + il P0 busy_timeout (`ed453d2`). Tutti con test; suite 36/0, typecheck 0.
+- **Restano 2 P2 (design dedicato, non P1)**: **A2** (token-pressure legge la history piena → ridefinire l'asse di pressione o usare `watchCount` come autoritativo), **D3** (convId module-global → threading per-ctx; latent, non scatta in 1-sessione/processo).
+- **Trade-off accettati**: C4, B5, D4, D5, C5-a (slash-command non trasformato: romperebbe il dispatch).
 - **Trade-off accettati**: C4, B5, D4, D5.
 - Pattern-radice comune ai fix: **fail-CLOSED su ogni hook di sicurezza/memoria** (try/catch che degrada in sicurezza, mai fa passare l'originale non-processato) + **canale user/nativo, non system, per parlare al 9B**.

@@ -78,6 +78,9 @@ export default function (pi: ExtensionAPI) {
     pi.on("before_agent_start", () => applyActive());
     pi.on("turn_start", () => applyActive());
   }
+  // B4 (audit 2026-07-04): azzera i "rivelati" a fine sessione → in un processo riusato per più sessioni (driver
+  // headless in loop, SDK multi-sessione) i tool rivelati nella sessione 1 NON restano attivi nella 2 (leak del gating).
+  pi.on("session_shutdown", () => revealed.clear());
 
   pi.registerTool({
     name: "find_tool",

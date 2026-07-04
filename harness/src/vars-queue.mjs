@@ -373,9 +373,12 @@ export class VarsQueue {
 
   setTaskStatus(id, status, { who = this.agent } = {}) {
     const prev = this.db.prepare(`SELECT status FROM tasks WHERE id = ?`).get(id);
+    // B3 (audit 2026-07-04): task inesistente → no-op REALE. Prima si eseguiva un UPDATE a 0 righe + un _log FANTASMA
+    // (entry fuorviante in recent_changes) e si ritornava null che il tool spacciava per ok:true. Ora: niente write, null.
+    if (!prev) return null;
     this.db.prepare(`UPDATE tasks SET status = ?, updated = ?, updated_by = ? WHERE id = ?`)
       .run(status, Date.now(), who, id);
-    this._log("tasks", id, "status", prev?.status ?? null, status, who);
+    this._log("tasks", id, "status", prev.status ?? null, status, who);
     return this.getTask(id);
   }
 

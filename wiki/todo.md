@@ -21,13 +21,9 @@ last_updated: 2026-06-30
 > 4 subagent paralleli hanno auditato le 20 estensioni post bug-P0. **9 fix applicati** (inclusi i DUE P1 sicurezza C1+C3) + awareness INFORMAZIONE-non-DATO. Tutti con test; suite 36/0, typecheck 0. Report completo con stato per finding: `wiki/audit-2026-07-04-extensions.md`.
 - ✅ **[P1] C1 FIXATO** — lockdown-secret exfil via tool MCP: flag `externalEgress` + classificazione tool-locali (`LOCAL_INJECTION_TOOLS`) → fail-closed verso egress esterno, uso locale bash preservato. Test 4 asserzioni.
 - ✅ **[P1] C3 FIXATO** — envelope tool_result aggirabile: idempotenza banner-aware (`FRAME_SIGNATURE`) + `neutralizeEnvelopeTokens` (anti-breakout). Test 8 asserzioni.
-- ✅ **[P1] C2/D1/B1** già fixati (redazione fail-closed, sandbox timeout, focus-scope-who) + A1/B2/D2. **Aperti (solo P2):**
-- **[P2] C5 — regex-ingress fail-open** in 3 edge (slash-command / throw non-wrappato / registry pieno). `regex-ingress.ts` + `sealed-secrets.mjs:788`.
-- **[P2] B3 — set_task_status no-op silenzioso** su task inesistente → entry fantasma. `vars-queue.ts:152`.
-- **[P2] B4 — tool-gating `revealed` non resettato** su session_shutdown.
-- **[P2] A2 — token-pressure legge history piena** non payload finestrato → focus/reorg/compact spuri. `context-assembly.ts:138`.
-- **[P2low] A3 — checkpoint.ts execute non-guardato** (2 key non-atomiche).
-- **[P2latent] D3 — session-context `_convId` module-global** → cross-session se 2 sessioni/processo.
+- ✅ **[P1] C2/D1/B1 + A1/B2/D2 già fixati.** ✅ **batch P2 (2026-07-04): C5, B3, B4, A3 FIXATI** con test — C5 regex-ingress fail-CLOSED (registry-pieno→[REDACTED-SECRET], hook input wrappato; slash-command accettato/documentato, C5-a), B3 set_task_status no-op reale (null, niente changelog fantasma), B4 tool-gating `revealed` azzerato su session_shutdown, A3 checkpoint try/catch (ok:false su fallimento parziale invece di falso successo). **Restano 2 P2 (richiedono design dedicato):**
+- **[P2] A2 — token-pressure legge history piena** non payload finestrato → focus/reorg/compact spuri. `context-assembly.ts:138`. Design: basare la pressione sul context assemblato o trattare `watchCount` come asse autoritativo.
+- **[P2latent] D3 — session-context `_convId` module-global** → cross-session se 2 sessioni/processo. Latent (non scatta in 1-sessione/processo, il caso normale TUI). Fix: threading convId per-ctx (architetturale).
 - **eviction-nudge efficacia**: D2 ha spostato il nudge sul canale user (che il 9B legge), ma l'EFFICACIA (il modello salva davvero?) va validata con un test eviction DEDICATO multi-turno (>keepTurns). + valutare fire-until-saved invece di fire-once (boundary avanza prima del successo).
 - **[WONTFIX/track] D4 — verifier-sandbox isolamento debole** (no Docker) → gate dietro flag config finché non containerizzato.
 
