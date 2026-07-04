@@ -1,6 +1,10 @@
-/** Type declarations for state-db.mjs (connessioni DB condivise singleton per-path). */
+/** Type declarations for state-db.mjs (connessioni DB condivise singleton per-path + SSOT path/agent). */
 import type { VarsQueue } from "./vars-queue.mjs";
 import type { ConversationStore } from "./conversation-store.mjs";
+
+export const VARS_DB_PATH: string;
+export const CONV_DB_PATH: string;
+export const ORCHESTRATOR_AGENT: string;
 
 export function getVarsQueue(dbPath?: string, opts?: { agent?: string }): VarsQueue;
 export function getConversationStore(dbPath?: string, opts?: { agent?: string }): ConversationStore;
@@ -10,5 +14,8 @@ declare const _default: {
   getVarsQueue: typeof getVarsQueue;
   getConversationStore: typeof getConversationStore;
   closeAll: typeof closeAll;
+  VARS_DB_PATH: string;
+  CONV_DB_PATH: string;
+  ORCHESTRATOR_AGENT: string;
 };
 export default _default;
