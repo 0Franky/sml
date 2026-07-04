@@ -22,22 +22,37 @@
  *  - scaffold che RECEDE (L3 anti-pezza): metrica = frazione di eviction dove il modello aveva GIÀ salvato → sale
  *    con lo strato-3 → si declassa il rung require→inject→nudge→off.
  *
- * Node-puro + testabile (fetchImpl iniettabile per l'OOB, come http-request.mjs). Zero import pesanti.
+ * Testabile: `fetchImpl` (OOB) e `readFile` (config) sono iniettabili; le altre funzioni sono pure.
  */
+import { readFileSync } from "node:fs";
 
 /** Scala dei rung, dal più economico. off = capability presente ma inerte (default). */
 export const EVICTION_RUNGS = ["off", "nudge", "inject", "require"];
 
 /**
- * Config del rung. DEFAULT `off`: la sola presenza dell'estensione NON cambia il comportamento live finché non
- * abiliti un rung (env `HARNESS_EVICTION_CHECKPOINT`). Fail-safe: valore ignoto → off.
- * @param {Record<string,string|undefined>} [env]
- * @returns {{ rung: string, enabled: boolean }}
+ * Config del rung. Precedenza: (1) env `HARNESS_EVICTION_CHECKPOINT` (override rapido/A-B; `off` esplicito =
+ * kill-switch); (2) file `.pi/harness.config.json` campo `evictionCheckpoint` (PERSISTENTE, toggle a mano — così
+ * il modello vede il rung al riavvio di pi senza esportare env); (3) DEFAULT `off` (presenza estensione inerte).
+ * Fail-safe: file assente/malformato/valore-ignoto → si scende al livello successivo, mai lancia.
+ * @param {{ env?:Record<string,string|undefined>, configPath?:string, readFile?:(p:string)=>string }} [opts]
+ * @returns {{ rung: string, enabled: boolean, source: "env"|"file"|"default" }}
  */
-export function loadEvictionConfig(env = typeof process !== "undefined" && process.env ? process.env : {}) {
-  const raw = String(env.HARNESS_EVICTION_CHECKPOINT || "").trim().toLowerCase();
-  const rung = EVICTION_RUNGS.includes(raw) ? raw : "off";
-  return { rung, enabled: rung !== "off" };
+export function loadEvictionConfig(opts = {}) {
+  const env = opts.env ?? (typeof process !== "undefined" && process.env ? process.env : {});
+  // 1) env override
+  const envRaw = String(env.HARNESS_EVICTION_CHECKPOINT || "").trim().toLowerCase();
+  if (EVICTION_RUNGS.includes(envRaw)) return { rung: envRaw, enabled: envRaw !== "off", source: "env" };
+  // 2) file opt-in
+  try {
+    const read = opts.readFile || ((p) => readFileSync(p, "utf-8"));
+    const parsed = JSON.parse(read(opts.configPath ?? ".pi/harness.config.json"));
+    const r = String((parsed && parsed.evictionCheckpoint) || "").trim().toLowerCase();
+    if (EVICTION_RUNGS.includes(r)) return { rung: r, enabled: r !== "off", source: "file" };
+  } catch {
+    /* assente/malformato → default (fail-safe) */
+  }
+  // 3) default
+  return { rung: "off", enabled: false, source: "default" };
 }
 
 /**

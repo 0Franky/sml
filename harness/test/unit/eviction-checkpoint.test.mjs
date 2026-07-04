@@ -17,14 +17,23 @@ import {
 let pass = 0, fail = 0;
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; console.error("  ✗ " + msg); } }
 
-// ── loadEvictionConfig: DEFAULT off + fail-safe ──
-ok(loadEvictionConfig({}).rung === "off", "config: env vuota → off (DEFAULT)");
-ok(loadEvictionConfig({}).enabled === false, "config: off → enabled=false");
-ok(loadEvictionConfig({ HARNESS_EVICTION_CHECKPOINT: "nudge" }).rung === "nudge", "config: nudge");
-ok(loadEvictionConfig({ HARNESS_EVICTION_CHECKPOINT: "INJECT" }).rung === "inject", "config: case-insensitive");
-ok(loadEvictionConfig({ HARNESS_EVICTION_CHECKPOINT: " require " }).rung === "require", "config: trim");
-ok(loadEvictionConfig({ HARNESS_EVICTION_CHECKPOINT: "require" }).enabled === true, "config: require → enabled=true");
-ok(loadEvictionConfig({ HARNESS_EVICTION_CHECKPOINT: "bogus" }).rung === "off", "config: valore ignoto → off (fail-safe)");
+// ── loadEvictionConfig: env override + file opt-in + DEFAULT off + fail-safe ──
+const NOFILE = () => { throw new Error("ENOENT"); }; // simula "nessun .pi/harness.config.json"
+ok(loadEvictionConfig({ env: {}, readFile: NOFILE }).rung === "off", "config: no env + no file → off (DEFAULT)");
+ok(loadEvictionConfig({ env: {}, readFile: NOFILE }).enabled === false, "config: off → enabled=false");
+ok(loadEvictionConfig({ env: {}, readFile: NOFILE }).source === "default", "config: source=default");
+ok(loadEvictionConfig({ env: { HARNESS_EVICTION_CHECKPOINT: "nudge" }, readFile: NOFILE }).rung === "nudge", "config: env nudge");
+ok(loadEvictionConfig({ env: { HARNESS_EVICTION_CHECKPOINT: "INJECT" }, readFile: NOFILE }).rung === "inject", "config: env case-insensitive");
+ok(loadEvictionConfig({ env: { HARNESS_EVICTION_CHECKPOINT: " require " }, readFile: NOFILE }).rung === "require", "config: env trim");
+ok(loadEvictionConfig({ env: { HARNESS_EVICTION_CHECKPOINT: "require" }, readFile: NOFILE }).source === "env", "config: source=env");
+ok(loadEvictionConfig({ env: { HARNESS_EVICTION_CHECKPOINT: "bogus" }, readFile: NOFILE }).rung === "off", "config: env ignoto + no file → off (fail-safe)");
+// file opt-in `.pi/harness.config.json` → campo evictionCheckpoint (persistente)
+ok(loadEvictionConfig({ env: {}, readFile: () => JSON.stringify({ evictionCheckpoint: "inject" }) }).rung === "inject", "config: da FILE evictionCheckpoint");
+ok(loadEvictionConfig({ env: {}, readFile: () => JSON.stringify({ evictionCheckpoint: "NUDGE" }) }).source === "file", "config: source=file (case-insensitive)");
+ok(loadEvictionConfig({ env: { HARNESS_EVICTION_CHECKPOINT: "off" }, readFile: () => JSON.stringify({ evictionCheckpoint: "inject" }) }).rung === "off", "config: env=off = kill-switch anche sul file");
+ok(loadEvictionConfig({ env: {}, readFile: () => "{bad json" }).rung === "off", "config: file malformato → off (fail-safe)");
+ok(loadEvictionConfig({ env: {}, readFile: () => JSON.stringify({ evictionCheckpoint: "bogus" }) }).rung === "off", "config: file valore ignoto → off");
+ok(loadEvictionConfig({ env: {}, readFile: () => JSON.stringify({}) }).rung === "off", "config: file senza campo → off");
 ok(EVICTION_RUNGS.join(",") === "off,nudge,inject,require", "config: ladder ordinata");
 
 // ── evictionEvent: detection deterministica (semantica windowNativeMessages: tiene ultimi K turni-utente) ──

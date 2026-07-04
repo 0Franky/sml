@@ -2,7 +2,11 @@
 
 export const EVICTION_RUNGS: string[];
 
-export function loadEvictionConfig(env?: Record<string, string | undefined>): { rung: string; enabled: boolean };
+export function loadEvictionConfig(opts?: {
+  env?: Record<string, string | undefined>;
+  configPath?: string;
+  readFile?: (path: string) => string;
+}): { rung: string; enabled: boolean; source: "env" | "file" | "default" };
 
 export function evictionEvent(args: {
   userTurnCount: number;
