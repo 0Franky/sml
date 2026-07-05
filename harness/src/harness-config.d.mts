@@ -31,6 +31,7 @@ export interface HarnessConfig {
   messagesCharCap: number;
   nativeKeepTurns: number;
   laneMemoryHint: boolean;
+  laneMemoryHintLevel: "full" | "lean";
   messagesExcludeCurrentTurn: boolean;
   singleUser: boolean;
   gathering: GatheringConfig;

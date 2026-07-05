@@ -55,6 +55,10 @@ export const DEFAULT_HARNESS_CONFIG = {
   // sua memoria, con una checklist su come ragionare. true (DEFAULT ON, regime SLM: "già configurarlo"); false per
   // modelli grandi che non ne hanno bisogno. È la via da provare PRIMA di alzare nativeKeepTurns.
   laneMemoryHint: true,
+  // laneMemoryHintLevel (utente msg 1067 + ADR slm-ext 2026-07-05): dettaglio dello scaffolding <how_memory_works>
+  // QUANDO laneMemoryHint=true. "full" (default, regime SLM debole: checklist completa anti-amnesia) | "lean" (modello
+  // più capace: solo l'essenziale, niente hand-holding "non è il primo messaggio" — l'ASSENZA di una lane È il segnale).
+  laneMemoryHintLevel: "full",
   // Strada-2 complementarità (legacy, review-full P1-B): usato SOLO se nativeKeepTurns=0 (retro-compat). Con
   // nativeKeepTurns>0 il confine di complementarità è per-seq (K-esimo msg utente) e questo flag è ignorato.
   messagesExcludeCurrentTurn: true,
@@ -166,6 +170,7 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
     messagesCharCap: DEFAULT_HARNESS_CONFIG.messagesCharCap,
     nativeKeepTurns: DEFAULT_HARNESS_CONFIG.nativeKeepTurns,
     laneMemoryHint: DEFAULT_HARNESS_CONFIG.laneMemoryHint,
+    laneMemoryHintLevel: DEFAULT_HARNESS_CONFIG.laneMemoryHintLevel,
     messagesExcludeCurrentTurn: DEFAULT_HARNESS_CONFIG.messagesExcludeCurrentTurn,
     singleUser: DEFAULT_HARNESS_CONFIG.singleUser,
     gathering: { ...DEFAULT_HARNESS_CONFIG.gathering },
@@ -192,6 +197,7 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
         cfg.nativeKeepTurns = Math.floor(f.nativeKeepTurns);
       }
       if (typeof f?.laneMemoryHint === "boolean") cfg.laneMemoryHint = f.laneMemoryHint;
+      if (f?.laneMemoryHintLevel === "full" || f?.laneMemoryHintLevel === "lean") cfg.laneMemoryHintLevel = f.laneMemoryHintLevel;
       if (typeof f?.messagesExcludeCurrentTurn === "boolean") cfg.messagesExcludeCurrentTurn = f.messagesExcludeCurrentTurn;
       if (typeof f?.singleUser === "boolean") cfg.singleUser = f.singleUser;
     }
@@ -245,6 +251,9 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
   }
   if (env.HARNESS_LANE_MEMORY_HINT != null && env.HARNESS_LANE_MEMORY_HINT !== "") {
     cfg.laneMemoryHint = env.HARNESS_LANE_MEMORY_HINT !== "false" && env.HARNESS_LANE_MEMORY_HINT !== "0";
+  }
+  if (env.HARNESS_LANE_MEMORY_HINT_LEVEL === "full" || env.HARNESS_LANE_MEMORY_HINT_LEVEL === "lean") {
+    cfg.laneMemoryHintLevel = env.HARNESS_LANE_MEMORY_HINT_LEVEL;
   }
   if (env.HARNESS_SINGLE_USER != null && env.HARNESS_SINGLE_USER !== "") {
     cfg.singleUser = env.HARNESS_SINGLE_USER !== "false" && env.HARNESS_SINGLE_USER !== "0";

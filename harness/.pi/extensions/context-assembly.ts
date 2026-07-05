@@ -13,6 +13,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { VarsQueue } from "../../src/vars-queue.mjs";
 import { getVarsQueue, getConversationStore, closeAll } from "../../src/state-db.mjs";
 import { assembleContext, buildResumeDigest, buildAimTail, buildExecutionOrderLines } from "../../src/context-assembler.mjs";
+import { buildMemoryScaffolding } from "../../src/slm-scaffolding.mjs";
 // inventario SEALED (nomi+sink+flag, MAI valori) per la lane <secrets> — singleton di processo condiviso con
 // secrets-guardrail/regex-ingress. Chiude FIND-7 (il modello ri-chiamava list_secrets perché non era in context).
 import { listSecretsMeta } from "../../src/sealed-secrets.mjs";
@@ -44,63 +45,16 @@ const EXCLUDE_CURRENT_TURN = HARNESS_CFG.messagesExcludeCurrentTurn; // P1-B: es
 // turni più VECCHI del K-esimo (nthLastUserSeq → niente doppia-chat). K>0 ha precedenza su EXCLUDE_CURRENT_TURN.
 const NATIVE_KEEP_TURNS = HARNESS_CFG.nativeKeepTurns; // SSOT harness-config: intero ≥1 garantito (no `?? 1`/as any)
 
-// <how_memory_works> — AWARENESS-first (utente msg 830): un modello piccolo con keepTurns=1 vede 1 solo messaggio per
-// volta e tratta l'ARRAY NATIVO come "la conversazione", IGNORANDO le lane nel system prompt → amnesia ("è il mio primo
-// messaggio?" con la storia davanti). Qui gli SPIEGHIAMO la situazione + gli diamo una CHECKLIST semplice su come usare
-// le lane come memoria. Config `laneMemoryHint` (default on, regime SLM). È la via da provare PRIMA di alzare keepTurns.
-const MEMORY_AWARENESS = HARNESS_CFG.laneMemoryHint
-  ? `<how_memory_works note="IMPORTANT — how you remember things here. Read this before answering.">
-You run in a harness that gives you only ONE message at a time (the current turn). Your earlier turns are NOT in the chat array — they are kept FOR you in the <context> below. The lanes ARE your memory; treat them as your brain:
-- <messages_with_user> = the whole conversation so far: every earlier message from the user AND your own replies, oldest→newest. This is your record of the dialogue.
-- <last_tool_calls> = the actions you already took and their results.
-- <task_list>, <current_aim>, and your variables = your working state.
-TIME: each line carries a [+Xs] shift = seconds since session start (the absolute session_start is in the lane header). The AUTHORITATIVE order is given by these timestamps, NOT by the position of the lines — do not assume the lines are pre-sorted; if a shift is out of order, trust the shift. Reconstruct the real timeline from the [+Xs] values.
-Checklist — before you answer, especially about the past:
-1. If the question is about what happened / what was said / what you did (e.g. "is this my first message?", "did we already…?", "what value did you use?") → look in <messages_with_user> and <last_tool_calls> FIRST, then answer from what you find there.
-2. Do NOT say "this is your first message" or "I have no memory/context": your history is in <messages_with_user>. Read it and count the turns.
-3. Reconstruct the timeline by sorting the entries by their [+Xs] shift (oldest→newest) before responding.
-4. Answer ONLY from what is ACTUALLY written in the lanes. If something is NOT there, say so plainly ("I don't see that in our conversation") — NEVER invent a fact, a name, a tool result, or a past request that isn't in <messages_with_user>/<last_tool_calls>. Making something up (confabulating) is worse than admitting you don't have it. Point 2 (don't claim amnesia) and this point are two sides of one rule: read the lanes, answer from what's there, and when it's genuinely absent, say it's absent.
-What SCROLLS OUT — save what must last (new environment: nobody told you these rules until now):
-- <messages_with_user> is a ROLLING window: as the chat grows, the OLDEST turns (the ones at the TOP of the lane) drop off to make room and are then GONE — not recoverable from your context.
-- So the moment something must outlast the next few turns, SAVE it as SELF-EXPLANATORY INFORMATION, never as bare data. The saved text must make full sense ON ITS OWN, later, with zero surrounding chat. A key/value that only echoes itself is useless.
-  · BAD:  set_var("nome_alfred", "Alfred")  — circular: it never says WHO Alfred is or WHY it matters. Later it is noise.
-  · GOOD: note("The user asked me to call myself 'Alfred' and to address them as 'Luna'.", key="identities")  — a complete statement (who / what / still clear in a month).
-  · a FACT to RE-READ later (a name/nickname, a preference, a decision, a promise) → note("<a full self-contained sentence>", key="<short-id>"): it appears in <facts> and survives the rolling window AND the compact. note again with the same key to update; remove_note to drop.
-  · a structured VALUE you will interpolate or compute on (a token id, a count, a path) → set_var (shows in <vars>, read back with get_var). Even here, name the key so a stranger gets it: 'discord_client_id', not 'x'.
-- The chat window forgets; your saved facts (<facts>) and variables (<vars>) do not.
-The lanes are the ground truth about this conversation — trust them over any impression that the chat looks empty.
-</how_memory_works>
-`
-  : "";
-
-// RECENCY REMINDER in CODA (utente msg 853/855): l'awareness completa è in TESTA al contesto, ma su 24-26K char un
-// modello debole la "perde" (lost-in-the-middle). Stesso principio dell'aim-in-coda (msg 518): ri-ancorare in CODA —
-// dove l'attenzione è massima — l'istruzione load-bearing. Qui: un promemoria BREVE (non duplica il blocco intero)
-// che dice di ricostruire la timeline dagli shift prima di rispondere sul passato. Gated dallo stesso laneMemoryHint.
-const MEMORY_TAIL = HARNESS_CFG.laneMemoryHint
-  ? `\n<reminder note="read this right before you answer">If the question touches the past (what was said/done, "is this my first message?", "did we already…?", "what value did you use?"): reconstruct the timeline by sorting the entries in <messages_with_user> and <last_tool_calls> by their [+Xs] shift (oldest→newest), then answer from them. NEVER say you have no memory or that this is the first message — your history is in those lanes. The shifts are the authoritative order, not the line position. But answer ONLY from what is actually there: if something is genuinely not in the lanes, say so — do NOT invent events, names, tool results, or past requests. And if you need an action but don't see a tool for it — or a tool returned 'not found' — call find_tool('what you want to do') and use a name it returns BEFORE claiming a capability is unavailable.</reminder>`
-  : "";
-
-// <resources> — MAPPA delle affordance/store del modello (utente 2026-07-03). Il 9B confabula "non ho accesso / nessun
-// file di cronologia" (visto a msg [208] della sessione live 019f292b) perché non sa DOVE vive la sua memoria né QUALE
-// tool/lane la raggiunge. Tabella compatta e STATICA (cache-friendly, subito dopo l'awareness) store→accesso→file.
-// Steera al TOOL/LANE, NON al file grezzo (un 9B farebbe `cat` del .db → caos): il path è solo "dove vive". I conteggi
-// dinamici stanno già negli header delle lane → non duplicati qui. Gated come l'awareness; la riga find_tool solo se
-// tool-gating è attivo (altrimenti quei tool non esistono).
+// <how_memory_works> / <reminder> / <resources> — scaffolding-crutch ESTRATTO in ../../src/slm-scaffolding.mjs
+// (ADR 2026-07-05 estensione slm). Livello: laneMemoryHint=false → "off"; altrimenti laneMemoryHintLevel ("full" default
+// = checklist completa anti-amnesia | "lean" = solo l'essenziale load-bearing, senza la parte "non è il primo messaggio"
+// e i BAD/GOOD, utente msg 1067; l'ASSENZA di una lane È il segnale). Il core resta l'UNICO injector; il testo-crutch
+// vive nel modulo, così è misurabile/dial-down man mano che il training lo interiorizza (→ "off").
+const MEMORY_LEVEL = HARNESS_CFG.laneMemoryHint ? HARNESS_CFG.laneMemoryHintLevel : "off";
 const TOOLGATING_MODE = HARNESS_CFG.toolGating; // SSOT harness-config: enum lowercase validato (no `?? "gated"`/toLowerCase)
 const DISCOVERABLE_CATS = Object.keys(CATEGORY_TOOLS).filter((c) => c !== "core" && c !== "meta").join(", ");
-const RESOURCES_LANE = HARNESS_CFG.laneMemoryHint
-  ? `<resources note="where your memory lives and how to reach it — use the TOOL/LANE, do NOT parse raw DB files">
-- conversation (every past message) -> get_conversation(range) tool; the recent ones are already in <messages_with_user>. [.pi/state/conversations.db]
-- your own recent actions -> <last_tool_calls> lane.
-- variables -> <vars> lane; read/write with get_var / set_var. [.pi/state/vars.db]
-- durable facts (a name, a nickname, a preference) -> <facts> lane; save/update with note, drop with remove_note.
-- decisions you recorded -> record_decision / get_decisions_by_agent.
-- secrets (names + permissions only; values are sealed, you never see them) -> <secrets> lane; list_secrets.${TOOLGATING_MODE !== "off" ? `
-- need a capability you don't see a tool for? find_tool('what you want') or open_category(category). Categories: ${DISCOVERABLE_CATS}.` : ""}
-</resources>
-`
-  : "";
+const { awareness: MEMORY_AWARENESS, tail: MEMORY_TAIL, resources: RESOURCES_LANE } =
+  buildMemoryScaffolding(MEMORY_LEVEL, { toolGating: TOOLGATING_MODE, discoverableCats: DISCOVERABLE_CATS });
 
 function getStore(): VarsQueue {
   const vq = getVarsQueue(); // vars.db dell'orchestratore (path+mkdir+agent nel singleton state-db)
