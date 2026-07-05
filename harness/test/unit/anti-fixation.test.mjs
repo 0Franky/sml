@@ -19,7 +19,8 @@ ok(classifyTurnSignal(["wrote solution.py"]) === "neutral", "classify: output ne
 // --- updateStagnation ---
 ok(updateStagnation({ consecutiveFails: 2 }, "fail").consecutiveFails === 3, "update: fail incrementa");
 ok(updateStagnation({ consecutiveFails: 5 }, "pass").consecutiveFails === 0, "update: pass azzera (progresso)");
-ok(updateStagnation({ consecutiveFails: 4 }, "neutral").consecutiveFails === 4, "update: neutral invariato");
+ok(updateStagnation({ consecutiveFails: 4 }, "neutral").consecutiveFails === 5, "update: neutral IN stallo (n>0) incrementa (debug-loop post-fail)");
+ok(updateStagnation({ consecutiveFails: 0 }, "neutral").consecutiveFails === 0, "update: neutral di SETUP (n=0, pre-fail) NON conta");
 ok(updateStagnation(undefined, "fail").consecutiveFails === 1, "update: stato assente → parte da 0");
 
 // --- rungLevel (soglie 3/5/7) ---
@@ -40,6 +41,18 @@ ok(rungMessage(1) !== rungMessage(2) && rungMessage(2) !== rungMessage(3), "rung
   const historyVaryingCommands = ["fail", "fail", "fail"];
   const inj = stagnationInjection(historyVaryingCommands);
   ok(inj.level === 1 && inj.message.length > 0, "DESIGN: 3 fail (comandi diversi) → rung scatta comunque (no dipendenza dal comando)");
+}
+
+// --- REGRESSION (regola #17): il pattern REALE di HE/145 (diagnosi headless 2026-07-05) che il vecchio codice MANCAVA:
+//     1 fail + print-debugging (neutral) → col vecchio "conta solo i fail" restava a 1 e il rung NON scattava mai.
+//     Ora i neutral post-fail contano → la stagnazione VERA viene colta. Questo test FALLIREBBE col codice pre-fix. ---
+{
+  const he145pattern = stagnationInjection(["fail", "neutral", "neutral"]); // test-fallito poi 2 print-debug
+  ok(he145pattern.level === 1 && he145pattern.consecutiveFails === 3, "REGRESSION HE/145: fail + 2 neutral-debug → soglia raggiunta (il vecchio codice restava a 1)");
+  const setupNeutrals = stagnationInjection(["neutral", "neutral", "neutral", "neutral"]); // solo setup, mai un fail
+  ok(setupNeutrals.level === 0 && setupNeutrals.consecutiveFails === 0, "REGRESSION: neutral di SOLO setup (nessun fail) NON scatta (no falsi positivi)");
+  const recovers = stagnationInjection(["fail", "neutral", "pass", "neutral"]); // un pass a metà azzera
+  ok(recovers.level === 0, "REGRESSION: un PASS durante il debug azzera (progresso reale → niente rung)");
 }
 
 // --- stagnationInjection end-to-end ---

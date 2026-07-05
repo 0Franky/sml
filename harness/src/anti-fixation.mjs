@@ -4,9 +4,10 @@
  * permuta il tie-breaking ~10 turni senza riquestionare l'assunzione sbagliata).
  *
  * Principi (dal concept):
- *  - Trigger sul SEGNALE "il task NON progredisce" (verifica fallita ripetuta), NON su "stesso comando 2×" (HE/145
- *    variava il comando → un trigger su comando-identico lo mancherebbe). → si contano i FAIL consecutivi, a prescindere
- *    dal comando; un PASS azzera (progresso), un neutro non conta.
+ *  - Trigger sul SEGNALE "il task NON progredisce", NON su "stesso comando 2×" (HE/145 variava il comando). Si contano i
+ *    PASSI SENZA PROGRESSO (fail, oppure neutral mentre già in un debug-loop dopo un fail); un PASS azzera. I neutral di
+ *    SETUP pre-fail non contano. [FIX post-diagnosi HE/145: contare solo i fail si fermava a 1 perché il modello passa al
+ *    print-debugging — output neutral — invece di ripetere il test. Vedi updateStagnation.]
  *  - Nudge ESCALANTE, conciso, effimero (solo-quel-turno), iniettato SOLO a stagnazione → zero costo-contesto altrimenti (anti-H6).
  *  - Reward OUTCOME-anchored (il fix vero è il training): qui è solo lo scaffold; l'esito (ha rotto la stagnazione?) è il segnale RL.
  * PURO: nessun import di pi. L'estensione (anti-fixation.ts) mantiene la storia-segnali per-conv e chiama queste funzioni.
@@ -32,14 +33,21 @@ export function classifyTurnSignal(toolResultTexts) {
 }
 
 /**
- * Aggiorna lo stato di stagnazione con un nuovo segnale. fail→+1; pass→reset (progresso); neutral→invariato.
+ * Aggiorna lo stato di stagnazione (contatore = "passi senza progresso", non solo fail consecutivi).
+ *   pass    → reset a 0 (progresso reale).
+ *   fail    → +1.
+ *   neutral → +1 SOLO se siamo GIÀ in stallo (n>0), cioè in un debug-loop dopo un fail; i neutral di SETUP pre-fail
+ *             (scrivi-file, ecc.) NON contano. Motivo (diagnosi HE/145, trace 2026-07-05): dopo il 1° test fallito il
+ *             modello passa al PRINT-DEBUGGING (`python -c "print(...)"` → output neutral), NON ripete lo stesso test →
+ *             contare solo i fail consecutivi si ferma a 1 e il rung non scatta mai. La stagnazione VERA è "molti passi
+ *             senza mai un PASS". Coerente col principio del concept: trigger su "task-non-progredisce", non comando-identico.
  * @param {{consecutiveFails:number}} state  @param {"fail"|"pass"|"neutral"} signal
  */
 export function updateStagnation(state, signal) {
   const n = Number.isInteger(state?.consecutiveFails) ? state.consecutiveFails : 0;
-  if (signal === "fail") return { consecutiveFails: n + 1 };
   if (signal === "pass") return { consecutiveFails: 0 };
-  return { consecutiveFails: n };
+  if (signal === "fail") return { consecutiveFails: n + 1 };
+  return { consecutiveFails: n > 0 ? n + 1 : 0 }; // neutral: conta come stallo solo se il debug-loop è già iniziato
 }
 
 /** Livello del rung dai fail-consecutivi (0 = nessun intervento). */

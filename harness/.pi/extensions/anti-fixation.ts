@@ -23,7 +23,12 @@ import { classifyTurnSignal, updateStagnation, rungLevel, rungMessage } from "..
 // Gate env-based (msg 930.1), non harness-config. Default OFF: abilita con HARNESS_ANTI_FIXATION=true|1 per l'A/B.
 const ENABLED = process.env.HARNESS_ANTI_FIXATION === "true" || process.env.HARNESS_ANTI_FIXATION === "1";
 
+// diagnostica best-effort su ANTI_FIXATION_LOG (se set): instrumenta OGNI passo (regola #15, instrument-before-hypothesizing).
+function diag(m: string) { try { const lp = process.env.ANTI_FIXATION_LOG; if (lp) appendFileSync(lp, m + "\n"); } catch { /* mai bloccante */ } }
+diag(`[module-load] enabled=${ENABLED} env=${process.env.HARNESS_ANTI_FIXATION ?? "(unset)"}`);
+
 export default function (pi: ExtensionAPI) {
+  diag(`[activate] enabled=${ENABLED}`);
   if (!ENABLED) return; // DEFAULT off → no-op totale (nessun hook): il rung non esiste finché non lo si abilita per l'A/B.
 
   // stato di stagnazione per-conversazione (isolamento via convIdFor, come eviction/context-assembly).
@@ -37,9 +42,11 @@ export default function (pi: ExtensionAPI) {
       ? event.content.filter((b: any) => b && b.type === "text" && typeof b.text === "string").map((b: any) => b.text)
       : [];
     const signal = classifyTurnSignal(texts);
-    if (signal === "neutral") return; // niente segnale di verifica → non muove il contatore
     const convId = convIdFor(ctx);
-    state.set(convId, updateStagnation(state.get(convId), signal));
+    // NB: NON scartare i neutral qui — updateStagnation li conta come stallo se il debug-loop è già iniziato (post-fail).
+    const next = updateStagnation(state.get(convId), signal);
+    state.set(convId, next);
+    diag(`[tool_result] signal=${signal} noProgress=${next.consecutiveFails} sample=${JSON.stringify((texts[0] ?? "").slice(0, 70))}`);
   });
 
   // INIETTA il nudge escalante SOLO a stagnazione (livello>0), effimero (solo questo request), canale user.
@@ -47,6 +54,7 @@ export default function (pi: ExtensionAPI) {
     const convId = convIdFor(ctx);
     const fails = state.get(convId)?.consecutiveFails ?? 0;
     const level = rungLevel(fails);
+    diag(`[context] fails=${fails} level=${level}`);
     if (level === 0) return; // sotto soglia → zero costo-contesto (nessuna iniezione)
     const msg = rungMessage(level);
     if (!msg) return;
