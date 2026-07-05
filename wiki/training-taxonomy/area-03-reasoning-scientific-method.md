@@ -19,6 +19,7 @@ status: generated
 - **Fase curriculum** (§4.bis): **F1** = basi/teoria (system prompt + tracce); **F2** = esercizi con-hint→senza-hint (fade-out, incluso "il gioco" Area 16); **F3** = RL agentico con harness [[../decisions/2026-06-23-pi-harness-base|pi]].
 - **Reward design**: Q → verifier deterministico / process-reward (PRM); L → LLM-judge / preference; Q+L → verifier filtra + judge ordina.
 - **Hack-check (OBBLIGATORIO)**: il rischio trasversale di tutta l'Area 3 è il **process-marker spoofing** — il modello impara a **mimare i marker/passi** (scrivere `[V]`, elencare gli 8 passi, dire "verifico") **senza** eseguire il ragionamento sottostante, per intascare il reward. Difesa generale → ancorare SEMPRE all'**outcome verificabile**, non alla presenza del marker. Dettaglio per foglia sotto. Vedi [[../concepts/reward-hacking-mitigation]].
+- **Foglia dedicata — verifica ANTI-INGANNO** (utente msg 1103, 2026-07-05): *verify-before-concluding sotto test-coverage ingannevole* — i test forniti passano su un'impl plausibile-sbagliata; il modello deve **derivare i casi dallo spec → scrivere un test DISCRIMINANTE → eseguirlo LIVE → POI concludere** (fidarsi del verde fornito = **penalizzato sull'outcome**, non sulla cerimonia). Reward Q con *discrimination-gate* (`t(B)=FAIL ∧ t(C)=PASS`). Design: [[../concepts/verification-discipline-training]] · Gold: [[gold-example-area03-verification-discipline]]. È la lezione di sessione (verde≠corretto, [[../feedback_institutionalize_lessons_as_rules]]) trasformata in training-signal.
 
 ---
 

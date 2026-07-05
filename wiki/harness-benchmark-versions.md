@@ -107,10 +107,22 @@ il 16% di token in meno del full (46K vs 55K). Il costo-token 4-5× vs vanilla �
 (dove vanilla NON ha memoria), overhead puro su single-shot. → [[concepts/adaptive-context-injection]].
 
 ### Modo-2 — long-horizon, 6 task in una sessione + probe memoria/timeline · `gemini-3.1-flash-lite`
-Config {vanilla, ours@keep1, ours@keep6}. **Run 2026-07-05 INVALIDO**: le sessioni pesano ~180-205K token cumulativi e hanno
-saturato il rate-limit/TPM del free-tier → 2-4 task/config in errore-API, **probe api-errata** (recall non misurabile). **Re-run
-spaziato in corso** (30s/task). I pass parziali (vanilla 4/4, ours 2/2 sui task gradati) NON sono confrontabili finché la sessione non
-gira pulita. [[architecture/ab-eval-harness]]
+Config {vanilla, ours@keep1, ours@keep6} sui 6 task base (HE/0-5). Run **SPAZIATO 2026-07-05** (30s/task → PULITO; il primo run era
+saturato dal rate-limit/TPM del free-tier, ~200K tok/sessione).
+
+| Config | pass | probe-recall | probe-ordine | turni-tot | token-finali |
+|---|---|---|---|---|---|
+| vanilla | **6/6** | **100%** | 100% | 19 | 66 297 |
+| ours@keep1 | **6/6** | **33%** | 33% | 44 | 505 518 |
+| ours@keep6 | **6/6** | **100%** | 100% | 47 | 722 695 |
+
+**Lettura ONESTA (critica oggettiva, non auto-promozione):** tutti risolvono 6/6 (task facili). Sulla **probe memoria/timeline**
+`vanilla` fa **100%**: la sessione a 6 task **entra nella finestra nativa di pi** → vanilla ricorda tutto da solo, e qui la
+memoria-harness **non aggiunge nulla** costando **8-11× token**. `ours@keep1` fa **33%** (PEGGIO di vanilla): con finestra nativa=1
+turno la ricostruzione della memoria vive nella lane `<messages_with_user>`, che **il modello ignora** (amnesia nota, [[feedback_instrument_before_hypothesizing]])
+→ dimentica 4/6 E costa 8× token. `ours@keep6` recupera 100% ma a **11× token**. **Conclusione:** l'harness-memoria PAGA solo su
+sessioni **più lunghe della finestra nativa** (dove vanilla comincia a dimenticare); 6 task facili NON stressano vanilla → serve un
+long-horizon vero (SWE-scale o molti più task) per un test equo. Finché non c'è, l'harness qui è overhead. [[architecture/ab-eval-harness]]
 
 > **Regola quota (utente msg 1106):** ladder `gemini-3.1-flash-lite → gemini-3.1-flash` su esaurimento; il modello è etichettato per-cella.
 > Se si esaurisce anche `flash` → serve la 2ª key. NESSUNA PII (hardware utente ecc.) nei report.
@@ -123,8 +135,11 @@ gira pulita. [[architecture/ab-eval-harness]]
   (V1 70% < V0 80%); il lean lo mitiga (V2 80% = V0) a token inferiori. Direzione coerente con E8/E9 ([[harness-experiment-log]]).
 - **Scaffold-che-recede misurabile**: V1→V2→(V3 off) è una scala; la metrica "receded" = niente regressione abbassando il livello. Finora
   abbassare full→lean **migliora** su hard → lo scaffolding full è, per questo modello su questi task, un *crutch dannoso* (non solo neutro).
-- **Costo del contesto**: il valore dell'harness NON è sul single-shot HumanEval (dove è overhead) ma sul long-horizon (Modo-2) — che va
-  però misurato pulito (quota).
+- **Costo del contesto**: il valore dell'harness NON è sul single-shot HumanEval (dove è overhead).
+- **Modo-2 (memoria) — l'harness NON vince su sessioni corte** (finding onesto): a 6 task vanilla ha **100%** probe-recall (la sessione
+  entra nella finestra nativa) → la memoria-harness è **overhead** (8-11× token) e `keep1` **peggiora** (33%, lane ignorata). Il
+  valore-memoria è atteso SOLO su long-horizon **> finestra-nativa** → da dimostrare con SWE-scale / molti più task. Non abbiamo ancora
+  un setup dove l'harness-memoria vince: è il prossimo test critico, non un dettaglio.
 
 ## Metodo / riproducibilità
 - Orchestratore: `eval/run-versioned.mjs` (Modo-1) + `eval/run-session-ab.mjs` (Modo-2). Report: `eval/data/report-*.json` (gitignored, path assoluti).
