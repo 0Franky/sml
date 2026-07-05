@@ -87,6 +87,9 @@ export const DEFAULT_HARNESS_CONFIG = {
   // set-attivo iniziale = ESSENTIAL (tool-gating.mjs) e la coda lunga si riscopre con find_tool/open_category.
   // Default `gated` = regime SLM (utente msg 807 "tenerlo attivo di default"); per un modello grande → "off" nel file.
   toolGating: "gated",
+  // NB: il rung anti-fissazione NON è qui di proposito (utente msg 930.1): è un'estensione DEDICATA
+  // (.pi/extensions/anti-fixation.ts) gatata via env HARNESS_ANTI_FIXATION, non un flag harness-config. Presenza-file =
+  // opt-in; l'A/B si fa con l'env senza rimuovere il file. Niente accoppiamento config ↔ scaffold sperimentale.
 };
 
 const DEFAULT_PATH = ".pi/harness.config.json";

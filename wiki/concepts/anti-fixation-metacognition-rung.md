@@ -61,10 +61,18 @@ La decomposizione + i tried-and-failed vanno nelle **note** (error-memo + subtas
 
 > **Principio unificante**: contesto e comportamento **ADATTIVI e TRIGGERED da SEGNALI** (stagnazione · rilevanza-memoria · regime), MAI always-on; l'harness fa da scaffold ORA, il training lo internalizza, **tutto outcome-anchored**.
 
+## Evidenza concreta [EXTRACTED — trace tracciato 2026-07-05, `eval/data/trace-diag/` gitignored]
+
+Ri-tracciato HE/145 (`order_by_points`) su vanilla vs ours-full (gemini-3.1-flash-lite). **Entrambi falliscono con lo STESSO bug**: l'helper `digit_sum(n) = sum(int(d) for d in str(abs(n)))` — `abs(n)` è sbagliato perché HE/145 vuole la **prima cifra dei negativi col segno** (`-12` → `-1+2 = 1`, non `3`). Il modello **si fissa sull'ORDINAMENTO** (che azzecca con `enumerate`+index) e **non mette in dubbio l'HELPER**. Dettaglio della fissazione:
+- **vanilla** (13 turni, 38K tok): ha PERFINO ipotizzato il bug a metà (`# What if it's not abs(n)?`, ha abbozzato una variante signed-digit) ma **l'ha PERSO e ha rimesso `abs`** nella soluzione finale → l'ipotesi giusta non è stata *persistita* (esattamente il buco che il **note-ledger** colma).
+- **ours-full** (17 turni, **230K tok**): si è incaponito a **riscrivere la sort-key** in `solution.py` ~6 volte senza mai toccare l'helper → bruciando ~6× i token di vanilla sulla dimensione SBAGLIATA. Instanza concreta di fissazione + plausibile aggravante-H6 (più scaffolding ↔ più thrashing sull'ordinamento).
+- → **il rung-2 ("l'helper/formula è corretto, non solo l'ordinamento?") + note-ledger** puntano esattamente a questo. Lega anche la [[verification-discipline-training]] (derivare l'edge `-12` dallo spec e testarlo).
+- ⚠️ **Caveat metodologico [EXTRACTED]**: a **n=1** il pass/fail per-task è **STOCASTICO** (nello stesso batch #132 e #32 si sono ribaltati run-to-run). #145 è l'unico fallimento **STABILE** (fallisce in ogni run, entrambi gli arm) → è l'unico su cui trarre conclusioni. Il claim "harness peggiora #132" della prima hard10 era **entro il rumore n=1**, NON un effetto-harness robusto. Per claim armaturati servono n≥5/cella + confronto di pass-RATE.
+
 ## Stato / validazione [EXTRACTED]
-- **Diagnosi**: VALIDATA (trace HE/145).
-- **Fattibilità**: ALTA — hook `context` esistente (inject on-demand), error-memo già a concept, pattern-escalation già usato (eviction-checkpoint).
-- **EFFICACIA**: ⚠️ DA VALIDARE con l'A/B — NON ancora provato che il rung aiuti davvero. Prima si prototipa + A/B sui task-fissazione, poi si decide.
+- **Diagnosi**: VALIDATA (trace HE/145, evidenza concreta sopra).
+- **MECCANISMO: COSTRUITO** (2026-07-05) — logica pura `src/anti-fixation.mjs` (detector fail-consecutivi + rung escalante, **test 22/0**), estensione DEDICATA `.pi/extensions/anti-fixation.ts` (hook `tool_result`→conta i fail-verifica, `context`→inietta il nudge). **Gate env `HARNESS_ANTI_FIXATION` DEFAULT off** (msg 930.1: estensione dedicata, NIENTE flag in harness-config; A/B senza rimuovere il file), no-op totale se off. Typecheck 0, suite 45/0.
+- **EFFICACIA: ⚠️ ANCORA DA VALIDARE con l'A/B** (`HARNESS_ANTI_FIXATION=true` vs plain sui task-fissazione) — costruito ≠ efficace (regola #14). Non spedito ON per fede: default off finché l'A/B non lo giustifica. L'A/B costa quota.
 
 ## Situational table + abilità-da-addestrare IMPRESCINDIBILE (utente msg 1072)
 
