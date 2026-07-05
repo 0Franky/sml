@@ -50,4 +50,21 @@ export function makeKeyRotator(nkeys, opts = {}) {
   };
 }
 
-export default { makeKeyRotator };
+/**
+ * isRateLimited — true se la stringa segnala un rate-limit/quota Gemini (429/RESOURCE_EXHAUSTED).
+ * SSOT (#16): prima era duplicata inline in run-ab.mjs E run-session-ab.mjs → estratta qui, testata una volta.
+ */
+export function isRateLimited(s) {
+  return /429|quota|rate.?limit|RESOURCE_EXHAUSTED/i.test(String(s || ""));
+}
+
+/**
+ * isRateLimitedResult — true se il RISULTATO di un worker eval è un rate-limit (429 http o messaggio di quota su
+ * uno qualsiasi dei campi-errore). È la logica che decide `reportBlocked` vs `reportOk` nel wiring di run-ab/run-session-ab.
+ * @param {{httpStatus?:number, retryErr?:string, sendErr?:string, error?:string}|null|undefined} w
+ */
+export function isRateLimitedResult(w) {
+  return !!w && (w.httpStatus === 429 || isRateLimited(w.retryErr) || isRateLimited(w.sendErr) || isRateLimited(w.error));
+}
+
+export default { makeKeyRotator, isRateLimited, isRateLimitedResult };

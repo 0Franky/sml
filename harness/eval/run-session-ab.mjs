@@ -12,7 +12,7 @@
  */
 import { spawnSync } from "node:child_process";
 import { loadGeminiKeys } from "./gemini-keys.mjs"; // SSOT multi-key: 1 chiave per config (no contesa quota nelle sessioni lunghe)
-import { makeKeyRotator } from "./gemini-key-rotator.mjs"; // rotazione robusta (2-blocchi→morta, cooldown, no ping)
+import { makeKeyRotator, isRateLimited } from "./gemini-key-rotator.mjs"; // rotazione + detection 429 (SSOT)
 import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { tmpdir } from "node:os";
@@ -24,7 +24,6 @@ const HARNESS = resolve(__dirname, "..");
 const WORKER = join(__dirname, "run-session.mjs");
 const KEYS = loadGeminiKeys();
 const NKEYS = Math.max(1, KEYS.length); // chiavi disponibili per la rotazione per-config
-const isRateLimit = (s) => /429|quota|rate.?limit|RESOURCE_EXHAUSTED/i.test(String(s || ""));
 // rotazione robusta delle chiavi (utente msg 1178/1180): morta dopo 2 blocchi (429) CONSECUTIVI, tutte-morte → cooldown
 // 60s + sblocco, cap 5 cicli; ZERO ping (impara dai run reali). Parametri SSOT nel modulo → qui solo `log`.
 const rotator = makeKeyRotator(NKEYS, { log: (m) => console.log(`\n  ⚠ ${m}`) });
@@ -134,7 +133,7 @@ async function main() {
     process.stdout.write(`[${ci + 1}/${configs.length}] ${cfg.label.padEnd(12)} sessione ${N} task (key ${keyIndex})… `);
     const res = runConfig(cfg, keyIndex);
     // report al rotator: config 429ata (errore rate-limit o TUTTI i task api-err) → blocco consecutivo su quella chiave
-    if (isRateLimit(res.error) || (res.perTask?.length > 0 && res.perTask.every((pt) => pt.apiError))) rotator.reportBlocked(keyIndex);
+    if (isRateLimited(res.error) || (res.perTask?.length > 0 && res.perTask.every((pt) => pt.apiError))) rotator.reportBlocked(keyIndex);
     else rotator.reportOk(keyIndex);
     if (res.error) { console.log(`ERRORE: ${res.error}`); report.configs.push({ label: cfg.label, error: res.error }); if (ci < configs.length - 1) await sleep(DELAY_MS); continue; }
 

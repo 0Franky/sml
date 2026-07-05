@@ -24,7 +24,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gradeHumanEval } from "./verify.mjs";
 import { loadGeminiKeys } from "./gemini-keys.mjs"; // rotazione multi-chiave (SSOT #16)
-import { makeKeyRotator } from "./gemini-key-rotator.mjs"; // rotazione robusta (2-blocchi→morta, cooldown, no ping)
+import { makeKeyRotator, isRateLimited, isRateLimitedResult } from "./gemini-key-rotator.mjs"; // rotazione + detection 429 (SSOT)
 
 const here = dirname(fileURLToPath(import.meta.url));
 const RUN_ONE = join(here, "run-one.mjs");
@@ -51,7 +51,6 @@ if (ARMS.includes("vanilla")) configs.push({ arm: "vanilla", keep: null, key: "v
 if (ARMS.includes("ours")) for (const k of KEEPS) configs.push({ arm: "ours", keep: k, key: `ours@keep${k}` });
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const isRateLimit = (s) => /429|quota|rate.?limit|RESOURCE_EXHAUSTED/i.test(String(s || ""));
 
 function runWorker(task, cfg, keyIndex) {
   const workdir = mkdtempSync(join(tmpdir(), "eval-wd-"));
@@ -87,11 +86,10 @@ const rows = [];
 const t0 = Date.now();
 console.log(`\n=== A/B HumanEval — ${tasks.length} task × ${configs.length} config (${configs.map((c) => c.key).join(", ")}) — model=${MODEL_ID} — delay=${DELAY_MS}ms ===\n`);
 
-const isDeadResult = (w) => !!w && (w.httpStatus === 429 || isRateLimit(w.retryErr) || isRateLimit(w.sendErr) || isRateLimit(w.error));
 // rotazione robusta via gemini-key-rotator (utente msg 1178/1180): morta dopo 2 blocchi (429) CONSECUTIVI (un successo
 // azzera); tutte-morte → cooldown 60s + sblocco, cap 5 cicli; ZERO ping. Parametri SSOT nel modulo → qui solo `log`.
 const rotator = makeKeyRotator(NKEYS, { log: (m) => console.log(`      ⚠ ${m}`) });
-const reportKey = (i, w) => { if (i < 0) return; if (isDeadResult(w)) rotator.reportBlocked(i); else if (!w.apiError) rotator.reportOk(i); };
+const reportKey = (i, w) => { if (i < 0) return; if (isRateLimitedResult(w)) rotator.reportBlocked(i); else if (!w.apiError) rotator.reportOk(i); };
 
 let idx = 0, total = tasks.length * configs.length, rateLimited = 0;
 for (const task of tasks) {
@@ -103,7 +101,7 @@ for (const task of tasks) {
       : runWorker(task, cfg, keyIndex);
     reportKey(keyIndex, w);
     // retry su ERRORE-API: ruota a chiave viva (o cooldown+sblocco se tutte morte); STOP se esaurite dopo i cooldown.
-    for (let attempt = 1; attempt <= MAX_RETRIES && (w.apiError || isRateLimit(w.sendErr) || isRateLimit(w.error)); attempt++) {
+    for (let attempt = 1; attempt <= MAX_RETRIES && (w.apiError || isRateLimited(w.sendErr) || isRateLimited(w.error)); attempt++) {
       keyIndex = await rotator.next();
       if (keyIndex < 0) { console.log(`      ⚠ chiavi esaurite anche dopo cooldown → stop retry`); break; }
       console.log(`      ⚠ errore-API (http=${w.httpStatus ?? "?"} ${String(w.retryErr ?? w.sendErr ?? w.error ?? "").slice(0, 80)}) → backoff ${RETRY_DELAY_MS / 1000}s + retry ${attempt}/${MAX_RETRIES} [key→${keyIndex}]`);
