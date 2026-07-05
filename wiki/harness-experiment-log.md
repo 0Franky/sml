@@ -35,6 +35,7 @@ Tutti il **2026-07-04** (sera, ora locale utente ~UTC+? — tempi approssimati d
 | E4 | ~21:53 | Modo-2 SMOKE | ours@1 | HE/0-2 (1 sessione) | pass **3/3**; probe recall **100%** (post fix grader fuzzy) | `report-session-smoke.json` |
 | E5 | ~21:39 | SWE-bench download | — | SWE-bench Lite | **300 task** metadata (12 repo OSS), Docker-gated | `eval/data/swe/` |
 | E6 | ~22:01 (128s) | HE/145 TRACCIATO | vanilla, ours@1, ours@6 | HE/145 | vanilla **PASS**, ours **0/2 FAIL** → diagnosi fissazione | `report-he145-trace.json` + trace |
+| E7 | 2026-07-05 ~02:15 | **headless full-vs-lean** (validazione wiring `slm-scaffolding`) | ours@6 {laneMemoryHintLevel: full, lean} | probe memoria 2-turni (9B `qwen3.5:9b` locale, quota-free) | wiring OK entrambe (pi parte, `set_var`, no crash); **lean ctx-input 6637 vs full 6811** (~174 tok, ~2.5%); 9B ricorda in entrambe (lean T2 richiama entrambi i nomi) | driver `tools/drive-qwen.mjs` |
 
 ## 3. Risultati numerici (con condizioni)
 
