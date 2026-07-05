@@ -110,7 +110,7 @@ Predicati eseguibili (fixture): `median_C.py`, `median_B.py`, `tests_provided.py
 
 ## §4 — Fase curriculum & generazione
 - **Fasi**: F2 (con-hint→senza-hint) → F3 (RL agentico: `O_hidden` + gate girano in verifier-sandbox).
-- **Label-gen** (deterministica, [[../concepts/verification-discipline-training]] §4): `(S,C)` → mutazione `C→B` su edge `e` → `P` = test che passano su B∧C → `O_hidden` = test che uccidono B. Riusabile su qualunque foglia HumanEval/SWE (il mutation-operator è il generatore d'inganno).
+- **Label-gen** (deterministica, [[../concepts/verification-discipline-training]] §4): `(S,C)` → mutazione `C→B` su edge `e` → `P` = test che passano su B∧C → `O_hidden` = test che uccidono B. Riusabile su qualunque foglia HumanEval/SWE (il mutation-operator è il generatore d'inganno). **IMPLEMENTATO+testato**: `harness/verifiers/deceptive-task-gen.mjs` (`generateDeceptiveTasks`, test 7/0) + grader `verification-discipline.mjs` (9/0).
 
 ## Links
 [[../concepts/verification-discipline-training]] · [[area-03-reasoning-scientific-method]] · [[gold-methodology]] · [[../concepts/reward-hacking-mitigation]] · [[../concepts/scientific-method-operating-protocol]] · [[area-16-self-evaluation-critique]] · [[../feedback_institutionalize_lessons_as_rules]]

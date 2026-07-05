@@ -77,6 +77,9 @@ Deterministico e riproducibile (F-harness genera il dato; nessun giudizio umano 
 5. **Discrimination-gate** per il test-modello `T`: `run(T,B)` e `run(T,C)` in sandbox ([[training-taxonomy/area-02-criticality-safety]]/verifier-sandbox).
 > Il *mutation testing* è letteratura solida (i "mutanti" = i `B`); qui lo usiamo al contrario per **costruire l'inganno** e per
 > **misurare la potenza** del test del modello (uccide il mutante?).
+> **IMPLEMENTATO**: `harness/verifiers/deceptive-task-gen.mjs` — `generateDeceptiveTasks({refCorrect, tests})` cerca un mutante `B`
+> (flip di confronto/booleano/aritmetica, per-occorrenza) e **partiziona** la suite in forniti-ingannevoli↔oracolo-nascosto,
+> verificando la deceptiveness **eseguendo Python** (non assunta); il grader è `verifiers/verification-discipline.mjs`. Test 7/0 + 9/0.
 
 ## 5. Classificazione training-vs-harness (regola #11, [[training-vs-harness-classification]])
 
