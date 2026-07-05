@@ -77,6 +77,14 @@ Questo **completa il protocollo §2**: durante l'indagine il modello scrive nell
 ragionamento → libera working-memory), promuove a `<facts>` solo l'esito, pota il resto. È anche ciò che serviva
 all'eviction-checkpoint (salva-prima-che-scrolli) e all'error-memo, oggi frammentati.
 
+> ✅ **COSTRUITO + VALIDATO E2E (2026-07-05, utente msg 1141 "scratch = core tool").** Lane `<scratch>` volatile rolling +
+> tool `jot` (core/essential), `recall_scratch` (core, allunga la finestra), `clear_scratch`. `src/scratch.mjs` (store
+> rolling: display-cap 6, store-cap 30, auto-prune) + `scratchLaneLines` in context-assembler (zona volatile in coda) +
+> namespace `scratch` SILENT (fuori da recent_changes) + awareness `<how_memory_works>` full+lean insegna `note`=durevole vs
+> `jot`=volatile. **Validazione**: unit 22/0, typecheck 0, suite 40/0, **headless 9B** (il modello chiama `jot`, poi rilegge
+> il testo esatto dalla lane `<scratch>` nel payload reale — ground-truth ispezionato in `last-turn-full.md`). Distinto dai
+> `<facts>` durevoli (nessuna contaminazione, testato).
+
 ## 4. keepTurns come "dial" di working-memory (già esiste, va USATO)
 
 `set_keepturns` (model-controlled, [[project_pi_launch_no_context_files|native-window]]) È GIÀ la leva che l'utente descrive
@@ -110,7 +118,7 @@ insegna al modello a fare da sé ciò che oggi scaffoldiamo.
 
 ## 7. Prossimi passi (ordinati)
 1. **Prototipo focus-on-stagnation** (riusa il detector; risposta = enter_focus con aim preset + summary invece del nudge). A/B vs plain vs rung-nudge sui task-fissazione (flash-lite + un modello capace).
-2. **Split note a due layer** (volatile rolling scratchpad + durevole `<facts>`); wiring in context-assembly + slm-scaffolding awareness.
+2. ✅ **FATTO — Split note a due layer** (volatile rolling `<scratch>` via `jot`/`recall_scratch`/`clear_scratch` + durevole `<facts>`); wirato in context-assembly + slm-scaffolding + tool-gating (core). Validato E2E (headless 9B). Vedi §3.
 3. **Golden with/without-hint** dei 4 transfer (utente ha dato l'ok) → training della disciplina assumption-audit.
 4. Situational-table: righe "stagnazione→focus+decomponi" e "stateful→alza keepTurns", ognuna OUTCOME-validata (non hard-coded).
 

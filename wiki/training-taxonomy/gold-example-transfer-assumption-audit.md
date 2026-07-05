@@ -75,5 +75,12 @@ Per **ciascuno** dei 4 task (istanziato sui rispettivi edge):
   deriva altri B da un C dato e partiziona i test in forniti↔oracolo (riusabile su qualunque foglia con un helper).
 - **Held-out**: #145 fuori dal training set → misura il transfer. Aggiungere altri held-out con la stessa logica (un 5°/6° dominio) per irrobustire la stima.
 
+## §5 — Calibrazione VALIDATA girando il modello (F11, 2026-07-05) [EXTRACTED]
+I 4 transfer sono stati girati come task HumanEval su flash-lite (vanilla) per verificare se **riproducono la fissazione** di #145.
+- **Spec espliciti (edge dichiarato): 0/4 cascano** — se lo spec svela l'edge, anche il modello debole lo gestisce → task NON deceptivo. Lezione: la deceptività va **validata**, non assunta.
+- **Spec impliciti (edge derivabile): 1/4 casca** — solo `total_minutes` (midnight-wrap → durata NEGATIVA) fallisce; accenti/arrotondamento/inclusività passano.
+- **Insight [INFERRED]:** l'unico che riproduce #145 è della **STESSA CLASSE aritmetica sign/wrap** (#145 = digit-sum di negativi; total_minutes = wrap → negativo). Il gap #145 è specificamente un **blindspot su edge sign/wrap**, non "helper subdolo" generico.
+- **Raffinamento del set (PROPOSTO, attende ok utente):** privilegiare esempi **same-class sign/wrap** (es. differenza-modulare, saldo che va sotto-zero, indice che va negativo, overflow/underflow, `%` con operandi negativi) invece di edge eterogenei (accenti/inclusività) che non riproducono il blindspot su un modello debole. Gli attuali 4 restano validi come **struttura** (helper-audit) ma solo total_minutes è un probe-di-difficoltà calibrato. Held-out #145 + total_minutes = due probe sign/wrap; aggiungerne 2-3 same-class.
+
 ## Links
 [[gold-example-area03-verification-discipline]] · [[area-03-reasoning-scientific-method]] · [[../concepts/verification-discipline-training]] · [[../concepts/anti-fixation-metacognition-rung]] · [[../concepts/stuck-state-focus-protocol]] · [[gold-methodology]] · [[../feedback_intelligence_gap_to_training_class]]
