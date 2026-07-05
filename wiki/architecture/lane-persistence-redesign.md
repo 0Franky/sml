@@ -41,6 +41,12 @@ L'harness dà al modello memoria OLTRE la finestra nativa iniettando **lane** ne
 
 **Dettaglio di design della cattura deterministica**: salvare un digest **compatto e strutturato** di ogni turno in uscita in una lane **dedicata** (es. `<recall>` / auto-history) **separata** dai `<facts>` curati dal modello → così è **bounded** (cap + ordinamento recency/importance come le altre lane, [[context-pressure-mechanism]]), **auditabile**, e **non inquina** le note del modello. Attenzione a **non doppio-mostrare** i turni più recenti (già nella finestra nativa): il boundary di eviction lo traccia già.
 
+## Aggiornamento F24 (2026-07-06) — il nudge PIÙ forte peggiora; `<last_tool_calls>` è già metà del fix
+
+**Test dell'hint più forte** (utente msg 1245, [[../harness-experiment-log]] F24): allargare il nudge ("salva i tuoi PROGRESSI") **ottiene** il save (F23: 0 → F24: 7) ma **DERAGLIA l'outcome** — a keep1 recall **0%** (vs vecchio-hint 60%) + 844K token, perché il modello **deflette** la probe ("ho salvato tutto in `session_progress`, pronto per il summary") invece di rispondere: **hijack mezzi-fini**. → **il push-via-hint è un vicolo cieco** (insufficiente in F23, dannoso in F24): rafforza la scelta **cattura DETERMINISTICA (#1/#6)** e declassa nudge/inject (#3-parziale).
+
+**`<last_tool_calls>` ESISTE già** (`src/tool-call-log.mjs` + `context-assembly.ts`, "fix amnesia #1" msg 811-817): ring-buffer delle **ultime 8** tool-call con esito, formato `[+Xs][ok] name(args) → result` — è **già** una cattura deterministica della traccia-azioni. Limiti per la recall long-horizon: **(a)** size 8 + **rolling** → sfuma come la finestra nativa; **(b)** include le **memory-op del modello** (note/jot/set_var) → in F24 i 7 salvataggi avrebbero comunque affollato la lane; **(c)** non è **persistente per-task**. → **La cattura deterministica = promuovere `<last_tool_calls>` da ring-buffer volatile a**: **(1) lane FILTRATA** alle azioni vere (write_file/exec/test), escluse le memory-op; **+ (2) digest PERSISTENTE per-task** (una riga durevole per task completato dalla traccia, che NON scorre). Entrambi deterministici, lato-harness, ancorati agli eventi osservati. È il ponte tra l'idea utente (msg 1253) e F24.
+
 ## ⚠️ Le due decisioni che restano a TE
 
 1. **Selettività vs completezza della cattura**: salvare **tutto** l'evicted (completo ma rumoroso/token-pesante) o un **summary selettivo** (compatto ma serve un giudizio di sintesi — un modello cheap/euristica)? È il trade-off principale.
