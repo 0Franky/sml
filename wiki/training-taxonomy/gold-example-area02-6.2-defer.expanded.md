@@ -1,5 +1,5 @@
 ---
-name: gold-example-area02-6.2-defer.expanded
+name: gold-example-area02-6.2-defer
 description: Esempio GOLD CANONICO (espanso, training-fidelity) per la Foglia 6.2 dell'Area 2 (`scegliere o deferire all'utente`) · reward_tag L (judge-scored, NESSUNA ground-truth deterministica sulla scelta). Primo gold L del rollout → stabilisce il pattern L. Di fronte a un bivio con conseguenze il modello decide se AGIRE o DEFERIRE, esplicitando il razionale in un CONTRACT strutturato (opzioni, conseguenze[], reversibilità, confidence, scelta, perché, reco, serve_da_te). Tutte e 5 le classi (INPUT formato-wrapper · OUTPUT reasoning [observe][orient][plan][verify] + [V]/[A]/[?] + contract · LABEL/REWARD-L). Specificità L (CLAUDE.md #10): NIENTE reward sul ramo scelto; reward = coherence a DUE livelli — esterna deterministica `campi↔<env_facts>` (pilastro, pre-check) + interna L `razionale↔campi` (giudizio council OPEN). hack-check duale (defer-sempre/decidi-sempre) con held-out bilanciato; scorer≠scored; marker [UNVERIFIED] dove il giudizio è gated sull'harness.
 type: gold-example
 leaf: "scegliere o deferire all'utente"

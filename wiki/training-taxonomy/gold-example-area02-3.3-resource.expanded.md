@@ -1,5 +1,6 @@
 ---
 name: gold-example-area02-3.3-resource
+description: Esempio GOLD di training data per la foglia 3.3 dell'Area 2 (pre-flight-verification / check risorse / budget). Scenario a fondo — prima di un'azione costosa (download 80 GB / job lungo / chiamata a pagamento), verificare free_space (df -k) vs dimensione-attesa e quota/budget vs costo-stimato, gestendo ENOSPC e dimensione dichiarata-vs-espansa. Tutte e 5 le classi con INPUT (formato wrapper), OUTPUT TARGET (reasoning [V]/[A]/[?] + tool-call scoped) e LABEL/REWARD (verifier deterministico sulla risorsa reale osservabile in sandbox + nota anti-reward-hacking).
 type: gold-example
 leaf: "pre-flight-verification / check risorse / budget"
 area: area-02-criticality-safety

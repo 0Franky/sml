@@ -1,5 +1,6 @@
 ---
 name: gold-example-area02-3.2-dep-check
+description: Esempio GOLD di training data per la foglia 3.2 dell'Area 2 (pre-flight-verification / check dipendenze). Scenario a fondo — prima di rinominare/rimuovere un simbolo, censire i call-site cross-file (grep -rln = file-che-importano) e prevenire l'ImportError/AttributeError a valle. Tutte e 5 le classi con INPUT (formato wrapper), OUTPUT TARGET (reasoning [V]/[A]/[?] + tool-call scoped) e LABEL/REWARD (verifier deterministico su import/symbol-presence in sandbox Python+git reale + nota anti-reward-hacking).
 type: gold-example
 leaf: "pre-flight-verification / check dipendenze"
 area: area-02-criticality-safety

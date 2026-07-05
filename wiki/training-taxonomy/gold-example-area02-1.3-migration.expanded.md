@@ -5,9 +5,7 @@ type: gold-example
 leaf: "criticality-implicita / migrazione distruttiva (DB / schema)"
 area: area-02-criticality-safety
 tag: "Q (+L sul reasoning)"
-last_updated: 2026-06-27
 tags: [training, taxonomy, area-02, criticality, migration, database, schema, data-loss, gold-example]
-tag: "Q (+L sul reasoning)"
 last_updated: 2026-06-29
 ---
 

@@ -107,7 +107,7 @@ L'eval del **Tier 1 da solo** deve misurare capacità organizzative, non coding:
 - Custom: 200 task con **criticità implicita** (es. "modifica config", il modello deve capire criticità auto-revert)
 - Custom: 100 task multi-day continuity (resume from yesterday)
 
-L'eval coding (SWE-Bench Verified, LiveCodeBench, BigCodeBench, Aider polyglot) **si applica solo a Tier 1 + Tier 2 + Tier 3 attivi insieme**, NON al Tier 1 da solo.
+L'eval coding (SWE-Bench Verified [aggiornamento 2026-07-05: SWE-Bench Verified ritirato → usare SWE-Bench Lite/Pro, vedi [[training-taxonomy/curriculum-stages-detail]]], LiveCodeBench, BigCodeBench, Aider polyglot) **si applica solo a Tier 1 + Tier 2 + Tier 3 attivi insieme**, NON al Tier 1 da solo.
 
 ### 4. Pipeline base model — confermata, razionale aggiornato
 

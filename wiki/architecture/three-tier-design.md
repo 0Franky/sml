@@ -93,7 +93,7 @@ User: "Crea un componente React per gestire utenti."
 
 Vedi [[open-questions]] blocco 2 (architettura). In sintesi:
 
-- Base orchestratore: 8-14B (decidere su hardware)
+- Base orchestratore: 8-14B (decidere su hardware) **[superato 2026-07-05 → [[decisions/2026-05-21-base-model-pipeline]]: target 35B-A3B; OQ#5/#6 CHIUSE; Qwen3.5 = Alt-2 rifiutata]**
 - Base verticali: stesso modello o Qwen3-Coder
 - Routing meccanismo: token speciale vs classifier esterno
 - Granularità verticali: stack singolo vs area larga

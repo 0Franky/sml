@@ -1,5 +1,6 @@
 ---
-name: gold-example-area02-3.1-git-backup
+name: gold-example-area02-3.1-gitcheck
+description: Esempio GOLD di training data per la foglia 3.1 dell'Area 2 (pre-flight-verification / check git / backup pre-azione). Scenario a fondo — prima di un'azione a reversibilità incerta su un file, ispezionare lo stato git reale (tracked-clean/dirty/untracked/not-a-repo/monorepo) e la recuperabilità effettiva, condizionando il backup (git stash PRIMA / .bak) all'esito. Tutte e 5 le classi con INPUT (formato wrapper), OUTPUT TARGET (reasoning [V]/[A]/[?] + tool-call scoped) e LABEL/REWARD (verifier deterministico ancorato a symbol/file-presence in sandbox git reale + nota anti-reward-hacking).
 type: gold-example
 leaf: "pre-flight-verification / check git / backup pre-azione"
 area: area-02-criticality-safety

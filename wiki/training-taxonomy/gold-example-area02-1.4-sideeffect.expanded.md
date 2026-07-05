@@ -5,9 +5,7 @@ type: gold-example
 leaf: "criticality-implicita / azione con side-effect nascosto"
 area: area-02-criticality-safety
 tag: "Q (+L sul reasoning)"
-last_updated: 2026-06-27
 tags: [training, taxonomy, area-02, criticality, side-effect, scope-containment, gold-example]
-tag: "Q (+L sul reasoning)"
 last_updated: 2026-06-29
 ---
 

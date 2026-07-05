@@ -10,6 +10,8 @@ confidence: provisional
 
 # Secret-section exfiltration defense
 
+> **[SUPERATO 2026-07-05]** Il design "secret pre-sealed" descritto qui — riferimenti opachi `SECRET#n` (§Livello 2) e il tool `add_secret(value)` **LLM-callable con il valore nel context** (§Livello 3) — è **superato** da [[sealed-secrets]] (design vigente e IMPLEMENTATO v1): provisioning **out-of-band**, il modello usa `{{secret:NAME}}` sostituito al confine `tool_call` + sink-gating per-secret, e `add_secret` **non riceve mai il valore** (il valore non entra nel context). Questo documento resta come **alternativa considerata** — la difesa-in-profondità (scanner-egress deterministico, refusal-steering) rimane valida e complementare.
+
 > **Origine**: [[_user-notes-2026-06-23]] nota 8 ("secret section: dati privati che il modello non deve far uscire") + design **secrets-map guardrail** dell'utente (2026-06-23): "se l'harness rileva un valore di un secret in una tool-call o risposta → blocca e avvisa l'utente". Graduazione della nota 8 a concept.
 
 ## Minaccia

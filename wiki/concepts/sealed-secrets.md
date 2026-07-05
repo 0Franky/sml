@@ -1,13 +1,13 @@
 ---
 name: sealed-secrets
-description: "Gestione secret negli agenti: il VALORE non entra mai nel context del modello (sealed); il modello usa riferimenti {{secret:NAME}} sostituiti al confine del tool, con sink-gating per-secret. 3 vie di provisioning + regex-ingress. Design, non ancora implementato."
+description: "Gestione secret negli agenti: il VALORE non entra mai nel context del modello (sealed); il modello usa riferimenti {{secret:NAME}} sostituiti al confine del tool, con sink-gating per-secret. 3 vie di provisioning + regex-ingress. IMPLEMENTATO v1 (2026-06-30, test 110/110): src/sealed-secrets.mjs + wiring secrets-guardrail.ts (egress) + regex-ingress.ts (ingress)."
 type: concept
-status: design-draft
+status: implemented-v1
 tags: [security, secrets, harness, guardrail, prompt-injection, training-vs-harness]
 sources:
   - TG utente 2026-06-30 msg 577 (secret-vars: modello vede nome/descrizione, non il valore; ask-secret / terminale)
   - TG utente 2026-06-30 msg 578/579 (regex-ingress interception + ask-confirm sui falsi-positivi)
-last_updated: 2026-06-30
+last_updated: 2026-07-05
 ---
 
 # Sealed secrets — secret-reference per agenti

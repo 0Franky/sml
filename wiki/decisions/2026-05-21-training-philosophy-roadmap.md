@@ -133,7 +133,7 @@ Step:
 - AgentBench (organization-relevant subset)
 - τ-Bench (tool use multi-turn)
 - LiveCodeBench v6 (coding baseline)
-- SWE-Bench Verified Lite (sotto baseline tipico ma da quantificare)
+- SWE-Bench Verified Lite [aggiornamento 2026-07-05: SWE-Bench Verified ritirato → usare SWE-Bench Lite/Pro, vedi [[training-taxonomy/curriculum-stages-detail]]] (sotto baseline tipico ma da quantificare)
 - Custom criticality awareness eval (200 task con criticità implicite)
 - Custom needle-in-haystack su context dinamico (validare baseline retrieval)
 

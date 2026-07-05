@@ -17,7 +17,7 @@ sources:
 Misurare **se l'harness (le nostre `.pi/extensions`) migliora, mantiene o regredisce** qualità/tempi rispetto a pi liscio, e **se crea buchi** (conoscenza/timeline) — con un modello ospitato neutro (**gemini-3.1-flash-lite**, NON ancora il nostro SLM). Reward **oggettivo** = test ufficiale del task. Idea utente: A/B pulito dove l'UNICA differenza tra i bracci sono le nostre estensioni di contesto.
 
 - **Braccio vanilla** = `pi --no-extensions` (0 estensioni, pi puro).
-- **Braccio ours** = pi + tutte le 20 `.pi/extensions/*.ts` (context-assembly, nested-compact, native-window, vars-queue, secrets-guardrail, …).
+- **Braccio ours** = pi + tutte le 21 `.pi/extensions/*.ts` (+`slm` dal 2026-07-05) (context-assembly, nested-compact, native-window, vars-queue, secrets-guardrail, …).
 
 ## Architettura (pipeline) [EXTRACTED]
 
@@ -29,7 +29,7 @@ run-ab.mjs (orchestratore, SEQUENZIALE)
      ├─ mkdtemp workdir + state-dir ISOLATI
      ├─ spawn run-one.mjs (worker SDK, 1 processo)   ← isolamento per-run
      │     · provider Gemini NATIVO in-memory
-     │     · braccio: 0 ext (vanilla) | 20 ext (ours)
+     │     · braccio: 0 ext (vanilla) | 21 ext (ours)
      │     · il modello implementa solution.py (write/bash agentico)
      │     · cattura ms/turni/tool/token/hasContext/apiError
      ├─ verify.mjs: grada col test ufficiale HumanEval → PASS/FAIL
@@ -56,7 +56,7 @@ Per run: `passed` (verifier) · `ms` (wall-clock) · `turns` · `toolCalls` · `
 ## Validazione E2E (2026-07-04) [EXTRACTED]
 
 - Worker vanilla: HE/0, 3 turni, write+bash, solution su file, 0 ext, `hasContext=false`. ✓
-- Worker ours@keep6: HE/0, **20 ext**, `hasContext=true`, state-dir isolato (conversations.db nel dir dedicato). ✓
+- Worker ours@keep6: HE/0, **21 ext** (+`slm` dal 2026-07-05), `hasContext=true`, state-dir isolato (conversations.db nel dir dedicato). ✓
 - Verifier oracle: 8/8 (canonical/rotto su 4 task). ✓
 - Orchestratore (3 task × {vanilla, ours@6} = 6 run): pipeline completa, report scritto. ✓
 

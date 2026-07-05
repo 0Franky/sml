@@ -88,7 +88,7 @@ Skippare Step 1, iniziare direttamente cloud.
 - **Step 2 preparation**: budget cloud A100 stimato ~$50-100 per training Tier 1 orchestrator + Tier 2 programming generalist. Sweep iperparametri esclusi (fanno esplodere budget).
 - **Step 3 strategy**: Qwen3.6-35B-A3B richiede framework MoE-friendly (Megatron-Core, OpenRLHF, ms-swift). Stack tooling diverso da Step 1-2 (Unsloth). Da pianificare.
 - **Tokenizer continuity check**: prima di iniziare Step 3, verificare se Qwen3.6 ha tokenizer Qwen3 (151,936) o nuovo. Influenza riusabilità dei dati training preparati negli Step 1-2.
-- **Eval coerente cross-step**: stesso eval suite (SWE-Bench Verified subset, LiveCodeBench v6, BigCodeBench, Aider polyglot) eseguita su ogni Step → numeri confrontabili.
+- **Eval coerente cross-step**: stesso eval suite (SWE-Bench Verified subset [aggiornamento 2026-07-05: SWE-Bench Verified ritirato → usare SWE-Bench Lite/Pro, vedi [[training-taxonomy/curriculum-stages-detail]]], LiveCodeBench v6, BigCodeBench, Aider polyglot) eseguita su ogni Step → numeri confrontabili.
 
 ## Stato
 

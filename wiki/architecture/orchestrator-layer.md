@@ -34,7 +34,7 @@ Il valore principale del progetto vive qui. Il Tier 1 deve eccellere in:
 ## Implementazione
 
 - **Method**: full fine-tuning del modello base (NOT LoRA, NOT prompt-only). Aperto: alternativa con LoRA grande (r=128+) se VRAM non basta.
-- **Base candidates**: Qwen3.5-9B generic, Qwen3-8B, Qwen3-14B (vedi [[open-questions]] #5).
+- **Base candidates**: Qwen3.5-9B generic, Qwen3-8B, Qwen3-14B (vedi [[open-questions]] #5). **[superato 2026-07-05 → [[decisions/2026-05-21-base-model-pipeline]]: target 35B-A3B; OQ#5/#6 CHIUSE; Qwen3.5 = Alt-2 rifiutata]**
 - **Training data needed** (composizione aggiornata, vedi [[../decisions/2026-05-21-vision-clarification]]):
   - **30% Task decomposition + planning multi-step lungo orizzonte** — synthetic da teacher model (Claude/GPT) su task long-horizon + reali da Claude Code transcripts pubblici
   - **20% Safety reasoning + awareness criticità implicite** — synthetic + reali. Esempi: cancellazione file, git operations destructive, DB DROP, shell rm -rf, modifiche a config sensibili. Pattern: dato un task, identifica le criticità implicite + proponi piano sicuro
