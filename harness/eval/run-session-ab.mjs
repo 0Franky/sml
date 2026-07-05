@@ -150,7 +150,7 @@ async function main() {
     const totTurns = perTask.reduce((a, p) => a + (p.turns || 0), 0);
 
     console.log(`pass ${passed}/${graded}${apiErr ? ` (+${apiErr} api-err)` : ""}  · probe recall ${fmt(probe.recall * 100)}% ordine ${fmt(probe.orderScore * 100)}%  · turni ${totTurns} · tok ${res.finalTokens}`);
-    report.configs.push({ label: cfg.label, arm: cfg.arm, keep: cfg.keep, nExt: res.nExt, hasContext: res.hasContext, passed, graded, apiErr, passPct, totTurns, finalTokens: res.finalTokens, probe: { ...probe, turns: res.probe?.turns, apiError: res.probe?.apiError }, probeAnswer: res.probe?.answer, perTask });
+    report.configs.push({ label: cfg.label, arm: cfg.arm, keep: cfg.keep, nExt: res.nExt, hasContext: res.hasContext, passed, graded, apiErr, passPct, totTurns, finalTokens: res.finalTokens, userTurnsRecorded: res.userTurnsRecorded, evictionOrdinal: res.evictionOrdinal, probe: { ...probe, turns: res.probe?.turns, apiError: res.probe?.apiError }, probeAnswer: res.probe?.answer, perTask }); // F22: forwarda le guardie di regressione (userTurnsRecorded/evictionOrdinal) dal worker
 
     if (ci < configs.length - 1) await sleep(DELAY_MS);
   }
