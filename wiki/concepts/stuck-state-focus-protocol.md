@@ -45,6 +45,18 @@ Risposta = **entra in focus** con:
 > un promemoria da eseguire in un contesto diluito. ⚠️ Resta un'IPOTESI da A/B (il modello debole potrebbe comunque non
 > eseguire l'indagine) — ma è una scommessa migliore, e MISURABILE: focus-on-stagnation vs plain sui task-fissazione.
 
+### 2.1 — FORK di design critico: consigliare-focus vs AUTO-entrare-focus
+`enter_focus` è un **tool che chiama il MODELLO** — l'harness non può forzarlo. Quindi due implementazioni, MOLTO diverse:
+- **(a) NUDGE-to-focus**: la stagnazione inietta *"sembri bloccato, considera enter_focus con aim=scomponi"*. ⚠️ **È di nuovo un
+  nudge** → stesso identico fallimento del rung (F9): aggiunge contesto E dipende dal modello debole che *decide di agire* (e non lo fa).
+- **(b) AUTO-ENTER**: la stagnazione fa scattare l'**autofocus deterministico** (già esiste per la pressione, `autofocus:auto`,
+  [[architecture/context-pressure-mechanism]]) → l'harness ENTRA in focus DA SOLO, produce il summary (COMPRIME) e imposta
+  l'aim preset. **Non dipende dal modello che agisce** → è l'unica variante che aggira davvero la debolezza. Più lavoro (wiring
+  detector→autofocus + aim preset + guardia anti-cerimonia), ma è **la sola che può riuscire dove il rung ha fallito**.
+> **Raccomandazione (expert):** prototipare **(b) auto-enter**; (a) è codice morto (equivale al rung refutato). Config: estendere
+> `autofocus` con trigger `stagnation` oltre a `pressure`; l'A/B misura auto-focus-on-stagnation vs plain vs rung-nudge.
+> ⚠️ Rischio da guardare nell'A/B: l'auto-enter potrebbe scattare troppo (ogni debug-loop) → soglia proporzionale + anti-ping-pong (no re-focus immediato dopo pop).
+
 ## 3. Il mismatch NOTE (durevoli vs volatili) — un difetto di design reale [EXTRACTED dal codice]
 
 L'utente (msg 1134): «le note servono per le cose VOLATILI… a fine turno salva nelle note, al più dopo le cancelli; c'è la
