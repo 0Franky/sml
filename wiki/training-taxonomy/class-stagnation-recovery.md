@@ -10,6 +10,7 @@ last_updated: 2026-07-05
 
 > **Stato**: APPROVATA dall'utente (regola #18, msg 1168, 2026-07-05) con struttura **padre + specializzazioni** (msg 1168: "mettile sotto stessa categoria padre e sotto specializzale").
 > **Origine**: modo-di-fallimento REALE di #145 (F14, [[../harness-experiment-log]]) — il modello **rileva l'anomalia ma non la risolve e abbandona** (`pass` vuoto dopo 17 turni di thrashing). Vedi [[../concepts/stuck-state-focus-protocol]], [[class-sign-wrap-blindspot]], [[../feedback_intelligence_gap_to_training_class]].
+> **Padre**: [[class-metacognitive-self-audit]] — questa è l'**audit del PROGRESSO** (regola #20). È a sua volta padre delle proprie specializzazioni A/B → esempio di specializzazione ricorsiva.
 
 ## 0 — La skill-RADICE (livello padre)
 

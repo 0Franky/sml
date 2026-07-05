@@ -10,7 +10,7 @@ last_updated: 2026-07-05
 
 > **Stato**: PROPOSTA via regola #18 (utente msg 1177, 2026-07-05: *"le analisi di causa-azione e azione-conseguenza e vedere se le conseguenze vanno in conflitto con l'intenzione … il pre-flight che in realtà è controproducente, vorrei impedire questo"*). In attesa di conferma struttura.
 > **Origine**: modo-di-fallimento REALE **mio, in questa sessione** (non del modello-sotto-test — ma è la STESSA classe di gap): ho costruito un **pre-flight** che pinga le chiavi per *risparmiare* quota, ma i ping SONO richieste extra che *bruciano* quota/RPM → la conseguenza dell'azione contraddice la sua intenzione. Auto-sconfiggente.
-> **Famiglia**: audit del proprio ragionamento — [[class-stagnation-recovery]] (audit del *progresso*), [[gold-example-transfer-assumption-audit]] / #145 (audit delle *assunzioni*), questa (audit della *coerenza mezzi-fini*). Vedi [[../feedback_intelligence_gap_to_training_class]].
+> **Padre**: [[class-metacognitive-self-audit]] (regola #20 — gerarchia obbligatoria). **Sorelle**: [[class-stagnation-recovery]] (audit del *progresso*), [[gold-example-transfer-assumption-audit]] / #145 (audit delle *assunzioni*); questa è l'audit della *coerenza mezzi-fini*. Vedi [[../feedback_intelligence_gap_to_training_class]].
 
 ## Il gap
 

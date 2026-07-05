@@ -14,6 +14,8 @@ sources:
 
 # Gold — assumption-auditing sotto stagnazione (4 transfer, #145 held-out) · Area 3 · Tag Q
 
+> **Padre**: [[class-metacognitive-self-audit]] — questa è l'**audit delle ASSUNZIONI** (regola #20 — gerarchia obbligatoria). **Sorelle**: [[class-stagnation-recovery]] (progresso), [[class-consequence-intention-conflict]] (coerenza mezzi-fini).
+
 > Segue [[gold-methodology]]. Fixture eseguibili: `harness/verifiers/transfer-assumption-audit.mjs` (grader
 > `verification-discipline.mjs`, test 17/0 — provati eseguendo Python: forniti insufficienti + oracolo sound + reward coerente).
 
