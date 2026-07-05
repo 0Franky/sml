@@ -108,11 +108,11 @@ export default function (pi: ExtensionAPI) {
     async execute(_toolCallId: string, params: any) {
       const key = String(params.id ?? params.name ?? "").trim();
       if (!key) {
-        return { content: [{ type: "text", text: "get_var needs an id (the variable's key). Pass id (or name) = the exact key you used with set_var; existing keys are listed in the <vars> lane." }], details: { ok: false, found: false } };
+        return { content: [{ type: "text", text: "get_var needs an id (the variable's key). Pass id (or name) = the exact key you used with set_var. To list EVERY saved variable, call get_shared_view; existing keys are also shown in the <vars> lane." }], details: { ok: false, found: false } };
       }
       const v = vq.getVar(key);
       if (v == null) {
-        return { content: [{ type: "text", text: `No variable '${key}'. Check the exact key in the <vars> lane. If '${key}' is a SECRET, secrets are NOT variables — use list_secrets or preview_secret_use. If it is a durable FACT, read the <facts> lane (managed with note/remove_note).` }], details: { ok: false, found: false } };
+        return { content: [{ type: "text", text: `No variable '${key}'. To see EVERY saved variable, call get_shared_view. If '${key}' is a durable FACT (something you saved with note), it is ALREADY shown in the <facts> lane above — read it there, do NOT guess or invent a value. If '${key}' is a SECRET, secrets are NOT variables — use list_secrets or preview_secret_use.` }], details: { ok: false, found: false } };
       }
       return { content: [{ type: "text", text: JSON.stringify(v) }], details: { ok: true, found: true } };
     },
