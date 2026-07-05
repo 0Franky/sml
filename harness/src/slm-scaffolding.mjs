@@ -34,7 +34,8 @@ What SCROLLS OUT — save what must last (new environment: nobody told you these
   · GOOD: note("The user asked me to call myself 'Alfred' and to address them as 'Luna'.", key="identities")  — a complete statement (who / what / still clear in a month).
   · a FACT to RE-READ later (a name/nickname, a preference, a decision, a promise) → note("<a full self-contained sentence>", key="<short-id>"): it appears in <facts> and survives the rolling window AND the compact. note again with the same key to update; remove_note to drop.
   · a structured VALUE you will interpolate or compute on (a token id, a count, a path) → set_var (shows in <vars>, read back with get_var). Even here, name the key so a stranger gets it: 'discord_client_id', not 'x'.
-- The chat window forgets; your saved facts (<facts>) and variables (<vars>) do not.
+  · a VOLATILE working note (what you're doing / tried / what failed and why — mid-task thinking you don't need to keep) → jot("<a full sentence>"): it appears in <scratch>, a ROLLING window (recent shown, older fade — recall_scratch to pull more, clear_scratch to reset). Use it as a scratchpad to externalise your reasoning cheaply; promote to note() only the few things that must LAST. note = durable <facts>; jot = throwaway <scratch>.
+- The chat window forgets; your saved facts (<facts>) and variables (<vars>) do not — and <scratch> keeps your recent working notes (rolling) so mid-task thoughts aren't lost between turns.
 The lanes are the ground truth about this conversation — trust them over any impression that the chat looks empty.
 </how_memory_works>
 `;
@@ -43,7 +44,7 @@ The lanes are the ground truth about this conversation — trust them over any i
 /** <how_memory_works> SNELLO (utente msg 1067) — solo l'essenziale load-bearing, niente checklist/hand-holding. */
 function leanAwareness() {
   return `<how_memory_works note="how you remember here">
-Your earlier turns are NOT in the chat array — they are kept in the <context> lanes below, which ARE your memory: <messages_with_user> = the dialogue so far (the user's messages and your replies), <last_tool_calls> = your past actions, <task_list>/<current_aim>/<vars> = your working state. A lane that isn't shown is empty. TIME: each line has a [+Xs] shift (seconds since session start, header has the absolute start) — the shifts, not the line order, are the authoritative timeline. Before something scrolls out of the rolling <messages_with_user> window, save it self-contained: note("<a full sentence>", key) for a durable fact, set_var for a structured value. Answer ONLY from what the lanes actually contain; if it isn't there, say so — never invent it.
+Your earlier turns are NOT in the chat array — they are kept in the <context> lanes below, which ARE your memory: <messages_with_user> = the dialogue so far (the user's messages and your replies), <last_tool_calls> = your past actions, <task_list>/<current_aim>/<vars> = your working state. A lane that isn't shown is empty. TIME: each line has a [+Xs] shift (seconds since session start, header has the absolute start) — the shifts, not the line order, are the authoritative timeline. Before something scrolls out of the rolling <messages_with_user> window, save it self-contained: note("<a full sentence>", key) for a durable fact, set_var for a structured value, jot("<a full sentence>") for a VOLATILE working note (appears in <scratch>, rolling — recent shown, old fade). Answer ONLY from what the lanes actually contain; if it isn't there, say so — never invent it.
 </how_memory_works>
 `;
 }

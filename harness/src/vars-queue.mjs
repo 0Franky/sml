@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS focus_frames (
  * (recall on-demand con includeSilent) ma NON compaiono in `recent_changes` del <context> → una nota/memo
  * non inquina il contesto finché non è esplicitamente richiamata. (fix 2026-06-29, finding test-suite.)
  */
-const SILENT_NAMESPACES = new Set(["memo", "fact"]);
+const SILENT_NAMESPACES = new Set(["memo", "fact", "scratch"]);
 
 /**
  * Colonne aggiunte a tabelle ESISTENTI dopo la creazione iniziale → vanno ADD-ate via _ensureColumn sui DB su

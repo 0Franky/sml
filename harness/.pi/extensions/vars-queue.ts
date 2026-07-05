@@ -16,6 +16,7 @@ import { getVarsQueue, closeAll } from "../../src/state-db.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { GATHER_TOKEN_META } from "../../src/meta-keys.mjs"; // SSOT chiave gather (reader in nested-compact.mjs)
 import { setKeepTurnsOverride, KEEPTURNS_MAX } from "../../src/keepturns.mjs"; // keepTurns model-controlled (msg 1062)
+import { jotScratch, recallScratch, clearScratch } from "../../src/scratch.mjs"; // scratchpad VOLATILE rolling (<scratch>, msg 1134)
 
 const HARNESS_CFG = loadHarnessConfig(); // per gathering.mode (write del token solo in require-mode)
 
@@ -160,6 +161,52 @@ export default function (pi: ExtensionAPI) {
       if (!key) return { content: [{ type: "text", text: "Provide the fact key to remove." }], details: { ok: false } };
       const removed = vq.removeVar(`fact:${key}`, { who: activeWho() });
       return { content: [{ type: "text", text: removed ? `Removed fact '${key}'.` : `No fact '${key}' found (nothing removed).` }], details: { ok: removed } };
+    },
+  });
+
+  // jot / recall_scratch / clear_scratch — note VOLATILI rolling (namespace 'scratch'), DISTINTE dai <facts> durevoli
+  // (utente msg 1134): lo scratchpad dell'indagine in corso. jot appende → appare in <scratch> (finestra rolling: le
+  // più recenti visibili, le vecchie sfumano); recall_scratch allunga la finestra on-demand; clear_scratch resetta.
+  // Awareness in <how_memory_works>: fatto DUREVOLE → note · nota VOLATILE del lavoro-in-corso → jot.
+  pi.registerTool({
+    name: "jot",
+    label: "Jot a volatile working note",
+    description:
+      "Jot a VOLATILE working note — what you're doing, what you tried, what failed and why. It appears in the <scratch> lane, a ROLLING window: the most recent are always shown, older ones fade out (recall_scratch to pull older, clear_scratch to reset). Use jot at end of a step to externalise your working memory so it survives the rolling chat window WITHOUT bloating durable memory. For a fact you must KEEP (a name, a decision, a preference) use note instead — that goes to <facts> and is permanent.",
+    parameters: Type.Object({
+      text: Type.String({ description: "The working note, in a few words (what you're doing / tried / found)." }),
+    }),
+    async execute(_t: string, p: any) {
+      const text = String(p?.text ?? "").replace(/\s+/g, " ").trim();
+      if (!text) return { content: [{ type: "text", text: "Provide a non-empty note text." }], details: { ok: false, key: "", pruned: 0 } };
+      const key = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`; // unico per jot (append-log volatile)
+      const { pruned } = jotScratch(vq, text, { key });
+      return { content: [{ type: "text", text: `Jotted to <scratch>: ${text}${pruned ? ` (${pruned} oldest rolled off)` : ""}. It's a VOLATILE note (rolling); use note() instead for a durable fact.` }], details: { ok: true, key, pruned } };
+    },
+  });
+
+  pi.registerTool({
+    name: "recall_scratch",
+    label: "Recall older scratch notes",
+    description: "Widen the <scratch> window: return your most recent volatile notes (default 20, newest first), including ones that rolled off the lane. Use it when you need to see more of your working notes than the lane shows.",
+    parameters: Type.Object({ limit: Type.Optional(Type.Integer({ description: "How many recent notes to return (default 20)." })) }),
+    async execute(_t: string, p: any) {
+      const limit = Number.isFinite(p?.limit) ? Math.trunc(p.limit) : 20;
+      const items = recallScratch(vq, { limit });
+      if (!items.length) return { content: [{ type: "text", text: "No scratch notes yet. Use jot to add one." }], details: { ok: true, count: 0 } };
+      const body = items.map((s, i) => `${i + 1}. ${s.text}`).join("\n");
+      return { content: [{ type: "text", text: `${items.length} scratch note(s), newest first:\n${body}` }], details: { ok: true, count: items.length } };
+    },
+  });
+
+  pi.registerTool({
+    name: "clear_scratch",
+    label: "Clear scratch notes",
+    description: "Remove ALL your volatile scratch notes (the <scratch> lane). Use it when the working notes are stale and you want a clean slate. Does NOT touch durable <facts> (those are managed with note/remove_note).",
+    parameters: Type.Object({}),
+    async execute(_t: string, _p: any) {
+      const n = clearScratch(vq);
+      return { content: [{ type: "text", text: `Cleared ${n} scratch note(s). <facts> are untouched.` }], details: { ok: true, cleared: n } };
     },
   });
 

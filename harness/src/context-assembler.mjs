@@ -17,6 +17,7 @@
 
 import { buildMessagesLane } from "./conversation-store.mjs";
 import { DEFAULT_MESSAGES_WINDOW_N } from "./lane-defaults.mjs"; // SSOT finestra lane messaggi (buildWorkspace)
+import { listScratch, DEFAULT_MAX_SCRATCH } from "./scratch.mjs"; // SSOT scratchpad VOLATILE rolling (<scratch>)
 
 // Display-cap delle lane (context-section-sizing): quante entry mostrare per lane prima del marker "+N nascosti".
 // Nominati una volta (audit SSOT/DRY 2026-07-04, CLAUDE.md #16): erano 4 literal `12` sparsi + un `?? 12` ridondante.
@@ -161,6 +162,27 @@ export function factsLaneLines(vq, { maxFacts = DEFAULT_MAX_FACTS } = {}) {
 }
 
 /**
+ * scratchLaneLines — righe della lane <scratch> (note VOLATILI rolling, namespace 'scratch', tool `jot`).
+ * DISTINTA da <facts> (durevole): qui si mostra la finestra ROLLING delle più RECENTI (cap display), newest-first;
+ * le più vecchie **rollano via** (potate dallo store o oltre il cap) → è lo scratchpad dell'indagine, non memoria
+ * permanente (utente msg 1134, [[concepts/stuck-state-focus-protocol]] §3). Volatile → sta in coda (zona non-cacheata).
+ * Un cap superato NON scarta in silenzio: segnala "+N older, recall_scratch/clear_scratch". [] se non ci sono note.
+ * @param {import("./vars-queue.mjs").VarsQueue} vq
+ * @param {{ maxScratch?: number }} [opts]
+ * @returns {string[]}
+ */
+export function scratchLaneLines(vq, { maxScratch = DEFAULT_MAX_SCRATCH } = {}) {
+  const all = listScratch(vq); // recenti prima
+  if (!all.length) return [];
+  const shown = all.slice(0, maxScratch);
+  const lines = ["  <scratch>"];
+  for (const s of shown) lines.push(`    - ${esc(s.text)}`);
+  if (all.length > shown.length) lines.push(`    - (+${all.length - shown.length} older, rolling off — recall_scratch to see more, clear_scratch to reset)`);
+  lines.push("  </scratch>");
+  return lines;
+}
+
+/**
  * @param {import("./vars-queue.mjs").VarsQueue} vq
  * @param {{ sinceMs?: number, maxChanges?: number, includePrivateVars?: boolean, now?: number, maxFacts?: number }} [opts]
  *        sinceMs: epoch ms da cui mostrare i change recenti (default: ultimi 15 min relativi a `now`).
@@ -296,6 +318,10 @@ export function assembleContext(vq, opts = {}) {
     if (changesPlus.length > changes.length) lines.push(`    - (+other older changes or beyond the window — use get_changelog for the full history)`);
     lines.push("  </recent_changes>");
   }
+
+  // --- scratch (note VOLATILI rolling, namespace 'scratch', tool `jot`) — zona VOLATILE in coda (churn per-turno,
+  //     fuori dal prefisso cacheato). Rolling: le più recenti visibili, le vecchie rollano via. Distinta da <facts>. ---
+  for (const l of scratchLaneLines(vq, { maxScratch: opts.maxScratch })) lines.push(l);
 
   // --- notes/memo: ESCLUSE dal flusso (silent) per non inquinare → ma SEGNALA che esistono, altrimenti
   //     il modello non sa di poterle richiamare. (memo namespace = convenzione condivisa con error-memo.) ---
