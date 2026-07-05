@@ -25,12 +25,18 @@ last_updated: 2026-06-30
 - [x] **5. `set_keepturns` model-controlled** (msg 1062) ✅ **FATTO + E2E-VALIDATO**: `src/keepturns.mjs` (SSOT `getEffectiveKeepTurns`/`setKeepTurnsOverride`, cap 20, override in meta) + native-window legge il valore EFFETTIVO **per-turno** (fail-safe al default) + tool `set_keepturns` (awareness del tradeoff nella description, on-demand anti-H6) + registrato in `tool-gating` (categoria focus + **essenziale**). **Bug di wiring scoperto SOLO dal driver+DB** (unit verdi 13/0 lo nascondevano, [[feedback_handoff_validation_gate]]): tool gated→irraggiungibile + schema Integer-stretto rifiutava `"12"`; fix = essenziale + `Union[Integer,String]`. E2E: override persiste, `effective=12`. +test keepturns 13/0 +tool-gating (classifyToolError WIP utente ora testato, set_keepturns cat/essenziale) 47/0. Suite 33/0, typecheck 0. **RESTA v2**: auto-revert turn-counted (ora reminder solo at-set-time).
 
 **🔵 DA VALIDARE (quando riprende l'eval, n≥5):**
-- [ ] H6 su HE/145 ×5/braccio (gap ours-vs-vanilla significativo o rumore?) — [[harness-experiment-log]] §7.
+- [x] H6 ×n≥5 ✅ **FATTO (E10, n=10 su hard10)**: gap REALE non rumore (full 70% < vanilla 80%; lean recupera 80%). — [[harness-benchmark-versions]].
 - [ ] Situational table ([[concepts/anti-fixation-metacognition-rung]]): ogni riga outcome-validata, non hard-coded.
 - [ ] Rung anti-fissazione: prototipo + A/B vs harness-plain sui task-fissazione.
-- [ ] Modo-2 full long-horizon {vanilla, ours@1, ours@8}.
-- [ ] **`/graphify --update`** (maintenance, regola #7/#12): dopo la lane 2026-07-05 (nuovi `keepturns.mjs`/`context-invariants.mjs`/`slm.ts` + ADR aggiornato) il grafo è disallineato. Op costosa (~170K tok) → tracciata, non lanciata in-lane; lanciare quando conviene.
-- [ ] **A/B full-vs-lean n≥5** (confermare H6 direzionale E8+E9): `EVAL_DATASET=eval/data/humaneval-hard.jsonl EVAL_ARMS=ours EVAL_KEEPS=6 [HARNESS_LANE_MEMORY_HINT_LEVEL=lean] node eval/run-ab.mjs` ×5. Solo dopo n≥5 valutare il cambio default full→lean.
+- [~] Modo-2 long-horizon {vanilla, ours@1, ours@6}: run 2026-07-05 **INVALIDO** (rate-limit free, sessioni ~200K tok, probe api-errata) → **re-run SPAZIATO in corso** (30s/task, `bxx6n8zvo`). Aggiungere {ours@8}. [[harness-benchmark-versions]] §Modo-2.
+- [ ] **`/graphify --update`** (maintenance, regola #7/#12): dopo la lane 2026-07-05 (nuovi `keepturns.mjs`/`context-invariants.mjs`/`slm.ts`/`context-invariants` + `tool-reachability.test` + turn-trace-fidelity + `harness-benchmark-versions.md` + regola #17 + ADR aggiornato) il grafo è disallineato. Op costosa (~170K tok) → tracciata, non lanciata in-lane; lanciare quando conviene.
+- [x] **A/B full-vs-lean n≥5** ✅ **FATTO (E10, n=10)**: `humaneval-hard10` → vanilla 80%, ours-full 70%, ours-lean 80% (lean −16% tok). **H6 confermato**: full peggiora su hard, lean recupera. Orchestratore `eval/run-versioned.mjs`, tabella+changelog [[harness-benchmark-versions]]. → next: V3 scaffolding=off + valutare cambio default full→lean su hard.
+
+**🟢 BUILD 2026-07-05 (lane msg 1103/1105/1108 — autonomo, committato):**
+- [x] **Point-1** regola #17 (lezione→regola/test/meccanismo, mai solo acknowledgment) + wiring-test `tool-reachability` (scanct i 50 registerTool reali) + fix `note`/`remove_note` gated (bug latente classe-`set_keepturns`, trovato dal test). Suite 42/0. Commit `9447c63`.
+- [x] **Point-2** fedeltà debug turn-trace: `last-turn-raw.json` = ESATTAMENTE ciò che vede il modello (0 nomi-tag iniettati) + header .md senza literal-tag (fix falso-positivo che depistò la diagnosi). `buildRawDump`/`buildFullMd` pure+testate (43/0), typecheck 0. Commit `17fe33c`.
+- [x] **Point-4** benchmark versionato + **changelog per-versione** (composizione 21 estensioni + diff specifico, msg 1108/1109): [[harness-benchmark-versions]]. Modo-1 n=10 fatto; Modo-2 re-run spaziato in corso.
+- [~] **Point-3** training set anti-inganno (implementa→scrivi-NUOVI-test→testa-live→POI delibera; se salti la verifica e passi solo i test esistenti = **penalizzato sull'outcome**, non sulla cerimonia). Concept + gold example nella training-taxonomy. **IN CORSO**.
 
 ## ✅ P0 BUG (2026-07-04, VERIFICATO + FIXATO + VALIDATO) — store SQLite perdevano turni per contesa concorrente → amnesia
 
