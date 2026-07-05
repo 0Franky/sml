@@ -26,6 +26,7 @@ import { fileURLToPath } from "node:url";
 import {
   AuthStorage, ModelRegistry, createAgentSession, DefaultResourceLoader, SessionManager,
 } from "@earendil-works/pi-coding-agent";
+import { loadGeminiKeys, pickKey } from "./gemini-keys.mjs"; // SSOT multi-key (rule #16): rotazione per-config via EVAL_KEY_INDEX
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const HARNESS = resolve(__dirname, "..");
@@ -45,11 +46,12 @@ if (process.env.EVAL_N) tasks = tasks.slice(0, Math.max(1, parseInt(process.env.
 const N = tasks.length;
 
 function loadKey() {
-  for (const l of readFileSync(ENV_PATH, "utf8").split(/\r?\n/)) {
-    const m = l.match(/^\s*GEMINI_API_KEY\s*=\s*(.+?)\s*$/);
-    if (m) return m[1].replace(/^["']|["']$/g, "");
-  }
-  throw new Error("GEMINI_API_KEY assente in harness/.env");
+  // Multi-key SSOT: legge GEMINI_API_KEYS (comma-sep) o fallback GEMINI_API_KEY, poi seleziona per EVAL_KEY_INDEX
+  // (settato dall'orchestratore run-session-ab per isolare ogni config su una chiave diversa → no contesa/quota).
+  const keys = loadGeminiKeys();
+  if (!keys.length) throw new Error("GEMINI_API_KEY(S) assente in harness/.env");
+  const idx = Number.parseInt(process.env.EVAL_KEY_INDEX ?? "0", 10) || 0;
+  return pickKey(keys, idx);
 }
 function makeHeadlessUI() {
   return {

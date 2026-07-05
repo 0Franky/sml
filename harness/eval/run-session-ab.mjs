@@ -11,6 +11,7 @@
  * Uso (cwd=harness/):  node eval/run-session-ab.mjs
  */
 import { spawnSync } from "node:child_process";
+import { loadGeminiKeys } from "./gemini-keys.mjs"; // SSOT multi-key: 1 chiave per config (no contesa quota nelle sessioni lunghe)
 import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { tmpdir } from "node:os";
@@ -20,6 +21,8 @@ import { gradeHumanEval } from "./verify.mjs";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const HARNESS = resolve(__dirname, "..");
 const WORKER = join(__dirname, "run-session.mjs");
+const NKEYS = Math.max(1, loadGeminiKeys().length); // quante chiavi disponibili per la rotazione per-config
+let keyCursor = 0;
 
 // path ASSOLUTO: il worker gira in un tempdir isolato (cwd≠harness) → un path relativo non risolverebbe lì.
 const TASKS_FILE = resolve(process.env.EVAL_TASKS_FILE || join(__dirname, "data", "humaneval-6.jsonl"));
@@ -52,6 +55,7 @@ function parseWorkerOutput(stdout) {
 function runConfig(cfg) {
   const workdir = mkdtempSync(join(tmpdir(), `eval-sess-${cfg.label.replace(/[^a-z0-9]/gi, "")}-`));
   const env = { ...process.env, EVAL_ARM: cfg.arm, EVAL_WORKDIR: workdir, EVAL_TASKS_FILE: TASKS_FILE, EVAL_N: String(N), MODEL_ID };
+  env.EVAL_KEY_INDEX = String(keyCursor++ % NKEYS); // ogni config (sessione lunga) su una chiave dedicata
   if (cfg.arm === "ours") {
     env.HARNESS_STATE_DIR = join(workdir, "_state");
     mkdirSync(env.HARNESS_STATE_DIR, { recursive: true });
