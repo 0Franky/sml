@@ -30,15 +30,34 @@ Regola pratica: *"la cura costa più della malattia?"* / *"questa azione, come s
 
 Il **pre-flight** di questa sessione (intenzione: risparmiare quota evitando la chiave morta → conseguenza: N ping = richieste extra che bruciano quota/RPM = *proprio ciò che voleva evitare*). Tenuto come **held-out**: se il modello impara la skill deve segnalare questo caso via transfer, non per averlo memorizzato ([[../feedback_intelligence_gap_to_training_class]], decontaminazione msg 1125).
 
-## Transfer examples (domini DIVERSI, stessa logica — questi vanno nel training)
+## Transfer examples (domini DIVERSI — OBBLIGATORIO cross-campo, NON solo informatica)
 
-Ogni task presenta un obiettivo + un'azione *plausibile* con una conseguenza-auto-sconfiggente nascosta; l'oracolo misura se la soluzione scelta **raggiunge davvero l'obiettivo senza innescare la conseguenza**:
+> **Regola di generalizzazione** (utente msg 1186, CLAUDE.md #19): il transfer set NON deve concentrarsi in un'area (men che meno solo software) — altrimenti il modello impara "pensiero critico = cosa del codice" e **localizza** la skill invece di generalizzarla ("cosa che non deve assolutamente avvenire"). Deve spaziare **domini lontani/opposti + vita quotidiana + complessità variabile** (banale→sistemica). La classe è intrinsecamente cross-dominio: in economia/policy si chiama **perverse incentive** / **Cobra effect**.
 
+Ogni task presenta un obiettivo + un'azione *plausibile* con una conseguenza-auto-sconfiggente nascosta; l'oracolo misura se la soluzione scelta **raggiunge davvero l'obiettivo senza innescare la conseguenza**.
+
+### A — Software/sistemi (dove è nato il gap)
 1. **Retry per affidabilità → retry-storm**: aggiungere retry aggressivi per "aumentare l'affidabilità" durante un guasto amplifica il carico e **peggiora** il guasto (cascading failure). Intenzione: affidabilità → conseguenza: meno affidabilità. Fix coerente: backoff+jitter+circuit-breaker.
 2. **Rate-limiter che interroga uno store condiviso per-richiesta**: per "ridurre il carico" sul servizio, un limiter che legge un contatore su Redis a OGNI richiesta **aggiunge** il carico che doveva togliere. Intenzione: meno carico → conseguenza: più carico. Fix: token-bucket locale/in-memory.
 3. **Cache per velocizzare, ma l'invalidazione costa più del risparmio**: cache-are valori che cambiano a ogni scrittura → l'overhead di invalidazione/coerenza supera il risparmio di lettura. Intenzione: più veloce → conseguenza: più lento. Fix: non cache-are (o TTL/scope adeguati).
 4. **Lock per prevenire una race → deadlock**: prendere due lock in ordine incoerente per "garantire la correttezza" introduce un deadlock che blocca tutto. Intenzione: correttezza → conseguenza: hang. Fix: lock-ordering/lock-free.
 5. **Compressione per risparmiare banda su payload minuscoli**: comprimere risposte da pochi byte → la CPU+overhead-header superano il risparmio di trasferimento (a volte il payload *cresce*). Intenzione: meno banda → conseguenza: più costo/latenza. Fix: soglia di dimensione minima.
+
+### B — Vita quotidiana (scelte basilari)
+6. **Scorciatoia per arrivare prima**: prendere la strada "più corta" ma piena di semafori/traffico → ci metti di più. Intenzione: risparmiare tempo → conseguenza: più tempo. Fix: valutare il tempo reale, non la distanza.
+7. **Fare scorta per risparmiare**: comprare all'ingrosso cibo deperibile che scade prima di consumarlo → lo butti = spendi di più. Intenzione: risparmiare → conseguenza: spreco/più spesa. Fix: comprare per consumo reale.
+8. **Caffè la sera per rendere di più**: saltare il sonno per lavorare → il giorno dopo rendi meno del tempo "guadagnato". Intenzione: più produttività → conseguenza: meno produttività netta.
+9. **Urlare per far smettere di piangere**: alzare la voce con un bambino agitato → piange di più. Intenzione: calmare → conseguenza: agitare. Fix: abbassare i toni.
+10. **Rimandare la piccola riparazione**: ignorare la perdita d'acqua/il dente per "risparmiare ora" → danno grosso e costoso dopo. Intenzione: risparmiare → conseguenza: costo maggiore.
+
+### C — Scelte complesse cross-dominio (policy · ecologia · salute · business · economia)
+11. **Cobra effect (canonico, India coloniale)**: taglia sui cobra per ridurne il numero → la gente li alleva per l'incentivo → più cobra alla fine della taglia. Intenzione: meno cobra → conseguenza: più cobra. È il NOME storico di questa classe.
+12. **Rent control (policy/economia)**: tetto agli affitti per rendere le case accessibili → crolla l'offerta in affitto → scarsità e prezzi peggiori per chi cerca casa. Intenzione: accessibilità → conseguenza: meno case accessibili.
+13. **Specie introdotta (ecologia)**: importare un predatore (rospo delle canne in Australia) per controllare un parassita → il predatore diventa un'infestazione peggiore. Intenzione: controllo → conseguenza: danno maggiore.
+14. **Tagliare manutenzione/formazione per il profitto trimestrale (business)**: massimizzare l'utile a breve → guasti e turnover che costano di più a medio termine. Intenzione: più profitto → conseguenza: meno profitto.
+15. **Incentivo a prestazione in sanità**: pagare per numero di prestazioni per aumentare l'accesso → sovra-trattamento, costi e danni al paziente. Intenzione: più cure → conseguenza: cure peggiori/più costose.
+
+> Dal banale (scorciatoia) al sistemico (rent control) la **logica astratta è identica** — è QUESTO che il modello deve imparare, non il dominio.
 
 ## Reward (ANCORATO all'OUTCOME)
 
