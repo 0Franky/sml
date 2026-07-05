@@ -10,6 +10,8 @@ sources:
   - https://aimultiple.com/free-cloud-gpu
   - https://www.thundercompute.com/blog/free-cloud-gpu-credits
   - https://grantedai.com/blog/ai-compute-grants-gpu-credits-guide
+  - https://www.runpod.io/articles/guides/how-to-fine-tune-large-language-models-on-a-budget
+  - https://www.kaggle.com/product-announcements/607202
 ---
 
 # Compute gratuito / a-credito per il training
@@ -46,6 +48,26 @@ sources:
 3. **⚠️ Verificare l'eleggibilità (regola #22, non assumere)**: siamo **incorporati**? Abbiamo un **sito**? Siamo **VC-backed**? Questi gate decidono l'accesso ai programmi grossi. Inception ha la barra più bassa → primo da provare.
 
 **Onestà**: i free-tier senza carta (16–32GB) **non** addestrano il 27B in full-FT — solo LoRA su piccoli / QLoRA borderline. Il training del 27B **richiede** i programmi a-credito (Inception DGX / cloud credits). Piano realistico: **free-tier per il 4B + dev · programmi-credito per il 27B**.
+
+## Strategia operativa — Kaggle definisce la procedura, Inception scala (decisa 2026-07-06, msg 1247)
+
+**Decisione utente**: sviluppare e validare l'INTERA procedura di training su **Kaggle** col **modello più grande addestrabile lì**, poi — a procedura definita — scalare al **27B su NVIDIA Inception**.
+
+**Capacità Kaggle reale (verificata):**
+- QLoRA **4B** ≈ 15GB VRAM → sta su **1 sola T4**.
+- **7B** 4-bit → comodo su T4 16GB.
+- **13–14B** QLoRA → ci sta con **quantizzazione aggressiva + gestione attenta VRAM/RAM** su 2×T4 (32GB).
+- **Pratico più grande**: ~**14B in QLoRA** (7–9B = margine comodo). La TPU v5e-8 può spingere oltre ma con più engineering (JAX/PyTorch-XLA).
+- → **Target Kaggle: 9B QLoRA** (comodo, rappresentativo), con **14B come stretch**.
+
+**⚠️ Caveat ONESTO (critica oggettiva [[../feedback_objective_critique]]):**
+- Su Kaggle si fa **QLoRA/LoRA**, NON **full-FT**. Il nostro Tier-1 è deciso **full-FT** ([[../../MEMORY|project_training_approach_decided]] Default D) → su Kaggle il Tier-1 si può solo **prototipare in QLoRA** per DEFINIRE la procedura (dati, curriculum, eval, decontaminazione, harness-integration, LoRA-stacking Tier 2/3), NON per il training finale.
+- **Dinamiche full-FT ≠ QLoRA** (LR, capacità, catastrophic-forgetting [[catastrophic-forgetting]]) → gli iperparametri vanno **ri-tarati a scala** su Inception. Kaggle valida la **PIPELINE**, non i valori finali del full-FT.
+- **Limiti sessione** (30h/sett, 12h/sessione) → il dataset pieno (~30K) richiede **checkpoint + resume** multi-sessione.
+
+**Cosa Kaggle valida end-to-end (quota-free, subito):** l'intera pipeline dati→SFT→post-training→eval + l'harness-integration + il LoRA-stacking Tier 2/3 (che SONO LoRA) + un Tier-1-QLoRA proxy. **Cosa resta a Inception:** il full-FT reale di Tier-1 + il 27B target.
+
+**Prossimo passo concreto** ("verifica cosa riusciamo a fare", msg 1247): un **dry-run QLoRA 9B su Kaggle** (1 epoca, dataset-campione) per misurare tempi/memoria/feasibility reali PRIMA di committare la procedura.
 
 ## Links
 [[training-vs-harness-classification]] · [[../training-taxonomy/data-volume-estimate]] · [[../feedback_optimization_first]]

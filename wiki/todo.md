@@ -37,8 +37,10 @@ last_updated: 2026-06-30
 - [x] **Regola #21 negative-examples + completezza-dataset** (msg 1218) ✅ CLAUDE.md #21 + wiki `training-set-construction-principles.md` + `training-set-completeness-audit.md` + memory.
 - [x] **Regola #22 integrità-fattuale training-set** (msg 1235) ✅ CLAUDE.md #22 + mirror wiki (`training-set-construction-principles.md` #22 + check in `training-set-completeness-audit.md`) + **fix esempio Gmail** nella classe (→Discovery/verifica, non asserzione) + memory `feedback_training_set_factual_integrity`. Split: (I) verificato+citato vs (II) incerto/volatile→verify-step (default in dubbio); fixture self-contained per skill di ragionamento; reward sul VERIFICARE.
 
-## 💻 COMPUTE per il training (utente msg 1242)
-- [ ] **Applicare a NVIDIA Inception + verificare eleggibilità** (dettagli+fonti in `wiki/concepts/free-training-compute-options.md`): reco = **Kaggle** (2×T4/TPU-v5e, gratis) per il **4B di test**/ablazioni ORA; **NVIDIA Inception** (~$100K DGX H100, barra bassa: incorporati+sito+<10anni) per il **27B target**, + valutare Google for Startups AI ($350K) / AWS Activate GenAI ($300K). ⚠️ **Verificare (non assumere, #22)**: siamo incorporati? sito? VC-backed? → decide l'accesso ai programmi grossi. Academic Grant NON per noi (serve faculty PhD-granting).
+## 💻 COMPUTE + STRATEGIA training (utente msg 1242/1247)
+Strategia decisa (msg 1247): **Kaggle definisce la procedura** (modello più grande addestrabile lì) → **Inception scala al 27B**. Dettagli+fonti+caveat in `wiki/concepts/free-training-compute-options.md`.
+- [ ] **Dry-run QLoRA 9B su Kaggle** ("verifica cosa riusciamo a fare", msg 1247): 1 epoca su dataset-campione per misurare tempi/VRAM/feasibility reali; target **9B QLoRA** (comodo), **14B** stretch. ⚠️ caveat: Kaggle = QLoRA (non full-FT) → prototipa la PROCEDURA (dati/curriculum/eval/LoRA-stacking), il full-FT Tier-1 + iperparametri finali restano a Inception (dinamiche full-FT≠QLoRA).
+- [ ] **Applicare a NVIDIA Inception + verificare eleggibilità**: ~$100K DGX H100 (barra bassa: incorporati+sito+<10anni) per il **full-FT Tier-1 + 27B target**; + valutare Google for Startups AI ($350K) / AWS Activate GenAI ($300K). ⚠️ **Verificare (non assumere, #22)**: siamo incorporati? sito? VC-backed? → decide l'accesso. Academic Grant NON per noi (serve faculty PhD-granting).
 
 ## 🚧 GATE PRE-TRAINING (da fare PRIMA della verifica finale del training set e dell'addestramento — utente msg 1238)
 

@@ -191,6 +191,13 @@ async function main() {
     // è tornato → l'eviction-checkpoint non può scattare (era la root-cause di F22). evictionOrdinal>0 → il checkpoint HA girato.
     userTurnsRecorded: (() => { try { return convStore.countUserTurns(convIdFor({ sessionManager })); } catch { return null; } })(),
     evictionOrdinal: (() => { try { return Number(getVarsQueue().getMeta(EVICTION_ORDINAL_META + convIdFor({ sessionManager })) ?? 0) || 0; } catch { return null; } })(),
+    // Strumentazione SALVATAGGI (rule #14/#17, per il test dell'hint più forte msg 1245): conta le chiamate ai tool di
+    // persistenza dallo stream tool-call reale. È la metrica DIRETTA di F23 ("0 note/0 jot" col nudge stretto): se il
+    // nuovo hint funziona → saveToolCalls>0. Nomi verificati in .pi/extensions/vars-queue.ts (note/jot/set_var).
+    noteCalls: allToolCalls.filter((n) => n === "note").length,
+    jotCalls: allToolCalls.filter((n) => n === "jot").length,
+    setVarCalls: allToolCalls.filter((n) => n === "set_var").length,
+    saveToolCalls: allToolCalls.filter((n) => n === "note" || n === "jot" || n === "set_var").length,
   };
   session.dispose();
   process.stdout.write(JSON.stringify(out) + "\n");
