@@ -78,6 +78,9 @@ ok(!buildEvictionDirective("nudge", { digest: "- #1 [user] ciao" }).includes("Le
 ok(buildEvictionDirective("inject", { digest: "- #1 [user] ciao" }).includes("Leaving the window:\n- #1 [user] ciao"), "directive: inject include il digest");
 ok(buildEvictionDirective("nudge").includes('note("<fact>")'), "directive: nudge cita note() (affordance)");
 ok(buildEvictionDirective("nudge").includes("do nothing"), "directive: outcome-not-ceremony ('do nothing' se niente durevole)");
+ok(buildEvictionDirective("nudge").includes("<scratch>"), "directive: nudge consolida anche lo <scratch> (msg 1158)");
+ok(buildEvictionDirective("nudge").toLowerCase().includes("promote"), "directive: nudge PROMUOVE gli scratch durevoli → note() (consolidamento lane appunti)");
+ok(buildEvictionDirective("inject", { digest: "x" }).includes("<scratch>"), "directive: inject include il consolidamento scratch + il digest");
 
 // ── buildOobPrompt / parseOobSave ──
 {

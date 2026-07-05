@@ -97,7 +97,17 @@ export function summarizeEvicting(turns, { maxCharsPerTurn = 240, maxTurns = 6 }
 
 /** Frase-guida condivisa (model-facing, EN). Outcome, non cerimonia: "salva o non fare nulla". */
 const SAVE_HINT =
-  'save it NOW with note("<fact>") (or set_var for a structured value). If nothing here is durable, do nothing. Do not restate this notice.';
+  'save it NOW with note("<fact>") (or set_var for a structured value).';
+/**
+ * SCRATCH_HINT — l'eviction è anche il PUNTO DI CONSOLIDAMENTO dell'intera lane appunti (utente msg 1158): oltre a
+ * salvare i fatti dai messaggi in uscita, il modello rivede il proprio <scratch> e PROMUOVE a note() ciò che deve
+ * durare. Outcome, non cerimonia: solo ciò che deve OUTLAST — il resto dello scratch è volatile e deve sfumare
+ * (no over-save di spazzatura → [[feedback_reward_hacking_principle]]).
+ */
+const SCRATCH_HINT =
+  " This is also your consolidation point: scan your <scratch> working-notes and promote any that must OUTLAST the next few turns into note() — facts persist; <scratch> is a rolling window and the rest is meant to fade.";
+/** Chiusura condivisa: outcome-not-ceremony + no-restate. Tenuta ULTIMA così il no-restate chiude il notice. */
+const SAVE_CLOSER = " If nothing is durable, do nothing. Do not restate this notice.";
 
 /**
  * buildEvictionDirective — testo model-facing (EN) per i rung nudge/inject. Stringa vuota per off/require.
@@ -111,7 +121,7 @@ export function buildEvictionDirective(rung, { digest = "" } = {}) {
     "MEMORY EVICTION — the earlier message(s) are leaving your working window; after this turn you will NOT see " +
     "them verbatim. If they contain a DURABLE fact worth remembering later (a name/nickname, a decision, a " +
     "constraint, a stable preference, an open thread), " +
-    SAVE_HINT;
+    SAVE_HINT + SCRATCH_HINT + SAVE_CLOSER;
   if (rung === "inject" && digest) return head + "\n\nLeaving the window:\n" + digest;
   return head;
 }
