@@ -32,6 +32,7 @@ last_updated: 2026-06-30
 - [x] **Classe anti-confabulazione** (msg 1213) ✅ FILATA: 4ª figlia di metacognitive-self-audit, gold F16 held-out, 12 transfer cross-dominio, reward simmetrico.
 - [x] **Classe scelte-preferenziali** (msg 1218) ✅ FILATA: `class-constraint-fit-decision` (padre) → `class-resource-appropriate-substitution` (figlia, gold Gemma-vs-Gemini, negativi integrati).
 - [x] **Regola #21 negative-examples + completezza-dataset** (msg 1218) ✅ CLAUDE.md #21 + wiki `training-set-construction-principles.md` + `training-set-completeness-audit.md` + memory.
+- [ ] **Remediation transfer cross-dominio sui gold pre-#19** (dall'audit-completezza 2026-07-05, campione `gold-example-decomposition`): i gold/classi di **ragionamento** creati PRIMA del 2026-07-05 mancano il transfer cross-dominio (rule #19) — es. decomposition ha §4-template SOLO software. **Attende OK utente** (regola #18). Su approvazione: pass §4bis con 3-4 esempi non-software (evento/business/ricerca) sui gold di ragionamento/metacognizione; NON sui gold Q verticali-di-codice (dove la localizzazione al codice è giusta). Audit completo del resto della taxonomy = workstream quota-free separato (candidato workflow multi-agente).
 - [x] **Pagina eviction-checkpoint** ✅ creata (era meccanismo senza pagina) + fix link penzolante; **wiki-lint** ✅ 11 fix applicati; **F16/F17/F18/F19/F20** registrati; suite **51/0**.
 
 **🟢 2026-07-05 (pomeriggio) — rotazione chiavi + classe azione→conseguenza:**

@@ -50,5 +50,23 @@ last_updated: 2026-07-05
 ## Output dell'audit
 Un report per-classe: voci PASS/FAIL + evidenza + gap→TODO. Una classe è **"pronta"** solo con tutte le voci PASS (o i FAIL giustificati esplicitamente). Da rieseguire quando la classe cambia o nuovi finding emergono.
 
+## Applicazione 2026-07-05 (prima esecuzione — campione)
+
+Primo run dell'audit su un campione, per stimare i gap del dataset esistente (msg 1218-d). Campionato `gold-example-decomposition.md` (2026-06-29, skill Tier-1 `hierarchical-decomposition`):
+
+| Voce | Esito | Evidenza |
+|---|---|---|
+| 1. Copertura | PASS | 5 classi (WITH-hint 3 livelli · WITHOUT-hint · WRONG-awareness · WRONG-recovery · OTHER). |
+| 2. Negativi + bilanciamento | **PASS (forte)** | 3a/3b/3c difettose da riconoscere + **coppia bilanciata** 5a banale / 5b falso-invariante adversariale; penalità simmetrica anti-over-decomposition. |
+| 3. **Transfer cross-dominio (#19)** | **FAIL** | §4 "usa come template" elenca SOLO scenari **software** (parser multi-formato, pipeline ML). ZERO transfer a domini lontani (vita quotidiana, business, ecologia…). La skill decompose vale per QUALSIASI problema (pianificare un evento, strutturare un'azienda) → così com'è il modello rischia di **localizzarla al codice** (esattamente ciò che #19 vieta). |
+| 4. Coerenza | PASS | cross-link coerenti, nessuna contraddizione trovata. |
+| 5. Ancoraggio + hack-check | **PASS (forte)** | reward su oracoli eseguibili (pytest/pylint duplicate-code/mutation-probe ∀stmt); hack-check esplicito scorer≠scored, forma-non-premiata. |
+| 6. Decontaminazione | PASS | fixture held-out FX-trivial / FX-false-invariant. |
+| 7. Struttura & wiring | PASS | in index, frontmatter completo, link risolvono. |
+
+**Finding trasversale [INFERRED]:** i gold/classi **pre-2026-07-05** sono robusti su negativi + ancoraggio (principi assorbiti presto) ma **mancano il transfer cross-dominio** di regola #19 (creata dopo, 2026-07-05). Le classi **create dopo** (metacognitive-self-audit e figlie, constraint-fit, resource-substitution, consequence-intention, confabulation) hanno il transfer cross-dominio by-design → il gap è **datato**, non pervasivo.
+
+**Remediation proposta (tracciata, attende OK utente — regola #18):** pass di *transfer cross-dominio* sui gold di **ragionamento/metacognizione** pre-#19 (decomposition per primo: aggiungere §4bis con 3-4 esempi non-software — decomporre un evento/piano-aziendale/progetto-di-ricerca con la STESSA logica core→axes→leaves). NON sui gold Q verticali-di-codice puri (dove la localizzazione al codice è corretta). → `wiki/todo.md`.
+
 ## Links
 [[training-set-construction-principles]] · [[../feedback_reward_hacking_principle]] · [[../feedback_transfer_always_cross_domain]] · [[../feedback_intelligence_gap_to_training_class]] · [[../training-taxonomy/class-metacognitive-self-audit]]
