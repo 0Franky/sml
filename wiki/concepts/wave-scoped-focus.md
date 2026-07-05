@@ -35,7 +35,7 @@ focalizzato è allineato con tutto il progetto (disciplina di contesto, H6, [[co
 3. **Decomposizione = identità del Tier-1.** Il base model è addestrato a *decomporre/operare* ([[project_base_model_intelligence]]).
    Forzare wave è lo **scaffold** di quella skill (poi interiorizzata dal training → recede). Non un vincolo estraneo: è la cosa giusta.
 4. **Confini semantici per memoria e reward.** Il fine-wave è un boundary NATURALE per (a) persistere il digest nelle note
-   (meglio del boundary turn-count dell'[[architecture/eviction-checkpoint mechanism|eviction-checkpoint]]) e (b) dare un
+   (meglio del boundary turn-count dell'[[concepts/eviction-checkpoint|eviction-checkpoint]]) e (b) dare un
    **reward a grana-wave** (la wave ha raggiunto il suo sotto-obiettivo?) → segnale RL più fine e outcome-anchored.
 5. **Regola teachable.** "Quando attivi una wave, focalizza" è semplice, spiegabile nella situational-table
    ([[concepts/anti-fixation-metacognition-rung]] §situational), a differenza dell'opaco "focalizza quando la matrioska sale".
