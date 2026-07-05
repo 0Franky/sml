@@ -69,5 +69,19 @@ sources:
 
 **Prossimo passo concreto** ("verifica cosa riusciamo a fare", msg 1247): un **dry-run QLoRA 9B su Kaggle** (1 epoca, dataset-campione) per misurare tempi/memoria/feasibility reali PRIMA di committare la procedura.
 
+## Accesso programmatico (API/MCP) vs human-in-the-loop — quanto posso guidarlo io (msg 1251)
+
+**Kaggle** ha una **API pubblica** (`kaggle` CLI) che guida i Notebook (kernel) in modo scriptato:
+- `kaggle kernels push` (carica un notebook/script come kernel, con `enable_gpu:true`/`enable_tpu`), `kaggle kernels status` (polling), `kaggle kernels output` (scarica gli artefatti). Modello **batch**: push → gira async (≤12h) → fetch. Adatto ai job di training.
+- **Setup one-time (serve l'utente UNA volta)**: (a) account Kaggle **verificato via telefono** — obbligatorio per abilitare GPU + internet-on nei kernel, **non automatizzabile**; (b) generare un **API token** (`kaggle.json`) e metterlo **localmente** in `~/.kaggle/kaggle.json` — è una **credenziale → MAI nel repo** ([[../feedback_no_pii_in_repo]]).
+- **Dopo il setup**: il loop push→run→fetch è **guidabile da me** (scrivo il notebook, lo pusho, monitoro, scarico i risultati) senza che l'utente sia l'interfaccia a ogni run.
+- **Nessun Kaggle MCP** in sessione → userei la `kaggle` CLI via Bash (`pip install kaggle`).
+
+**Dove serve l'utente come interfaccia**: (1) creazione + **phone-verify** account (una tantum); (2) fornire il token localmente; (3) accettare eventuali termini dataset/competizione. Per la fase **dev/debug** iterativa la Web UI interattiva è più comoda (io scrivo il notebook, tu lo esegui e mi mandi l'output); per gli **run automatizzati** stabilizzati guido io via API.
+
+**Altri servizi**: **Colab** = nessuna API ufficiale headless (pensato per browser → banco manuale). **Lightning AI / Paperspace / Modal** = CLI/API più adatte all'automazione headless (alternative se vogliamo che io guidi di più).
+
+**Reco**: Kaggle come banco principale, **setup one-time dell'utente** (account phone-verified + token locale), poi **guido io** i run via `kaggle` CLI; per il debug iniziale del notebook, comodo se c'è l'utente sulla Web UI.
+
 ## Links
 [[training-vs-harness-classification]] · [[../training-taxonomy/data-volume-estimate]] · [[../feedback_optimization_first]]
