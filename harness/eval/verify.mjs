@@ -7,12 +7,7 @@
  *
  * NB: `task.test` è il test NASCOSTO (mai dato al modello). Il modello riceve solo `task.prompt` (firma+docstring).
  */
-import { execFileSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-
-const PY = process.env.EVAL_PYTHON || "python";
+import { runPython } from "./py-run.mjs"; // runner Python isolato CONDIVISO (SSOT #16) — ex-exec inline migrato 2026-07-05
 
 /**
  * @param {{test:string, entry_point:string}} task
@@ -22,24 +17,9 @@ const PY = process.env.EVAL_PYTHON || "python";
  */
 export function gradeHumanEval(task, solutionCode, opts = {}) {
   if (!solutionCode || !solutionCode.trim()) return { passed: false, exit: null, reason: "no-solution", stderr: "" };
-  const timeoutMs = opts.timeoutMs ?? 20000;
   const program = `${solutionCode}\n\n${task.test}\n\ncheck(${task.entry_point})\n`;
-  const dir = mkdtempSync(join(tmpdir(), "he-grade-"));
-  const file = join(dir, "grade.py");
-  writeFileSync(file, program);
-  try {
-    execFileSync(PY, [file], { cwd: dir, stdio: "pipe", timeout: timeoutMs });
-    return { passed: true, exit: 0, reason: "ok", stderr: "" };
-  } catch (e) {
-    const exit = typeof e.status === "number" ? e.status : null;
-    const stderr = (e.stderr || e.stdout || "").toString();
-    const reason = e.signal === "SIGTERM" || /ETIMEDOUT/.test(String(e.message)) ? "timeout"
-      : /assert/i.test(stderr) ? "assert-fail"
-      : exit === null ? "run-error" : "nonzero-exit";
-    return { passed: false, exit, reason, stderr: stderr.slice(0, 500) };
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
+  const r = runPython(program, { timeoutMs: opts.timeoutMs ?? 20000 });
+  return { passed: r.ok, exit: r.exit, reason: r.ok ? "ok" : r.reason, stderr: r.stderr };
 }
 
 export default { gradeHumanEval };
