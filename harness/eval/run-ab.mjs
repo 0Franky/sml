@@ -24,6 +24,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gradeHumanEval } from "./verify.mjs";
 import { loadGeminiKeys } from "./gemini-keys.mjs"; // rotazione multi-chiave (SSOT #16)
+import { makeKeyRotator } from "./gemini-key-rotator.mjs"; // rotazione robusta (2-blocchi→morta, cooldown, no ping)
 
 const here = dirname(fileURLToPath(import.meta.url));
 const RUN_ONE = join(here, "run-one.mjs");
@@ -37,7 +38,8 @@ const RETRY_DELAY_MS = parseInt(process.env.EVAL_RETRY_DELAY_MS || "30000", 10);
 const MAX_RETRIES = parseInt(process.env.EVAL_MAX_RETRIES || "1", 10);
 const LABEL = process.env.EVAL_LABEL || "run";
 const MODEL_ID = process.env.MODEL_ID || "gemini-3.1-flash-lite";
-const NKEYS = Math.max(1, loadGeminiKeys().length); // #chiavi disponibili → round-robin per-cella + rotate-on-retry
+const KEYS = loadGeminiKeys();
+const NKEYS = Math.max(1, KEYS.length); // #chiavi → rotazione robusta via gemini-key-rotator (2-blocchi→morta, cooldown, no ping)
 let keyCursor = 0; // avanza a ogni cella e a ogni retry → distribuisce il carico e ritenta su chiave FRESCA
 
 if (!existsSync(DATASET)) { console.error(`dataset assente: ${DATASET} — lancia prima eval/fetch-humaneval.mjs`); process.exit(2); }
@@ -85,19 +87,29 @@ const rows = [];
 const t0 = Date.now();
 console.log(`\n=== A/B HumanEval — ${tasks.length} task × ${configs.length} config (${configs.map((c) => c.key).join(", ")}) — model=${MODEL_ID} — delay=${DELAY_MS}ms ===\n`);
 
+const isDeadResult = (w) => !!w && (w.httpStatus === 429 || isRateLimit(w.retryErr) || isRateLimit(w.sendErr) || isRateLimit(w.error));
+// rotazione robusta via gemini-key-rotator (utente msg 1178/1180): morta dopo 2 blocchi (429) CONSECUTIVI (un successo
+// azzera); tutte-morte → cooldown 60s + sblocco, cap 5 cicli; ZERO ping. Parametri SSOT nel modulo → qui solo `log`.
+const rotator = makeKeyRotator(NKEYS, { log: (m) => console.log(`      ⚠ ${m}`) });
+const reportKey = (i, w) => { if (i < 0) return; if (isDeadResult(w)) rotator.reportBlocked(i); else if (!w.apiError) rotator.reportOk(i); };
+
 let idx = 0, total = tasks.length * configs.length, rateLimited = 0;
 for (const task of tasks) {
   for (const cfg of configs) {
     idx++;
-    let keyIndex = keyCursor++ % NKEYS; // round-robin: ogni cella parte da una chiave diversa
-    let w = runWorker(task, cfg, keyIndex);
-    // retry con backoff su ERRORE-API (429/5xx/empty deglutito): NON è un fallimento di capacità del modello.
-    // Su retry RUOTA la chiave (keyCursor++) → ritenta su una chiave FRESCA (se la 429 era per-day, l'altra regge).
+    let keyIndex = await rotator.next();
+    let w = keyIndex < 0
+      ? { apiError: true, error: `all-keys-quota: ${NKEYS} chiavi esaurite anche dopo cooldown` }
+      : runWorker(task, cfg, keyIndex);
+    reportKey(keyIndex, w);
+    // retry su ERRORE-API: ruota a chiave viva (o cooldown+sblocco se tutte morte); STOP se esaurite dopo i cooldown.
     for (let attempt = 1; attempt <= MAX_RETRIES && (w.apiError || isRateLimit(w.sendErr) || isRateLimit(w.error)); attempt++) {
-      keyIndex = keyCursor++ % NKEYS;
-      console.log(`      ⚠ errore-API (http=${w.httpStatus ?? "?"} ${String(w.retryErr ?? w.sendErr ?? w.error ?? "").slice(0, 80)}) → backoff ${RETRY_DELAY_MS / 1000}s + retry ${attempt}/${MAX_RETRIES} [key→${NKEYS > 1 ? keyIndex : "single"}]`);
+      keyIndex = await rotator.next();
+      if (keyIndex < 0) { console.log(`      ⚠ chiavi esaurite anche dopo cooldown → stop retry`); break; }
+      console.log(`      ⚠ errore-API (http=${w.httpStatus ?? "?"} ${String(w.retryErr ?? w.sendErr ?? w.error ?? "").slice(0, 80)}) → backoff ${RETRY_DELAY_MS / 1000}s + retry ${attempt}/${MAX_RETRIES} [key→${keyIndex}]`);
       await sleep(RETRY_DELAY_MS);
       w = runWorker(task, cfg, keyIndex);
+      reportKey(keyIndex, w);
     }
     const errored = w.apiError === true || !!w.error;
     if (errored) rateLimited++;
