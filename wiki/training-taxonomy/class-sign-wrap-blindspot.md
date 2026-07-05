@@ -52,5 +52,7 @@ Non è "qualsiasi wrap ciclico": l'aritmetica modulare **idiomatica** (orologio 
 - **Riparare la superficie** (il vettore di #145) → penalizzato quando l'oracolo dell'edge fallisce.
 - **Contaminazione** → #145 held-out; il generatore NON deve emettere l'istanza-eval osservata.
 
+> **NB**: questi task sono anche il **trigger naturale** della classe-padre [[class-stagnation-recovery]] (il modello ci si blocca in modo riproducibile → è il generatore di stagnazione per addestrare il recupero).
+
 ## Links
-[[gold-example-transfer-assumption-audit]] · [[area-03-reasoning-scientific-method]] · [[../concepts/stuck-state-focus-protocol]] · [[../concepts/verification-discipline-training]] · [[../feedback_intelligence_gap_to_training_class]] · [[../harness-experiment-log]]
+[[class-stagnation-recovery]] · [[gold-example-transfer-assumption-audit]] · [[area-03-reasoning-scientific-method]] · [[../concepts/stuck-state-focus-protocol]] · [[../concepts/verification-discipline-training]] · [[../feedback_intelligence_gap_to_training_class]] · [[../harness-experiment-log]]
