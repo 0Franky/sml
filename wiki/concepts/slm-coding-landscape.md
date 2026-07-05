@@ -325,14 +325,14 @@ Alternativa: **Qwen3-Coder-Next-80B-A3B** (SWE-V 70.6%) se hybrid linear attenti
 
 3. **Context length per cross-codebase**: Qwen3-4B-Instruct-2507 ha già 262K nativo → sufficiente per ingest repo medio-grande senza bisogno di andare su 3.5.
 
-4. **Continuità scaling**: orchestrator 4B → 8B → 30B-A3B tutti famiglia Qwen3, **same tokenizer (151,936)**, **same RoPE base**, transfer learning concettuale lineare.
+4. **Continuità scaling**: orchestrator 4B → 8B → 35B-A3B tutti famiglia Qwen3, **same tokenizer (151,936)**, **same RoPE base**, transfer learning concettuale lineare.
 
-5. **Capacity**: 4B per task narrow (programming LoRA verticale singolo dominio); 8B+ per orchestrator FT con knowledge mantenuta; 30B-A3B per "modello finale" multi-task.
+5. **Capacity**: 4B per task narrow (programming LoRA verticale singolo dominio); 8B+ per orchestrator FT con knowledge mantenuta; 35B-A3B per "modello finale" multi-task.
 
 **Sequenza concreta proposta**:
 - **Step 1 (locale 2080 Ti)**: Qwen3-4B-Instruct-2507 + QLoRA NF4 + LoRA rank 16 → workflow consolidation, mini-experiment LoRA stacking proof-of-concept.
 - **Step 2 (cloud A100)**: Qwen3-8B + LoRA bf16 → orchestrator fine-tune con dataset più ampio, validazione catastrophic-forgetting su MMLU + HumanEval.
-- **Step 3 (cloud H100/B200)**: Qwen3-Coder-30B-A3B → modello target finale per produzione, full SFT + DPO + (opzionale) GRPO sul dominio.
+- **Step 3 (cloud H100/B200)**: Qwen3.6-35B-A3B → modello target finale per produzione, full SFT + DPO + (opzionale) GRPO sul dominio. *(allineato all'ADR [2026-05-21-base-model-pipeline](../decisions/2026-05-21-base-model-pipeline.md): target = 35B-A3B; Qwen3-Coder-30B-A3B era Alt-1 RIFIUTATA.)*
 
 **Trade-off chiave da accettare**: Qwen3.5 ha **+20pt LiveCodeBench** vs Qwen3 a parità di parametri. Per un agent puramente coding-focused vale la pena rivalutare. Ma per **architettura three-tier con stacking adapter + orchestrator generalista**, la maturità ecosystem di Qwen3 dense vince.
 
