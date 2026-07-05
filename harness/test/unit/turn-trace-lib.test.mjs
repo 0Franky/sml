@@ -5,7 +5,7 @@
  * role="developer", NON "system". Prima extractSystemText cercava solo "system" → systemLen/laneLines SEMPRE 0
  * (trace cieco, ha depistato la diagnosi dell'amnesia). Questi test fissano il riconoscimento di ENTRAMBI i ruoli.
  */
-import { contentText, isSystemRole, extractSystemText, isToolResult, messagesInfo, messagesDump, laneOverlap } from "../../src/turn-trace-lib.mjs";
+import { contentText, isSystemRole, extractSystemText, isToolResult, messagesInfo, messagesDump, laneOverlap, buildRawDump, buildFullMd } from "../../src/turn-trace-lib.mjs";
 
 let pass = 0, fail = 0;
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; console.error("  ✗ " + msg); } }
@@ -95,6 +95,44 @@ ok(!isToolResult({ role: "user", content: "stringa" }), "isToolResult: content s
   ok(ovDup.overlap >= 1, "laneOverlap: overlap≥1 quando la riga lane ricompare nel native (doppia-chat)");
 
   eq(laneOverlap("nessuna lane qui", "x").laneLines, 0, "laneOverlap: nessuna lane → 0");
+}
+
+// ── buildRawDump / buildFullMd: FEDELTÀ del debug (fix 2026-07-05, utente msg 1103) ──
+// REGRESSIONE: il vecchio dump .md iniettava nell'header il literal "<how_memory_works>" → un grep per lo scaffolding
+// trovava un FALSO POSITIVO anche quando il modello NON lo riceveva → depistò la diagnosi di modularità. Il debug DEVE
+// rispecchiare ESATTAMENTE lo stato del modello: 0 stringhe iniettate che il modello non ha ricevuto.
+{
+  const system = "SYS senza scaffolding: solo <context><current_aim>x</current_aim></context>";
+  const messages = [
+    { role: "user", text: "domanda utente" },
+    { role: "assistant", text: "risposta" },
+    { role: "user", text: "out del tool", toolResult: true },
+  ];
+  const raw = buildRawDump({ ts: "T", convId: "c1", system, messages });
+  const full = buildFullMd({ ts: "T", convId: "c1", system, messages, tokens: 42 });
+
+  // fedeltà byte-esatta di system e messaggi
+  eq(raw.system, system, "buildRawDump: system byte-identico all'input");
+  eq(raw.messages.length, 3, "buildRawDump: 3 messaggi");
+  eq(raw.messages[0].text, "domanda utente", "buildRawDump: testo messaggio fedele");
+  ok(raw.messages[2].toolResult === true, "buildRawDump: toolResult preservato");
+
+  // NIENTE nomi-tag iniettati: il modello NON riceve "how_memory_works" → NON deve comparire da nessuna parte
+  ok(!JSON.stringify(raw).includes("how_memory_works"), "FEDELTÀ raw: 0 'how_memory_works' iniettati (input non lo contiene)");
+  ok(!full.includes("how_memory_works"), "FEDELTÀ full: 0 'how_memory_works' nell'header (fix falso-positivo)");
+  ok(!full.includes("messages_with_user"), "FEDELTÀ full: nessun nome-tag iniettato nell'header");
+
+  // presenza FEDELE: se il modello LO riceve davvero, deve comparire (il debug non nasconde né inventa)
+  const sysWith = "<how_memory_works>you run in a harness…</how_memory_works>\n" + system;
+  const rawWith = buildRawDump({ ts: "T", convId: "c1", system: sysWith, messages });
+  ok(rawWith.system.includes("how_memory_works"), "FEDELTÀ raw: presente quando l'input lo contiene davvero");
+  ok(buildFullMd({ system: sysWith, messages }).includes("how_memory_works"), "FEDELTÀ full: presente quando reale");
+
+  // i marker di fence esistono ma NON collidono con contenuto di scaffolding (nessun <tag> nei marker)
+  ok(full.includes("===== VERBATIM"), "full: marker di fence presenti");
+  // difensività su input vuoto/malformato (la diagnostica non deve mai rompere)
+  ok(buildRawDump().messages.length === 0 && buildRawDump().system === "", "buildRawDump: input vuoto → {system:'',messages:[]}");
+  ok(typeof buildFullMd() === "string", "buildFullMd: input vuoto → stringa");
 }
 
 console.log(`\nturn-trace-lib: ${pass} pass, ${fail} fail`);

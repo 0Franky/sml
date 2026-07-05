@@ -10,8 +10,11 @@
  * non ritorna mai il payload → non altera la richiesta (coesiste con gemini-compat che invece lo muta).
  *
  * Output (in `.pi/state/trace/`, gitignored runtime — non project-knowledge):
- *   - `trace-<convId>.jsonl` : un record per turno (append) → storico macchina-leggibile.
- *   - `last-turn.md`         : snapshot umano dell'ultimo turno (overwrite) → apribile al volo nella TUI.
+ *   - `trace-<convId>.jsonl` : un record di METRICHE per turno (append) → storico macchina-leggibile.
+ *   - `last-turn.md`         : riepilogo metriche umano dell'ultimo turno (overwrite) → apribile al volo nella TUI.
+ *   - `last-turn-raw.json`   : AUTORITATIVO — system + array messaggi ESATTI (redatti), zero annotazioni → check
+ *                              programmatici affidabili (fix fedeltà 2026-07-05: il debug rispecchia ciò che vede il modello).
+ *   - `last-turn-full.md`    : vista umana del payload; verbatim fra i marker "===== VERBATIM… =====".
  * Tool `trace_status`: ritorna il riepilogo dell'ultimo turno (per ispezione rapida dal modello/utente).
  *
  * Toggle: attivo di default; `PI_TRACE=0` (o "false"/"off") lo disattiva (zero overhead, nessun file).
@@ -21,7 +24,7 @@ import { Type } from "typebox";
 import { convIdFor } from "../../src/session-context.mjs";
 // Funzioni PURE estratte/testate in turn-trace-lib.mjs (unit: turn-trace-lib.test.mjs). Includono il fix
 // role="developer" (OpenAI-completions su pi/ollama/gemini) — prima systemLen/laneLines erano SEMPRE 0 su ollama.
-import { extractSystemText, messagesInfo, messagesDump, laneOverlap } from "../../src/turn-trace-lib.mjs";
+import { extractSystemText, messagesInfo, messagesDump, laneOverlap, buildRawDump, buildFullMd } from "../../src/turn-trace-lib.mjs";
 import { redactText } from "../../src/secrets-redact.mjs";
 import { getDynamicSecrets } from "../../src/secrets-registry.mjs";
 import { mkdirSync, writeFileSync, appendFileSync, readdirSync } from "node:fs";
@@ -84,29 +87,26 @@ export default function (pi: ExtensionAPI) {
           `- overlap lane↔native: ${rec.laneNativeOverlap}  → ${dup}\n` +
           `- contesto: ${rec.tokens ?? "?"} token${rec.contextWindow ? ` / ${rec.contextWindow}` : ""}  (${rec.contextFraction != null ? Math.round(rec.contextFraction * 100) + "%" : "?"})\n`,
       );
-      // DUMP COMPLETO (utente msg 825/827: "vedi turno per turno cosa arriva a ollama"). Apri last-turn-full.md per
-      // VEDERE esattamente cosa riceve il modello: system/developer prompt + array messaggi NATIVO (ciò che il modello
-      // tratta come "la conversazione"). REDATTO (egress, secrets-map dinamica + pattern statici). Overwrite per turno.
+      // DUMP del turno (utente msg 825/827: "vedi turno per turno cosa arriva a ollama"). Due artefatti (fix fedeltà
+      // 2026-07-05, utente msg 1103: «il debug deve rispecchiare ESATTAMENTE lo stato del modello»):
+      //   - last-turn-raw.json  = AUTORITATIVO: system + array messaggi ESATTI (redatti), ZERO annotazioni/nomi-tag
+      //     iniettati → una ricerca su .system/.messages[].text è affidabile (prima l'header .md conteneva il literal
+      //     "<how_memory_works>" → falso positivo che depistò la diagnosi di modularità).
+      //   - last-turn-full.md   = vista umana; contenuto verbatim fra i marker "===== VERBATIM… =====".
+      // REDATTO qui (l'estensione ha i secrets dinamici); le funzioni-dump della lib restano PURE (input già redatto).
       const dyn = getDynamicSecrets();
       const red = (s: string) => redactText(String(s ?? ""), dyn, { staticPatterns: true }).redacted;
-      const dump = messagesDump(payload);
-      const full = [
-        `# turn-trace — payload COMPLETO (ultimo turno)`,
-        `- ts: ${rec.ts}  ·  convId: ${rec.convId}`,
-        `- native messages: ${rec.nativeMessages} (${rec.nativeRoles.join(", ")})  ·  user turns: ${rec.nativeUserTurns}  ·  tokens: ${rec.tokens ?? "?"}`,
-        ``,
-        `## SYSTEM / DEVELOPER prompt (${sys.length} char) — qui vivono le lane (<how_memory_works>, <messages_with_user>, <last_tool_calls>, …)`,
-        ``,
-        red(sys),
-        ``,
-        `## NATIVE messages array (${dump.length}) — ciò che il modello tratta come "la conversazione"`,
-        ...dump.map((m, i) => `\n### [${i}] role=${m.role}${m.toolResult ? " (tool_result)" : ""}\n${red(m.text)}`),
-      ].join("\n");
+      const redSys = red(sys);
+      const redMessages = messagesDump(payload).map((m) => ({ role: m.role, toolResult: m.toolResult, text: red(m.text) }));
+      const rawObj = buildRawDump({ ts: rec.ts, convId, system: redSys, messages: redMessages });
+      const full = buildFullMd({ ts: rec.ts, convId, system: redSys, messages: redMessages, tokens: rec.tokens });
+      writeFileSync(join(TRACE_DIR, "last-turn-raw.json"), JSON.stringify(rawObj, null, 2));
       writeFileSync(join(TRACE_DIR, "last-turn-full.md"), full);
       if (PERTURN) {
         _turnCounter += 1;
         const nnn = String(_turnCounter).padStart(3, "0");
         writeFileSync(join(TRACE_DIR, `full-${nnn}.md`), full); // file separato per-turno (utente msg 843)
+        writeFileSync(join(TRACE_DIR, `raw-${nnn}.json`), JSON.stringify(rawObj, null, 2));
       }
     } catch {
       /* la diagnostica non deve mai rompere la richiesta */

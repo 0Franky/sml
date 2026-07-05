@@ -79,4 +79,56 @@ export function laneOverlap(systemText, nativeText) {
   return { laneLines: lines.length, overlap };
 }
 
-export default { contentText, isSystemRole, extractSystemText, isToolResult, messagesInfo, messagesDump, laneOverlap };
+/**
+ * Artefatto RAW del dump per-turno: ESATTAMENTE ciò che riceve il modello (system + array messaggi nativo),
+ * byte-fedele a meno della redazione secrets (l'estensione redige PRIMA di chiamare → la lib resta pura). NIENTE
+ * nomi-tag né annotazioni iniettate → una ricerca su `.system` / `.messages[].text` è affidabile: nessun falso
+ * positivo come quello del dump .md che il 2026-07-05 ha depistato la diagnosi di modularità (header col literal
+ * "<how_memory_works>" → sembrava presente anche quando il modello NON lo riceveva). Autoritativo per check programmatici.
+ * @param {{ts?, convId?, system?:string, messages?:{role:string,text:string,toolResult?:boolean}[]}} input (già redatto)
+ */
+export function buildRawDump({ ts = null, convId = null, system = "", messages = [] } = {}) {
+  return {
+    ts, convId,
+    system: String(system ?? ""),
+    messages: (Array.isArray(messages) ? messages : []).map((m) => ({
+      role: String(m?.role ?? "?"),
+      toolResult: !!m?.toolResult,
+      text: String(m?.text ?? ""),
+    })),
+  };
+}
+
+// marker di fence: il contenuto VERBATIM del modello sta fra questi; NON contengono nomi-tag → nessun falso positivo.
+export const VERBATIM_SYS_MARK = "===== VERBATIM: SYSTEM/DEVELOPER PROMPT =====";
+export const VERBATIM_NATIVE_MARK = "===== VERBATIM: NATIVE MESSAGES =====";
+export const VERBATIM_END_MARK = "===== END VERBATIM =====";
+
+/**
+ * Dump umano (.md) dell'ultimo turno. Il testo VERBATIM del modello è fra i marker VERBATIM_*; le righe che iniziano
+ * con '#'/'-'/'###' e i marker sono ANNOTAZIONI del trace (NON viste dal modello). FIX 2026-07-05: l'header NON contiene
+ * più i literal dei nomi-tag (<how_memory_works>, <messages_with_user>, …) che causavano falsi positivi nel grep — il
+ * debug ora rispecchia ESATTAMENTE lo stato del modello. Per check programmatici usare buildRawDump (last-turn-raw.json).
+ * @param {{ts?, convId?, system?:string, messages?:{role:string,text:string,toolResult?:boolean}[], tokens?}} input (già redatto)
+ */
+export function buildFullMd({ ts = null, convId = null, system = "", messages = [], tokens = null } = {}) {
+  const msgs = Array.isArray(messages) ? messages : [];
+  const roles = msgs.map((m) => String(m?.role ?? "?"));
+  return [
+    `# turn-trace — payload COMPLETO (ultimo turno)`,
+    `- ts: ${ts}  ·  convId: ${convId}`,
+    `- native messages: ${msgs.length} (${roles.join(", ")})  ·  tokens: ${tokens ?? "?"}`,
+    `- FEDELTÀ: il testo verbatim del modello è fra i marker "===== VERBATIM… ====="; le righe che iniziano con`,
+    `  '#'/'-'/'###' e i marker sono annotazioni del trace, NON viste dal modello. Check programmatici → last-turn-raw.json.`,
+    ``,
+    `${VERBATIM_SYS_MARK} (${String(system ?? "").length} char)`,
+    String(system ?? ""),
+    ``,
+    `${VERBATIM_NATIVE_MARK} (${msgs.length}) — ciò che il modello tratta come "la conversazione"`,
+    ...msgs.map((m, i) => `\n### native[${i}] role=${String(m?.role ?? "?")}${m?.toolResult ? " (tool_result)" : ""}\n${String(m?.text ?? "")}`),
+    ``,
+    VERBATIM_END_MARK,
+  ].join("\n");
+}
+
+export default { contentText, isSystemRole, extractSystemText, isToolResult, messagesInfo, messagesDump, laneOverlap, buildRawDump, buildFullMd };
