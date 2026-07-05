@@ -36,6 +36,7 @@ Tutti il **2026-07-04** (sera, ora locale utente ~UTC+? — tempi approssimati d
 | E5 | ~21:39 | SWE-bench download | — | SWE-bench Lite | **300 task** metadata (12 repo OSS), Docker-gated | `eval/data/swe/` |
 | E6 | ~22:01 (128s) | HE/145 TRACCIATO | vanilla, ours@1, ours@6 | HE/145 | vanilla **PASS**, ours **0/2 FAIL** → diagnosi fissazione | `report-he145-trace.json` + trace |
 | E7 | 2026-07-05 ~02:15 | **headless full-vs-lean** (validazione wiring `slm-scaffolding`) | ours@6 {laneMemoryHintLevel: full, lean} | probe memoria 2-turni (9B `qwen3.5:9b` locale, quota-free) | wiring OK entrambe (pi parte, `set_var`, no crash); **lean ctx-input 6637 vs full 6811** (~174 tok, ~2.5%); 9B ricorda in entrambe (lean T2 richiama entrambi i nomi) | driver `tools/drive-qwen.mjs` |
+| E8 | 2026-07-05 ~07:00 | **A/B full-vs-lean HE/145** (H6, gemini) | ours@keep6 {full, lean}, **n=1** | HE/145 | ENTRAMBI FAIL, ma: **full 17 turni / 185.7K tok** vs **lean 2 turni / 8.9K tok** (−20× token, −8× turni). Lean TAGLIA il thrashing-fissazione ma NON risolve; ⚠️ il "2 turni" (il modello si ferma subito invece di iterare) è **da investigare** + n≥5 | `report-he145-{full,lean}.json` |
 
 ## 3. Risultati numerici (con condizioni)
 
@@ -59,6 +60,7 @@ Tutti il **2026-07-04** (sera, ora locale utente ~UTC+? — tempi approssimati d
 - **F2** [n=5]: **keep1 patologico** sui single-hard — pass 40%, token 2.5× (HE/32: 190K/FAIL@1 vs 9.8K/PASS@6 = 20×). Causa: finestra nativa=1 turno → il modello non vede i propri tentativi.
 - **F3** [n=2, DA CONFERMARE n≥5]: su HE/145 **ours 4/4 FAIL vs vanilla 2/2 PASS** (~3× token). Meccanismo (dal trace): **FISSAZIONE sul sotto-problema sbagliato** (permuta il tie-breaking ~10 turni senza riquestionare `digit_sum(abs)` errato sui negativi). Ipotesi **H6**: il `<context>` grande diluisce il ragionamento del modello piccolo. Report turn-by-turn: `harness/eval/data/trace/REPORT-he145-ours-k1.md`.
 - **F4** [EXTRACTED]: il `<context>` di ours = **12.7K char (~3200 token)**, in gran parte `how_memory_works` + spiegazioni-lane; i dati veri (`current_aim`/`task_list`/`facts`) sono **VUOTI** su task self-contained.
+- **F5** [EXTRACTED, metodologico — regola #15]: costruendo `set_keepturns`, gli **unit erano tutti VERDI** (13/0) ma il tool NON funzionava end-to-end. Solo il **driver headless + ispezione del DB reale** l'ha svelato: il tool risultava "chiamato" nel trace ma `keepturns_override` restava `null`. Due cause a catena, entrambe invisibili all'unit: (1) `set_keepturns` non era in `CATEGORY_TOOLS`/`ESSENTIAL_TOOLS` di `tool-gating.mjs` → gated/nascosto → il 9B fumblava `other:set_keepturns` (nome inesistente) → `execute` mai raggiunto; (2) schema `Type.Integer` stretto rifiutava la stringa `"12"` che i modelli piccoli passano. Fix: tool essenziale + categorizzato + schema `Union[Integer,String]` (la funzione già coerce). **Lezione**: "il tool è nel trace" ≠ "il tool ha avuto effetto"; àncora al ground-truth (DB), mai alla presentazione.
 
 **Verdetti ipotesi** (validate sui log): H1 convergenza-prematura → **REFUTATA** (17 turni). H2 lane-non-preservano-iterazione → **NON è il problema** (ri-testa ogni turno). H3 non-usa-note/facts → **CONFERMATA** (irrilevanti qui). H5 prompt-sopprime-ragionamento → **REFUTATA**. H4 rumore → parziale (2/2 vs 4/4). H6 contesto-diluisce → **LEADING, da confermare**.
 
@@ -66,7 +68,7 @@ Tutti il **2026-07-04** (sera, ora locale utente ~UTC+? — tempi approssimati d
 
 - **Context-assembly**: lane `how_memory_works`, `rules`, `facts`, `task_list`, `current_aim`, `last_tool_calls`, `messages_with_user`, `secrets`, `vars`, `recent_changes` (+ temporal-anchoring `[+Xs]` shift).
 - **Memoria durabile (tool)**: `note`/`remove_note`, `record_decision`/`get_decisions`, `set_var`/`get_var`, `list_secrets`, `find_tool`/`open_category`.
-- **keepTurns** config-driven (`HARNESS_NATIVE_KEEP_TURNS`, native-window ext).
+- **keepTurns** config-driven (`HARNESS_NATIVE_KEEP_TURNS`, native-window ext) **+ MODEL-CONTROLLED** (tool `set_keepturns`, override per-turno clampato [1,20], reset n=0).
 - **Safety**: secrets-guardrail, pre-flight distruttivo, eviction-checkpoint, tool-gating.
 - **Infra eval**: Modo-1 (`run-one`/`run-ab`), Modo-2 (`run-session`/`run-session-ab`), verifier HumanEval (oracle 8/8), isolamento (`HARNESS_STATE_DIR`), **tracing completo** (`EVAL_TRACE_DIR` → eventi+solution+`<context>`), report turn-by-turn (`gen-trajectory-report`).
 
@@ -77,7 +79,7 @@ Tutti il **2026-07-04** (sera, ora locale utente ~UTC+? — tempi approssimati d
 | Iniezione contesto **ADATTIVA/lean** (gate lane per rilevanza; niente scaffolding-memoria su self-contained) | H6 + msg 1045 | 🟡 progettato, non costruito | [[concepts/adaptive-context-injection]] |
 | Tool **on-demand** (`Read temp file`, pull-non-push) | msg 1051 | 🟡 concept | [[concepts/harness-capabilities-as-files]] |
 | **Rung anti-fissazione** (stagnation-triggered: decompose→questiona-assunzione→diversifica + note-ledger) | msg 1056/1057 | 🟡 progettato+validato (efficacia DA provare) | [[concepts/anti-fixation-metacognition-rung]] |
-| **keepTurns MODEL-CONTROLLED** (`set_keepturns` + reminder-revert + cap) | msg 1062 | 🟡 mecc=F-harness / decisione=S-da-addestrare | [[concepts/adaptive-context-injection]] §3b |
+| **keepTurns MODEL-CONTROLLED** (`set_keepturns` + reminder-revert + cap) | msg 1062 | ✅ **MECCANISMO COSTRUITO** (`src/keepturns.mjs` + tool `set_keepturns` + native-window per-turno + cap 20 + reset n=0); E2E-validato (override persiste nel DB, `effective=12`). Reminder=at-set-time; auto-revert-turn-counted = **v2**. Decisione (quando)=S-da-addestrare | [[concepts/adaptive-context-injection]] §3b |
 | **Training regime-aware** (keepTurns curriculum {1,3,8} + esporre keepTurns + doppia-testa) | msg 1047 | 🟡 design Fase-3 RL | [[concepts/adaptive-context-injection]] §3 |
 | **native-window non-piatta** (preserva iterazione intra-task sotto keepTurns basso) | msg 1045 | 🔵 DA DISCUTERE | [[architecture/ab-eval-harness]] §Da discutere |
 

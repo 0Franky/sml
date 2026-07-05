@@ -1,7 +1,7 @@
 /**
  * tool-gating — unit test della logica di scoperta tool (utente msg 801/803/804).
  */
-import { categorizeTool, searchTools, toolsInCategory, listCategories, computeDefaultActive, ESSENTIAL_TOOLS } from "../../src/tool-gating.mjs";
+import { categorizeTool, searchTools, toolsInCategory, listCategories, computeDefaultActive, ESSENTIAL_TOOLS, classifyToolError } from "../../src/tool-gating.mjs";
 
 let pass = 0, fail = 0;
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; console.error("  ✗ " + msg); } }
@@ -100,6 +100,22 @@ ok(searchTools(ITEMS, "secret", { limit: 1 }).length === 1, "search: limit rispe
   ok(ESSENTIAL_TOOLS.includes("get_conversation"), "widen: get_conversation è essenziale (la lane lo indica per i msg vecchi)");
   const active = computeDefaultActive(["bash", "get_conversation", "enter_focus"]);
   ok(active.includes("get_conversation"), "widen: default attiva get_conversation quando registrato");
+}
+
+// set_keepturns model-controlled (msg 1062): categorizzato + ESSENZIALE (E2E: se gated il 9B non lo raggiunge)
+{
+  ok(categorizeTool("set_keepturns") === "focus", "set_keepturns categorizzato in focus (non 'other')");
+  ok(ESSENTIAL_TOOLS.includes("set_keepturns"), "set_keepturns è essenziale (chiamabile col nome reale, no discovery)");
+  const active = computeDefaultActive(["bash", "set_keepturns"]);
+  ok(active.includes("set_keepturns"), "default attiva set_keepturns quando registrato");
+}
+
+// classifyToolError (recovery 'not found', utente msg 908): active→execution, hidden→reveal, hallucinated→unknown
+{
+  ok(classifyToolError("", [], []) === "execution", "classify: nome vuoto → execution");
+  ok(classifyToolError("set_var", ["set_var"], ["set_var"]) === "execution", "classify: attivo → execution (errore reale)");
+  ok(classifyToolError("request_secret", ["set_var"], ["set_var", "request_secret"]) === "reveal", "classify: registrato ma nascosto → reveal");
+  ok(classifyToolError("ghost_tool", ["set_var"], ["set_var"]) === "unknown", "classify: nome allucinato → unknown");
 }
 
 console.log(`\ntool-gating: ${pass} pass, ${fail} fail`);

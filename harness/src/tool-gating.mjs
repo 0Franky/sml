@@ -16,7 +16,7 @@ export const CATEGORY_TOOLS = {
   http: ["http_request"],
   tasks: ["set_task_status", "add_task", "set_task_deps", "get_execution_order", "set_curr", "list_tasks"],
   vars: ["set_var", "get_var", "propose_var", "merge_proposals", "extract_var", "render_template", "sliding_var_read", "sliding_var_replace", "get_shared_view", "get_changelog"],
-  focus: ["enter_focus", "pop_focus", "focus_status", "checkpoint", "get_conversation"],
+  focus: ["enter_focus", "pop_focus", "focus_status", "checkpoint", "get_conversation", "set_keepturns"],
   reasoning: ["remember_lesson", "recall_lessons", "record_assumptions", "check_facts", "record_decision", "get_decisions_by_agent"],
   messaging: ["send_message", "inbox", "mark_read"],
   verify: ["run_verifier"],
@@ -42,6 +42,9 @@ export const ESSENTIAL_TOOLS = [
   "set_var", "get_var", // vars basics
   "enter_focus", "pop_focus", "focus_status", // focus/matrioska (utente msg 807: enter_focus essenziale; il TRIO
   // insieme, altrimenti il modello entra in focus e non può uscirne — pop_focus/focus_status stranded)
+  "set_keepturns", // keepTurns model-controlled (msg 1062): primitivo di auto-gestione del contesto. ESSENZIALE per lo
+  // stesso razionale anti-"not-found-loop": se gated, il modello che vuole allocarsi memoria non lo raggiunge (E2E:
+  // il 9B fumblava `other:set_keepturns` su un tool nascosto → mai eseguito). Sempre-attivo = chiamabile col nome reale.
   "get_conversation", // sessione 019f292b: la lane <messages_with_user> istruisce ESPLICITAMENTE "use get_conversation
   // range=..." per i messaggi più vecchi → dev'essere ATTIVO, altrimenti il modello che obbedisce prende "not found"
   // (il hint puntava a un tool gated). Read-only, safe. Risponde a "mostrami tutti i miei messaggi".
@@ -127,6 +130,25 @@ export function listCategories(items) {
 export function computeDefaultActive(allToolNames) {
   const present = new Set((Array.isArray(allToolNames) ? allToolNames : []).map(String));
   return ESSENTIAL_TOOLS.filter((n) => present.has(n));
+}
+
+/**
+ * NEW-B (recovery su "not found", utente msg 908): classifica un tool_result d'ERRORE per decidere il recupero.
+ * pi rigetta una call verso un tool non-attivo con "Tool X not found" PRIMA di ogni hook pre-dispatch → non si
+ * intercetta prima; ma il risultato passa per il tool_result hook (post) → qui si decide:
+ *   - "execution": il tool ERA attivo → è un errore d'esecuzione VERO (non un not-found) → non toccare.
+ *   - "reveal": registrato ma NASCOSTO → attivalo (sticky) e guida il retry (il re-call resta al modello — l'hook
+ *     non può ri-dispatchare — ma il tool è già attivo → al giro dopo funziona).
+ *   - "unknown": non esiste affatto (nome allucinato) → suggerisci find_tool.
+ * @param {string} name  toolName del risultato d'errore
+ * @param {string[]} activeNames  getActiveTools()
+ * @param {string[]} allNames  getAllTools().map(name)
+ * @returns {"execution"|"reveal"|"unknown"}
+ */
+export function classifyToolError(name, activeNames, allNames) {
+  if (!name) return "execution";
+  if (new Set(activeNames || []).has(name)) return "execution"; // attivo → errore reale, non not-found
+  return new Set(allNames || []).has(name) ? "reveal" : "unknown";
 }
 
 export default { CATEGORY_TOOLS, ESSENTIAL_TOOLS, categorizeTool, searchTools, toolsInCategory, listCategories, computeDefaultActive };

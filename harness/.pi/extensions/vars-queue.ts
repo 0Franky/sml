@@ -15,6 +15,7 @@ import { VarsQueue } from "../../src/vars-queue.mjs";
 import { getVarsQueue, closeAll } from "../../src/state-db.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { GATHER_TOKEN_META } from "../../src/meta-keys.mjs"; // SSOT chiave gather (reader in nested-compact.mjs)
+import { setKeepTurnsOverride, KEEPTURNS_MAX } from "../../src/keepturns.mjs"; // keepTurns model-controlled (msg 1062)
 
 const HARNESS_CFG = loadHarnessConfig(); // per gathering.mode (write del token solo in require-mode)
 
@@ -63,6 +64,32 @@ export default function (pi: ExtensionAPI) {
         who: activeWho(),
       });
       return { content: [{ type: "text", text: JSON.stringify(v) }], details: { ok: true } };
+    },
+  });
+
+  // set_keepturns (msg 1062): il modello alloca la propria finestra nativa. MECCANISMO qui; la DECISIONE (quando) è una
+  // SKILL da addestrare (regola #11). L'awareness del tradeoff (più memoria ≠ meglio; su una fissazione DILUISCE) vive
+  // nella description on-demand (anti-H6: niente scaffolding permanente nel <context>). Valore effettivo letto per-turno
+  // da native-window. Cap KEEPTURNS_MAX (anti context-bloat). Reset con n=0.
+  pi.registerTool({
+    name: "set_keepturns",
+    label: "Adjust your native memory window",
+    description:
+      `Change keepTurns — how many recent turns stay verbatim in your native message array. Raise it (up to ${KEEPTURNS_MAX}) ONLY when a task genuinely needs more short-term working memory across turns; call set_keepturns with n=0 to reset to the default once you no longer need it. A larger window costs more tokens, and on a hard REASONING problem MORE context can DILUTE your focus — if you are stuck, step back and question your assumption, do NOT just add memory. When you raise it for a task, reset it once that task is done.`,
+    // n accetta integer O stringa-numerica: i modelli piccoli spesso passano i numeri come stringa ("12"); Type.Integer
+    // stretto li rifiuterebbe (execute non girerebbe — bug scoperto E2E: il 9B ritentava "12" all'infinito). setKeepTurnsOverride
+    // coerce via Number(). Robustezza-verso-il-modello-debole > rigidità dello schema (feedback_clear_instructions_over_patches).
+    parameters: Type.Object({
+      n: Type.Union([Type.Integer(), Type.String()], {
+        description: `New keepTurns (1..${KEEPTURNS_MAX}). Use 0 to reset to the default.`,
+      }),
+    }),
+    async execute(_toolCallId: string, params: any) {
+      const r = setKeepTurnsOverride(vq, params?.n);
+      const text = r.overridden
+        ? `keepTurns set to ${r.effective} (default ${r.def}). Call set_keepturns with n=0 to reset it once this task no longer needs the extra memory.`
+        : `keepTurns reset to the default (${r.def}).`;
+      return { content: [{ type: "text", text }], details: { ok: true, effective: r.effective, overridden: r.overridden } };
     },
   });
 
