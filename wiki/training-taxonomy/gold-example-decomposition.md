@@ -5,7 +5,7 @@ type: gold-example
 leaf: "hierarchical-decomposition / fattorizzazione generale→assi→foglie"
 area: area-03-reasoning-scientific-method
 reward_tag: "Q-DOMINANTE (rifattorizzazione verificabile: coverage+detector+invariante tutti eseguibili). L SOLO per la generalizzazione §4 — decomposizione progettuale non-materializzabile in codice. NON L sulla prosa del mapping (judge-gaming)."
-last_updated: 2026-06-29
+last_updated: 2026-07-06
 status: gold-draft (autore verticale; review-loop agnostico pending) — [UNVERIFIED — format-only, sandbox-execution pending]
 ---
 
@@ -410,6 +410,17 @@ read_file decoders.py               → regex ISO 8601 | lookup tabella user | p
 - **Q vs L**: dove la decomposizione si materializza in artefatto eseguibile (codice, suite di test) → **Q** (oracolo). Dove resta progettuale (decomposizione di un dominio/concetto) → **L** su coverage∧non-ridondanza∧invariante (council OPEN, [[../concepts/judge-design|judge-design]]), con l'ancora Q "la decomposizione predetta regge in fase 3" dove disponibile.
 
 > Regola di replica: **non riscrivere lo schema, riempilo**. La barra: *lo vorrei nel mio training set, e l'oracolo deve poterlo eseguire*.
+
+## §4bis — Transfer CROSS-DOMINIO (regola #19: la stessa fattorizzazione FUORI dal software)
+
+> Remediation dall'audit-completezza 2026-07-06 (gap #19: il §4 sopra resta tutto in ambito software → il modello **localizzerebbe** la skill al codice). La skill `core→axes→leaves + ricomposizione` è **dominio-generale**; questi transfer la costringono ad astrarre. Stessa struttura (decisione-se-decomporre → `<decomposition>` → verifica di ricomposizione), fatti **self-contained** (regola #22 — nessuna verità-del-mondo). Dal banale al sistemico.
+
+- **[vita quotidiana — menù per N ospiti]** pianificare una cena di 3 portate per 8 persone con 2 vincoli dietetici. `core` = comune a ogni portata (porzioni×8, rispetto vincoli, coordinamento tempi); `axes` = tipo-portata {antipasto, primo, dolce}; `leaves` = la ricetta specifica di ciascuna. **Ricomposizione**: le 3 portate coprono il pasto (coverage) senza che una faccia il lavoro dell'altra (non-ridondanza); il comune non è ripetuto in ogni ricetta. **Proporzionalità (5a)**: un solo piatto → niente gerarchia.
+- **[business — piani di abbonamento]** 3 tier (Free/Pro/Enterprise). `core` = ciò che TUTTI condividono (auth, billing, supporto base); `axes` = livello; `leaves` = le feature aggiuntive di ogni tier. **Ricomposizione**: i tier coprono i segmenti senza gap né sovrapposizione (nessun tier ri-implementa l'auth). **Falso-invariante (5b)**: 3 prodotti che *sembrano* una famiglia ma non condividono nulla di sostanziale → un "BaseProduct" comune = astrazione forzata.
+- **[scienza — disegno sperimentale]** testare l'effetto di una variabile su 3 condizioni. `core` = protocollo + controlli **identici** in tutte le condizioni (è la **parità** di [[class-alternative-path-under-block]] sotto-classe A!); `axes` = la variabile manipolata; `leaves` = ogni condizione. **Ricomposizione**: le condizioni coprono lo spazio dell'ipotesi **senza confound** (nessuna differenza spuria oltre la variabile) = l'analogo dell'invariante-nel-core.
+- **[NEGATIVO cross-dominio — over-decomposition nel quotidiano]** "organizzo la serata: cucino, pago le bollette, chiamo un amico" → superficie comune ("cose della sera") ma **zero sotto-struttura condivisa** → forzare una gerarchia = indirezione inutile (5a/5b nel quotidiano). Mossa gold: in sequenza, **niente** `<decomposition>`.
+
+> La logica premiata è IDENTICA a quella software (coverage ∧ non-ridondanza ∧ invariante-reale + anti-over-decomposition): cambia SOLO il dominio. Chi ha imparato la LOGICA la applica ovunque — è la metrica di successo del transfer (#19).
 
 ## Sources
 - [[../concepts/hierarchical-decomposition|hierarchical-decomposition]] (skill, classe S, reward coverage+non-ridondanza+invariante, ⚠️ proporzionalità, 5 classi). [EXTRACTED — idea utente 2026-06-29 msg 284]
