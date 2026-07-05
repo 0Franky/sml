@@ -5,7 +5,7 @@ type: gold-example
 tags: [gold, training-data, area-03, verification, deception, reward, verifier, scientific-method]
 reward_tag: Q
 last_updated: 2026-07-05
-status: "[UNVERIFIED — format+logic reviewed, sandbox-execution pending (verifier-sandbox Fase 0.3)]"
+status: "reward-machinery ESEGUIBILE+testata (harness/verifiers/verification-discipline.mjs + test 9/0); prosa pytest inline illustrativa"
 sources:
   - "Utente TG msg 1103 (2026-07-05)"
   - "Concept madre: [[../concepts/verification-discipline-training]]"
@@ -14,7 +14,11 @@ sources:
 # Gold — verify-before-concluding sotto test-coverage INGANNEVOLE · Area 3 · Tag Q
 
 > Segue [[gold-methodology]] + il template 5-classi di [[area-03-reasoning-scientific-method]]. Concept: [[../concepts/verification-discipline-training]].
-> **[UNVERIFIED]**: gli output pytest/predicati sono ragionati ma NON ancora eseguiti in sandbox reale (gated su verifier-sandbox, [[../decisions/2026-06-23-pi-harness-base]]).
+> **Stato:** la MACCHINA-REWARD (discrimination-gate + grader + task `median`) è **ESEGUIBILE e testata contro Python reale** —
+> `harness/verifiers/verification-discipline.mjs` + `harness/test/unit/verification-discipline.test.mjs` (9/0): task ben-formato
+> (forniti insufficienti + oracolo nascosto sound), gate discrimina il test pari dal placebo, e le 5 traiettorie del reward danno i
+> valori attesi (disciplinato 1.25 · naive-ships −0.5 · cerimonia 1.0 · marker-spoofing −0.5 · onesto 1.0). Gli output pytest *inline*
+> qui sotto restano illustrativi (documentazione), ma la logica NON è più "di carta".
 
 ## §0 — Skill target
 Il modello, davanti a un task di coding con **test forniti che passano ma NON coprono un requisito dello spec**, deve:

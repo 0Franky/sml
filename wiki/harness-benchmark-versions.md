@@ -86,7 +86,7 @@ Diff **specifico** vs CB-2026-07-04 (commit → cosa cambia):
 | **V0 vanilla** | — | 0 | — | — | pi puro, baseline |
 | **V1 ours-full (stato-1)** | CB-2026-07-05 | 21 | `full` | 6 | scaffolding pieno (checklist anti-amnesia completa) |
 | **V2 ours-lean (stato-2)** | CB-2026-07-05 | 21 | `lean` | 6 | **diff vs V1: SOLO `laneMemoryHintLevel` full→lean** (via env, stesso codice) |
-| V3 ours-off (pianificato) | — | 20 (senza `slm`) | `off` | 6 | scaffold rimosso: misura "quanto il modello ha interiorizzato" |
+| **V3 ours-off (stato-3)** | CB-2026-07-05 | 21 (`slm` caricato ma scaffolding **OFF** via `laneMemoryHint=false`) | `off` | 6 | **diff vs V2: scaffolding `<how_memory_works>` spento del tutto**. Misura "quanto il modello ha interiorizzato" |
 
 ---
 
@@ -100,6 +100,7 @@ Dataset `humaneval-hard10` (5 hard noti {32,126,129,132,145} + 5 per proxy-diffi
 | V0 vanilla | 8/10 | **80** | 10 421 | 5 | 0 | 100 |
 | V1 ours-full | 7/10 | **70** | 55 144 | 5 | 100 | 100 |
 | V2 ours-lean | 8/10 | **80** | 46 198 | 5 | 100 | 100 |
+| V3 ours-off | 8/10 | **80** | 49 321 | 5 | 100 | 100 |
 
 **Lettura:** su task HARD self-contained lo scaffolding **full peggiora** (70 < 80 vanilla): il `<context>` verboso diluisce il
 ragionamento del modello piccolo (**H6 confermato a n=10**, prima solo n≤5). Il **lean recupera** al livello vanilla (80) **e** costa
@@ -133,8 +134,10 @@ long-horizon vero (SWE-scale o molti più task) per un test equo. Finché non c'
 
 - **H6 (adaptive-context) — SUPPORTATO a n=10**: scaffolding full diluisce il ragionamento su task hard self-contained
   (V1 70% < V0 80%); il lean lo mitiga (V2 80% = V0) a token inferiori. Direzione coerente con E8/E9 ([[harness-experiment-log]]).
-- **Scaffold-che-recede misurabile**: V1→V2→(V3 off) è una scala; la metrica "receded" = niente regressione abbassando il livello. Finora
-  abbassare full→lean **migliora** su hard → lo scaffolding full è, per questo modello su questi task, un *crutch dannoso* (non solo neutro).
+- **Scaffold-che-recede CONFERMATO (V1→V2→V3)**: full **70%** → lean **80%** → off **80%**. Abbassare/rimuovere lo scaffolding NON
+  regredisce (anzi full→lean *migliora*); a `off` il pass-rate resta 80% = vanilla. Su hard self-contained lo scaffolding `how_memory_works`
+  full è un **crutch dannoso RIMOVIBILE** (non solo neutro). La metrica "scaffold receded" (niente regressione abbassando il livello) è **verde**.
+  ⚠️ Vale per task self-contained; su long-horizon lo scaffolding-memoria potrebbe ancora servire (da testare, vedi Modo-2).
 - **Costo del contesto**: il valore dell'harness NON è sul single-shot HumanEval (dove è overhead).
 - **Modo-2 (memoria) — l'harness NON vince su sessioni corte** (finding onesto): a 6 task vanilla ha **100%** probe-recall (la sessione
   entra nella finestra nativa) → la memoria-harness è **overhead** (8-11× token) e `keep1` **peggiora** (33%, lane ignorata). Il
