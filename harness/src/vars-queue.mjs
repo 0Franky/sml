@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS rules (
   id       TEXT PRIMARY KEY,
   text     TEXT NOT NULL,
   severity TEXT NOT NULL DEFAULT 'soft',                -- soft|strong|hard
+  category TEXT NOT NULL DEFAULT 'general',             -- safety|memory|task|general (raggruppamento per concentrazione, msg 1067)
   created  INTEGER NOT NULL
 );
 CREATE TABLE IF NOT EXISTS decisions (
@@ -132,6 +133,7 @@ const EXPECTED_COLUMNS = {
   changelog: [["silent", "INTEGER NOT NULL DEFAULT 0"], ["decision_ref", "TEXT"]],
   vars: [["decision_ref", "TEXT"]],
   tasks: [["priority", "INTEGER NOT NULL DEFAULT 0"], ["deps", "TEXT NOT NULL DEFAULT '[]'"]], // focus-gathering v1 (migrazione DB esistenti)
+  rules: [["category", "TEXT NOT NULL DEFAULT 'general'"]], // categorizzazione regole (msg 1067, migrazione DB esistenti)
 };
 
 /** Parse difensivo del campo `deps` (JSON array di task-id). Ritorna SEMPRE un array di stringhe. */
@@ -474,10 +476,10 @@ export class VarsQueue {
   }
 
   // -- RULES ------------------------------------------------------------------
-  addRule(id, text, { severity = "soft", who = this.agent } = {}) {
-    this.db.prepare(`INSERT INTO rules (id,text,severity,created) VALUES (?,?,?,?)
-                     ON CONFLICT(id) DO UPDATE SET text=excluded.text, severity=excluded.severity`)
-      .run(id, text, severity, Date.now());
+  addRule(id, text, { severity = "soft", category = "general", who = this.agent } = {}) {
+    this.db.prepare(`INSERT INTO rules (id,text,severity,category,created) VALUES (?,?,?,?,?)
+                     ON CONFLICT(id) DO UPDATE SET text=excluded.text, severity=excluded.severity, category=excluded.category`)
+      .run(id, text, severity, category, Date.now());
     this._log("rules", id, "text", null, text, who);
   }
 

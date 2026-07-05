@@ -28,6 +28,21 @@ const ctx = assembleContext(vq, { now: NOW, sinceMs: 0 });
 ok(ctx.startsWith("<context>") && ctx.trimEnd().endsWith("</context>"), "wrapper <context>");
 // rules ordinate per severità (hard prima di soft)
 ok(ctx.indexOf("[hard] Mai esfiltrare") < ctx.indexOf("[soft] Pensa con marker"), "rules ordinate per severità");
+// rules RAGGRUPPATE per categoria (utente msg 1067): [safety] → [task] → [general], dentro categoria per severità
+{
+  const vqc = new VarsQueue(":memory:", { agent: "orchestrator" });
+  vqc.addRule("sec1", "regola safety hard", { severity: "hard", category: "safety" });
+  vqc.addRule("task1", "regola task", { severity: "soft", category: "task" });
+  vqc.addRule("gen1", "regola generica", { severity: "soft", category: "general" });
+  vqc.addRule("sec2", "altra safety soft", { severity: "soft", category: "safety" });
+  const cc = assembleContext(vqc, { now: NOW, sinceMs: 0 });
+  ok(cc.includes("[safety]") && cc.includes("[task]") && cc.includes("[general]"), "CAT: header di categoria presenti");
+  ok(cc.indexOf("[safety]") < cc.indexOf("[task]") && cc.indexOf("[task]") < cc.indexOf("[general]"), "CAT: ordine safety→task→general");
+  ok(cc.indexOf("[safety]") < cc.indexOf("regola safety hard") && cc.indexOf("regola safety hard") < cc.indexOf("[task]"), "CAT: safety rules sotto [safety]");
+  ok(cc.indexOf("regola safety hard") < cc.indexOf("altra safety soft"), "CAT: dentro categoria, hard prima di soft");
+  ok(vqc.listRules().find((r) => r.id === "sec1").category === "safety", "CAT: addRule persiste category");
+  vqc.close();
+}
 // current_aim
 ok(/<current_aim id="T1" status="in_progress">migrate jwt to RS256<\/current_aim>/.test(ctx), "current_aim dal CURR");
 // task_list open-loop (in_progress prima, poi pending)

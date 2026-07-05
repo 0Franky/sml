@@ -175,12 +175,22 @@ export function assembleContext(vq, opts = {}) {
 
   const lines = ["<context>"];
 
-  // --- rules (ordinate per severità: hard > strong > soft; tiebreaker per id → ordine deterministico) ---
+  // --- rules: RAGGRUPPATE per categoria (concentrazione del modello, msg 1067), poi per severità (hard>strong>soft),
+  // poi per id → prefisso cache-stabile (categorie in ordine fisso + tiebreaker deterministico) byte-identico cross-turno.
   const sevRank = { hard: 0, strong: 1, soft: 2 };
+  const CAT_ORDER = ["safety", "task", "memory", "general"];
+  const catRank = (c) => { const i = CAT_ORDER.indexOf(c); return i < 0 ? CAT_ORDER.length : i; };
   const rules = vq.listRules().sort((a, b) =>
-    ((sevRank[a.severity] ?? 9) - (sevRank[b.severity] ?? 9)) || String(a.id).localeCompare(String(b.id)));
+    (catRank(a.category) - catRank(b.category)) ||
+    ((sevRank[a.severity] ?? 9) - (sevRank[b.severity] ?? 9)) ||
+    String(a.id).localeCompare(String(b.id)));
   lines.push("  <rules>");
-  for (const r of rules) lines.push(`    - [${r.severity}] ${esc(r.text)}`);
+  let curCat = null;
+  for (const r of rules) {
+    const cat = r.category || "general";
+    if (cat !== curCat) { lines.push(`    [${cat}]`); curCat = cat; }
+    lines.push(`    - [${r.severity}] ${esc(r.text)}`);
+  }
   lines.push("  </rules>");
 
   // --- current_aim ---

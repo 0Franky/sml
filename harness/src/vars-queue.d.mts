@@ -125,7 +125,7 @@ export class VarsQueue {
   listVerifications(opts?: { status?: string | null }): VerificationRecord[];
 
   // RULES
-  addRule(id: string, text: string, opts?: { severity?: string; who?: string }): void;
+  addRule(id: string, text: string, opts?: { severity?: string; category?: string; who?: string }): void;
   listRules(): RuleRecord[];
 
   // CURR
