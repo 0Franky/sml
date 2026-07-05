@@ -40,12 +40,44 @@ compressione-che-rompe). Non spedire per fede: prototipare su 2 skill e MISURARE
 1. **Reward per-skill ANCORATO AL DOWNSTREAM, non a una cerimonia** ([[feedback_reward_hacking_principle]]). Il rischio del
    gathering-isolato: il modello impara "gathering che fa punteggio" (es. "ha raccolto N file") ma inutile a valle. Reward corretto
    = *il contesto raccolto ABILITA un'implementazione corretta* (misurato a valle), non un conteggio. Vale per ogni skill isolata.
+   > ✅ **CONFERMATO dall'utente (msg 1144):** «tutto il training set fatto ad hoc; il reward del gathering dato SOLO se sono stati
+   > ispezionati i file GIUSTI». Ground-truth del reward-gathering = **set dei file rilevanti effettivamente ispezionati** (precision/recall
+   > sui file-che-contano), non il numero. Il "file giusti" è definito dal task-oracle (quali file l'impl corretta deve toccare) → è
+   > outcome-anchored e non-gameable con l'ispezione-a-tappeto (che abbassa la precision).
 2. **Replay anti-forgetting** ([[catastrophic-forgetting]]). RL-are lo skill-2 degrada lo skill-1 (problema classico). La tua
    ricomposizione (1+2, poi 1+2+3) È già una forma di replay — **buon istinto** — ma va resa esplicita con **ratio di mixing**
    (una quota di task del vecchio skill in ogni stage nuovo), altrimenti la finestra scorrevole "2+3" può erodere lo skill-1.
 3. **Gate di competenza per-skill** = quando "gathering è buono abbastanza"? Serve un **eval per-skill** (held-out) con soglia,
    non un giudizio a occhio. → è la **matrice task×competenza** che proponi: costruiscila come *scaffold di eval* (righe=task,
    colonne=skill, celle=pass-rate) → misura competenza per-skill E rileva regressioni durante la composizione. Vale la pena.
+
+### A.1 — Verifica-stato all'HANDOFF (utente msg 1144) — nuova classe-training [PROPOSTA]
+> Utente msg 1144: «voglio anche testi dove diciamo *riprendi da qua* MA lo step precedente ha un ERRORE. Il modello deve
+> SEMPRE verificare che lo stato attuale sia corretto, e solo dopo che tutto torna procede. Il check va fatto **quando è
+> possibile e quando ha senso**, e solo per le parti sensate: se lo step precedente è un'implementazione enorme non la controlla
+> tutta, ma **le parti che intaccano la sua implementazione** → almeno verifica che la sua lane/input sia corretta».
+
+**Perché è importante (e dove si innesta):** l'**handoff tra step composti è IL punto di fallimento** del curriculum di Parte A —
+step-N eredita l'output di step-(N-1). Se il modello si fida ciecamente di uno stato rotto, l'errore si propaga e il credit-assignment
+si sporca ("step-N ha fallito" quando la colpa era l'input). È un'istanza di [[verification-discipline-training]] (non fidarti del
+dato ereditato) + di **proporzionalità/criticality** (verifica SOLO ciò che tocca la tua lane, non tutto — anti over-check).
+
+**Classe-training (rule #18) — "verifica SCOPED-e-PROPORZIONALE dello stato ereditato prima di procedere":**
+- **Setup**: prompt "riprendi da qui: {stato}". Metà esempi **stato-OK**, metà **stato-con-errore nella lane rilevante** al task.
+- **Comportamento premiato**: (i) verifica MIRATA delle sole parti che intaccano il proprio task (non l'intero stato); (ii) se l'errore
+  è nella propria lane → lo RILEVA prima di costruirci sopra (poi corregge o segnala); (iii) se lo stato è OK → **procede senza
+  over-verificare** (proporzionalità: non ri-controllare un'implementazione enorme irrilevante).
+- **Reward OUTCOME-anchored + bilanciato (anti cry-wolf, come il gold criticality):**
+  · stato-rotto-nella-lane ∧ procede-cieco (non rileva) → **penalità** (ha costruito su base rotta).
+  · stato-rotto-nella-lane ∧ rileva+gestisce → **reward**.
+  · stato-OK ∧ procede → **reward** (nessun premio all'over-check).
+  · stato-OK ∧ si blocca a verificare-tutto → **penalità lieve** (spreco/over-cautela, anti optimization-first violato).
+  · errore FUORI dalla propria lane ∧ non lo verifica → **nessuna penalità** (giustamente fuori scope).
+- **Ground-truth della "lane rilevante"**: derivata dal task-oracle (quali parti dello stato l'implementazione corretta LEGGE/DIPENDE) →
+  la verifica-mirata è misurabile, non a occhio. Riusa il pattern del `verifiers/` (fixture con stato-seminato-rotto vs stato-pulito).
+- **Legame stuck-state**: se la verifica trova lo stato rotto e il fix non è ovvio → è esattamente il trigger del [[stuck-state-focus-protocol]]
+  (entra in focus, aim="identifica l'errore nello stato ereditato").
+> Attende ok utente per filare in `wiki/training-taxonomy/` (probabile Area-03 accanto a verification-discipline).
 
 ## Parte B — thinking-optimization progressiva
 
