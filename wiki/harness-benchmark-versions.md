@@ -76,6 +76,14 @@ Diff **specifico** vs CB-2026-07-04 (commit → cosa cambia):
 - categorizzazione `<rules>` (safety/task/memory/general) + enum stati task validato.
 - `9447c63` — **wiring-test `tool-reachability`** + fix `note`/`remove_note` gated (bug latente classe-`set_keepturns`) — regola #17.
 - `17fe33c` — **fedeltà `turn-trace`**: `last-turn-raw.json` autoritativo; header senza literal dei nomi-tag (fix falso-positivo di diagnosi).
+- `a2f0e70` — **orchestratore `run-versioned`**: riusa run-ab (Modo-1) + run-session-ab (Modo-2), ladder modello (flash-lite→3.5-flash), report incrementale crash-safe. NB il ladder puntava a `gemini-3.1-flash` (inesistente) → corretto a `gemini-3.5-flash` (verificato via ListModels: 3.1 esiste solo come flash-lite; 3.1-pro = free-tier quota 0).
+- `5b37d11` — **Point-3 (disciplina di verifica)**: concept + gold-example (task `median` deceptivo) + Modo-2 pulito. Nessun cambio d'estensione (design + verifier).
+- `4d196ad` — **verifier disciplina-di-verifica ESEGUIBILE** (`eval/py-run.mjs` runner Python condiviso + `verifiers/verification-discipline.mjs` reward-machine reale, test 9/0) + config-stato **V3 scaffolding=off**.
+- `66e9862` — **mutation-generator** `verifiers/deceptive-task-gen.mjs` (test 7/0): da `(C,suite)` auto-genera task deceptivi ben-formati (scala il training set Point-3 oltre l'esempio a mano). Verifier, nessun cambio d'estensione.
+- `7156953` — **DRY (#16)**: `eval/verify.mjs::gradeHumanEval` migrato a `py-run.mjs::runPython` (un solo runner Python).
+- `e3fbbd1` — **RUNG anti-fissazione**: NUOVA estensione dedicata `.pi/extensions/anti-fixation.ts` (**la 22ª**, gate env `HARNESS_ANTI_FIXATION`, **DEFAULT off**) + logica pura `src/anti-fixation.mjs` (test 22/0). Diagnosi tracciata #145 (F8). ⚠️ meccanismo costruito, **efficacia A/B pending** → NON entra ancora come config-stato benchmarkato (default off, non spedito per fede).
+
+> **Nota conteggio estensioni**: da `e3fbbd1` i file-estensione sono **22** (aggiunta `anti-fixation.ts`), ma il rung è **gated off di default** → i config-stati V0-V3 sotto restano a comportamento invariato (21 estensioni *attive*). Il rung diventerà un config-stato solo dopo l'A/B di efficacia.
 
 ---
 
