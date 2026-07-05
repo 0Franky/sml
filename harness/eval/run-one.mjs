@@ -23,6 +23,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   AuthStorage, ModelRegistry, createAgentSession, DefaultResourceLoader, SessionManager,
 } from "@earendil-works/pi-coding-agent";
+import { loadGeminiKeys, pickKey } from "./gemini-keys.mjs"; // rotazione multi-chiave (SSOT #16)
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const HARNESS = resolve(__dirname, "..");
@@ -51,12 +52,11 @@ function snap(ev) {
 if (!TASK_FILE || !existsSync(TASK_FILE)) { console.error(JSON.stringify({ error: `EVAL_TASK_FILE mancante: ${TASK_FILE}` })); process.exit(2); }
 const task = JSON.parse(readFileSync(TASK_FILE, "utf8"));
 
+// chiave scelta per-indice (EVAL_KEY_INDEX, impostato dall'orchestratore per round-robin/rotate-on-retry). SSOT: gemini-keys.mjs.
 function loadKey() {
-  for (const l of readFileSync(ENV_PATH, "utf8").split(/\r?\n/)) {
-    const m = l.match(/^\s*GEMINI_API_KEY\s*=\s*(.+?)\s*$/);
-    if (m) return m[1].replace(/^["']|["']$/g, "");
-  }
-  throw new Error("GEMINI_API_KEY assente in harness/.env");
+  const keys = loadGeminiKeys();
+  const idx = Number.parseInt(process.env.EVAL_KEY_INDEX ?? "0", 10) || 0;
+  return pickKey(keys, idx);
 }
 // Headless UI: AUTO-APPROVA i confirm (in un eval automatico non c'è umano; i gate interattivi
 // dell'harness — pre-flight/secrets — non devono deadlock-are/negare le azioni legittime di coding).

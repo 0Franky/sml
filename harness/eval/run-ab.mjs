@@ -23,6 +23,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gradeHumanEval } from "./verify.mjs";
+import { loadGeminiKeys } from "./gemini-keys.mjs"; // rotazione multi-chiave (SSOT #16)
 
 const here = dirname(fileURLToPath(import.meta.url));
 const RUN_ONE = join(here, "run-one.mjs");
@@ -36,6 +37,8 @@ const RETRY_DELAY_MS = parseInt(process.env.EVAL_RETRY_DELAY_MS || "30000", 10);
 const MAX_RETRIES = parseInt(process.env.EVAL_MAX_RETRIES || "1", 10);
 const LABEL = process.env.EVAL_LABEL || "run";
 const MODEL_ID = process.env.MODEL_ID || "gemini-3.1-flash-lite";
+const NKEYS = Math.max(1, loadGeminiKeys().length); // #chiavi disponibili → round-robin per-cella + rotate-on-retry
+let keyCursor = 0; // avanza a ogni cella e a ogni retry → distribuisce il carico e ritenta su chiave FRESCA
 
 if (!existsSync(DATASET)) { console.error(`dataset assente: ${DATASET} — lancia prima eval/fetch-humaneval.mjs`); process.exit(2); }
 let tasks = readFileSync(DATASET, "utf8").split(/\r?\n/).filter(Boolean).map((l) => JSON.parse(l));
@@ -48,7 +51,7 @@ if (ARMS.includes("ours")) for (const k of KEEPS) configs.push({ arm: "ours", ke
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const isRateLimit = (s) => /429|quota|rate.?limit|RESOURCE_EXHAUSTED/i.test(String(s || ""));
 
-function runWorker(task, cfg) {
+function runWorker(task, cfg, keyIndex) {
   const workdir = mkdtempSync(join(tmpdir(), "eval-wd-"));
   const statedir = join(workdir, "state");
   writeFileSync(join(workdir, "_task.json"), JSON.stringify(task));
@@ -56,6 +59,7 @@ function runWorker(task, cfg) {
     ...process.env, MODEL_ID,
     EVAL_ARM: cfg.arm, EVAL_WORKDIR: workdir, EVAL_TASK_FILE: join(workdir, "_task.json"),
     HARNESS_STATE_DIR: statedir,
+    EVAL_KEY_INDEX: String(keyIndex ?? 0), // quale chiave Gemini usa questo worker (rotazione)
   };
   if (cfg.arm === "ours") env.HARNESS_NATIVE_KEEP_TURNS = String(cfg.keep);
   else delete env.HARNESS_NATIVE_KEEP_TURNS;
@@ -85,12 +89,15 @@ let idx = 0, total = tasks.length * configs.length, rateLimited = 0;
 for (const task of tasks) {
   for (const cfg of configs) {
     idx++;
-    let w = runWorker(task, cfg);
+    let keyIndex = keyCursor++ % NKEYS; // round-robin: ogni cella parte da una chiave diversa
+    let w = runWorker(task, cfg, keyIndex);
     // retry con backoff su ERRORE-API (429/5xx/empty deglutito): NON è un fallimento di capacità del modello.
+    // Su retry RUOTA la chiave (keyCursor++) → ritenta su una chiave FRESCA (se la 429 era per-day, l'altra regge).
     for (let attempt = 1; attempt <= MAX_RETRIES && (w.apiError || isRateLimit(w.sendErr) || isRateLimit(w.error)); attempt++) {
-      console.log(`      ⚠ errore-API (http=${w.httpStatus ?? "?"} ${String(w.retryErr ?? w.sendErr ?? w.error ?? "").slice(0, 80)}) → backoff ${RETRY_DELAY_MS / 1000}s + retry ${attempt}/${MAX_RETRIES}`);
+      keyIndex = keyCursor++ % NKEYS;
+      console.log(`      ⚠ errore-API (http=${w.httpStatus ?? "?"} ${String(w.retryErr ?? w.sendErr ?? w.error ?? "").slice(0, 80)}) → backoff ${RETRY_DELAY_MS / 1000}s + retry ${attempt}/${MAX_RETRIES} [key→${NKEYS > 1 ? keyIndex : "single"}]`);
       await sleep(RETRY_DELAY_MS);
-      w = runWorker(task, cfg);
+      w = runWorker(task, cfg, keyIndex);
     }
     const errored = w.apiError === true || !!w.error;
     if (errored) rateLimited++;

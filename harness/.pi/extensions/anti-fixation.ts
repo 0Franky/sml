@@ -16,6 +16,7 @@
  * L'esito (rompe la stagnazione & risolve?) è il segnale RL outcome-anchored (il fix VERO è il training; qui è lo scaffold).
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { appendFileSync } from "node:fs";
 import { convIdFor } from "../../src/session-context.mjs";
 import { classifyTurnSignal, updateStagnation, rungLevel, rungMessage } from "../../src/anti-fixation.mjs";
 
@@ -49,6 +50,9 @@ export default function (pi: ExtensionAPI) {
     if (level === 0) return; // sotto soglia → zero costo-contesto (nessuna iniezione)
     const msg = rungMessage(level);
     if (!msg) return;
+    // INSTRUMENTAZIONE (regola #15, msg 1103 punto-2): il trace `events` NON cattura le iniezioni context-hook →
+    // per sapere con CERTEZZA se il rung scatta scrivo un marker su file (ANTI_FIXATION_LOG, se set). Best-effort.
+    try { const lp = process.env.ANTI_FIXATION_LOG; if (lp) appendFileSync(lp, `fire level=${level} fails=${fails} conv=${convId}\n`); } catch { /* mai bloccante */ }
     const messages = ((event as any).messages as any[]) || [];
     return { messages: messages.concat([{ role: "user", content: msg }]) };
   });
