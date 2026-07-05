@@ -69,5 +69,18 @@ Primo run dell'audit su un campione, per stimare i gap del dataset esistente (ms
 
 **Remediation proposta (tracciata, attende OK utente — regola #18):** pass di *transfer cross-dominio* sui gold di **ragionamento/metacognizione** pre-#19 (decomposition per primo: aggiungere §4bis con 3-4 esempi non-software — decomporre un evento/piano-aziendale/progetto-di-ricerca con la STESSA logica core→axes→leaves). NON sui gold Q verticali-di-codice puri (dove la localizzazione al codice è corretta). → `wiki/todo.md`.
 
+## Procedura — PASS di integrità fattuale (gate PRE-training, regola #22)
+
+> Richiesta utente msg 1238: il labeling di integrità fattuale ha un **costo** → serve il **modo migliore** per farlo, come **gate prima della verifica finale del training set e dell'inizio dell'addestramento**. Principio-guida: **la verifica-del-mondo-reale è l'ULTIMA risorsa** — la maggior parte dei fatti va resa *self-contained* o *verify-step*, così il costo crolla.
+
+1. **Triage per rischio (non scansionare tutto uguale):**
+   - 🟢 **SAFE (skip)** — fatti **self-contained in una fixture** (gold Q-verificabili: il fatto *è* il codice/scenario, vero-per-costruzione). Già conformi.
+   - 🔴 **TARGET (scansiona)** — esempi che citano **entità del mondo reale** (prodotti/servizi/aziende/versioni/prezzi/API) o asseriscono **world-facts** come ground truth. È qui il rischio.
+2. **Flagging automatizzato (scala via workflow):** fan-out sulla taxonomy; ogni agente **flagga ogni asserzione fattuale sul mondo reale** (entità nominata + proprietà/superiorità/limite/numero rivendicato) e la classifica (I) verificabile-stabile / (II) incerta-o-volatile.
+3. **Remediation di DEFAULT = self-containment:** per gli esempi di ragionamento, sposta il fatto DENTRO la fixture/scenario (given-fact, vero-per-costruzione) → l'esempio testa il ragionamento, nessuna verità esterna serve. **Copre la maggioranza dei casi a costo ~0.**
+4. **Verifica+cita SOLO dove essenziale:** dove un fatto-del-mondo è genuinamente il punto (task di CONOSCENZA, area-12), verifica su fonte autorevole + **cita** (URL/doc/DOI, come la regola-citazioni wiki).
+5. **Reframe-as-verify-step:** dove il VALORE è il comportamento di discovery (caso Gmail), converti l'asserzione in un `[?]`→verifica; la ground truth diventa "il modello ha verificato", non "il fatto".
+6. **GATE:** il pass gira come voce della checklist (§5, #22) + come **gate dedicato pre-training**. **Nessun addestramento parte** finché ogni asserzione-mondo flaggata non è (I) citata, (II) reframe-verify, o (III) self-contained. Traccia in `wiki/todo.md`.
+
 ## Links
 [[training-set-construction-principles]] · [[../feedback_reward_hacking_principle]] · [[../feedback_transfer_always_cross_domain]] · [[../feedback_intelligence_gap_to_training_class]] · [[../training-taxonomy/class-metacognitive-self-audit]]
