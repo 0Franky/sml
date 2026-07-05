@@ -115,16 +115,18 @@ ragionamento del modello piccolo (**H6 confermato a n=10**, prima solo n≤5). I
 il 16% di token in meno del full (46K vs 55K). Il costo-token 4-5× vs vanilla è l'overhead del contesto: è valore su multi-turno/long-horizon
 (dove vanilla NON ha memoria), overhead puro su single-shot. → [[concepts/adaptive-context-injection]].
 
-#### Modo-1 — modello PIÙ CAPACE `gemini-3.5-flash` (utente msg 1106, ⚠️ PARZIALE n=3) [EXTRACTED]
-Pro 3.1 = free-tier quota 0 → ripiego su `gemini-3.5-flash` (più capace di flash-lite). **Quota esaurita dopo 3 task graded** (#32,#126,#129; poi 429 secco su #132/#145 + tutto il run lean). Segnale forte ma **n=3**, da completare con 2ª key:
+#### Modo-1 — modello PIÙ CAPACE `gemini-3.5-flash` (utente msg 1106, n=5 su chiavi fresche + TRACCIATO) [EXTRACTED 2026-07-05]
+Pro 3.1 = free-tier quota 0 → ripiego su `gemini-3.5-flash` (più capace di flash-lite). Set hard5 {32,126,129,132,145}, rotazione 4-chiavi.
 
-| Stato (gemini-3.5-flash) | pass | dettaglio |
+| Stato (gemini-3.5-flash) | pass (task puliti) | note |
 |---|---|---|
-| vanilla | **3/3** | #32 ✓, #126 ✓, #129 ✓ |
-| ours-full | **1/3** | #126 ✓; **#32 e #129 → FAIL `no-solution`** (il modello ha MOLLATO in 2-3 turni senza scrivere `solution.py`) |
-| ours-lean | — | 0 graded (quota esaurita prima del run) |
+| vanilla | **4/5** | #126/#129/#132/#145 ✓; **#32 FAIL** (assert-fail — task a polinomio RANDOM, stocastico) |
+| ours-full | **4/4 graded** | #126/#129/#132/#145 ✓; **#32 = crash worker infra** (SQLite state-db, escluso, non un fallimento del modello) |
 
-**Lettura [AMBIGUOUS — n=3 + causa da tracciare]:** su un modello capace lo scaffolding sembra peggiorare ANCORA (1/3 vs 3/3), e per una via NUOVA: non "assert-fail" (soluzione sbagliata) ma **`no-solution`** (early give-up senza produrre codice). Coerente con H6, ma ⚠️ il `no-solution` va **investigato con un trace** prima di concludere: potrebbe essere (a) cambio-comportamento indotto dal contesto verboso (mola/risponde conversazionale) o (b) artefatto d'estrazione (il modello scrive il codice in chat invece di `write_file`). **TODO**: ri-run tracciato di #32/#129 ours-full su gemini-3.5-flash appena c'è quota. NON si conclude H6-su-capaci da n=3.
+**Lettura ONESTA (con RETTIFICA del claim n=3):**
+- ⚠️ **RETRATTO il "no-solution / l'harness danneggia il modello capace" del run n=3 precedente**: NON riprodotto con chiavi fresche → era un **artefatto da quota** (chiave vecchia semi-esausta → risposte troncate/vuote → nessuna soluzione scritta). Con chiavi non-limitate, ours gira e passa. Lezione: separare gli effetti-harness dagli artefatti-quota richiede chiavi con budget.
+- **H6 è WEAK-MODEL-specifico**: su flash-lite lo scaffolding full PEGGIORA (70 vs 80 vanilla, F7); su gemini-3.5-flash **ours ≈ vanilla** (entrambi 4/4 sui task puliti) → un modello capace **tollera** il contesto verboso. Raffina H6: la diluizione-da-scaffolding morde il modello DEBOLE, non quello capace. **Rilevante per il target ~27B**: lì lo scaffolding potrebbe non nuocere (H6 è preoccupazione da modello-piccolo).
+- **#145 RISOLTO da gemini-3.5-flash** (helper corretto sui negativi: `-int(s[1]) + sum(...)`) — proprio l'edge che flash-lite sbagliava sempre con `abs(n)`. Conferma: la fissazione-#145 è un **limite di CAPACITÀ del modello debole**, non un difetto harness → il target-training (transfer examples) è portare un modello debole a fare ciò che uno capace già fa.
 
 ### Modo-2 — long-horizon, 6 task in una sessione + probe memoria/timeline · `gemini-3.1-flash-lite`
 Config {vanilla, ours@keep1, ours@keep6} sui 6 task base (HE/0-5). Run **SPAZIATO 2026-07-05** (30s/task → PULITO; il primo run era
