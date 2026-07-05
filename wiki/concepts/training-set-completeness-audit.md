@@ -38,6 +38,7 @@ last_updated: 2026-07-05
 - [ ] Ogni reward è **ancorato all'OUTCOME** reale (oracolo verificabile), MAI alla cerimonia/forma ([[../feedback_reward_hacking_principle]])?
 - [ ] C'è un **hack-check** esplicito che elenca i modi di lucrare il segnale e come sono neutralizzati?
 - [ ] I marker di ragionamento sono **ancorabili** a tool-call/artefatti reali (anti catena-fantasma, CLAUDE.md #10)?
+- [ ] **Integrità fattuale (regola #22)**: ogni claim FATTUALE è o **verificato+citato** (I) o riformulato come **verify-step/Discovery** (II)? Nessun **fatto-del-mondo inventato o volatile** asserito come ground truth (es. "Gmail ha solo server US")? Le skill di ragionamento usano fatti **self-contained nella fixture** (veri-per-costruzione) dove possibile?
 
 ### 6. Decontaminazione (regola #18)
 - [ ] L'**istanza osservata** (il caso reale da cui è nata la classe) è tenuta **held-out**, NON nel training?
