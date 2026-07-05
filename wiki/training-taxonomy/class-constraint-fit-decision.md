@@ -22,7 +22,7 @@ last_updated: 2026-07-05
 | Figlia | Dimensione della scelta | Esempio | Doc |
 |---|---|---|---|
 | **sostituzione risorsa-appropriata** | quale RISORSA (costosa vs sostituto equivalente) | Gemma per il meccanismo, Gemini per i dati | [[class-resource-appropriate-substitution]] (gold Gemma/Gemini held-out) |
-| **percorso-alternativo sotto-blocco** | come SBLOCCARSI quando la default è bloccata (alternativa EQUIVALENTE) | 2 modelli bloccati → modello fresco non-testato di parità | [[class-alternative-path-under-block]] (msg 1229; cross-link stagnation-recovery) |
+| **percorso-alternativo sotto-blocco** *(a sua volta padre di 2 sotto-classi)* | come SBLOCCARSI quando la default è bloccata + **quale "equivalente" secondo il REGIME** (misura→parità / uso→best-fit) | modelli bloccati→parità (misura) · Yahoo deprecato→Gmail (uso) | [[class-alternative-path-under-block]] (msg 1229+1233; discriminatore misura-vs-goal) |
 | *(futura)* right-tool-for-job | quale STRUMENTO | grep vs parser AST vs LLM | — |
 | *(futura)* right-effort-for-stakes | quanto SFORZO/rigore | one-liner vs design-doc | — |
 
