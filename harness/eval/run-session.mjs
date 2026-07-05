@@ -27,6 +27,9 @@ import {
   AuthStorage, ModelRegistry, createAgentSession, DefaultResourceLoader, SessionManager,
 } from "@earendil-works/pi-coding-agent";
 import { loadGeminiKeys, pickKey } from "./gemini-keys.mjs"; // SSOT multi-key (rule #16): rotazione per-config via EVAL_KEY_INDEX
+import { getConversationStore, getVarsQueue } from "../src/state-db.mjs"; // F22: registra i turni-USER nel path SDK + legge la meta eviction
+import { convIdFor } from "../src/session-context.mjs"; // convId della sessione (registrato da conversation-capture su session_start)
+import { EVICTION_ORDINAL_META } from "../src/meta-keys.mjs"; // F22: per leggere se l'eviction-checkpoint ha girato (guardia di regressione)
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const HARNESS = resolve(__dirname, "..");
@@ -90,12 +93,22 @@ async function main() {
     await resourceLoader.reload();
   }
 
+  const sessionManager = SessionManager.inMemory(WORKDIR);
   const { session, extensionsResult } = await createAgentSession({
     cwd: WORKDIR, agentDir: emptyAgent, model, authStorage: auth, modelRegistry: reg,
-    resourceLoader, sessionManager: SessionManager.inMemory(WORKDIR),
+    resourceLoader, sessionManager,
   });
   const nExt = (extensionsResult?.extensions ?? []).length;
   await session.bindExtensions({ uiContext: makeHeadlessUI() });
+
+  // --- F22 fix: registra i turni-USER nello store ---
+  // Il path SDK (`session.sendUserMessage`) NON fa scattare l'hook `input` della conversation-capture (che è per la
+  // pipeline della CLI) → i turni-USER non finivano in conversations.db → `store.countUserTurns()`=0 →
+  // l'eviction-checkpoint NON scattava MAI nell'eval (mentre nel pi CLI di drive-qwen sì, F16). Li registriamo qui,
+  // così l'eval è FEDELE alla produzione (CLI). Store singleton = quello che le extension leggono (stesso HARNESS_STATE_DIR);
+  // convId risolto dal sessionManager di QUESTA sessione (registrato da conversation-capture su session_start). [F22]
+  const convStore = getConversationStore();
+  const recordUserTurn = (t) => { try { convStore.append(convIdFor({ sessionManager }), "user", String(t)); } catch { /* best-effort: la cattura non deve rompere l'eval */ } };
 
   // --- Diagnostica continua: turni totali + ultimo status HTTP / retry (snapshot per task) ---
   let turns = 0, lastHttpStatus = null, lastRetryErr = null;
@@ -129,6 +142,7 @@ async function main() {
     const t0 = Date.now();
     const wait = waitAgentEnd(TASK_TIMEOUT);
     let sendErr = null;
+    recordUserTurn(prompt); // F22: registra il turno-USER PRIMA del send → countUserTurns corretto quando il context-hook (eviction) gira in questo turno
     try { await session.sendUserMessage(prompt); } catch (e) { sendErr = String(e?.message ?? e); }
     const outcome = await wait;
     const ms = Date.now() - t0;
@@ -155,6 +169,7 @@ async function main() {
   const turnsBeforeProbe = turns; lastHttpStatus = null; lastRetryErr = null;
   const wait = waitAgentEnd(TASK_TIMEOUT);
   let probeSendErr = null;
+  recordUserTurn(probePrompt); // F22: registra anche il turno della probe
   try { await session.sendUserMessage(probePrompt); } catch (e) { probeSendErr = String(e?.message ?? e); }
   const probeOutcome = await wait;
   const probeAnswer = safeLastText(session);
@@ -172,6 +187,10 @@ async function main() {
     },
     finalTokens: statsFinal?.tokens?.total ?? null,
     assistantMsgs: statsFinal?.assistantMessages ?? null,
+    // F22 GUARDIA DI REGRESSIONE (rule #17 + no-silent-caps): userTurnsRecorded=0 → il bug "SDK non registra i turni-USER"
+    // è tornato → l'eviction-checkpoint non può scattare (era la root-cause di F22). evictionOrdinal>0 → il checkpoint HA girato.
+    userTurnsRecorded: (() => { try { return convStore.countUserTurns(convIdFor({ sessionManager })); } catch { return null; } })(),
+    evictionOrdinal: (() => { try { return Number(getVarsQueue().getMeta(EVICTION_ORDINAL_META + convIdFor({ sessionManager })) ?? 0) || 0; } catch { return null; } })(),
   };
   session.dispose();
   process.stdout.write(JSON.stringify(out) + "\n");
