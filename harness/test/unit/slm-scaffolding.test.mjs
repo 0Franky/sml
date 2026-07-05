@@ -3,7 +3,7 @@
  * Garanzie: (1) "full" NON-breaking (contiene il testo storico load-bearing); (2) "lean" snello (senza la parte
  * "primo messaggio"/BAD-GOOD, utente msg 1067) ma tiene l'essenziale; (3) "off" tutto vuoto; (4) default config = "full".
  */
-import { buildMemoryScaffolding } from "../../src/slm-scaffolding.mjs";
+import { buildMemoryScaffolding, registerScaffolding, getRegisteredScaffolding } from "../../src/slm-scaffolding.mjs";
 import { DEFAULT_HARNESS_CONFIG, loadHarnessConfig } from "../../src/harness-config.mjs";
 
 let passed = 0, failed = 0;
@@ -59,6 +59,22 @@ const OPTS = { toolGating: "gated", discoverableCats: "web, files" };
   ok(leaned.laneMemoryHintLevel === "lean", "CONFIG: env HARNESS_LANE_MEMORY_HINT_LEVEL=lean override");
   const bad = loadHarnessConfig(NOPATH, { env: { HARNESS_LANE_MEMORY_HINT_LEVEL: "garbage" } });
   ok(bad.laneMemoryHintLevel === "full", "CONFIG: valore invalido → resta 'full' (clamp)");
+}
+
+// 6) REGISTRY (ADR modularità): slm.ts registra, il core legge lazy; non-installato → vuoto -----------
+{
+  // stato iniziale: nessuna registrazione → getRegisteredScaffolding() vuoto (= core pulito se slm.ts assente)
+  ok((() => { const s = getRegisteredScaffolding(); return s.awareness === "" && s.tail === "" && s.resources === ""; })(),
+    "REGISTRY: non-registrato → tutto vuoto (contesto core pulito, slm non installato)");
+  // slm.ts registra "full" → il core lo legge
+  const reg = registerScaffolding("full", OPTS);
+  ok(reg.awareness.includes("how_memory_works"), "REGISTRY: registerScaffolding('full') ritorna lo scaffolding pieno");
+  const got = getRegisteredScaffolding();
+  ok(got.awareness === reg.awareness && got.tail === reg.tail && got.resources === reg.resources,
+    "REGISTRY: getRegisteredScaffolding() rende ESATTAMENTE quanto registrato (stessa istanza modulo = singleton condiviso)");
+  // dial-down a "off" (training interiorizzato) → il core torna pulito
+  registerScaffolding("off", OPTS);
+  ok(getRegisteredScaffolding().awareness === "", "REGISTRY: re-register 'off' → core pulito (scaffold receded)");
 }
 
 console.log(`\nslm-scaffolding test: ${passed} passed, ${failed} failed`);

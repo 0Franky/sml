@@ -50,6 +50,15 @@ Mappa sull'asse training-vs-harness ([[feedback_training_vs_harness_classificati
 - **Flag/config per ogni hint** (invece di un'estensione unica): più granulare ma frammentato + gli hint restano nel core (non davvero rimovibili) → scartato a favore del confine netto estensione/core.
 - **Sempre-on con relevance-gating interno**: utile ma non risolve la modularità per-modello (il grande porta comunque il codice) → complementare, non sostitutivo.
 
+## Stato realizzazione (2026-07-05)
+
+**MODULARITÀ PIENA REALIZZATA + E2E-validata.** Il confine estensione/core è concreto, non solo un flag:
+- `.pi/extensions/slm.ts` è l'unità di install (pi carica ogni file in `.pi/extensions/`). REGISTRA lo scaffolding via `registerScaffolding(level, opts)` in `src/slm-scaffolding.mjs` (livello dalla config: `laneMemoryHint`=false→off, altrimenti `laneMemoryHintLevel` full/lean).
+- Il CORE (`context-assembly.ts`) NON conosce il contenuto-crutch: legge **lazy per-turno** `getRegisteredScaffolding()` (registry vuoto se slm non installato → contesto core PULITO).
+- **E2E (driver 9B)**: slm installato → `<how_memory_works …>` nel `last-turn-full.md`; slm off/assente → marker VERO assente (core pulito). ⚠️ nota metodologica: `turn-trace` scrive letteralmente "how_memory_works" nell'header del dump → per il check usare il testo VERO dello scaffolding, non il nome-tag.
+- Contenuto `slm`: `how_memory_works`/`reminder`/`resources` (livelli full/lean/off) + nudge `set-aim-and-tasks` (via seed rules, categoria task) + `set_keepturns` guidance (nella tool-description). L'alternativa "config-only" (§Alternative) era scartata perché lasciava il codice nel core; qui il testo-crutch vive SOLO nell'estensione → genuinamente rimovibile.
+- **Dial-down misurabile**: full→lean→off via config, poi rimozione del file; la metrica di "scaffold receded" = regressione E2E quando si abbassa/rimuove.
+
 ## Validazione / piano di build (ordine)
 1. ADR (questo) → scheletro estensione `slm`.
 2. Sposta `how_memory_works` in `slm` + **semplifica** (assenza-lane = segnale, no checklist verbosa) — [[concepts/adaptive-context-injection]].

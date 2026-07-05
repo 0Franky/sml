@@ -13,7 +13,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { VarsQueue } from "../../src/vars-queue.mjs";
 import { getVarsQueue, getConversationStore, closeAll } from "../../src/state-db.mjs";
 import { assembleContext, buildResumeDigest, buildAimTail, buildExecutionOrderLines } from "../../src/context-assembler.mjs";
-import { buildMemoryScaffolding } from "../../src/slm-scaffolding.mjs";
+import { getRegisteredScaffolding } from "../../src/slm-scaffolding.mjs";
 // inventario SEALED (nomi+sink+flag, MAI valori) per la lane <secrets> — singleton di processo condiviso con
 // secrets-guardrail/regex-ingress. Chiude FIND-7 (il modello ri-chiamava list_secrets perché non era in context).
 import { listSecretsMeta } from "../../src/sealed-secrets.mjs";
@@ -27,7 +27,6 @@ import { TRACE_DIR } from "../../src/state-paths.mjs"; // SSOT dir trace/log
 import { parseSessionStartMs } from "../../src/time-shift.mjs"; // ancoraggio temporale lane (msg 848/849)
 import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint, markFocusHintEmitted, shouldEmitReorgHint, markReorgEmitted, maybeAutoFocus } from "../../src/nested-compact.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
-import { CATEGORY_TOOLS } from "../../src/tool-gating.mjs"; // categorie per la riga di scoperta del tag <resources>
 import { redactText } from "../../src/secrets-redact.mjs";
 import { getDynamicSecrets } from "../../src/secrets-registry.mjs";
 import { mkdirSync, appendFileSync } from "node:fs";
@@ -45,16 +44,10 @@ const EXCLUDE_CURRENT_TURN = HARNESS_CFG.messagesExcludeCurrentTurn; // P1-B: es
 // turni più VECCHI del K-esimo (nthLastUserSeq → niente doppia-chat). K>0 ha precedenza su EXCLUDE_CURRENT_TURN.
 const NATIVE_KEEP_TURNS = HARNESS_CFG.nativeKeepTurns; // SSOT harness-config: intero ≥1 garantito (no `?? 1`/as any)
 
-// <how_memory_works> / <reminder> / <resources> — scaffolding-crutch ESTRATTO in ../../src/slm-scaffolding.mjs
-// (ADR 2026-07-05 estensione slm). Livello: laneMemoryHint=false → "off"; altrimenti laneMemoryHintLevel ("full" default
-// = checklist completa anti-amnesia | "lean" = solo l'essenziale load-bearing, senza la parte "non è il primo messaggio"
-// e i BAD/GOOD, utente msg 1067; l'ASSENZA di una lane È il segnale). Il core resta l'UNICO injector; il testo-crutch
-// vive nel modulo, così è misurabile/dial-down man mano che il training lo interiorizza (→ "off").
-const MEMORY_LEVEL = HARNESS_CFG.laneMemoryHint ? HARNESS_CFG.laneMemoryHintLevel : "off";
-const TOOLGATING_MODE = HARNESS_CFG.toolGating; // SSOT harness-config: enum lowercase validato (no `?? "gated"`/toLowerCase)
-const DISCOVERABLE_CATS = Object.keys(CATEGORY_TOOLS).filter((c) => c !== "core" && c !== "meta").join(", ");
-const { awareness: MEMORY_AWARENESS, tail: MEMORY_TAIL, resources: RESOURCES_LANE } =
-  buildMemoryScaffolding(MEMORY_LEVEL, { toolGating: TOOLGATING_MODE, discoverableCats: DISCOVERABLE_CATS });
+// <how_memory_works> / <reminder> / <resources> — scaffolding-crutch: NON vive più qui. È REGISTRATO dall'estensione
+// `.pi/extensions/slm.ts` (ADR 2026-07-05) e letto LAZY per-turno (in-hook) via getRegisteredScaffolding(). Se `slm` non
+// è installato (modello capace) → registry vuoto → questo core rende un contesto PULITO. Il core è l'unico INJECTOR ma
+// non conosce il CONTENUTO-crutch (confine estensione/core netto). Lettura per-turno = raccoglie l'eventuale re-register.
 
 function getStore(): VarsQueue {
   const vq = getVarsQueue(); // vars.db dell'orchestratore (path+mkdir+agent nel singleton state-db)
@@ -135,6 +128,9 @@ export default function (pi: ExtensionAPI) {
       const lane = buildMessagesLane(convStore, convId, { n: MESSAGES_WINDOW_N, charCap: MESSAGES_CHAR_CAP, afterSeq: checkpointSeq, excludeCurrentTurn: EXCLUDE_CURRENT_TURN, nativeKeepTurns: NATIVE_KEEP_TURNS });
       workspace = (resume ? `${resume}\n` : "") + base + hint + (lane ? `\n${lane}` : "");
     }
+    // Scaffolding-crutch letto LAZY dal registry (popolato da .pi/extensions/slm.ts al load; VUOTO se slm non installato
+    // → core pulito). Per-turno: raccoglie l'eventuale livello aggiornato. Vedi ADR 2026-07-05-slm-scaffolding-extension.
+    const { awareness: MEMORY_AWARENESS, tail: MEMORY_TAIL, resources: RESOURCES_LANE } = getRegisteredScaffolding();
     // <how_memory_works> IN TESTA (AWARENESS-first, msg 830): il modello legge PRIMA la spiegazione, poi vede le lane
     // che essa descrive. Statico + config-gated (laneMemoryHint). Vale in entrambi i rami (nested e non).
     if (MEMORY_AWARENESS) workspace = MEMORY_AWARENESS + RESOURCES_LANE + workspace;

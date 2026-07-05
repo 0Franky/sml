@@ -85,3 +85,22 @@ export function buildMemoryScaffolding(level, { toolGating, discoverableCats } =
   // "full" (default)
   return { awareness: fullAwareness(), tail: fullTail(), resources: resourcesLane({ toolGating, discoverableCats }) };
 }
+
+// ─── REGISTRY (ADR 2026-07-05, modularità piena) ───────────────────────────────────────────────────────────────────
+// L'ESTENSIONE `.pi/extensions/slm.ts` REGISTRA qui lo scaffolding al proprio load (decide full/lean/off dalla config).
+// Il CORE (`context-assembly.ts`) lo LEGGE lazy PER-TURNO via getRegisteredScaffolding(). Se slm.ts NON è installato
+// (modello capace) → il registry resta vuoto → il core rende un contesto PULITO (niente crutch). Questo è il confine
+// estensione/core dell'ADR: la pezza è genuinamente RIMOVIBILE togliendo un file, non un flag sepolto nel core.
+let _registered = null;
+const EMPTY = Object.freeze({ awareness: "", tail: "", resources: "" });
+
+/** Chiamata da slm.ts al load. @param {"full"|"lean"|"off"} level @returns lo scaffolding registrato. */
+export function registerScaffolding(level, opts) {
+  _registered = buildMemoryScaffolding(level, opts);
+  return _registered;
+}
+
+/** Letta dal core per-turno. Registry vuoto (slm non installato) → tutto "" (contesto core pulito). */
+export function getRegisteredScaffolding() {
+  return _registered ?? EMPTY;
+}
