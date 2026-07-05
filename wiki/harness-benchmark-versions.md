@@ -115,6 +115,17 @@ ragionamento del modello piccolo (**H6 confermato a n=10**, prima solo n≤5). I
 il 16% di token in meno del full (46K vs 55K). Il costo-token 4-5× vs vanilla è l'overhead del contesto: è valore su multi-turno/long-horizon
 (dove vanilla NON ha memoria), overhead puro su single-shot. → [[concepts/adaptive-context-injection]].
 
+#### Modo-1 — modello PIÙ CAPACE `gemini-3.5-flash` (utente msg 1106, ⚠️ PARZIALE n=3) [EXTRACTED]
+Pro 3.1 = free-tier quota 0 → ripiego su `gemini-3.5-flash` (più capace di flash-lite). **Quota esaurita dopo 3 task graded** (#32,#126,#129; poi 429 secco su #132/#145 + tutto il run lean). Segnale forte ma **n=3**, da completare con 2ª key:
+
+| Stato (gemini-3.5-flash) | pass | dettaglio |
+|---|---|---|
+| vanilla | **3/3** | #32 ✓, #126 ✓, #129 ✓ |
+| ours-full | **1/3** | #126 ✓; **#32 e #129 → FAIL `no-solution`** (il modello ha MOLLATO in 2-3 turni senza scrivere `solution.py`) |
+| ours-lean | — | 0 graded (quota esaurita prima del run) |
+
+**Lettura [AMBIGUOUS — n=3 + causa da tracciare]:** su un modello capace lo scaffolding sembra peggiorare ANCORA (1/3 vs 3/3), e per una via NUOVA: non "assert-fail" (soluzione sbagliata) ma **`no-solution`** (early give-up senza produrre codice). Coerente con H6, ma ⚠️ il `no-solution` va **investigato con un trace** prima di concludere: potrebbe essere (a) cambio-comportamento indotto dal contesto verboso (mola/risponde conversazionale) o (b) artefatto d'estrazione (il modello scrive il codice in chat invece di `write_file`). **TODO**: ri-run tracciato di #32/#129 ours-full su gemini-3.5-flash appena c'è quota. NON si conclude H6-su-capaci da n=3.
+
 ### Modo-2 — long-horizon, 6 task in una sessione + probe memoria/timeline · `gemini-3.1-flash-lite`
 Config {vanilla, ours@keep1, ours@keep6} sui 6 task base (HE/0-5). Run **SPAZIATO 2026-07-05** (30s/task → PULITO; il primo run era
 saturato dal rate-limit/TPM del free-tier, ~200K tok/sessione).
@@ -133,8 +144,9 @@ turno la ricostruzione della memoria vive nella lane `<messages_with_user>`, che
 sessioni **più lunghe della finestra nativa** (dove vanilla comincia a dimenticare); 6 task facili NON stressano vanilla → serve un
 long-horizon vero (SWE-scale o molti più task) per un test equo. Finché non c'è, l'harness qui è overhead. [[architecture/ab-eval-harness]]
 
-> **Regola quota (utente msg 1106):** ladder `gemini-3.1-flash-lite → gemini-3.1-flash` su esaurimento; il modello è etichettato per-cella.
-> Se si esaurisce anche `flash` → serve la 2ª key. NESSUNA PII (hardware utente ecc.) nei report.
+> **Regola quota (utente msg 1106):** ladder `gemini-3.1-flash-lite → gemini-3.5-flash` su esaurimento (⚠️ `gemini-3.1-flash` semplice NON esiste;
+> `gemini-3.1-pro` = free-tier **quota 0**, inutilizzabile senza billing — verificato via ListModels 2026-07-05). Il modello è etichettato per-cella.
+> **Stato quota 2026-07-05:** flash-lite ~esaurito dopo hard10+diag; 3.5-flash esaurito dopo 3 task → **serve la 2ª key** per completare a n≥5 (offerta utente msg 1106). NESSUNA PII (hardware utente ecc.) nei report.
 
 ---
 
