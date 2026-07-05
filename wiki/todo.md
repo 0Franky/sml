@@ -29,6 +29,8 @@ last_updated: 2026-06-30
 - [ ] Situational table ([[concepts/anti-fixation-metacognition-rung]]): ogni riga outcome-validata, non hard-coded.
 - [ ] Rung anti-fissazione: prototipo + A/B vs harness-plain sui task-fissazione.
 - [ ] Modo-2 full long-horizon {vanilla, ours@1, ours@8}.
+- [ ] **`/graphify --update`** (maintenance, regola #7/#12): dopo la lane 2026-07-05 (nuovi `keepturns.mjs`/`context-invariants.mjs`/`slm.ts` + ADR aggiornato) il grafo è disallineato. Op costosa (~170K tok) → tracciata, non lanciata in-lane; lanciare quando conviene.
+- [ ] **A/B full-vs-lean n≥5** (confermare H6 direzionale E8+E9): `EVAL_DATASET=eval/data/humaneval-hard.jsonl EVAL_ARMS=ours EVAL_KEEPS=6 [HARNESS_LANE_MEMORY_HINT_LEVEL=lean] node eval/run-ab.mjs` ×5. Solo dopo n≥5 valutare il cambio default full→lean.
 
 ## ✅ P0 BUG (2026-07-04, VERIFICATO + FIXATO + VALIDATO) — store SQLite perdevano turni per contesa concorrente → amnesia
 
