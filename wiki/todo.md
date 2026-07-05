@@ -13,9 +13,9 @@ last_updated: 2026-06-30
 
 > ⚠️ **Repo `0Franky/sml` è PUBLIC** — scan PII full-tree ad ogni push, redigere dump prima di inviarli. Vedi `feedback_no_pii_in_repo` + [[concepts/path-portability-awareness]].
 
-**🔴 PII — bloccato su UTENTE (reminder impostato per domani 2026-07-05):**
-- [ ] **Lanciare il purge storia** (`scratchpad/purge-pii-history.sh`): filter-repo che sostituisce l'username reale → `<user>` su tutti i 269 commit + force-push. Backup: `scratchpad/slm-full-backup.bundle`. Bloccato in auto-mode (rewrite+force-push da canale esterno) → lo lancia l'utente via `!`/terminale. Comando in TG msg 1080.
-- [ ] (decidere) email autore nei metadata commit: rewrite sì/no (default: lasciata).
+**🟢 PII — VERIFICATO CLEAN (2026-07-05, utente msg 1195):**
+- [x] **Purge storia username** ✅ **NON serve** (verificato, non a memoria): pickaxe `git log -S "frhae" --all` → username in **0 commit** del contenuto tracciato (local + origin/main); tree pulito; vecchio `b8171a7` inesistente → history già riscritta a un certo punto. Il "comando andato bene" era il PUSH graphify (`fd3be25` su origin, PII-scanned), non il purge. (Se serve certezza 100% sul remoto pubblico: `git fetch` + re-scan.)
+- [x] **Email autore nei metadata** ✅ **DECISO**: nessun rewrite, lasciata `frhaexin@gmail.com` (utente msg 1195). Task #8 chiuso.
 
 **🟡 BUILD stanotte (autonomo — wiring+test+commit, ADR [[decisions/2026-07-05-slm-scaffolding-extension]]):**
 - [x] **1. Task-validation deps-aware** (utente msg 1076) ✅ **FATTO**: `TASK_STATUSES` SSOT {pending,in_progress,done,blocked,cancelled}; `setTaskStatus` rifiuta status arbitrari (enum-guard) + **NON attiva (in_progress) un task con deps non-`done`** (deps-guard, rispetta `_checkDeps`/`ready`, non lo bypassa; forward-ref → blocca); `set_task_status` tool try/catch → rifiuto azionabile. Test task-graph +10 asserzioni; **suite unit 30/0, typecheck 0**.
@@ -27,7 +27,8 @@ last_updated: 2026-06-30
 **🟢 2026-07-05 (pomeriggio) — rotazione chiavi + classe azione→conseguenza:**
 - [x] **Rotator chiavi Gemini** (`eval/gemini-key-rotator.mjs`, 8 test) ✅ **FATTO** (commit `ffb0bfd`): 2-blocchi-429-consecutivi→morta (un successo azzera → filtra RPM), tutte-morte→cooldown 60s+sblocco, cap 5 cicli→abort; wirato run-ab+run-session-ab (params SSOT nel modulo); **pre-flight eliminato** (N ping = controproducente). F15: diagnosi quota corretta (RPM su key0, non esaurimento giornaliero di tutte). Design utente msg 1178/1180.
 - [x] **Classe training PROPOSTA** `class-consequence-intention-conflict` (regola #18, msg 1177) ✅ **FILATA** (commit `e13b69e`): causa→azione + azione→conseguenza vs intenzione; gold=il mio pre-flight (held-out) + 5 transfer domini-diversi; reward outcome-anchored. **In attesa conferma struttura utente** (proposto padre comune "audit-del-ragionamento" con stagnation-recovery + transfer-assumption-audit).
-- [ ] **graphify --update DEFERRED**: 1 nuova classe + edit index/log; grafo ricostruito stamattina (`fd3be25`). Batchare quando la coda-classi si assesta (optimization-first — evita rebuild ~170K-token per 1 file).
+- [x] **Ristrutturazione gerarchica + regola #20** ✅ **FATTO** (commit `c8503b9`, msg 1195): padre-radice `class-metacognitive-self-audit` + 3 figlie agganciate (link Padre reciproco) + specializzazione ricorsiva (stagnation-recovery figlia-e-padre); CLAUDE.md #20 + memory `feedback_hierarchical_training_classes`.
+- [ ] **graphify --update DEFERRED fino a consolidamento tassonomia** (utente msg 1197): grafo ricostruito stamattina (`fd3be25`); ora ci sono +2 classi + 1 padre + edit. Batchare quando la tassonomia si assesta (evita rebuild ripetuti mentre si ristruttura — optimization-first). Trigger: "ferma le classi, consolida".
 - [ ] **Intelligenza #145 su 3.5-flash BLOCCATO — CONFERMATO daily** (4/4 chiavi 429 anche dopo 10 min di attesa, 2026-07-05 → NON è RPM, è esaurimento giornaliero; il ping-1-token passa ma `generateContent` reale no). Re-test al **reset giornaliero** (task #11). Probe pronto: `PK=1 PM=gemini-3.5-flash node eval/_probe145direct.mjs` (o loop su tutte le chiavi).
 
 **🔵 DA VALIDARE (quando riprende l'eval, n≥5):**
