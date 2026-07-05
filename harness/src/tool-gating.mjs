@@ -15,7 +15,7 @@ export const CATEGORY_TOOLS = {
   secrets: ["list_secrets", "request_secret", "request_local_http", "request_sink", "propose_secret_edit", "propose_secret_destroy", "propose_secret_create", "check_secret_refs", "preview_secret_use", "add_secret", "load_secrets_from_env"],
   http: ["http_request"],
   tasks: ["set_task_status", "add_task", "set_task_deps", "get_execution_order", "set_curr", "list_tasks"],
-  vars: ["set_var", "get_var", "propose_var", "merge_proposals", "extract_var", "render_template", "sliding_var_read", "sliding_var_replace", "get_shared_view", "get_changelog"],
+  vars: ["set_var", "get_var", "note", "remove_note", "propose_var", "merge_proposals", "extract_var", "render_template", "sliding_var_read", "sliding_var_replace", "get_shared_view", "get_changelog"],
   focus: ["enter_focus", "pop_focus", "focus_status", "checkpoint", "get_conversation", "set_keepturns"],
   reasoning: ["remember_lesson", "recall_lessons", "record_assumptions", "check_facts", "record_decision", "get_decisions_by_agent"],
   messaging: ["send_message", "inbox", "mark_read"],
@@ -39,7 +39,10 @@ export const ESSENTIAL_TOOLS = [
   "propose_secret_create", "load_secrets_from_env", "http_request",
   "list_secrets", "request_sink", "preview_secret_use", "propose_secret_edit", "check_secret_refs",
   "list_tasks", "add_task", "set_task_status", "set_curr", // task basics
-  "set_var", "get_var", // vars basics
+  "set_var", "get_var", "note", // vars basics + note (durable fact): lo scaffolding <how_memory_works> ISTRUISCE
+  // ESPLICITAMENTE "note(...)" per salvare prima dello scroll → se gated il modello va in not-found (STESSA classe di
+  // set_keepturns, trovata dal wiring-test tool-reachability). Essenziale = chiamabile subito col nome reale. remove_note
+  // resta deferito (categoria vars, raro/distruttivo — scopribile con find_tool/open_category).
   "enter_focus", "pop_focus", "focus_status", // focus/matrioska (utente msg 807: enter_focus essenziale; il TRIO
   // insieme, altrimenti il modello entra in focus e non può uscirne — pop_focus/focus_status stranded)
   "set_keepturns", // keepTurns model-controlled (msg 1062): primitivo di auto-gestione del contesto. ESSENZIALE per lo
