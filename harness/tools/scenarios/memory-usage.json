@@ -1,0 +1,10 @@
+[
+  "Iniziamo un'indagine su una pipeline dati che perde record. Esaminiamo un componente per turno. Componente 1: l'ingestion legge da un CSV e potrebbe saltare l'header. Valuta il rischio in breve.",
+  "Componente 2: il parser delle date. Alcune date sono in formato ambiguo MM/DD contro DD/MM: rischio di parsing sbagliato. Valuta in breve.",
+  "Componente 3: il dedup usa un hash a 32 bit, possibile collisione. Valuta in breve.",
+  "Componente 4: lo storage ha un vincolo UNIQUE che potrebbe rifiutare righe in silenzio. Valuta in breve.",
+  "Componente 5: il retry ha un backoff esponenziale ma un tetto di 3 tentativi: possibile perdita oltre il tetto. Valuta in breve.",
+  "Componente 6: il logging campiona all'1%, quindi i drop sono quasi invisibili nei log. Valuta in breve.",
+  "Componente 7: la partizione temporale usa UTC ma la sorgente registra in ora locale: rischio off-by-one-day sulle partizioni. Valuta in breve.",
+  "Bene, abbiamo esaminato 7 componenti. Domanda: tra tutti, QUALE componente aveva il rischio legato al FORMATO DELLE DATE, e qual era il rischio esatto?"
+]
