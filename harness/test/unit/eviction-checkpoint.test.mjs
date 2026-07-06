@@ -87,10 +87,10 @@ ok(buildEvictionDirective("inject", { digest: "x" }).includes("<scratch>"), "dir
 
 // ── loadEvictionInjectMode + injectDirectiveMessages (F26 forma-vs-richiesta) ──
 ok(EVICTION_INJECT_MODES.join(",") === "trailing,preuser,system", "inject-mode: modi disponibili");
-ok(loadEvictionInjectMode({ env: {} }) === "trailing", "inject-mode: default trailing (comportamento invariato)");
-ok(loadEvictionInjectMode({ env: { HARNESS_EVICTION_INJECT_MODE: "PREUSER" } }) === "preuser", "inject-mode: env case-insensitive");
+ok(loadEvictionInjectMode({ env: {} }) === "preuser", "inject-mode: default preuser (F26: trailing dannoso, flip 2026-07-06)");
+ok(loadEvictionInjectMode({ env: { HARNESS_EVICTION_INJECT_MODE: "TRAILING" } }) === "trailing", "inject-mode: env case-insensitive (trailing ancora selezionabile)");
 ok(loadEvictionInjectMode({ env: { HARNESS_EVICTION_INJECT_MODE: " system " } }) === "system", "inject-mode: env trim");
-ok(loadEvictionInjectMode({ env: { HARNESS_EVICTION_INJECT_MODE: "bogus" } }) === "trailing", "inject-mode: valore ignoto → default (fail-safe)");
+ok(loadEvictionInjectMode({ env: { HARNESS_EVICTION_INJECT_MODE: "bogus" } }) === "preuser", "inject-mode: valore ignoto → default preuser (fail-safe)");
 {
   const base = [{ role: "user", content: "task1" }, { role: "assistant", content: "ok" }, { role: "user", content: "PROBE: what did you save?" }];
   const dir = buildEvictionDirective("nudge");

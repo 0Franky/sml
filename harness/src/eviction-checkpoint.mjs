@@ -141,15 +141,17 @@ export function buildEvictionDirective(rung, { digest = "" } = {}) {
 export const EVICTION_INJECT_MODES = ["trailing", "preuser", "system"];
 
 /**
- * loadEvictionInjectMode — modo d'iniezione. Env `HARNESS_EVICTION_INJECT_MODE` ∈ EVICTION_INJECT_MODES,
- * default `trailing` (comportamento attuale, cambio nullo). Fail-safe: valore ignoto → default.
+ * loadEvictionInjectMode — modo d'iniezione. Env `HARNESS_EVICTION_INJECT_MODE` ∈ EVICTION_INJECT_MODES.
+ * DEFAULT `preuser` dal 2026-07-06 (F26, utente msg 1290/1291): il vecchio default `trailing` è ATTIVAMENTE DANNOSO
+ * — a keep1 dà recall 50% e 886K token (dirotta la probe + thrashing), mentre `preuser` (direttiva PRIMA dell'ultimo
+ * turno, non-competitiva) dà 83% a 390K. `trailing`/`system` restano selezionabili via env. Fail-safe: valore ignoto → default.
  * @param {{ env?:Record<string,string|undefined> }} [opts]
  * @returns {"trailing"|"preuser"|"system"}
  */
 export function loadEvictionInjectMode(opts = {}) {
   const env = opts.env ?? (typeof process !== "undefined" && process.env ? process.env : {});
   const raw = String(env.HARNESS_EVICTION_INJECT_MODE || "").trim().toLowerCase();
-  return EVICTION_INJECT_MODES.includes(raw) ? /** @type {any} */ (raw) : "trailing";
+  return EVICTION_INJECT_MODES.includes(raw) ? /** @type {any} */ (raw) : "preuser";
 }
 
 /**
