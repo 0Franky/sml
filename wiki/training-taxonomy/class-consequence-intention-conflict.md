@@ -77,4 +77,4 @@ Ogni task presenta un obiettivo + un'azione *plausibile* con una conseguenza-aut
 - **Over-fitting all'istanza** (riconoscere solo "pre-flight/ping") → mitigato: pre-flight è held-out; il training è su 5 domini disgiunti.
 
 ## Links
-[[class-stagnation-recovery]] · [[gold-example-transfer-assumption-audit]] · [[area-03-reasoning-scientific-method]] · [[area-04-context-metacognition]] · [[../feedback_reward_hacking_principle]] · [[../feedback_intelligence_gap_to_training_class]] · [[../harness-experiment-log]]
+[[class-metacognitive-self-audit]] (padre) · [[class-subgoal-hijacks-task]] (figlia — il MEZZO si sostituisce al FINE, da F24) · [[class-stagnation-recovery]] · [[gold-example-transfer-assumption-audit]] · [[area-03-reasoning-scientific-method]] · [[area-04-context-metacognition]] · [[../feedback_reward_hacking_principle]] · [[../feedback_intelligence_gap_to_training_class]] · [[../harness-experiment-log]]
