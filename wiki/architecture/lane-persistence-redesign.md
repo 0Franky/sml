@@ -62,7 +62,9 @@ L'harness dà al modello memoria OLTRE la finestra nativa iniettando **lane** ne
 
 **Validazione (rule #14, PRIMA di dichiararlo fatto)**: (a) **wiring/unit test** deterministico — data una traccia-tool con N write_file → il digest contiene gli N entry-point; (b) **validazione su Gemma** — re-run del setup F24 con digest ON → la recall deve salire verso vanilla **SENZA** dipendere dal salvataggio del modello (è la prova che la cattura deterministica funziona dove il nudge fallisce). **Metrica di successo**: recall@keep1 ≫ 0% (F24) avvicinandosi a vanilla, a costo-token controllato.
 
-**Deprioritizzato**: il "filtrare le memory-op da `<last_tool_calls>`" (prima proposta) — la sua motivazione (affollamento) è stata **REFUTATA** da F24 (la causa era deflessione), e `<last_tool_calls>` serve anche a **non ri-chiamare** un tool → non spogliarlo. Il core-fix è il digest persistente pinned.
+**Push come SCAFFOLD FADEABLE (curriculum, utente msg 1267)**: la lane tool-results pushata è uno scaffold da FAR RECEDERE nel training — FASE-1 pushata piena; poi rimossa progressivamente forzando il modello a `view_tool_calls` (pull). Insegna la decisione-di-pull sfumando il push (filosofia scaffold-recede resa curriculum). **Prerequisito**: il tool pull `view_tool_calls(start,end)` (#3) deve esistere PRIMA di poter fadeare. Tracciato in `todo.md` (famiglia classe uso-harness).
+
+**Deprioritizzato (poi RIPRISTINATO, utente msg 1259)**: il "filtrare le memory-op da `<last_tool_calls>`" (prima proposta) — la sua motivazione (affollamento) è stata **REFUTATA** da F24 (la causa era deflessione), e `<last_tool_calls>` serve anche a **non ri-chiamare** un tool → non spogliarlo. Il core-fix è il digest persistente pinned.
 
 ## ⚠️ Le due decisioni che restano a TE
 
