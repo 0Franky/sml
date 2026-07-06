@@ -1,7 +1,7 @@
 /**
  * tool-call-log — test del ring buffer delle ultime tool-call (fix amnesia #1, msg 811-817).
  */
-import { summarizeArgs, recordCall, recordResult, getRecent, formatLane, clearToolCallLog } from "../../src/tool-call-log.mjs";
+import { summarizeArgs, recordCall, recordResult, getRecent, formatLane, ringStats, viewRange, clearToolCallLog } from "../../src/tool-call-log.mjs";
 
 let pass = 0, fail = 0;
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; console.error("  ✗ " + msg); } }
@@ -90,6 +90,59 @@ ok(summarizeArgs({ v: "x".repeat(100) }).length < 60, "args: valore lungo tronca
   ok(/AUTHORITATIVE order is by those timestamps/.test(lane), "note: ordine autoritativo = timestamp");
   // senza sessionStartMs → nessun prefisso (degrada)
   ok(!/\[\+\d/.test(formatLane(8)), "shift: senza sessionStartMs → nessun prefisso (graceful)");
+}
+
+// ── seq assoluto + ringStats + viewRange (tool PULL view_tool_calls, #3 msg 1258) ──
+{
+  clearToolCallLog();
+  // 5 azioni reali + 2 memory-op intercalate
+  recordCall({ callId: "a", name: "write_file", args: { path: "s1.py" } }); recordResult({ callId: "a", isError: false, text: "ok" }); // seq1
+  recordCall({ callId: "b", name: "run_python", args: { code: "print(1)" } }); recordResult({ callId: "b", isError: false, text: "1" }); // seq2
+  recordCall({ callId: "n1", name: "note", args: { text: "x" } }); recordResult({ callId: "n1", isError: false, text: "ok" }); // seq3 (memory-op)
+  recordCall({ callId: "c", name: "grep", args: { q: "def" } }); recordResult({ callId: "c", isError: false, text: "3 hits" }); // seq4
+  recordCall({ callId: "d", name: "write_file", args: { path: "s2.py" } }); recordResult({ callId: "d", isError: false, text: "ok" }); // seq5
+  // seq assoluto assegnato
+  const all = getRecent(100);
+  ok(all[0].seq === 1 && all[all.length - 1].seq === 5, "seq: assoluto crescente 1..5");
+  // ringStats
+  const st = ringStats();
+  ok(st.buffered === 5 && st.minSeq === 1 && st.maxSeq === 5 && st.totalSeen === 5 && st.dropped === 0, "ringStats: 5 bufferizzate, range 1..5, 0 dropped");
+  const stF = ringStats({ excludeMemoryOps: true });
+  ok(stF.buffered === 4, "ringStats: excludeMemoryOps esclude la note (4 azioni)");
+  // viewRange default (ultime N) — esclude memory-op di default
+  const vDefault = viewRange({ count: 3 });
+  ok(vDefault.includes("<tool_calls_view"), "viewRange: marker presente");
+  ok(!vDefault.includes("note("), "viewRange: default esclude le memory-op");
+  ok(vDefault.includes("#5") && vDefault.includes("#4") && vDefault.includes("#2"), "viewRange: ultime 3 AZIONI = #2,#4,#5 (note #3 saltata)");
+  // viewRange by range [from,to] su #seq assoluto
+  const vRange = viewRange({ from: 1, to: 2 });
+  ok(vRange.includes("#1") && vRange.includes("#2") && !vRange.includes("#4"), "viewRange: range [1,2] mostra solo #1,#2");
+  // includeMemoryOps mostra la note
+  const vRaw = viewRange({ from: 1, to: 5, includeMemoryOps: true });
+  ok(vRaw.includes("note("), "viewRange: includeMemoryOps → include la note #3");
+  // range fuori dal disponibile → header informativo, no righe
+  const vEmpty = viewRange({ from: 100, to: 200 });
+  ok(vEmpty.includes("no calls in the requested range"), "viewRange: range vuoto → header con range disponibile");
+}
+
+// ── viewRange: onestà su ciò che è USCITO dal ring (dropped) ──
+{
+  clearToolCallLog();
+  for (let i = 0; i < 30; i++) { recordCall({ callId: "x" + i, name: "write_file", args: { path: "f" + i } }); recordResult({ callId: "x" + i, isError: false, text: "ok" }); }
+  const st = ringStats();
+  ok(st.buffered === 24 && st.totalSeen === 30 && st.dropped === 6 && st.minSeq === 7, "ringStats: 30 seen, 24 bufferizzate, 6 dropped, min #7");
+  const v = viewRange({ count: 5 });
+  ok(v.includes('dropped="6"') && v.includes("dropped(ring keeps last 24)"), "viewRange: dichiara ONESTAMENTE le 6 call uscite dal buffer (no silent-truncation)");
+  // seq resettato da clearToolCallLog (isolamento sessione)
+  clearToolCallLog();
+  recordCall({ callId: "fresh", name: "ls", args: {} });
+  ok(getRecent()[0].seq === 1, "seq: clearToolCallLog resetta la sequenza (isolamento sessione)");
+}
+
+// ── vuoto → header vuoto ──
+{
+  clearToolCallLog();
+  ok(viewRange({ count: 5 }).includes('buffered="0"'), "viewRange: buffer vuoto → header buffered=0");
 }
 
 console.log(`\ntool-call-log: ${pass} pass, ${fail} fail`);
