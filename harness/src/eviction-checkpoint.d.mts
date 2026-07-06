@@ -21,6 +21,18 @@ export function summarizeEvicting(
 
 export function buildEvictionDirective(rung: string, opts?: { digest?: string }): string;
 
+export const EVICTION_INJECT_MODES: string[];
+
+export function loadEvictionInjectMode(opts?: {
+  env?: Record<string, string | undefined>;
+}): "trailing" | "preuser" | "system";
+
+export function injectDirectiveMessages(
+  messages: Array<{ role: string; content: string }>,
+  directive: string,
+  mode?: "trailing" | "preuser" | "system",
+): Array<{ role: string; content: string }>;
+
 export function buildOobPrompt(opts?: { digest?: string }): Array<{ role: string; content: string }>;
 
 export function parseOobSave(responseText: string): Array<{ text: string }>;

@@ -81,7 +81,7 @@ export default function (pi: ExtensionAPI) {
     // perché harness-config.mjs:44-50 ha PROVATO che il 9B legge user/nativo e IGNORA system). MA il trailing è anche
     // ciò che DIROTTA la probe (F25): most-recent → risposto. I modi `preuser`/`system` isolano forma-vs-richiesta.
     // Messaggio effimero (solo questo request, il context-hook non persiste); il tag lo marca come direttiva harness.
-    const injected = injectDirectiveMessages(messages, directive, injectMode);
-    return { messages: injected };
+    const injected = injectDirectiveMessages(messages as any, directive, injectMode);
+    return { messages: injected as any };
   });
 }

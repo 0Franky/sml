@@ -1,0 +1,1 @@
+["Do these steps IN ORDER within this single turn, using tools: (1) run the bash command `echo alpha-123`; (2) run the bash command `echo beta-456`; (3) then call the tool named view_tool_calls with count set to 5. Finally, report back VERBATIM the exact text that view_tool_calls returned to you. Do not skip step 3 — you MUST call view_tool_calls."]

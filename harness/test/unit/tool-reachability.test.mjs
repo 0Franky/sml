@@ -54,6 +54,8 @@ ok(categorizeTool("set_keepturns") === "focus" && essentialSet.has("set_keepturn
 ok(registered.has("note"), "pin: note è effettivamente registrato");
 ok(categorizeTool("note") === "vars" && essentialSet.has("note"), "pin: note categorizzato(vars)+essenziale (istruito dallo scaffolding)");
 ok(categorizeTool("remove_note") === "vars", "pin: remove_note categorizzato(vars) — scopribile anche se deferito");
+ok(registered.has("view_tool_calls"), "pin: view_tool_calls è effettivamente registrato (context-views.ts, anche se gated)");
+ok(categorizeTool("view_tool_calls") === "focus" && essentialSet.has("view_tool_calls"), "pin: view_tool_calls categorizzato(focus)+essenziale (pull-tool #3, curriculum scaffold-fade)");
 
 // E) INTEGRITÀ essential: ogni voce di ESSENTIAL_TOOLS è un core-pi noto O un tool davvero registrato
 //    (una voce che nessuno registra sarebbe silenziosamente scartata da computeDefaultActive → maschera un typo).

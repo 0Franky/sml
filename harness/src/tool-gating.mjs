@@ -16,7 +16,7 @@ export const CATEGORY_TOOLS = {
   http: ["http_request"],
   tasks: ["set_task_status", "add_task", "set_task_deps", "get_execution_order", "set_curr", "list_tasks"],
   vars: ["set_var", "get_var", "note", "remove_note", "jot", "recall_scratch", "clear_scratch", "propose_var", "merge_proposals", "extract_var", "render_template", "sliding_var_read", "sliding_var_replace", "get_shared_view", "get_changelog"],
-  focus: ["enter_focus", "pop_focus", "focus_status", "checkpoint", "get_conversation", "set_keepturns"],
+  focus: ["enter_focus", "pop_focus", "focus_status", "checkpoint", "get_conversation", "set_keepturns", "view_tool_calls"],
   reasoning: ["remember_lesson", "recall_lessons", "record_assumptions", "check_facts", "record_decision", "get_decisions_by_agent"],
   messaging: ["send_message", "inbox", "mark_read"],
   verify: ["run_verifier"],
@@ -51,6 +51,10 @@ export const ESSENTIAL_TOOLS = [
   "get_conversation", // sessione 019f292b: la lane <messages_with_user> istruisce ESPLICITAMENTE "use get_conversation
   // range=..." per i messaggi più vecchi → dev'essere ATTIVO, altrimenti il modello che obbedisce prende "not found"
   // (il hint puntava a un tool gated). Read-only, safe. Risponde a "mostrami tutti i miei messaggi".
+  "view_tool_calls", // pull della coda tool-call fuori-finestra (#3 msg 1258, curriculum scaffold-fade msg 1267). Stesso
+  // razionale get_conversation/set_keepturns: se la lane hint-a il pull, il tool dev'essere raggiungibile per nome
+  // (anti not-found-loop). Read-only. NB: registrato GATED (context-views.ts, HARNESS_CONTEXT_VIEWS=on) → attivo solo
+  // quando il gate è on (computeDefaultActive interseca coi tool davvero registrati: gate-off → assente, innocuo).
   "find_tool", "open_category", "list_tool_categories", // meta (scoperta)
 ];
 
