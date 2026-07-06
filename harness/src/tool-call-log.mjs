@@ -12,9 +12,10 @@
  */
 
 import { shiftPrefix } from "./time-shift.mjs";
+import { MEMORY_TOOLS } from "./task-digest.mjs"; // SSOT (rule #16): le stesse memory-op escluse dal digest si filtrano dalla lane
 
 const RING = [];
-const DEFAULT_MAX = 12; // capienza del buffer (le ultime N call); la lane ne mostra un sottoinsieme
+const DEFAULT_MAX = 24; // capienza del buffer (le ultime N call); la lane ne mostra un sottoinsieme (aumentato da 12: col filtro memory-op serve più margine per mostrare comunque n AZIONI vere)
 
 /** Tronca a n char single-line (collassa whitespace). */
 function clip(s, n) {
@@ -65,8 +66,12 @@ export function getRecent(n = 8) {
  * `sessionStartMs` (opz.) → prefisso SHIFT temporale per riga (ancoraggio, utente msg 848/849). Ritorna "" se vuoto.
  * @param {number} n @param {{ redact?: (s:string)=>string, sessionStartMs?: number }} [opts]
  */
-export function formatLane(n = 8, { redact = (s) => s, sessionStartMs = null } = {}) {
-  const items = getRecent(n);
+export function formatLane(n = 8, { redact = (s) => s, sessionStartMs = null, excludeMemoryOps = true } = {}) {
+  // FILTRO memory-op (utente msg 1259, F24): la lane serve a ricordare le AZIONI, non i salvataggi del modello
+  // (note/jot/set_var). Filtra il RING PIENO poi prende le ultime n → mostra sempre n AZIONI vere, non n call miste
+  // dove i salvataggi affollano i write-file. Il RING resta intatto (per eventuali query per-range, #3 msg 1258).
+  const pool = excludeMemoryOps ? RING.filter((e) => !MEMORY_TOOLS.has(e.name)) : RING;
+  const items = pool.slice(-Math.max(1, n));
   if (!items.length) return "";
   const rows = items.map((e) => {
     const args = e.args ? redact(e.args) : "";

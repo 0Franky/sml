@@ -10,10 +10,11 @@
  * PURO + deterministico → unit-testabile senza modello (disciplina #14: pura+test prima del wiring live).
  */
 
-// Memory-op del modello: si ESCLUDONO dal digest (F24: non sono "cosa ha fatto sul task"; e non devono dominare).
+// Memory-op di SCRITTURA del modello: si ESCLUDONO dal digest E dalla lane <last_tool_calls> (F24: sono i salvataggi
+// che affollano l'action-log, non "cosa ha fatto sul task"). Solo le WRITE-op (i read tipo get_var/list_secrets NON
+// vanno filtrati dalla lane: aiutano l'anti-ripetizione; e dal digest sono già esclusi dal check args-shape path+content).
 export const MEMORY_TOOLS = new Set([
-  "note", "jot", "set_var", "get_var", "remove_note", "recall_scratch",
-  "record_decision", "get_decisions", "list_secrets", "get_shared_view",
+  "note", "jot", "set_var", "remove_note", "record_decision",
 ]);
 // Tool di sola-lettura/navigazione: non sono OUTCOME di task → esclusi (riducono rumore).
 export const READONLY_TOOLS = new Set([

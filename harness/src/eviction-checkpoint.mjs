@@ -107,7 +107,7 @@ const SAVE_HINT =
 const SCRATCH_HINT =
   " This is also your consolidation point: scan your <scratch> working-notes and promote any that must OUTLAST the next few turns into note() — facts persist; <scratch> is a rolling window and the rest is meant to fade.";
 /** Chiusura condivisa: outcome-not-ceremony + no-restate. Tenuta ULTIMA così il no-restate chiude il notice. */
-const SAVE_CLOSER = " Save only what could matter later, not routine chatter; if truly nothing, do nothing. Do not restate this notice.";
+const SAVE_CLOSER = " If nothing is durable, do nothing. Do not restate this notice.";
 
 /**
  * buildEvictionDirective — testo model-facing (EN) per i rung nudge/inject. Stringa vuota per off/require.
@@ -117,15 +117,14 @@ const SAVE_CLOSER = " Save only what could matter later, not routine chatter; if
  */
 export function buildEvictionDirective(rung, { digest = "" } = {}) {
   if (rung !== "nudge" && rung !== "inject") return "";
-  // Framing ALLARGATO dopo F23 (wiki/architecture/lane-persistence-redesign.md): la versione precedente diceva solo
-  // "salva un FATTO durevole (nome/decisione/vincolo)" e il modello NON ci mappava la task-history (Gemma 0-save su
-  // 5 nudge). Il framing "salva i tuoi PROGRESSI / cosa hai fatto / ciò che ti servirà dopo" include esattamente ciò
-  // che mancava (istruzione-chiara-prima-del-guardrail). SAVE_CLOSER resta l'anti-over-save (non salvare trivia).
+  // NB: il framing ALLARGATO ("salva i tuoi PROGRESSI") è stato PROVATO e REVERTITO (F24, wiki/architecture/
+  // lane-persistence-redesign.md): otteneva il save (0→7) ma DERAGLIAVA l'outcome (keep1 recall 0% vs 60%, deflessione
+  // mezzi-fini). Lezione: il push-via-hint è un vicolo cieco → il fix è la cattura DETERMINISTICA (task-digest), non
+  // spingere di più il modello. Qui resta il nudge STRETTO (originale): safety-net leggera, non aggressiva.
   const head =
     "MEMORY EVICTION — the earlier message(s) are leaving your working window; after this turn you will NOT see " +
-    "them verbatim, and they are GONE unless you save them. You are mid-task: capture anything you may need later — " +
-    "your PROGRESS so far (what you did, tried, decided), open threads, key results, and any durable fact " +
-    "(a name, a constraint, a preference) — so you can recall or resume this work if you reconsider or need it again: " +
+    "them verbatim. If they contain a DURABLE fact worth remembering later (a name/nickname, a decision, a " +
+    "constraint, a stable preference, an open thread), " +
     SAVE_HINT + SCRATCH_HINT + SAVE_CLOSER;
   if (rung === "inject" && digest) return head + "\n\nLeaving the window:\n" + digest;
   return head;

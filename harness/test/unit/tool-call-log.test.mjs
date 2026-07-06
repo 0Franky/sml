@@ -55,14 +55,26 @@ ok(summarizeArgs({ v: "x".repeat(100) }).length < 60, "args: valore lungo tronca
   ok(getRecent().length === 0, "vuoto: nessuna entry");
 }
 
-// ── cap del ring buffer (12) ──
+// ── cap del ring buffer (24) ──
 {
   clearToolCallLog();
-  for (let i = 0; i < 20; i++) { recordCall({ callId: "k" + i, name: "t" + i, args: {} }); recordResult({ callId: "k" + i, isError: false, text: "r" + i }); }
+  for (let i = 0; i < 30; i++) { recordCall({ callId: "k" + i, name: "t" + i, args: {} }); recordResult({ callId: "k" + i, isError: false, text: "r" + i }); }
   const r = getRecent(100);
-  ok(r.length === 12, "cap: buffer limitato a 12");
-  ok(r[r.length - 1].name === "t19", "cap: l'ultima è la più recente (t19)");
-  ok(r[0].name === "t8", "cap: le più vecchie sono state droppate (parte da t8)");
+  ok(r.length === 24, "cap: buffer limitato a 24");
+  ok(r[r.length - 1].name === "t29", "cap: l'ultima è la più recente (t29)");
+  ok(r[0].name === "t6", "cap: le più vecchie sono state droppate (parte da t6)");
+}
+
+// ── formatLane: FILTRO memory-op (utente msg 1259, F24) ──
+{
+  clearToolCallLog();
+  recordCall({ callId: "w", name: "write_file", args: { path: "sol.py" } }); recordResult({ callId: "w", isError: false, text: "ok" });
+  recordCall({ callId: "n", name: "note", args: { text: "saved progress" } }); recordResult({ callId: "n", isError: false, text: "ok" });
+  recordCall({ callId: "v", name: "set_var", args: { key: "k" } }); recordResult({ callId: "v", isError: false, text: "ok" });
+  const laneF = formatLane(8);
+  ok(laneF.includes("write_file") && !laneF.includes("note(") && !laneF.includes("set_var"), "filtro: default esclude note/set_var, tiene write_file");
+  const laneRaw = formatLane(8, { excludeMemoryOps: false });
+  ok(laneRaw.includes("note(") && laneRaw.includes("set_var"), "filtro: excludeMemoryOps:false → mostra tutto (raw)");
 }
 
 // ── ANCORAGGIO TEMPORALE (utente msg 848/849): shift [+Xs] per riga + note su ordine autoritativo ──
