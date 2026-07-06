@@ -198,6 +198,9 @@ async function main() {
     jotCalls: allToolCalls.filter((n) => n === "jot").length,
     setVarCalls: allToolCalls.filter((n) => n === "set_var").length,
     saveToolCalls: allToolCalls.filter((n) => n === "note" || n === "jot" || n === "set_var").length,
+    // Cattura deterministica (F24/F25): quante auto-note-digest ha scritto l'harness (key `fact:_task:*`). Ground-truth
+    // del "il digest ha sparato sul tool-write REALE?" (rule #14) — 0 con HARNESS_TASK_DIGEST off o se il wiring non aggancia.
+    taskDigestFacts: (() => { try { return getVarsQueue().listVars({ namespace: "fact" }).filter((v) => String(v.id).startsWith("fact:_task:")).length; } catch { return null; } })(),
   };
   session.dispose();
   process.stdout.write(JSON.stringify(out) + "\n");

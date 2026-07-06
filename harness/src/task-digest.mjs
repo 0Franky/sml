@@ -81,4 +81,29 @@ export function buildTaskDigest(toolCalls, { maxLines = 40, maxDefsPerFile = 6 }
   return rows.slice(-maxLines);
 }
 
-export default { buildTaskDigest, extractDefs, pathOf, contentOf, MEMORY_TOOLS, READONLY_TOOLS };
+// ── Cattura deterministica (wiring): da una singola tool-call osservata → il FATTO-digest da PINNARE nella lane <facts>.
+// Riusa la ritenzione-per-importance esistente (context-assembler: importance desc → pinned in cima) scrivendo a
+// importance MAX. È la "creazione+contenuto" (l'harness scrive, coi nomi esatti); la "ritenzione" è il meccanismo esistente.
+export const TASK_FACT_PREFIX = "_task:";   // key-prefix riservato → auto-fact identificabili/rimovibili, distinti dai note del modello
+export const TASK_FACT_IMPORTANCE = 100;    // pinned in cima a <facts> (la task-history non deve scorrere fuori)
+
+/**
+ * digestFactFromCall — PURO. Da una tool-call osservata → { key, text, importance } da scrivere come fatto pinned,
+ * oppure null se la call non è una scrittura-file (o è una memory-op/readonly). Testabile senza pi.
+ * @param {{name?:string, args?:object, status?:string}} call
+ * @returns {{key:string, text:string, importance:number} | null}
+ */
+export function digestFactFromCall({ name, args, status } = {}) {
+  const n = name ? String(name) : "";
+  if (!n || MEMORY_TOOLS.has(n) || READONLY_TOOLS.has(n)) return null;
+  const p = pathOf(args);
+  const c = contentOf(args);
+  if (p == null || c == null) return null;
+  const base = basename(p);
+  const defs = extractDefs(c).slice(0, 6);
+  const defPart = defs.length ? ` → ${defs.map((d) => "def " + d).join(", ")}` : "";
+  const errPart = status === "error" ? " (error)" : "";
+  return { key: TASK_FACT_PREFIX + base, text: `${base}${defPart}${errPart}`, importance: TASK_FACT_IMPORTANCE };
+}
+
+export default { buildTaskDigest, digestFactFromCall, extractDefs, pathOf, contentOf, MEMORY_TOOLS, READONLY_TOOLS, TASK_FACT_PREFIX, TASK_FACT_IMPORTANCE };
