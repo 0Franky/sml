@@ -47,6 +47,23 @@ L'harness dà al modello memoria OLTRE la finestra nativa iniettando **lane** ne
 
 **`<last_tool_calls>` ESISTE già** (`src/tool-call-log.mjs` + `context-assembly.ts`, "fix amnesia #1" msg 811-817): ring-buffer delle **ultime 8** tool-call con esito, formato `[+Xs][ok] name(args) → result` — è **già** una cattura deterministica della traccia-azioni. Limiti per la recall long-horizon: **(a)** size 8 + **rolling** → sfuma come la finestra nativa; **(b)** include le **memory-op del modello** (note/jot/set_var) → in F24 i 7 salvataggi avrebbero comunque affollato la lane; **(c)** non è **persistente per-task**. → **La cattura deterministica = promuovere `<last_tool_calls>` da ring-buffer volatile a**: **(1) lane FILTRATA** alle azioni vere (write_file/exec/test), escluse le memory-op; **+ (2) digest PERSISTENTE per-task** (una riga durevole per task completato dalla traccia, che NON scorre). Entrambi deterministici, lato-harness, ancorati agli eventi osservati. È il ponte tra l'idea utente (msg 1253) e F24.
 
+## Design v1 — digest persistente per-task = auto-nota PINNED scritta dall'harness (approvato msg 1256)
+
+**Convergenza con l'idea "priorità nota" dell'utente (msg 1256)**: il meccanismo di **ritenzione per importance ESISTE già** — `context-assembler.mjs:150-154` ordina la facts-lane per `importance` desc ("i fatti pinned restano in cima", cap `DEFAULT_MAX_FACTS=12`) → importance alta = scorre più lenta. **Distinzione chiave**:
+- **PRIORITÀ/importance** (idea utente) = metà **RITENZIONE** (quanto vive un item GIÀ salvato) → **la RIUSIAMO** (SSOT, rule #16).
+- **CATTURA DETERMINISTICA** = metà **CREAZIONE+CONTENUTO** (il pezzo nuovo): l'**HARNESS** scrive il digest dalla traccia-tool osservata, coi **nomi esatti**, così esiste a prescindere dal modello. F24 ha provato che il problema è la creazione/deflessione, NON la ritenzione.
+
+**Meccanismo v1**:
+1. **Sorgente = traccia-tool osservata** (già catturata: `tool-call-log.mjs` RING + eventi `tool_execution_start`/result). Deterministica, model-independent.
+2. **Estrattore PURO** `buildTaskDigest(toolCalls)` → per ogni azione significativa (write_file/exec/test, ESCLUSE le memory-op) una riga compatta: `solution_3.py → def has_close_elements · tests ok`. Il **nome-funzione** estratto da `def NAME` nel content (è ESATTAMENTE ciò che la probe-recall richiede). Puro → **unit-testabile senza modello**.
+3. **Hook = eviction-checkpoint**: quando un turno/task **evicta**, oltre (o invece) al nudge, l'harness **scrive il digest dell'azione del turno in uscita** in un namespace persistente **`auto:task-digest`** a **importance MAX (pinned)** → riusa `factsLaneLines` per la ritenzione (mai scrolla). Separato dai `<facts>` curati dal modello (auditabile).
+4. **Anti-doppio-show**: non digestare un task ancora nella finestra nativa (il boundary di eviction lo traccia).
+5. **Budget** (decisione b) = cap righe del digest → studio empirico.
+
+**Validazione (rule #14, PRIMA di dichiararlo fatto)**: (a) **wiring/unit test** deterministico — data una traccia-tool con N write_file → il digest contiene gli N entry-point; (b) **validazione su Gemma** — re-run del setup F24 con digest ON → la recall deve salire verso vanilla **SENZA** dipendere dal salvataggio del modello (è la prova che la cattura deterministica funziona dove il nudge fallisce). **Metrica di successo**: recall@keep1 ≫ 0% (F24) avvicinandosi a vanilla, a costo-token controllato.
+
+**Deprioritizzato**: il "filtrare le memory-op da `<last_tool_calls>`" (prima proposta) — la sua motivazione (affollamento) è stata **REFUTATA** da F24 (la causa era deflessione), e `<last_tool_calls>` serve anche a **non ri-chiamare** un tool → non spogliarlo. Il core-fix è il digest persistente pinned.
+
 ## ⚠️ Le due decisioni che restano a TE
 
 1. **Selettività vs completezza della cattura**: salvare **tutto** l'evicted (completo ma rumoroso/token-pesante) o un **summary selettivo** (compatto ma serve un giudizio di sintesi — un modello cheap/euristica)? È il trade-off principale.
