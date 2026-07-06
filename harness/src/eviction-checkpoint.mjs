@@ -130,6 +130,49 @@ export function buildEvictionDirective(rung, { digest = "" } = {}) {
   return head;
 }
 
+// ── FORMA dell'iniezione (esperimento F26 forma-vs-richiesta). Il difetto F25 è che la direttiva è appesa come
+// messaggio `user` DOPO il turno-utente reale → sullo stesso assembly della probe l'ultima istruzione è la direttiva
+// e il modello risponde a QUELLA, non alla probe (hijack). Isoliamo FORMA (posizione/canale) vs RICHIESTA (chiedere-di-
+// salvare in sé) variando SOLO come/dove si inietta lo STESSO testo:
+//   trailing = user-msg appeso in coda (ATTUALE; most-recent → risposto → hijack)
+//   preuser  = user-msg inserito PRIMA dell'ultimo turno-utente (stesso canale/testo, posizione ambient → la probe
+//              resta l'ultima istruzione). Se recall risale ≈ control → il difetto è la FORMA-posizione.
+//   system   = system-msg in coda (canale diverso, non "risposto"). Testa la sensibilità-canale del modello.
+export const EVICTION_INJECT_MODES = ["trailing", "preuser", "system"];
+
+/**
+ * loadEvictionInjectMode — modo d'iniezione. Env `HARNESS_EVICTION_INJECT_MODE` ∈ EVICTION_INJECT_MODES,
+ * default `trailing` (comportamento attuale, cambio nullo). Fail-safe: valore ignoto → default.
+ * @param {{ env?:Record<string,string|undefined> }} [opts]
+ * @returns {"trailing"|"preuser"|"system"}
+ */
+export function loadEvictionInjectMode(opts = {}) {
+  const env = opts.env ?? (typeof process !== "undefined" && process.env ? process.env : {});
+  const raw = String(env.HARNESS_EVICTION_INJECT_MODE || "").trim().toLowerCase();
+  return EVICTION_INJECT_MODES.includes(raw) ? /** @type {any} */ (raw) : "trailing";
+}
+
+/**
+ * injectDirectiveMessages — PURO. Dato l'array `messages` assemblato e il testo `directive`, ritorna il NUOVO array
+ * con la direttiva iniettata secondo `mode`. Nessuna mutazione dell'input. Stringa-direttiva vuota → array invariato.
+ * @param {Array<{role:string,content:string}>} messages
+ * @param {string} directive
+ * @param {"trailing"|"preuser"|"system"} [mode]
+ * @returns {Array<{role:string,content:string}>}
+ */
+export function injectDirectiveMessages(messages, directive, mode = "trailing") {
+  const arr = Array.isArray(messages) ? messages.slice() : [];
+  if (!directive) return arr;
+  const wrapped = "<eviction_checkpoint>\n" + directive + "\n</eviction_checkpoint>";
+  const userMsg = { role: "user", content: wrapped };
+  if (mode === "system") return arr.concat([{ role: "system", content: wrapped }]);
+  if (mode === "preuser") {
+    if (arr.length === 0) return [userMsg];
+    return arr.slice(0, -1).concat([userMsg, arr[arr.length - 1]]); // direttiva PRIMA dell'ultimo turno (ambient)
+  }
+  return arr.concat([userMsg]); // trailing (default): most-recent
+}
+
 /**
  * buildOobPrompt — messaggi per la chiamata DEDICATA out-of-band (rung require, Impl-2). Focalizzata SOLO sul
  * salvare (attenzione piena = "escala il vincolo non il contesto"). L'output è vincolato a `SAVE:`/`NONE`.
@@ -224,10 +267,13 @@ export async function callModelOutOfBand({ endpoint, model, messages, apiKey, fe
 
 export default {
   EVICTION_RUNGS,
+  EVICTION_INJECT_MODES,
   loadEvictionConfig,
+  loadEvictionInjectMode,
   evictionEvent,
   summarizeEvicting,
   buildEvictionDirective,
+  injectDirectiveMessages,
   buildOobPrompt,
   parseOobSave,
   extractChatText,

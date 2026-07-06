@@ -4,10 +4,13 @@
  */
 import {
   EVICTION_RUNGS,
+  EVICTION_INJECT_MODES,
   loadEvictionConfig,
+  loadEvictionInjectMode,
   evictionEvent,
   summarizeEvicting,
   buildEvictionDirective,
+  injectDirectiveMessages,
   buildOobPrompt,
   parseOobSave,
   extractChatText,
@@ -81,6 +84,36 @@ ok(buildEvictionDirective("nudge").includes("do nothing"), "directive: outcome-n
 ok(buildEvictionDirective("nudge").includes("<scratch>"), "directive: nudge consolida anche lo <scratch> (msg 1158)");
 ok(buildEvictionDirective("nudge").toLowerCase().includes("promote"), "directive: nudge PROMUOVE gli scratch durevoli → note() (consolidamento lane appunti)");
 ok(buildEvictionDirective("inject", { digest: "x" }).includes("<scratch>"), "directive: inject include il consolidamento scratch + il digest");
+
+// ── loadEvictionInjectMode + injectDirectiveMessages (F26 forma-vs-richiesta) ──
+ok(EVICTION_INJECT_MODES.join(",") === "trailing,preuser,system", "inject-mode: modi disponibili");
+ok(loadEvictionInjectMode({ env: {} }) === "trailing", "inject-mode: default trailing (comportamento invariato)");
+ok(loadEvictionInjectMode({ env: { HARNESS_EVICTION_INJECT_MODE: "PREUSER" } }) === "preuser", "inject-mode: env case-insensitive");
+ok(loadEvictionInjectMode({ env: { HARNESS_EVICTION_INJECT_MODE: " system " } }) === "system", "inject-mode: env trim");
+ok(loadEvictionInjectMode({ env: { HARNESS_EVICTION_INJECT_MODE: "bogus" } }) === "trailing", "inject-mode: valore ignoto → default (fail-safe)");
+{
+  const base = [{ role: "user", content: "task1" }, { role: "assistant", content: "ok" }, { role: "user", content: "PROBE: what did you save?" }];
+  const dir = buildEvictionDirective("nudge");
+  // directive vuota → array invariato (nessuna mutazione)
+  const noop = injectDirectiveMessages(base, "", "trailing");
+  ok(noop.length === base.length && noop !== base, "inject: direttiva vuota → copia invariata (no mutazione input)");
+  // trailing: la direttiva è l'ULTIMO messaggio (most-recent → è ciò che il modello risponde: hijack F25)
+  const t = injectDirectiveMessages(base, dir, "trailing");
+  ok(t.length === base.length + 1 && t[t.length - 1].role === "user" && t[t.length - 1].content.includes("<eviction_checkpoint>"), "inject trailing: direttiva in CODA (user)");
+  ok(t[t.length - 1].content.includes("MEMORY EVICTION"), "inject trailing: contiene la direttiva");
+  // preuser: la PROBE resta l'ultimo messaggio; la direttiva è penultima (ambient → non dirotta la risposta)
+  const p = injectDirectiveMessages(base, dir, "preuser");
+  ok(p.length === base.length + 1, "inject preuser: +1 messaggio");
+  ok(p[p.length - 1].content === "PROBE: what did you save?", "inject preuser: la PROBE resta l'ULTIMO messaggio (non dirottata)");
+  ok(p[p.length - 2].role === "user" && p[p.length - 2].content.includes("<eviction_checkpoint>"), "inject preuser: direttiva inserita PRIMA dell'ultimo turno");
+  ok(base[base.length - 1].content === "PROBE: what did you save?", "inject preuser: input NON mutato");
+  // system: canale system in coda (non 'risposto' dai modelli che leggono system come contesto)
+  const s = injectDirectiveMessages(base, dir, "system");
+  ok(s[s.length - 1].role === "system" && s[s.length - 1].content.includes("<eviction_checkpoint>"), "inject system: direttiva in coda su canale SYSTEM");
+  // edge: array vuoto
+  ok(injectDirectiveMessages([], dir, "preuser").length === 1, "inject preuser: array vuoto → solo la direttiva");
+  ok(injectDirectiveMessages(null, dir, "trailing").length === 1, "inject: input non-array → degrada a [direttiva]");
+}
 
 // ── buildOobPrompt / parseOobSave ──
 {

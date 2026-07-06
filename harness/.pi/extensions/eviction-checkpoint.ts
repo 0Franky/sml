@@ -26,9 +26,11 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import {
   loadEvictionConfig,
+  loadEvictionInjectMode,
   evictionEvent,
   summarizeEvicting,
   buildEvictionDirective,
+  injectDirectiveMessages,
 } from "../../src/eviction-checkpoint.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { getVarsQueue, getConversationStore, closeAll } from "../../src/state-db.mjs";
@@ -40,6 +42,7 @@ export default function (pi: ExtensionAPI) {
   if (!enabled) return; // DEFAULT off → no-op TOTALE (nessun hook, nessun DB): push sicuro, zero cambio live.
 
   const keepTurns = loadHarnessConfig().nativeKeepTurns; // SSOT harness-config: intero ≥1 garantito (no `?? 1`/as any)
+  const injectMode = loadEvictionInjectMode(); // FORMA d'iniezione (F26 forma-vs-richiesta): default trailing (invariato)
   const vq = getVarsQueue(); // vars.db dell'orchestratore (path+mkdir+agent nel singleton state-db)
   const store = getConversationStore(); // FONTE AUTORITATIVA del conteggio turni (condivisa con conversation-capture)
   pi.on("session_shutdown", () => closeAll());
@@ -74,13 +77,11 @@ export default function (pi: ExtensionAPI) {
     // avanza il boundary PRIMA di ritornare → fire-once per turno-in-uscita (idempotente sui request ripetuti).
     vq.setMeta(metaKey, String(evictedThrough));
 
-    // D2 (audit 2026-07-04): canale USER, non SYSTEM. harness-config.mjs:44-50 ha PROVATO che questo stesso 9B legge il
-    // canale user/nativo e IGNORA il system → un nudge-a-salvare consegnato in system è INERTE (stessa non-lettura del
-    // resto dell'awareness). Messaggio effimero (solo per questo request, il context-hook non persiste); il tag
-    // <eviction_checkpoint> lo marca come direttiva harness (non voce umana). Efficacia: da validare con test eviction dedicato.
-    const injected = messages.concat([
-      { role: "user", content: "<eviction_checkpoint>\n" + directive + "\n</eviction_checkpoint>" },
-    ]);
+    // FORMA d'iniezione (F26): default `trailing` = user-msg in coda (D2 audit 2026-07-04: canale USER non SYSTEM,
+    // perché harness-config.mjs:44-50 ha PROVATO che il 9B legge user/nativo e IGNORA system). MA il trailing è anche
+    // ciò che DIROTTA la probe (F25): most-recent → risposto. I modi `preuser`/`system` isolano forma-vs-richiesta.
+    // Messaggio effimero (solo questo request, il context-hook non persiste); il tag lo marca come direttiva harness.
+    const injected = injectDirectiveMessages(messages, directive, injectMode);
     return { messages: injected };
   });
 }
