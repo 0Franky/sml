@@ -13,9 +13,10 @@ import { getVarsQueue } from "../../src/state-db.mjs";
 import { digestFactFromCall } from "../../src/task-digest.mjs";
 
 export default function (pi: ExtensionAPI) {
-  // Gate config-driven (default OFF, come eviction-checkpoint): esperimenti controllati (baseline lanes-only vs
-  // lanes+digest) senza contaminazione. Attiva con HARNESS_TASK_DIGEST=on. Diventerà default-on dopo la validazione.
-  if (String(process.env.HARNESS_TASK_DIGEST ?? "off").toLowerCase() !== "on") return;
+  // Gate config-driven. DEFAULT-ON dal 2026-07-06 (utente msg 1285) dopo la VALIDAZIONE robusta n=3 (F27:
+  // keep1 recall 100%/100%/100% con digest vs 67%/50%/67% senza, a costo-token INFERIORE). Kill-switch esplicito:
+  // HARNESS_TASK_DIGEST=off (usato dagli esperimenti che vogliono le lane-nude, es. F26 forma-vs-richiesta).
+  if (String(process.env.HARNESS_TASK_DIGEST ?? "on").toLowerCase() !== "on") return;
   const api = pi as any;
   // tool_execution_start porta toolName + args (path/content della scrittura). Scriviamo il digest qui (l'esito-errore
   // è raro per una write; v1 cattura l'intento). Key stabile per-file → un rewrite aggiorna la stessa entry.
