@@ -1,7 +1,7 @@
 /**
  * tool-call-log — test del ring buffer delle ultime tool-call (fix amnesia #1, msg 811-817).
  */
-import { summarizeArgs, recordCall, recordResult, getRecent, formatLane, ringStats, viewRange, clearToolCallLog } from "../../src/tool-call-log.mjs";
+import { summarizeArgs, recordCall, recordResult, getRecent, formatLane, ringStats, viewRange, renderCallRows, clearToolCallLog } from "../../src/tool-call-log.mjs";
 
 let pass = 0, fail = 0;
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; console.error("  ✗ " + msg); } }
@@ -143,6 +143,26 @@ ok(summarizeArgs({ v: "x".repeat(100) }).length < 60, "args: valore lungo tronca
 {
   clearToolCallLog();
   ok(viewRange({ count: 5 }).includes('buffered="0"'), "viewRange: buffer vuoto → header buffered=0");
+}
+
+// ── seq-mirror (T2, msg 1342): recordCall RISPECCHIA il #seq dello store (rowid globale) invece del contatore interno ──
+{
+  clearToolCallLog();
+  const s1 = recordCall({ callId: "a", name: "op1", args: {} });   // no seq → contatore interno = 1
+  ok(s1 === 1 && getRecent(1)[0].seq === 1, "seq-mirror: senza seq → contatore interno (1) + ritorna il seq");
+  const s2 = recordCall({ callId: "b", name: "op2", args: {}, seq: 105 }); // seq iniettato dallo store
+  ok(s2 === 105 && getRecent(1)[0].seq === 105, "seq-mirror: seq iniettato → il ring usa QUEL seq (risolve il #N tra ring e store)");
+  ok(ringStats().totalSeen >= 105, "seq-mirror: totalSeen si allinea al max seq visto (onestà anti-silent-truncation)");
+  const s3 = recordCall({ callId: "c", name: "op3", args: {} });   // torna al contatore, ora ≥ 106
+  ok(s3 === 106, "seq-mirror: dopo un seq iniettato il contatore riprende dal max (106), niente collisioni");
+}
+
+// ── renderCallRows (SSOT rendering, riusato dallo store) ──
+{
+  const rows = [{ seq: 7, name: "web", args: "q=x", status: "ok", result: "res", ts: 1000 }];
+  const out = renderCallRows(rows, { withSeq: true });
+  ok(/#7 /.test(out) && /\[ok\] web\(q=x\) → res/.test(out), "renderCallRows: riga con #seq + stato + args + esito");
+  ok(renderCallRows([], {}) === "" && renderCallRows(null, {}) === "", "renderCallRows: input vuoto/null → ''");
 }
 
 console.log(`\ntool-call-log: ${pass} pass, ${fail} fail`);

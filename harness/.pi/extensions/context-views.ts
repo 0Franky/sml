@@ -14,7 +14,8 @@
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
-import { viewRange, ringStats } from "../../src/tool-call-log.mjs";
+import { getToolCallStore } from "../../src/state-db.mjs";
+import { getConvId } from "../../src/session-context.mjs";
 
 /** Coercizione difensiva Integer|String→number (i modelli piccoli passano "5" come stringa — lezione F5 set_keepturns). */
 function num(v: any): number | undefined {
@@ -47,16 +48,18 @@ export default function (pi: ExtensionAPI) {
     }),
     async execute(_t: string, p: any) {
       try {
-        const text = viewRange({
+        const store = getToolCallStore(); // vista store-backed: recupera anche i #seq usciti dal ring-24 (fix F28)
+        const convId = getConvId();
+        const text = store.view(convId, {
           from: num(p?.from),
           to: num(p?.to),
           count: num(p?.count),
           includeMemoryOps: p?.include_memory_ops === true || String(p?.include_memory_ops).toLowerCase() === "true",
-        });
-        const st = ringStats();
-        return { content: [{ type: "text", text }], details: { ok: true, buffered: st.buffered, dropped: st.dropped } };
+        }); // redazione: NON qui — passa dal secrets-guardrail (tool_result hook), SSOT della redazione
+        const st = store.stats(convId);
+        return { content: [{ type: "text", text }], details: { ok: true, total: st.total, available: st.total ? `#${st.minSeq}..#${st.maxSeq}` : "" } };
       } catch (e: any) {
-        return { content: [{ type: "text", text: `view_tool_calls failed: ${e?.message || e}` }], details: { ok: false, buffered: 0, dropped: 0 } };
+        return { content: [{ type: "text", text: `view_tool_calls failed: ${e?.message || e}` }], details: { ok: false, total: 0, available: "" } };
       }
     },
   });

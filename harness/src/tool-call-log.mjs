@@ -39,13 +39,19 @@ export function summarizeArgs(args) {
   }).join(", ") + (keys.length > 3 ? ", …" : "");
 }
 
-/** Registra una tool-call APPENA invocata (stato pending). callId correla il result. */
-export function recordCall({ callId, name, args, ts } = {}) {
-  if (!name) return;
+/** Registra una tool-call APPENA invocata (stato pending). callId correla il result. Ritorna il seq assegnato.
+ *  `seq` (opz.): se lo store persistente ha già assegnato il rowid globale (SSOT #16), lo rispecchiamo qui → il `#N`
+ *  citato dal modello risolve identico nel ring E nello store; altrimenti si usa il contatore interno (path senza-store,
+ *  es. test puri). SEQ resta allineato al massimo visto → ringStats.totalSeen onesto anche col seq iniettato. */
+export function recordCall({ callId, name, args, ts, seq } = {}) {
+  if (!name) return 0;
   // ts (epoch ms) → ANCORAGGIO TEMPORALE della lane (utente msg 848/849): la formatLane lo rende shift dallo start.
   const stamp = Number.isFinite(ts) ? ts : Date.now();
-  RING.push({ seq: ++SEQ, callId: callId ?? null, name: String(name), args: summarizeArgs(args), status: "pending", result: "", ts: stamp });
+  const s = Number.isFinite(seq) ? seq : ++SEQ;
+  if (s > SEQ) SEQ = s;
+  RING.push({ seq: s, callId: callId ?? null, name: String(name), args: summarizeArgs(args), status: "pending", result: "", ts: stamp });
   while (RING.length > DEFAULT_MAX) RING.shift();
+  return s;
 }
 
 /** Completa l'entry col risultato (per callId; fallback: l'ultima pending con lo stesso nome / l'ultima pending). */
@@ -70,6 +76,12 @@ function renderRow(e, { redact = (s) => s, sessionStartMs = null, withSeq = fals
   const res = e.result ? ` → ${redact(e.result)}` : e.status === "pending" ? " → (running)" : "";
   const seq = withSeq && e.seq != null ? `#${e.seq} ` : "";
   return `  ${seq}${shiftPrefix(e.ts, sessionStartMs)}[${e.status}] ${e.name}(${args})${res}`;
+}
+
+/** Render di PIÙ righe (SSOT del rendering, rule #16): riusato dalla vista store-backed (tool-call-store.view) per
+ *  garantire formattazione identica ring↔store. rows = [{seq,name,args,status,result,ts}]. */
+export function renderCallRows(rows, opts = {}) {
+  return (Array.isArray(rows) ? rows : []).map((e) => renderRow(e, opts)).join("\n");
 }
 
 /**
@@ -138,4 +150,4 @@ export function viewRange({ from, to, count, includeMemoryOps = false, redact = 
 /** Svuota il buffer (isolamento di sessione: chiamata a session_shutdown). Resetta anche la sequenza assoluta. */
 export function clearToolCallLog() { RING.length = 0; SEQ = 0; }
 
-export default { summarizeArgs, recordCall, recordResult, getRecent, formatLane, ringStats, viewRange, clearToolCallLog };
+export default { summarizeArgs, recordCall, recordResult, getRecent, formatLane, ringStats, viewRange, renderCallRows, clearToolCallLog };

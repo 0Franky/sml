@@ -19,6 +19,7 @@
  */
 import { VarsQueue } from "./vars-queue.mjs";
 import { ConversationStore } from "./conversation-store.mjs";
+import { ToolCallStore } from "./tool-call-store.mjs";
 import { STATE_DIR } from "./state-paths.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
@@ -27,11 +28,14 @@ import { dirname } from "node:path";
 export const VARS_DB_PATH = `${STATE_DIR}/vars.db`;
 /** Path del DB della conversazione persistita per-ID (lane <messages_with_user> + get_conversation). */
 export const CONV_DB_PATH = `${STATE_DIR}/conversations.db`;
+/** Path del DB delle tool-call persistite (recovery oltre il ring-24, tool view_tool_calls). */
+export const TOOLCALL_DB_PATH = `${STATE_DIR}/tool-calls.db`;
 /** Identità agente di default delle extension dell'orchestratore (namespace + `who` nel change-log). */
 export const ORCHESTRATOR_AGENT = "orchestrator";
 
 const _vars = new Map(); // dbPath -> VarsQueue
 const _convs = new Map(); // dbPath -> ConversationStore
+const _toolcalls = new Map(); // dbPath -> ToolCallStore
 
 /** Crea la dir di stato alla PRIMA apertura file-backed (idempotente). No-op per ":memory:" (test). */
 function ensureStateDir(dbPath) {
@@ -58,12 +62,21 @@ export function getConversationStore(dbPath = CONV_DB_PATH, opts = { agent: ORCH
   return cs;
 }
 
+/** ToolCallStore condiviso per `dbPath` (creato alla prima richiesta). Default: tool-calls.db dell'orchestratore. */
+export function getToolCallStore(dbPath = TOOLCALL_DB_PATH) {
+  let ts = _toolcalls.get(dbPath);
+  if (!ts) { ensureStateDir(dbPath); ts = new ToolCallStore(dbPath); _toolcalls.set(dbPath, ts); }
+  return ts;
+}
+
 /** Chiude e dimentica TUTTE le connessioni condivise. Idempotente. Da chiamare su `session_shutdown`. */
 export function closeAll() {
   for (const vq of _vars.values()) { try { vq.close(); } catch { /* già chiusa */ } }
   for (const cs of _convs.values()) { try { cs.close(); } catch { /* già chiusa */ } }
+  for (const ts of _toolcalls.values()) { try { ts.close(); } catch { /* già chiusa */ } }
   _vars.clear();
   _convs.clear();
+  _toolcalls.clear();
 }
 
-export default { getVarsQueue, getConversationStore, closeAll, VARS_DB_PATH, CONV_DB_PATH, ORCHESTRATOR_AGENT };
+export default { getVarsQueue, getConversationStore, getToolCallStore, closeAll, VARS_DB_PATH, CONV_DB_PATH, TOOLCALL_DB_PATH, ORCHESTRATOR_AGENT };
