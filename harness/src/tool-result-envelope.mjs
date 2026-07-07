@@ -34,7 +34,38 @@ function neutralizeEnvelopeTokens(text) {
     .replace(/<\/tool_result\s*>/gi, "&lt;/tool_result&gt;")
     .replace(/<tool_result\b/gi, "&lt;tool_result");
 }
-const neutralizeTextBlock = (sb) => (sb && sb.type === "text" && typeof sb.text === "string" ? { ...sb, text: neutralizeEnvelopeTokens(sb.text) } : sb);
+
+/** True se il codepoint è INVISIBILE/di-controllo senza significato testuale legittimo ma abusabile per smuggling
+ *  (ASCII-smuggling M10, bidi-override, zero-width, variation-selector, control). NON tocca lettere/script visibili. */
+function isStrippableCp(cp) {
+  if (cp <= 0x08 || cp === 0x0b || cp === 0x0c || (cp >= 0x0e && cp <= 0x1f) || (cp >= 0x7f && cp <= 0x9f)) return true; // C0/C1 (tranne \t \n \r)
+  if (cp === 0x00ad) return true; // soft hyphen
+  if (cp >= 0x200b && cp <= 0x200f) return true; // zero-width + marks direzionali
+  if (cp === 0x2028 || cp === 0x2029) return true; // line/paragraph separator
+  if (cp >= 0x202a && cp <= 0x202e) return true; // bidi override (riordino visivo ingannevole)
+  if (cp >= 0x2060 && cp <= 0x2064) return true; // word-joiner + invisible math ops
+  if (cp >= 0x2066 && cp <= 0x206f) return true; // bidi isolates + deprecated format
+  if (cp === 0xfeff) return true; // BOM / zero-width no-break
+  if (cp >= 0xfff9 && cp <= 0xfffb) return true; // interlinear annotation
+  if (cp >= 0xfe00 && cp <= 0xfe0f) return true; // variation selectors
+  if (cp >= 0xe0000 && cp <= 0xe007f) return true; // TAGS block (canale ASCII-smuggling, M10-invisible)
+  if (cp >= 0xe0100 && cp <= 0xe01ef) return true; // variation selectors supplement (smuggling)
+  return false;
+}
+/** Sanitizzazione STRUTTURALE del contenuto UNTRUSTED (rule #24 = segnale strutturale, ammesso): NFKC + rimozione dei
+ *  caratteri invisibili/di-controllo (canale di smuggling M10-invisible). PRIMA linea deterministica; il resto della
+ *  recognition (homoglyph M9, semantica) resta al modello — NON facciamo confusables-fold cirillico→latino per non
+ *  corrompere contenuto multilingue legittimo. Itera per CODEPOINT (gestisce gli astral come il Tags-block). */
+export function sanitizeUntrusted(text) {
+  const nfkc = String(text ?? "").normalize("NFKC");
+  let out = "";
+  for (const ch of nfkc) { if (!isStrippableCp(ch.codePointAt(0))) out += ch; }
+  return out;
+}
+/** Pulizia completa del contenuto untrusted: PRIMA strip degli invisibili (espone un `</tool_result>` offuscato con
+ *  zero-width), POI neutralizza i delimitatori dell'envelope (anti-breakout). L'ordine conta. */
+const cleanUntrusted = (text) => neutralizeEnvelopeTokens(sanitizeUntrusted(text));
+const neutralizeTextBlock = (sb) => (sb && sb.type === "text" && typeof sb.text === "string" ? { ...sb, text: cleanUntrusted(sb.text) } : sb);
 
 function isToolResultBlock(b) {
   return !!b && (b.type === "tool_result" || b.type === "tool-result");
@@ -77,7 +108,7 @@ export function formatToolResultHeader({ name, callId, status, at, bytes } = {})
 export function wrapToolResultText(text, meta = {}) {
   const raw = String(text ?? "");
   if (FRAME_SIGNATURE.test(raw)) return raw; // idempotenza: è GIÀ il nostro frame (header+banner) → non ri-avvolgere
-  const t = neutralizeEnvelopeTokens(raw); // C3: neutralizza i delimitatori dell'untrusted PRIMA di avvolgere (anti-breakout)
+  const t = cleanUntrusted(raw); // sanitizza (NFKC+strip invisibili, M10) + neutralizza i delimitatori (anti-breakout) — in quest'ordine
   return `${formatToolResultHeader({ ...meta, bytes: meta.bytes ?? raw.length })}\n${t}\n${CLOSE}`;
 }
 
@@ -163,4 +194,4 @@ export function frameToolResultsInMessages(messages, opts = {}) {
   return changed ? out : messages;
 }
 
-export default { formatToolResultHeader, wrapToolResultText, frameToolResultsInMessages };
+export default { formatToolResultHeader, wrapToolResultText, frameToolResultsInMessages, sanitizeUntrusted };
