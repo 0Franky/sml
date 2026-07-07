@@ -10,6 +10,8 @@ status: ingested 2026-06-26 (ricerca web, fonti primarie)
 
 # DwarfStar 4 (DS4)
 
+> **⚠️ Update 2026-07-08 (utente msg 1346/1347)**: l'utente indica DS4 come **"motore inferenziale"** del progetto ("useremo come motore inferenziale … DS4 di antirez … Deep sick [DeepSeek] ovviamente"). **CLARIFICATION PENDING (2 punti aperti, [[../todo]])**: (1) DS4 è single-model DeepSeek-V4-specifico → lo si vuole come **engine per il TEACHER** (far girare DeepSeek-V4 per la distillazione, coerente con la decisione teacher=DeepSeek-V4) **oppure** come **re-scope del serving** verso DeepSeek-V4 (oggi il piano è vLLM `--enable-lora` per lo SLM three-tier)? (2) **HW**: DS4+DeepSeek-V4 q2 vuole ~96-128GB RAM unificata; l'utente ha **16GB RAM / 11GB VRAM** → **non gira in locale** in nessuna quant → resterebbe reference-di-tecnica o run su cloud/Mac dedicato. Attesa risposta prima di modificare l'architettura serving.
+
 > **Origine**: richiesta utente 2026-06-26 ("aggiungi e studia a fondo Dwarf Star 4"). Motore di inferenza locale **self-contained** di **Salvatore Sanfilippo (antirez)** — già presente tra le risorse dell'utente — purpose-built per **DeepSeek V4 Flash**. MIT, scritto in C + Objective-C, repo `antirez/ds4` (~13K★ in un mese, rilasciato ~mag 2026). Rinominato da "DwarfStar4" → "DwarfStar" (identità del motore indipendente dalla versione DeepSeek).
 
 ## 1. Cos'è (in una riga)
