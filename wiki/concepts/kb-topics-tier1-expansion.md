@@ -133,9 +133,10 @@ sources:
 ## → Rule #18: candidati a diventare training-CLASS (attendo approvazione utente prima di filarli in `training-taxonomy/`)
 I domini `RL-skill`/`both` del Gruppo A/B/D che NON hanno già una classe sono candidati-classe (con gold + reward-outcome + label-gen + hack-check). NON li creo unilateralmente. Priorità proposta: creatività-divergente (buco reale), diagnostic-reasoning, decision-theory/VoI (act-vs-ask), calibrazione-probabilistica, negotiation, emotional-intelligence. I domini `pre-train-fact` (Gruppo E + teoria CS/complessità) NON sono training-class ma **selezione-di-corpus** per il continual-pretraining.
 
-## Open questions per l'utente
-- **Granularità LoRA**: "1 LoRA per classe di argomento" (1295a) → i 46 domini sono troppi per 1-LoRA-ciascuno. Proposta: raggruppare in ~7 macro-LoRA (i Gruppi A-G) o LoRA solo per i domini-serviti verticali (E), tenendo A/B/C/D nel base+RL? Da decidere.
-- **Confine pre-train vs RL per il Gruppo A**: quanta teoria nel CPT vs quanto lasciare all'RL? (lega a [[concepts/training-intelligence-optimization]] §1: RL affila, non installa).
+## Open questions per l'utente — AGGIORNATE
+- **Granularità (i 7 macro-gruppi)**: ✅ **APPROVATI** (utente msg 1315 "i sette macro gruppi per ora vanno bene"). I Gruppi A-G sono l'organizzazione accettata. Refinement del msg 1314: **il BASE tiene una piccola % di TUTTI e 7 i gruppi** → per ISTINTO + CATEGORIZZAZIONE/routing; la **DEPTH per-dominio** va nelle LoRA (Tier-2 macro / Tier-3 foglie). Vedi [[decisions/2026-07-08-tier2-justification-analysis]] §"tassello che risolve la tensione-capacità".
+- **Confine pre-train vs RL per il Gruppo A**: quanta teoria nel CPT vs quanto lasciare all'RL? (lega a [[concepts/training-intelligence-optimization]] §1: RL affila/elicita, non installa → la teoria va seminata nel base PRIMA, l'RL la pratica). Rimane da calibrare empiricamente.
+- **Nuova classe emersa**: "esercizi di categorizzazione" (msg 1314) = classe di training del **routing/classification** del Tier-1 (label-di-dominio corretta = outcome). Candidata (rule #18).
 
 ## Cross-link
 [[concepts/training-intelligence-optimization]] · [[project_base_model_intelligence]] · [[project_three_tier_idea]] · [[feedback_reward_hacking_principle]] · [[training-taxonomy/class-metacognitive-self-audit]] · [[training-taxonomy/class-consequence-intention-conflict]] · [[concepts/verification-discipline-training]] · regole #10/#11/#18/#19/#20/#22
