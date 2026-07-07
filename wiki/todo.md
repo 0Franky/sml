@@ -9,16 +9,15 @@ last_updated: 2026-06-30
 
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
 
-## ⏭️ POST-COMPACT NEXT (utente msg 1294-1304, 2026-07-07) — PRIORITÀ IMMEDIATA
+## ⏭️ NOTE UTENTE 2026-07-07 — STATO (msg 1294-1311) — quasi tutto processato, gated su approvazione
 
-> ✅ **CATTURA GREZZA FATTA**: le note dell'utente (msg 1295-1302) sono salvate verbatim in **`wiki/_private/user-notes-2026-07-07.md`** (gitignored, anti-loss, sopravvive alla compattazione). Quello è la SORGENTE per il verification-loop. **Possono arrivare ALTRE note** (l'utente ha scritto "...Cos'altro?..." → lista incompleta) → tenere aperta la checklist in fondo a quel file.
-> **Estrazione PENDING** — protocollo (suo msg 1294): 
-> 1. **NON saltare NULLA** — ogni item della checklist nel file grezzo va filato in wiki.
-> 2. **Estrarre** i contenuti nelle pagine wiki appropriate (concepts/decisions/training-taxonomy secondo pertinenza) — vedi checklist con destinazioni proposte in fondo al file grezzo.
-> 3. **Verification-loop**: riconfrontare le pagine prodotte vs il grezzo → confermare zero-skip, spuntare la checklist.
-> 4. **Cross-reference**: incrociare i nuovi dati con TUTTA la wiki + KB (contraddizioni/conferme/link mancanti → aggiornare).
-> 5. Diverse note chiedono **analisi tecnica da esperto** (1295f split pre-train/RL, 1296+1298.2 steering-vector-diff, 1297 max-intelligenza, 1298.1 optimizer-per-parte, 1300 quanto-addestrare-secondari) → rispondere con analisi approfondita + citare 1299 (multi-task loss weighting/GradNorm/Kendall).
-> Solo DOPO: injection test (ordine flash-lite→flash→gemma26b→9b) + resistenza-injection come classe di training.
+> ✅ **CATTURA GREZZA** (msg 1295-1305) in `wiki/_private/user-notes-2026-07-07.md` (gitignored). Utente ha confermato "finito il dump" (msg 1307).
+> ✅ **ESTRAZIONE + VERIFICATION-LOOP FATTI** (zero-skip confermato sulla checklist):
+> - Note tecniche (1295f, 1296-1300) → [[concepts/training-intelligence-optimization]] (analisi con confidence-tag, inviata).
+> - Lista KB (1295a "cos'altro") → workflow multi-agente (46 domini pponderati) → [[concepts/kb-topics-tier1-expansion]] (7 famiglie, layer-split). **Meta-finding: ogni caveat converge su reward-outcome #10.**
+> - Anti-catastrophic-forgetting (1305) → gate pre-training (sezione sopra).
+> ⏳ **6 note-DESIGN → PROPOSTE P1-P6 pronte** in `wiki/_private/proposal-design-notes-2026-07-07.md` (rule #18) → **ATTENDO APPROVAZIONE UTENTE** (msg 1311): P1 frontend-ux · P2 workflow-alberatura(estende #20) · P3 SVG-spatial · P4 instruction-phase-gold · P5 scope-adaptive-aggregation(1301) · P6 conseguenze+protezione-hard(1302, estende consequence-intention+constitution).
+> **CANCELLI APERTI (input utente):** (a) approvare/aggiustare P1-P6 → poi filo in training-taxonomy; (b) 2 Q del KB-expansion (granularità LoRA su 46 domini; confine pre-train/RL per gruppo-A); (c) sequenziare gli injection test (autorizzati msg 1292, ordine flash-lite→flash→gemma26b→9b; injection-resistance = braccio adversariale di P6; suite `verifiers/injection-suite.mjs` 14/0 pronta; serve build runner Gemini + quota).
 
 
 
