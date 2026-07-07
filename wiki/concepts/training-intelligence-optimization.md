@@ -32,6 +32,8 @@ sources:
 
 > Sintesi: SÌ allo split, riformulato come — **base: continual-pretrain di conoscenza stabile + ragionamento (con un po' di codice-scaffold); coding-skill: SFT→RL sulle LoRA**. Lega a [[project_post_training_strategy]] (curriculum SFT staged + ORPO/PRM/GRPO) e [[project_replay_strategy]].
 
+**Precisazione "coding minimo" ≠ "debole" (utente msg 1322)** `[EXTRACTED]`: il base dev'essere **SUPER FORTE sull'OPERARE il sistema** — comandi **bash / PowerShell / sh / CMD + python-base + JS-base** — altrimenti non usa bene OS + harness. Distinzione: base = **forte sul substrato AGENTICO** (shell/scripting-base + tool/harness-use, spinto anche via **RL agentico**, §3) ma **debole sul coding PROFONDO** (framework/librerie → LoRA Tier-2/3). Non confondere "poco codice di dominio" con "debole a operare". Vedi [[project_base_model_intelligence]] + [[project_from_scratch_slm_future]] (il set riusabile deve includere questa forza agentica di base).
+
 ---
 
 ## 2. Steering-vector diff per aggiornare i pesi più in fretta (msg 1296 + 1298.2)
