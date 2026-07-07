@@ -9,16 +9,16 @@ last_updated: 2026-06-30
 
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
 
-## ⏭️ POST-COMPACT NEXT (utente msg 1294, 2026-07-07) — PRIORITÀ IMMEDIATA dopo la compattazione
+## ⏭️ POST-COMPACT NEXT (utente msg 1294-1304, 2026-07-07) — PRIORITÀ IMMEDIATA
 
-> L'utente compatta ORA (green-light dato). **Subito dopo** manda una serie di note/argomenti presi oggi. Protocollo da eseguire (suo msg 1294):
-> 1. **NON saltare NULLA** — ogni argomento della sua nota va processato.
-> 2. Valutare (reco: SÌ) salvare l'**intero messaggio grezzo** in `wiki/_private/` (gitignored, anti-loss) PRIMA di estrarre — così ho la sorgente per il verification-loop.
-> 3. **Estrarre** i contenuti nelle pagine wiki appropriate (entities/concepts/decisions/training-taxonomy/todo secondo pertinenza).
-> 4. **Verification-loop**: ri-confrontare le pagine wiki prodotte vs il messaggio grezzo → confermare che nessun argomento è stato saltato.
-> 5. **Cross-reference**: incrociare i nuovi dati con TUTTA la wiki + knowledge base esistente (contraddizioni? conferme? link mancanti? → aggiornare).
-> 6. Poi smarcarle una a una insieme.
-> Solo DOPO questo: riprendere gli injection test (vedi sotto, ordine modelli flash-lite→flash→gemma26b→9b) + resistenza-injection come classe di training.
+> ✅ **CATTURA GREZZA FATTA**: le note dell'utente (msg 1295-1302) sono salvate verbatim in **`wiki/_private/user-notes-2026-07-07.md`** (gitignored, anti-loss, sopravvive alla compattazione). Quello è la SORGENTE per il verification-loop. **Possono arrivare ALTRE note** (l'utente ha scritto "...Cos'altro?..." → lista incompleta) → tenere aperta la checklist in fondo a quel file.
+> **Estrazione PENDING** — protocollo (suo msg 1294): 
+> 1. **NON saltare NULLA** — ogni item della checklist nel file grezzo va filato in wiki.
+> 2. **Estrarre** i contenuti nelle pagine wiki appropriate (concepts/decisions/training-taxonomy secondo pertinenza) — vedi checklist con destinazioni proposte in fondo al file grezzo.
+> 3. **Verification-loop**: riconfrontare le pagine prodotte vs il grezzo → confermare zero-skip, spuntare la checklist.
+> 4. **Cross-reference**: incrociare i nuovi dati con TUTTA la wiki + KB (contraddizioni/conferme/link mancanti → aggiornare).
+> 5. Diverse note chiedono **analisi tecnica da esperto** (1295f split pre-train/RL, 1296+1298.2 steering-vector-diff, 1297 max-intelligenza, 1298.1 optimizer-per-parte, 1300 quanto-addestrare-secondari) → rispondere con analisi approfondita + citare 1299 (multi-task loss weighting/GradNorm/Kendall).
+> Solo DOPO: injection test (ordine flash-lite→flash→gemma26b→9b) + resistenza-injection come classe di training.
 
 
 
@@ -69,6 +69,7 @@ Strategia decisa (msg 1247): **Kaggle definisce la procedura** (modello più gra
 ## 🚧 GATE PRE-TRAINING (da fare PRIMA della verifica finale del training set e dell'addestramento — utente msg 1238)
 
 - [ ] **🔴 PASS di integrità fattuale su TUTTO il training set** (regola #22, gate pre-training). **Procedura "modo migliore"** definita in `wiki/concepts/training-set-completeness-audit.md` §Procedura: (1) triage per rischio (self-contained=safe skip · entità-mondo-reale=target); (2) **flagging automatizzato via workflow multi-agente** (fan-out sulla taxonomy, flag di ogni asserzione-mondo + classifica I/II); (3) remediation di DEFAULT = **self-containment** (sposta il fatto nella fixture, costo ~0, copre la maggioranza); (4) verifica+cita solo dove essenziale (area-12 conoscenza); (5) reframe-as-verify-step dove il valore è la discovery. **GATE: nessun training parte** finché ogni asserzione-mondo flaggata non è (I) citata / (II) reframe-verify / (III) self-contained. **Blocca l'inizio dell'addestramento.** ⚠️ Da eseguire INSIEME all'audit di completezza (#21) come verifica finale unica del dataset.
+- [ ] **🔴 CHECK anti-catastrophic-forgetting sul training set** (utente msg 1305, 2026-07-07, gate pre-training). **PRIMA di iniziare il training**, controllare che abbiamo inserito nel training set il **replay/anti-forgetting set NECESSARIO e SUFFICIENTE** per evitare il catastrophic forgetting (la conoscenza pre-esistente del base model non deve degradare). Verificare: (a) presenza + proporzione del replay (cfr. [[project_replay_strategy]] = 10% coding replay adaptive, da calibrare empiricamente); (b) copertura delle capability che NON vogliamo perdere (linguaggio, ragionamento generale, i domini "piccola %" del tier-1); (c) che la % sia *sufficiente* (non troppo poca → forgetting) ma non *eccessiva* (non diluisce il segnale target). Ancora a [[concepts/catastrophic-forgetting]]. **Blocca l'inizio dell'addestramento** insieme al pass di integrità fattuale sopra.
 - [~] **Remediation transfer cross-dominio sui gold pre-#19 — A3** (utente msg 1241): ✅ **decomposition FATTO** (`gold-example-decomposition` §4bis: menù/abbonamenti/disegno-sperimentale + negativo-quotidiano, fatti self-contained #22). **RESTA** (continuazione): gli ALTRI gold di ragionamento pre-#19 (es. `gold-example-area03-verification-discipline`, e i gold-area02-* se hanno template mono-dominio) — stesso pass §4bis. NON sui gold Q verticali-di-codice puri. L'audit completo del resto della taxonomy = workstream quota-free (candidato workflow multi-agente).
 - [x] **Pagina eviction-checkpoint** ✅ creata (era meccanismo senza pagina) + fix link penzolante; **wiki-lint** ✅ 11 fix applicati; **F16/F17/F18/F19/F20** registrati; suite **51/0**.
 
