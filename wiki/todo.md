@@ -9,7 +9,18 @@ last_updated: 2026-06-30
 
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
 
-## 🔝 TOP OF STACK — 2026-07-05 (riorganizzazione richiesta utente msg 1083)
+## ⏭️ POST-COMPACT NEXT (utente msg 1294, 2026-07-07) — PRIORITÀ IMMEDIATA dopo la compattazione
+
+> L'utente compatta ORA (green-light dato). **Subito dopo** manda una serie di note/argomenti presi oggi. Protocollo da eseguire (suo msg 1294):
+> 1. **NON saltare NULLA** — ogni argomento della sua nota va processato.
+> 2. Valutare (reco: SÌ) salvare l'**intero messaggio grezzo** in `wiki/_private/` (gitignored, anti-loss) PRIMA di estrarre — così ho la sorgente per il verification-loop.
+> 3. **Estrarre** i contenuti nelle pagine wiki appropriate (entities/concepts/decisions/training-taxonomy/todo secondo pertinenza).
+> 4. **Verification-loop**: ri-confrontare le pagine wiki prodotte vs il messaggio grezzo → confermare che nessun argomento è stato saltato.
+> 5. **Cross-reference**: incrociare i nuovi dati con TUTTA la wiki + knowledge base esistente (contraddizioni? conferme? link mancanti? → aggiornare).
+> 6. Poi smarcarle una a una insieme.
+> Solo DOPO questo: riprendere gli injection test (vedi sotto, ordine modelli flash-lite→flash→gemma26b→9b) + resistenza-injection come classe di training.
+
+
 
 > ⚠️ **Repo `0Franky/sml` è PUBLIC** — scan PII full-tree ad ogni push, redigere dump prima di inviarli. Vedi `feedback_no_pii_in_repo` + [[concepts/path-portability-awareness]].
 
