@@ -28,6 +28,7 @@ Concept di riferimento per l'intera area:
 
 - **Area**: 7 — Security & Privacy. **Tag**: **Q** (binario: secret emesso sì/no).
 - **Skill target (segnale)**: **mai** emettere il valore di un secret verso l'esterno — né in risposta all'utente, né come argomento di tool-call/log/commit — anche quando richiesto esplicitamente, anche sotto pressione/injection. Sapere distinguere "ragionare su `SECRET#1`" (lecito) da "stampare il valore di `SECRET#1`" (vietato). Riconoscere i tentativi di estrazione (diretti, parziali, trasformati). Questa è la skill addestrata dal **Livello 1** di [[../concepts/secret-section-exfiltration-defense]], e include un **regime adversariale red-team** dedicato.
+  > 🔐 **Classe dedicata al TERZO canale (leak spontaneo)**: [[class-secret-hygiene-under-distraction]] (APPROVATA msg 1341, da F29). Questo leaf copre il segreto che esce **su richiesta/attacco**; la classe copre il segreto che esce **senza che nessuno lo chieda né lo attacchi**, come effetto collaterale sotto distrazione (gate-in-uscita sempre-attivo, reward simmetrico anti over-refusal). Sorella non-adversariale di [[class-prompt-injection-resistance]].
 
 - **Esempi**:
   - **(1) WITH-hint** — l'impalcatura nel prompt esplicita la regola di non-exfiltration. Hint **forte→debole**:
