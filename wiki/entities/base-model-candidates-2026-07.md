@@ -53,8 +53,17 @@ last_updated: 2026-07-08
 5. **Licenza**: Seed-OSS/Qwen/OLMo/Gemma4 = Apache-2.0; GLM/DeepSeek-distill = MIT → primi 5 OK. Nemotron = NVIDIA Open (non Apache/MIT).
 6. **Onestà 1 vs 2**: Seed-OSS #1 è fit-su-carta; condizionato alla validazione. Decidere **col DATO**, non a priori.
 
-## Prossimi passi
-Vedi [[../todo]] → item bake-off. Alla decisione: ADR in `wiki/decisions/` + aggiornare [[../../memory]] `project_test_model_vs_target` + [[../harness-experiment-log]] (rule #23).
+## Prossimi passi — bake-off STAGED (locale-vs-cloud, utente msg 1332 "può girare in locale?")
+
+Il bake-off NON è monolitico: separare **INFERENZA** (leggera, locale/API) da **TRAINING** (pesante, cloud). La maggior parte della DECISIONE si prende in inferenza, PRIMA di spendere in training. `[EXTRACTED da reco + vincoli HW]`
+
+- **Stage 0 — probe di INFERENZA (locale/API, NIENTE training)** ⭐ decide la maggior parte: intelligenza + conoscenza + **operare-il-sistema/shell** (probe nostre) + injection-suite, sui candidati. Un 32B a **4-bit** sta in ~18-22GB → gira su 24GB (4090/3090); Seed-OSS-36B comodo su 48GB. Alternativa: **API pay-per-token** (OpenRouter/Together ospitano Qwen3-32B/GLM/OLMo/Gemma). **Il driver eval è già OpenAI-compatible → si punta indifferentemente a vLLM/Ollama LOCALE o a un endpoint API: stesso harness, stesse probe.** → costruire un **probe-harness model-agnostico** (generalizza `run-session`/`run-injection`).
+- **Stage 1 — meccanismo CPT+LoRA sul 4B LOCALE**: che il continual-pretrain giri, LoRA hot-swap su vLLM, catastrophic-forgetting gestito (replay). Il 4B sta in locale → validare il MECCANISMO qui, poi scalare solo il vincitore.
+- **Stage 2 — CPT+full-FT del/i FINALISTA/i a 32B in CLOUD**: full-FT di un 32B = ~8×A100 / 4×H100 (impossibile in locale consumer) → **GPU affittate a ore** (RunPod/Vast/Lambda) SOLO alla fine, sui finalisti.
+
+**Open questions (utente msg 1333)**: (a) VRAM della GPU locale dell'utente → quali candidati quantizzati in casa vs via API; (b) budget API pay-per-token per le probe (pochi $) vs solo-locale. → [[../open-questions]].
+
+Alla decisione finale: ADR in `wiki/decisions/` + aggiornare [[../../memory]] `project_test_model_vs_target` + [[../harness-experiment-log]] (rule #23).
 
 ## Links
 [[../../memory]] `project_test_model_vs_target` · `project_base_model_intelligence` · `project_from_scratch_slm_future` · [[open-pretraining-corpora]] (foundation-corpus per il from-scratch) · [[../concepts/catastrophic-forgetting]] · [[../concepts/training-intelligence-optimization]] · [[../decisions/2026-07-08-tier2-justification-analysis]]
