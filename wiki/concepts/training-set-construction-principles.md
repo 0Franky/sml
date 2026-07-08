@@ -41,5 +41,13 @@ Ogni fatto in un esempio diventa **ground truth** per il modello → un fatto **
 
 I principi si applicano **insieme** su ogni classe nuova: astrai il gap (#18) → trova/crea il padre e aggancia (#20) → scrivi positivi + **negativi** con reward simmetrico (#21) → aggiungi transfer cross-dominio (#19) → **verifica l'integrità fattuale** (#22: ogni fatto verificato+citato oppure incerto→verify-step; preferisci fixture self-contained) → **audita la completezza** ([[training-set-completeness-audit]]) → tieni l'istanza osservata held-out (#18). Il filo comune: [[../feedback_reward_hacking_principle]] — il reward àncora all'OUTCOME reale, mai alla cerimonia/forma.
 
+## Tecniche di label-generation (cross-cutting)
+
+Metodologie di generazione-label applicabili a più classi (non legate a una sola):
+
+- **[[discriminative-mcq-hard-distractors]]** (utente msg 1372/1378): MCQ a **distrattori-confondibili a coppie** (4/6/10/16 opz = minimal-pairs, una-sola-corretta) per affinare la **discriminazione fine**, in fase **recognition E generation**. Distrattori da **failure-mode reali** + **style-matched** + **posizione sempre randomizzata** (item + dataset ~uniforme) + audit exactly-one-correct/tell. Oracolo: `harness/verifiers/mcq-distractor-gen.mjs` (11/0). È l'estensione MCQ del principio #21 (il near-twin = negativo massimamente informativo).
+- **Mutation trap-sound** ([[../../harness/verifiers/deceptive-task-gen]]): da `(C corretto, suite)` genera mutanti + partiziona provided/hidden (deceptiveness verificata eseguendo). Base per i distrattori load-bearing dell'MCQ.
+- **Oracoli strutturali self-contained** ([[../../harness/verifiers/async-schedule-gen]]): decisione modellata + `score` outcome-anchored su fixture (rule #22: testa il ragionamento, non il recall).
+
 ## Links
-[[training-set-completeness-audit]] · [[../training-taxonomy/class-metacognitive-self-audit]] · [[../training-taxonomy/class-constraint-fit-decision]] · [[../feedback_intelligence_gap_to_training_class]] · [[../feedback_transfer_always_cross_domain]] · [[../feedback_hierarchical_training_classes]] · [[../feedback_reward_hacking_principle]]
+[[training-set-completeness-audit]] · [[discriminative-mcq-hard-distractors]] · [[../training-taxonomy/class-metacognitive-self-audit]] · [[../training-taxonomy/class-constraint-fit-decision]] · [[../feedback_intelligence_gap_to_training_class]] · [[../feedback_transfer_always_cross_domain]] · [[../feedback_hierarchical_training_classes]] · [[../feedback_reward_hacking_principle]]
