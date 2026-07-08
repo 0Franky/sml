@@ -9,6 +9,13 @@ last_updated: 2026-06-30
 
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
 
+## 🔬 IN CORSO 2026-07-08 (msg 1395/B) — MATRICE modello × feature (E12)
+
+> Direttiva utente (msg 1395, dopo il giusto rimprovero sul rimpallo-decisioni): **fai i test con le diverse configurazioni, matrice modello/feature, estrai TUTTI i risultati per esperimento, trova le composizioni migliori, consolida la config di PRODUZIONE**. Compute dato: 4 chiavi Gemini (quota tornata) + Ollama locale (qwen3.5:9b È installato → nessun drift) + Docker.
+> **Apparato** (committato c494bfa/a557ddd): `eval/run-matrix.mjs` (sweep taskset×modello×combo×keep → tabella incrementale md+json + best-composition + config-produzione); `run-session.mjs` provider generalizzato **gemini|ollama** (`EVAL_PROVIDER`, asse-modello locale quota-free); **probe con retry+backoff** (fix recall-0 artefatto da RPM). 5 feature-combo: base/digest/digest+lean/digest+views/all (da F26/F27/H6).
+> **Job lanciati**: Job-1 gemini-flash-lite (humaneval-6, 5 combo × keep 1,6) · Job-2 gemma4:e4b locale (idem). **RESTA**: qwen3.5:9b locale · **long-horizon humaneval-30** (IL test-critico [[harness-wins-validation-protocol]], Regime-A) · consolidare la tabella-master + config-produzione · registrare E12 in [[harness-experiment-log]] con i FINDINGS (regola #23).
+
+
 ## ⏭️ NOTE UTENTE 2026-07-08 (msg 1369) — classe "ottimizzazione delle azioni"
 
 > ✅ **FILATA** (direttiva utente msg 1369, gerarchia regola #20): l'utente ha nominato il PADRE ("ottimizzazione delle azioni") + dato l'async come esempio →
