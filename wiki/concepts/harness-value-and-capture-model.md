@@ -38,6 +38,8 @@ Anche con la cattura sempre-on, resta il problema che l'utente solleva: **non tu
 
 **È TESTABILE** → esperimento *durable-preference persistence* (§4): pianta una preferenza/decisione NON-file-write early, satura la finestra, sonda dopo. Se il digest non la cattura e il modello non l'ha notata → **anche ours FALLISCE** → prova il gap e ne misura la gravità.
 
+**✅ MISURATO (F33, 2026-07-08)** — [[../harness-experiment-log]] §F33: piantato "committente ALDO-QX + decisione TAB" al task-1, saturata la finestra (qwen-ctx16k he12, ours@keep1). **Risultato**: task-recall 100% (digest OK) ma **pref-recall FALSE**, **note/jot/setVar = 0** (il 9B non salva mai) → la preferenza è PERSA e il modello CONFABULA. **A/B su 4 direttive** (checkpoint OFF + inject narrow/anti-deflect/urgent, 13 eviction ciascuna): **ZERO save in tutte** → nessun framing di nudge smuove il 9B (`note`/`jot` disponibili, non gated → è una scelta del modello). **Conferma netta**: il nudge model-side è un vicolo cieco → **serve la cattura deterministica** (sotto). Nota: la variante `urgent` è l'unica che non confabula (onestà sull'assenza) → tenerla per l'anti-confabulazione.
+
 ## 3. È un miglioramento REALE? Vale investire? — framing onesto
 
 **Sì, ma è NARROW e CONDIZIONALE. Non gonfiamolo.**
