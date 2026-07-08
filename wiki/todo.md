@@ -9,6 +9,16 @@ last_updated: 2026-06-30
 
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
 
+## ⏭️ NOTE UTENTE 2026-07-08 (msg 1369) — classe "ottimizzazione delle azioni"
+
+> ✅ **FILATA** (direttiva utente msg 1369, gerarchia regola #20): l'utente ha nominato il PADRE ("ottimizzazione delle azioni") + dato l'async come esempio →
+>   - PADRE [[training-taxonomy/class-action-execution-optimization]] (radice = optimization-first #8 come skill addestrabile; assi: async / parallel / batch / decision-cache).
+>   - FIGLIA [[training-taxonomy/class-async-dispatch-and-prioritization]] (il caso richiesto: async-dispatch + risposta-immediata + riconciliazione + priorità sotto deadline-utente). 12 transfer cross-dominio (#19) + 5 negativi N1-N5 (#21) + reward outcome (utente-sbloccato, mai cerimonia, #10). Gold held-out = questa sessione ("vorrei andare").
+>   - Wired: index (2 entry) + area-01 §Parallelization (cross-ref al padre) + cross-link consequence-intention/criticality.
+> **RESTANO (forward)**: (a) ⏳ **CONFERMA/AGGIUSTA utente** (regola #18: mostrata la struttura, in attesa ok); (b) formalizzare come **foglie-sorelle** sotto il padre: `batching-ops-ripetute` + `decision-cache-per-blocco` (oggi solo leaf/mention in Area-1/02 → promuovere a classi figlie); (c) **label-gen**: oracolo-di-scheduling in `verifiers/` (riusa deceptive-task-gen) con i casi-confine N1-N5 come distrattori; (d) **testbook** entry TB async-dispatch (probe: richiesta multi-intento → misura latency-to-first-useful + no-task-perso); (e) 🧹 **graphify --update** dei 2 file nuovi (batchare al prossimo giro).
+
+---
+
 ## ⏭️ NOTE UTENTE 2026-07-07 — STATO (msg 1294-1311) — quasi tutto processato, gated su approvazione
 
 > ✅ **CATTURA GREZZA** (msg 1295-1305) in `wiki/_private/user-notes-2026-07-07.md` (gitignored). Utente ha confermato "finito il dump" (msg 1307).

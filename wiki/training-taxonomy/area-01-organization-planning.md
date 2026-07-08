@@ -104,6 +104,8 @@ Skill di orchestrazione del Tier T1 (organization-first): scomporre un goal, map
 
 ## Parallelization decisions
 
+> **Padre (regola #20)**: queste foglie di parallelizzazione/scheduling STATICO (DAG noto a priori) sono figlie di [[class-action-execution-optimization]] (radice "ottimizzazione delle azioni", utente msg 1369) — l'asse *quali-task-insieme*. Complementari all'asse *sync-vs-async interattivo* di [[class-async-dispatch-and-prioritization]] (dispatch in background durante il dialogo per non bloccare l'utente).
+
 ### Foglia — `identificare-task-paralleli` · Tag: Q
 - **Skill target (segnale)**: individuare quali task possono procedere **in parallelo** (nessuna dipendenza reciproca, diretta o transitiva).
 - **Esempi**:
