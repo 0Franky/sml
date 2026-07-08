@@ -181,13 +181,26 @@ async function main() {
     `Fine sessione. IMPORTANTE: rispondi SOLO dalla memoria, **senza rileggere i file e senza eseguire nulla**. ` +
     `Elenca IN ORDINE i ${N} problemi che hai risolto in questa sessione: per ciascuno (1) il NOME esatto della ` +
     `funzione che hai implementato e (2) una riga su cosa fa. Poi indica quale task hai trovato più difficile e perché.`;
-  const turnsBeforeProbe = turns; lastHttpStatus = null; lastRetryErr = null;
-  const wait = waitAgentEnd(TASK_TIMEOUT);
-  let probeSendErr = null;
-  recordUserTurn(probePrompt); // F22: registra anche il turno della probe
-  try { await session.sendUserMessage(probePrompt); } catch (e) { probeSendErr = String(e?.message ?? e); }
-  const probeOutcome = await wait;
-  const probeAnswer = safeLastText(session);
+  // RETRY della probe (2026-07-08): è l'UNICA misura del recall; un errore RPM/transiente sull'ultima call (contesto
+  // pieno) la azzererebbe = recall-0 ARTEFATTO (non un fail di memoria). Ritenta con backoff CRESCENTE (raffredda l'RPM).
+  // Il turno-utente si registra UNA volta (F22-safe); i re-send ri-chiedono la stessa domanda. Il locale (ollama) non
+  // becca RPM → tipicamente 1 tentativo. Non ritenta i timeout (non sono rate-limit).
+  const turnsBeforeProbe = turns;
+  const PROBE_RETRIES = Number(process.env.EVAL_PROBE_RETRIES || 3);
+  const PROBE_BACKOFF = Number(process.env.EVAL_PROBE_BACKOFF_MS || 25000);
+  let probeSendErr = null, probeOutcome = null, probeAnswer = "";
+  recordUserTurn(probePrompt); // F22: registra il turno della probe UNA volta
+  for (let attempt = 0; attempt <= PROBE_RETRIES; attempt++) {
+    if (attempt > 0) await sleep(PROBE_BACKOFF * attempt); // backoff crescente per far scadere la finestra RPM
+    lastHttpStatus = null; lastRetryErr = null;
+    const wait = waitAgentEnd(TASK_TIMEOUT);
+    try { await session.sendUserMessage(probePrompt); probeSendErr = null; } catch (e) { probeSendErr = String(e?.message ?? e); }
+    probeOutcome = await wait;
+    probeAnswer = safeLastText(session);
+    const failed = (!probeAnswer && lastHttpStatus == null) || (lastHttpStatus != null && lastHttpStatus >= 400) || (lastRetryErr != null);
+    if (probeOutcome === "timeout" || !failed) break; // timeout non è RPM (non ritentare); altrimenti stop appena riesce
+    if (attempt < PROBE_RETRIES) process.stderr.write(`  [probe retry ${attempt + 1}/${PROBE_RETRIES}] answer-vuota/apiErr → backoff…\n`);
+  }
   const statsFinal = safeStats(session);
 
   const out = {
