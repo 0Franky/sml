@@ -134,7 +134,7 @@ Principio comune: l'oracolo è **deterministico** e premia l'**esito**; i distra
 - **[PROCESSO]** **Review-loop OBBLIGATORIO**: autore verticale → revisore agnostico severo → integratore (il revisore pesca P0 che l'autore razionalizza). — gold-methodology §Review-loop.
 - **[DOPPIO-SCOPO]** Ogni esperimento migliora l'harness E scopre buchi-da-addestrare → collega finding-harness ↔ classe-training (lo scaffold harness recede man mano che la skill sale). — feedback_intelligence_gap_to_training_class.
 
-> **GAP aperti (dalla sweep, → TODO):** (a) nessun concept cross-cutting per la **randomizzazione-posizione** (vive solo in MCQ fix#4 + hack-check sparsi); (b) nessuna pagina che consolidi gli **oracle-design-pitfalls** (sha256/autocrlf, non-determinismo→check-statico); (c) manca un **indice di applicazione MCQ** (a quali classi è già innestata). Tracciati in [[../todo]].
+> **GAP dalla sweep — CHIUSI (2026-07-08):** (a) ✅ [[../concepts/position-answer-randomization]] (principio cross-cutting randomizzazione, 3 assi); (b) ✅ [[../concepts/oracle-design-pitfalls]] (6 trappole+difesa); (c) ✅ tracker di applicazione MCQ in [[../concepts/discriminative-mcq-hard-distractors]] §Tracker.
 
 ---
 

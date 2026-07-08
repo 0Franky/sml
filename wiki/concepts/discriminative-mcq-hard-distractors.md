@@ -61,6 +61,14 @@ I distrattori-CONTENUTO si generano come **mutazione del corretto lungo la featu
 
 Su una classe di ragionamento esistente la metodologia si innesta così: si prende il **failure-mode reale** già validato (girando il modello), si genera il **near-twin** hard-negative mutando il corretto lungo la feature che conta, si style-matcha, si aggiunge alle famiglie di coppie fino a 4/6/10/16 opzioni, si **shuffla + audita** (exactly-one + tell + position-balance), e si usa in **entrambe** le fasi (recognition + self-check generativo). La **generazione resta primaria**; l'MCQ affina la discriminazione senza sostituirla.
 
+## Tracker di applicazione (GAP-c — quali classi hanno già gli MCQ)
+
+> La metodologia è cross-cutting: si innesta sulle classi di ragionamento **durante la costruzione dei dataset per-classe** (generando i near-twin dai loro failure-mode reali). Questo tracker registra dove è già applicata — aggiornalo a ogni innesto (parte del wiring #12).
+
+| Classe | MCQ innestati? | Note |
+|---|---|---|
+| *(nessuna ancora)* | — | l'oracolo `mcq-distractor-gen.mjs` è pronto; l'innesto per-classe avviene alla generazione dei dataset. Candidate prime: [[../training-taxonomy/class-sign-wrap-blindspot]] (near-miss già definiti), [[../training-taxonomy/class-confabulation-retrieval-failure]] (confabulazione-vs-corretto = coppia naturale). |
+
 ## Links
 
-[[training-set-construction-principles]] · [[../feedback_intelligence_gap_to_training_class]] · [[../feedback_reward_hacking_principle]] · [[../feedback_negative_examples_and_dataset_completeness]] · [[../training-taxonomy/class-sign-wrap-blindspot]] · [[../training-taxonomy/class-confabulation-retrieval-failure]] · [[../../harness/verifiers/deceptive-task-gen]]
+[[training-set-construction-principles]] · [[position-answer-randomization]] · [[oracle-design-pitfalls]] · [[../feedback_intelligence_gap_to_training_class]] · [[../feedback_reward_hacking_principle]] · [[../feedback_negative_examples_and_dataset_completeness]] · [[../training-taxonomy/class-sign-wrap-blindspot]] · [[../training-taxonomy/class-confabulation-retrieval-failure]] · [[../../harness/verifiers/deceptive-task-gen]]
