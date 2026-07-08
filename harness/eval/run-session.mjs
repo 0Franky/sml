@@ -40,6 +40,7 @@ const ARM = process.env.EVAL_ARM || "vanilla";
 const WORKDIR = process.env.EVAL_WORKDIR || process.cwd();
 const TASKS_FILE = process.env.EVAL_TASKS_FILE;
 const MODEL_ID = process.env.MODEL_ID || "gemini-3.1-flash-lite";
+const PROVIDER = (process.env.EVAL_PROVIDER || "gemini").toLowerCase(); // gemini (cloud, key) | ollama (locale, OpenAI-compat, quota-free)
 const TASK_TIMEOUT = Number(process.env.EVAL_TASK_TIMEOUT_MS || 180000);
 const INTERTASK_DELAY = Number(process.env.EVAL_INTERTASK_DELAY_MS || 3000); // spazia le richieste (key free)
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -67,20 +68,34 @@ function makeHeadlessUI() {
 }
 
 async function main() {
-  const apiKey = loadKey();
-
-  // --- Provider Gemini NATIVO (identico a run-one, verificato) ---
+  // --- Provider: Gemini (cloud, native) O Ollama (locale, OpenAI-compat) — asse-modello della matrice ---
   const auth = AuthStorage.inMemory();
-  auth.set("gemini", { type: "api_key", key: apiKey });
   const reg = ModelRegistry.inMemory(auth);
-  reg.registerProvider("gemini", {
-    name: "Gemini", baseUrl: "https://generativelanguage.googleapis.com/v1beta",
-    api: "google-generative-ai", apiKey, authHeader: false,
-    models: [{ id: MODEL_ID, name: MODEL_ID, api: "google-generative-ai", reasoning: false, input: ["text"],
-      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, contextWindow: 1048576, maxTokens: 8192 }],
-  });
-  const model = reg.find("gemini", MODEL_ID);
-  if (!model) throw new Error(`modello ${MODEL_ID} non trovato`);
+  let model;
+  if (PROVIDER === "ollama") {
+    // Modello LOCALE via Ollama (quota-free). baseUrl allineato a ~/.pi/agent/models.json (openai-completions).
+    const baseUrl = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434/v1";
+    const ctx = Number(process.env.MODEL_CTX || 262144);
+    auth.set("ollama", { type: "api_key", key: "ollama" });
+    reg.registerProvider("ollama", {
+      name: "Ollama", baseUrl, api: "openai-completions", apiKey: "ollama", authHeader: true,
+      models: [{ id: MODEL_ID, name: MODEL_ID, api: "openai-completions", reasoning: false, input: ["text"],
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, contextWindow: ctx, maxTokens: 8192 }],
+    });
+    model = reg.find("ollama", MODEL_ID);
+  } else {
+    // Provider Gemini NATIVO (identico a run-one, verificato).
+    const apiKey = loadKey();
+    auth.set("gemini", { type: "api_key", key: apiKey });
+    reg.registerProvider("gemini", {
+      name: "Gemini", baseUrl: "https://generativelanguage.googleapis.com/v1beta",
+      api: "google-generative-ai", apiKey, authHeader: false,
+      models: [{ id: MODEL_ID, name: MODEL_ID, api: "google-generative-ai", reasoning: false, input: ["text"],
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, contextWindow: 1048576, maxTokens: 8192 }],
+    });
+    model = reg.find("gemini", MODEL_ID);
+  }
+  if (!model) throw new Error(`modello ${MODEL_ID} (provider ${PROVIDER}) non trovato`);
 
   const emptyAgent = mkdtempSync(join(tmpdir(), "eval-agent-"));
   let resourceLoader;
