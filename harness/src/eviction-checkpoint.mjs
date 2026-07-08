@@ -108,6 +108,22 @@ const SCRATCH_HINT =
   " This is also your consolidation point: scan your <scratch> working-notes and promote any that must OUTLAST the next few turns into note() — facts persist; <scratch> is a rolling window and the rest is meant to fade.";
 /** Chiusura condivisa: outcome-not-ceremony + no-restate. Tenuta ULTIMA così il no-restate chiude il notice. */
 const SAVE_CLOSER = " If nothing is durable, do nothing. Do not restate this notice.";
+/**
+ * SAVE_CLOSER_ANTIDEFLECT — variante ANTI-DEFLESSIONE (utente msg 2026-07-08). F24: spingere il save fa DEFLETTERE il
+ * modello (inversione mezzi-fini: annuncia "ho salvato, pronto per il summary" invece di continuare/rispondere → keep1
+ * recall 0% vs 60%). Fix di FRAMING (non "spingere di più"): rende il save un'AZIONE-DI-LATO atomica e VIETA
+ * esplicitamente i comportamenti-deflessione (annunciare, passare al summary, aspettare conferma). Il primary task NON
+ * si interrompe. A/B contro `narrow` via env HARNESS_EVICTION_DIRECTIVE_STYLE.
+ */
+const SAVE_CLOSER_ANTIDEFLECT =
+  " Do it in ONE quick note() call, then IMMEDIATELY continue exactly what you were doing — keep solving / answer the" +
+  " question. Saving is a background reflex, NOT your reply: do not announce that you saved, do not switch to" +
+  " summarizing, do not wait for confirmation, do not treat this as a stopping point. If nothing is durable, do nothing.";
+/** Stile della direttiva (A/B anti-deflessione). Default `narrow` = invariato. `anti-deflect` = SAVE_CLOSER_ANTIDEFLECT. */
+export function loadEvictionDirectiveStyle() {
+  const s = String(process.env.HARNESS_EVICTION_DIRECTIVE_STYLE || "narrow").toLowerCase().replace(/_/g, "-");
+  return s === "anti-deflect" ? "anti-deflect" : "narrow";
+}
 
 /**
  * buildEvictionDirective — testo model-facing (EN) per i rung nudge/inject. Stringa vuota per off/require.
@@ -115,17 +131,19 @@ const SAVE_CLOSER = " If nothing is durable, do nothing. Do not restate this not
  * @param {{ digest?:string }} [opts]
  * @returns {string}
  */
-export function buildEvictionDirective(rung, { digest = "" } = {}) {
+export function buildEvictionDirective(rung, { digest = "", style = loadEvictionDirectiveStyle() } = {}) {
   if (rung !== "nudge" && rung !== "inject") return "";
   // NB: il framing ALLARGATO ("salva i tuoi PROGRESSI") è stato PROVATO e REVERTITO (F24, wiki/architecture/
   // lane-persistence-redesign.md): otteneva il save (0→7) ma DERAGLIAVA l'outcome (keep1 recall 0% vs 60%, deflessione
   // mezzi-fini). Lezione: il push-via-hint è un vicolo cieco → il fix è la cattura DETERMINISTICA (task-digest), non
   // spingere di più il modello. Qui resta il nudge STRETTO (originale): safety-net leggera, non aggressiva.
+  // `style=anti-deflect` (A/B utente 2026-07-08) NON spinge di più: cambia il FRAMING per vietare la deflessione.
+  const closer = style === "anti-deflect" ? SAVE_CLOSER_ANTIDEFLECT : SAVE_CLOSER;
   const head =
     "MEMORY EVICTION — the earlier message(s) are leaving your working window; after this turn you will NOT see " +
     "them verbatim. If they contain a DURABLE fact worth remembering later (a name/nickname, a decision, a " +
     "constraint, a stable preference, an open thread), " +
-    SAVE_HINT + SCRATCH_HINT + SAVE_CLOSER;
+    SAVE_HINT + SCRATCH_HINT + closer;
   if (rung === "inject" && digest) return head + "\n\nLeaving the window:\n" + digest;
   return head;
 }

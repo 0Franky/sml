@@ -10,6 +10,7 @@ import {
   evictionEvent,
   summarizeEvicting,
   buildEvictionDirective,
+  loadEvictionDirectiveStyle,
   injectDirectiveMessages,
   buildOobPrompt,
   parseOobSave,
@@ -84,6 +85,18 @@ ok(buildEvictionDirective("nudge").includes("do nothing"), "directive: outcome-n
 ok(buildEvictionDirective("nudge").includes("<scratch>"), "directive: nudge consolida anche lo <scratch> (msg 1158)");
 ok(buildEvictionDirective("nudge").toLowerCase().includes("promote"), "directive: nudge PROMUOVE gli scratch durevoli → note() (consolidamento lane appunti)");
 ok(buildEvictionDirective("inject", { digest: "x" }).includes("<scratch>"), "directive: inject include il consolidamento scratch + il digest");
+// ── ANTI-DEFLESSIONE (A/B utente 2026-07-08): stile che vieta la deflessione mezzi-fini (F24), default invariato ──
+ok(loadEvictionDirectiveStyle() === "narrow", "directive-style: default (env non settato) = narrow (invariato)");
+{
+  const narrow = buildEvictionDirective("nudge", { style: "narrow" });
+  const anti = buildEvictionDirective("nudge", { style: "anti-deflect" });
+  ok(narrow.includes("Do not restate") && !narrow.includes("background reflex"), "style narrow: closer originale");
+  ok(anti.includes("background reflex") && anti.includes("do not announce") && anti.includes("do not switch to summarizing"),
+    "style anti-deflect: vieta annuncio/summary (fix deflessione)");
+  ok(anti.includes("continue exactly what you were doing"), "style anti-deflect: save = azione-di-lato, il task NON si interrompe");
+  ok(anti.includes('note("<fact>")') && anti.includes("do nothing"), "style anti-deflect: mantiene affordance + outcome-not-ceremony");
+  ok(buildEvictionDirective("off", { style: "anti-deflect" }) === "", "style anti-deflect: off resta inerte (nessuna direttiva)");
+}
 
 // ── loadEvictionInjectMode + injectDirectiveMessages (F26 forma-vs-richiesta) ──
 ok(EVICTION_INJECT_MODES.join(",") === "trailing,preuser,system", "inject-mode: modi disponibili");
