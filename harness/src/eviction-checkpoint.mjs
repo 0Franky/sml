@@ -119,10 +119,19 @@ const SAVE_CLOSER_ANTIDEFLECT =
   " Do it in ONE quick note() call, then IMMEDIATELY continue exactly what you were doing — keep solving / answer the" +
   " question. Saving is a background reflex, NOT your reply: do not announce that you saved, do not switch to" +
   " summarizing, do not wait for confirmation, do not treat this as a stopping point. If nothing is durable, do nothing.";
-/** Stile della direttiva (A/B anti-deflessione). Default `narrow` = invariato. `anti-deflect` = SAVE_CLOSER_ANTIDEFLECT. */
+/**
+ * SAVE_CLOSER_URGENT — variante URGENTE (utente msg 2026-07-08): massima consapevolezza dell'imminenza + comando di
+ * preservazione IMMEDIATA + "NON è un summary". Più forte di anti-deflect sull'urgenza. ⚠ È anche più a rischio di
+ * ri-innescare la deflessione F24 (spinta forte a salvare) → l'A/B misura se l'urgenza aiuta o dirotta.
+ */
+const SAVE_CLOSER_URGENT =
+  " ACT NOW: after this turn those earlier messages are GONE — you will not be able to read them back. Preserve every" +
+  ' fact you still need IMMEDIATELY, this turn, with note("<fact>")/set_var. This is NOT a summary and NOT a stopping' +
+  " point: save what must survive, then keep going with the task. Do not narrate what you saved. If nothing is durable, do nothing.";
+/** Stile della direttiva (A/B anti-deflessione). Default `narrow` = invariato. Altri: `anti-deflect`, `urgent`. */
 export function loadEvictionDirectiveStyle() {
   const s = String(process.env.HARNESS_EVICTION_DIRECTIVE_STYLE || "narrow").toLowerCase().replace(/_/g, "-");
-  return s === "anti-deflect" ? "anti-deflect" : "narrow";
+  return (s === "anti-deflect" || s === "urgent") ? s : "narrow";
 }
 
 /**
@@ -138,7 +147,7 @@ export function buildEvictionDirective(rung, { digest = "", style = loadEviction
   // mezzi-fini). Lezione: il push-via-hint è un vicolo cieco → il fix è la cattura DETERMINISTICA (task-digest), non
   // spingere di più il modello. Qui resta il nudge STRETTO (originale): safety-net leggera, non aggressiva.
   // `style=anti-deflect` (A/B utente 2026-07-08) NON spinge di più: cambia il FRAMING per vietare la deflessione.
-  const closer = style === "anti-deflect" ? SAVE_CLOSER_ANTIDEFLECT : SAVE_CLOSER;
+  const closer = style === "anti-deflect" ? SAVE_CLOSER_ANTIDEFLECT : style === "urgent" ? SAVE_CLOSER_URGENT : SAVE_CLOSER;
   const head =
     "MEMORY EVICTION — the earlier message(s) are leaving your working window; after this turn you will NOT see " +
     "them verbatim. If they contain a DURABLE fact worth remembering later (a name/nickname, a decision, a " +

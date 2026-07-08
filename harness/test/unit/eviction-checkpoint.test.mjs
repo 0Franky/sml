@@ -96,6 +96,11 @@ ok(loadEvictionDirectiveStyle() === "narrow", "directive-style: default (env non
   ok(anti.includes("continue exactly what you were doing"), "style anti-deflect: save = azione-di-lato, il task NON si interrompe");
   ok(anti.includes('note("<fact>")') && anti.includes("do nothing"), "style anti-deflect: mantiene affordance + outcome-not-ceremony");
   ok(buildEvictionDirective("off", { style: "anti-deflect" }) === "", "style anti-deflect: off resta inerte (nessuna direttiva)");
+  // variante URGENT (idea utente msg 1416): urgenza massima + "NOT a summary" — 3° braccio A/B
+  const urgent = buildEvictionDirective("nudge", { style: "urgent" });
+  ok(urgent.includes("ACT NOW") && urgent.includes("GONE") && urgent.includes("NOT a summary"), "style urgent: urgenza + not-a-summary (idea utente)");
+  ok(urgent.includes("keep going with the task") && urgent.includes('note("<fact>")'), "style urgent: mantiene continua-il-task + affordance");
+  ok(urgent !== anti && urgent !== narrow, "style urgent: distinto da narrow e anti-deflect (A/B a 3 bracci)");
 }
 
 // ── loadEvictionInjectMode + injectDirectiveMessages (F26 forma-vs-richiesta) ──
