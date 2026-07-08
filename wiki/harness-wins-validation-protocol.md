@@ -19,6 +19,20 @@ Modo-2 testava **recall di nomi-funzione** su una sessione **corta** (6 task Hum
 
 → Con la finestra-nativa **mai saturata**, la memoria-harness è **ridondante**: replica ciò che vanilla ha già gratis. **L'harness può vincere SOLO in un regime dove la memoria nativa di vanilla FALLISCE o COSTA più delle lane compatte.** Modo-2 non era quel regime.
 
+## LIVE FINDING (E12, 2026-07-08) — conferma empirica: serve l'OVERFLOW
+
+Matrice modello×feature in corso (`eval/run-matrix.mjs`). Dati long-horizon (humaneval-30) su **gemini-3.1-flash-lite** (context ~1M):
+
+| arm | pass% | recall% | token |
+|---|---|---|---|
+| vanilla | 100 | **100** | 403K |
+| ours base@keep6 | 100 | 77 | 662K |
+| ours base@keep8 | 100 | 77 | 813K |
+
+→ **Conferma la diagnosi**: 30 task = ~403K token < finestra 1M → vanilla **non va MAI in overflow** → ricorda tutto gratis (recall 100%); ours (finestra nativa ridotta + lane) fa **PEGGIO** (77%) e costa di più = **overhead**. Su un modello a contesto enorme l'harness-memoria è ridondante *a qualunque scala pratica di task*.
+
+**Implicazione operativa**: la vittoria (Regime A) è dimostrabile SOLO dove la finestra va in **overflow reale**. Con Gemini serve una sessione da >1M token (impraticabile). Il banco giusto = **modelli locali con `num_ctx` limitato** (es. `qwen-ctx16k` = num_ctx 16384): a 30 task la finestra **satura** → vanilla perde l'early-context → ours con **task-digest** (fatti early pinned) dovrebbe finalmente **vincere sul recall**. **Il test decisivo è `qwen-ctx16k` × humaneval-30** (in coda). [Nota infra: i locali via Ollama servono con num_ctx di default ~4096 → il braccio ours (system-prompt grande) veniva troncato; risolto con varianti Modelfile `PARAMETER num_ctx 16384`, `eval/_Modelfile-*-ctx`.]
+
 ## I 3 regimi candidati di vittoria (la scelta-di-design)
 
 Bisogna decidere **su COSA** l'harness deve vincere — sono ipotesi diverse, con esperimenti diversi:
