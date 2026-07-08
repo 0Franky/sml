@@ -24,12 +24,26 @@ import { STATE_DIR } from "./state-paths.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
+/**
+ * SSOT dei suffissi dei tre DB di stato, derivati da UNA qualsiasi state-dir. Serve a ISOLARE i run (driver
+ * headless, eval A/B) che girano con una `HARNESS_STATE_DIR` propria: il chiamante deriva i path della SUA dir
+ * senza ri-hardcodare `${dir}/vars.db` (evita la duplicazione del suffisso → CLAUDE.md #16). I `*_DB_PATH` sotto
+ * sono il caso-default (STATE_DIR corrente, letto all'import). @param {string} stateDir
+ */
+export function dbPathsFor(stateDir) {
+  return {
+    vars: `${stateDir}/vars.db`,
+    conv: `${stateDir}/conversations.db`,
+    toolcall: `${stateDir}/tool-calls.db`,
+  };
+}
+
 /** Path del DB dello stato (vars/tasks/rules/meta/changelog/…). Derivato da STATE_DIR (SSOT directory). */
-export const VARS_DB_PATH = `${STATE_DIR}/vars.db`;
+export const VARS_DB_PATH = dbPathsFor(STATE_DIR).vars;
 /** Path del DB della conversazione persistita per-ID (lane <messages_with_user> + get_conversation). */
-export const CONV_DB_PATH = `${STATE_DIR}/conversations.db`;
+export const CONV_DB_PATH = dbPathsFor(STATE_DIR).conv;
 /** Path del DB delle tool-call persistite (recovery oltre il ring-24, tool view_tool_calls). */
-export const TOOLCALL_DB_PATH = `${STATE_DIR}/tool-calls.db`;
+export const TOOLCALL_DB_PATH = dbPathsFor(STATE_DIR).toolcall;
 /** Identità agente di default delle extension dell'orchestratore (namespace + `who` nel change-log). */
 export const ORCHESTRATOR_AGENT = "orchestrator";
 
@@ -79,4 +93,4 @@ export function closeAll() {
   _toolcalls.clear();
 }
 
-export default { getVarsQueue, getConversationStore, getToolCallStore, closeAll, VARS_DB_PATH, CONV_DB_PATH, TOOLCALL_DB_PATH, ORCHESTRATOR_AGENT };
+export default { getVarsQueue, getConversationStore, getToolCallStore, closeAll, dbPathsFor, VARS_DB_PATH, CONV_DB_PATH, TOOLCALL_DB_PATH, ORCHESTRATOR_AGENT };
