@@ -21,6 +21,8 @@ last_updated: 2026-06-30
 >   - **Test valido RILANCIATO**: vanilla + digest@1 su **qwen-ctx16k × he12** (`b1eq7x1yh`, ~24min). Success-criterion: ours-digest recall > vanilla-overflow recall quando 16K satura.
 >   - **⚠ Finding meccanismo (task-digest.mjs)**: la lane task-digest cattura un fatto **SOLO da una tool-call di file-write** con args `path`+`content` (`digestFactFromCall`); scritture via `bash echo>file` o output inline **non** sono catturate → la memoria-digest dipende dal fatto che il modello usi un write-tool strutturato. Da verificare nel run 16k (digestFacts atteso ~N-task se il modello scrive via tool).
 > - [ ] **2° modello cloud** (gemini-3.5-flash he6) — solo la cella vanilla (poi killato) → da rifare quando l'ambiente regge.
+> - [ ] **Robustezza cattura digest** (emerso da E12): `digestFactFromCall` cattura solo write-tool strutturati (path+content); scritture via `bash echo>file`/`cat<<EOF`/inline NON catturate → il rescue-memoria non varrebbe lì. Estendere il riconoscimento (parse di redirection bash / heredoc) mantenendo il determinismo. Non-gated.
+> - [ ] **Riconferma overflow-win n≥3 + su target ≥27B**: E12 è n=1/cella su 9B locale; la direzione è netta ma va riconfermata (n≥3 stessa cella + un modello ≥27B su sessione agentica lunga SWE-scale, il regime di produzione reale). Success-criterion invariato: ours-digest recall ≫ vanilla in overflow.
 
 
 ## ⏭️ NOTE UTENTE 2026-07-08 (msg 1369) — classe "ottimizzazione delle azioni"
