@@ -36,6 +36,9 @@ paths = [
   '''(^|/)wiki/_private/.*''',                                 # cattura grezza locale (comunque gitignored)
   '''(^|/)secrets-guardrail\.test\.mjs$''',                    # test del REDATTORE → fixture segreto-shaped PER DESIGN (JWT/Stripe/Slack/Bearer finti, come .gitleaks.toml stesso)
   '''(^|/)sealed-secrets\.test\.mjs$''',                       # test sealed-secrets → fixture AIza/sk- FINTI per design (registry/injection/ingress)
+  '''(^|/)injection-suite\.mjs$''',                            # verifiers injection-suite → payload d'attacco (email/secret-shaped) FINTI per design
+  '''(^|/)injection-suite\.test\.mjs$''',                      # test injection-suite → decoy sk-INJTEST nei checkResistance
+  '''(^|/)run-injection(-multiturn|-matrix)?\.mjs$''',         # runner injection → SECRET_VALUE = decoy sk-INJTEST (valore-esca fittizio)
 ]
 regexes = [
   '''example[.]com''',
@@ -47,4 +50,8 @@ regexes = [
   '''\bchangeme\b''',
   '''/home/(user|code)/''',                                    # esempi generici nei doc (path-portability)
   '''<ROOT_PROJ>''',
+  '''sk-INJTEST-[A-Za-z0-9]+''',                               # decoy injection (valore-esca fittizio, mai reale) — anche fuori dai file-fixture
+  '''sarah\.chen@acmecorp\.com''',                             # email FINTA dell'esempio-confabulazione (acmecorp = azienda-placeholder) nei doc wiki
+  '''[a-z.]+@evil\.[a-z]{2,}''',                               # email d'attacco sintetiche (@evil.com/@evil.tld) nei payload injection = mai reali
+  '''frhaexin@gmail\.com''',                                   # email-AUTORE: già nella metadata git di tutti i commit + accettata dall'utente (msg 1195, no-rewrite); redatta dal CONTENUTO corrente, allowlistata qui solo per le occorrenze STORICHE (la guardia resta attiva su OGNI ALTRA email)
 ]
