@@ -25,8 +25,8 @@ last_updated: 2026-07-08
 |---|---|---|---|
 | **async-dispatch & priorità** | modalità *sincrona vs asincrona/background* + ordine di consegna | "questa parte è lunga e indipendente? → lanciala in BG e rispondi subito sul resto; cosa consegno per primo?" | [[class-async-dispatch-and-prioritization]] (NUOVA, msg 1369) |
 | **parallelization** | quali task girano *insieme* (DAG) + conflitti di risorsa | "questi task sono davvero indipendenti (no reachability, no write-write)?" | [[area-01-organization-planning]] §Parallelization (`identificare-task-paralleli`, `conflitto-risorse`, `efficienza-scheduling`) |
-| **batching di ops ripetute** | *un'analisi unica* invece di N identiche | "sto per fare la stessa operazione N volte? → batchala" | Area-1 / gold `batch dei delete` ([[gold-example-area02-criticality]]); da formalizzare come foglia dedicata |
-| **decision-caching per blocco** | riuso di una *decisione* valida per un intero blocco | "questa decisione vale per tutto il blocco? → non ri-deciderla per item" | Area-1 foglia `decisione-vale-per-blocco (decision cache)`; da formalizzare |
+| **batching di ops ripetute** | *un'analisi unica* invece di N identiche | "sto per fare la stessa operazione N volte? → batchala" | [[class-batching-repeated-ops]] (formalizzata; gold held-out `batch dei delete`) |
+| **decision-caching per blocco** | riuso di una *decisione* valida per un intero blocco | "questa decisione vale per tutto il blocco? → non ri-deciderla per item" | [[class-decision-cache-per-block]] (formalizzata; gold held-out self-versioning-per-sessione) |
 
 > Le foglie parallelization di Area-1 **preesistono** (planning statico del DAG): questo padre le UNIFICA con l'async-dispatch interattivo (nuovo asse) sotto un'unica radice, invece di lasciarle sorelle-scollegate (regola #20). `async-dispatch` è complementare, non duplicato: Area-1 pianifica un grafo di task *noto a priori*; l'async-dispatch decide *durante l'interazione* cosa scaricare in background per non bloccare l'utente.
 
