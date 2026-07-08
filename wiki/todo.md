@@ -45,8 +45,8 @@ last_updated: 2026-06-30
 > ⚠️ **Repo `0Franky/sml` è PUBLIC** — scan PII full-tree ad ogni push, redigere dump prima di inviarli. Vedi `feedback_no_pii_in_repo` + [[concepts/path-portability-awareness]].
 
 **🟢 PII — VERIFICATO CLEAN (2026-07-05, utente msg 1195):**
-- [x] **Purge storia username** ✅ **NON serve** (verificato, non a memoria): pickaxe `git log -S "frhae" --all` → username in **0 commit** del contenuto tracciato (local + origin/main); tree pulito; vecchio `b8171a7` inesistente → history già riscritta a un certo punto. Il "comando andato bene" era il PUSH graphify (`fd3be25` su origin, PII-scanned), non il purge. (Se serve certezza 100% sul remoto pubblico: `git fetch` + re-scan.)
-- [x] **Email autore nei metadata** ✅ **DECISO**: nessun rewrite, lasciata `frhaexin@gmail.com` (utente msg 1195). Task #8 chiuso.
+- [x] **Purge storia username** ✅ **NON serve** (verificato, non a memoria): pickaxe `git log -S "<username>" --all` → username in **0 commit** del contenuto tracciato (local + origin/main); tree pulito; vecchio `b8171a7` inesistente → history già riscritta a un certo punto. Il "comando andato bene" era il PUSH graphify (`fd3be25` su origin, PII-scanned), non il purge. (Se serve certezza 100% sul remoto pubblico: `git fetch` + re-scan.)
+- [x] **Email autore nei metadata** ✅ **DECISO**: nessun rewrite, lasciata l'email-autore nella metadata git (utente msg 1195). Task #8 chiuso. (Email redatta dal CONTENUTO wiki per la regola no-PII-nel-contenuto; resta solo nella metadata autore per scelta utente.)
 
 **🟡 BUILD stanotte (autonomo — wiring+test+commit, ADR [[decisions/2026-07-05-slm-scaffolding-extension]]):**
 - [x] **1. Task-validation deps-aware** (utente msg 1076) ✅ **FATTO**: `TASK_STATUSES` SSOT {pending,in_progress,done,blocked,cancelled}; `setTaskStatus` rifiuta status arbitrari (enum-guard) + **NON attiva (in_progress) un task con deps non-`done`** (deps-guard, rispetta `_checkDeps`/`ready`, non lo bypassa; forward-ref → blocca); `set_task_status` tool try/catch → rifiuto azionabile. Test task-graph +10 asserzioni; **suite unit 30/0, typecheck 0**.
