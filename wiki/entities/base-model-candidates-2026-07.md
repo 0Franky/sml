@@ -66,6 +66,16 @@ Il bake-off NON è monolitico: separare **INFERENZA** (leggera, locale/API) da *
 
 **Open questions (utente msg 1333)**: (a) VRAM della GPU locale dell'utente → quali candidati quantizzati in casa vs via API; (b) budget API pay-per-token per le probe (pochi $) vs solo-locale. → [[../open-questions]].
 
+### Provider FREE per le probe (utente msg 1361-B "solo quote gratuite + escamotage retry", ricerca 2026-07-08)
+
+Il bake-off gira su **free-tier** senza spesa (decisione utente: solo quote gratuite). Provider OpenAI-compatible che ospitano **Qwen3-32B** gratis:
+- ⭐ **Groq** — free, no carta, `qwen3-32b` (131K ctx), limiti **30 RPM / 1000 RPD**, base `https://api.groq.com/openai/v1`. Migliore per iniziare.
+- **OpenRouter** — `qwen/qwen3-32b:free`, base `https://openrouter.ai/api/v1` (1 key → 300+ modelli, ruota provider).
+- Altri OpenAI-compat: Cerebras, SiliconFlow, Nebius, Alibaba Model Studio. Liste: `github.com/cheahjs/free-llm-api-resources`, `freellm.net`.
+- ⚠️ **Seed-OSS-36B**: disponibilità free NON confermata → verificare lista OpenRouter/HF Inference; se assente serve provider a pagamento o self-host (caveat per validare ENTRAMBI).
+
+**Escamotage-codice (COSTRUITO)**: `run-base-probe.mjs` ha ora **rotazione multi-key** (`OPENAI_API_KEYS` comma-sep) + **retry con backoff esponenziale su 429/5xx** (ruota key ad ogni retry → aggira il rate-limit per-key) → regge i limiti free tipo Groq 30 RPM. Comando pronto: `OPENAI_BASE_URL=https://api.groq.com/openai/v1 OPENAI_API_KEYS=<key1,key2> MODEL_ID=qwen3-32b node eval/run-base-probe.mjs`. Gated solo sulla key free.
+
 Alla decisione finale: ADR in `wiki/decisions/` + aggiornare [[../../memory]] `project_test_model_vs_target` + [[../harness-experiment-log]] (rule #23).
 
 ## Links

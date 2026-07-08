@@ -35,44 +35,59 @@ const PACE_MS = Number(process.env.PACE_MS || 800);
 const MAX_TOKENS = Number(process.env.MAX_TOKENS || 512);
 const OUT = process.env.OUT || join(process.env.SCRATCH || tmpdir(), `base-probe-${MODEL_ID.replace(/[^\w.-]/g, "_")}.jsonl`);
 
-/** Key: OPENAI_API_KEY esplicita, altrimenti la prima GEMINI key (valida il path OpenAI-compat senza config esterna). */
-async function resolveKey() {
-  if (process.env.OPENAI_API_KEY) return process.env.OPENAI_API_KEY;
-  try { const { loadGeminiKeys } = await import("./gemini-keys.mjs"); const k = loadGeminiKeys(); if (k.length) return k[0]; } catch { /* nessuna */ }
-  throw new Error("OPENAI_API_KEY assente e nessuna GEMINI key in .env");
+/** Keys (ARRAY, per rotazione multi-key = escamotage free-tier, utente msg 1361-B): OPENAI_API_KEYS (comma-sep) >
+ *  OPENAI_API_KEY (singola) > GEMINI keys (valida il path OpenAI-compat senza config esterna). */
+async function resolveKeys() {
+  if (process.env.OPENAI_API_KEYS) return process.env.OPENAI_API_KEYS.split(",").map((s) => s.trim()).filter(Boolean);
+  if (process.env.OPENAI_API_KEY) return [process.env.OPENAI_API_KEY];
+  try { const { loadGeminiKeys } = await import("./gemini-keys.mjs"); const k = loadGeminiKeys(); if (k.length) return k; } catch { /* nessuna */ }
+  throw new Error("OPENAI_API_KEY(S) assente e nessuna GEMINI key in .env");
 }
+const MAX_RETRIES = Number(process.env.MAX_RETRIES || 3);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/** UNA chiamata chat/completions. Ritorna {text} o {error} (endpoint down/timeout/HTTP≥400). */
-async function chat(apiKey, prompt) {
-  const ctrl = new AbortController();
-  const killer = setTimeout(() => ctrl.abort(), TIMEOUT);
-  try {
-    const res = await fetch(`${BASE_URL}/chat/completions`, {
-      method: "POST", signal: ctrl.signal,
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({ model: MODEL_ID, messages: [{ role: "user", content: prompt }], temperature: 0, max_tokens: MAX_TOKENS }),
-    });
-    if (!res.ok) return { error: `HTTP ${res.status}` };
-    const j = await res.json();
-    const text = j?.choices?.[0]?.message?.content ?? "";
-    return typeof text === "string" && text.trim() !== "" ? { text } : { error: "empty completion" };
-  } catch (e) {
-    return { error: (e?.name === "AbortError" ? "timeout" : String(e?.message ?? e)).slice(0, 120) };
-  } finally { clearTimeout(killer); }
+/**
+ * chat/completions con RETRY+backoff e ROTAZIONE key (escamotage per reggere i rate-limit dei free-tier tipo Groq
+ * 30 RPM / OpenRouter :free, utente msg 1361-B). Su 429/5xx/errore-di-rete: ritenta con la key SUCCESSIVA + backoff
+ * esponenziale (cap 8s). Su 4xx non-429 (bad model/key): errore vero, niente retry. `startIdx` ruota la key iniziale
+ * per probe → distribuisce il carico. Ritorna {text} o {error} dopo MAX_RETRIES.
+ */
+async function chat(keys, prompt, startIdx) {
+  let lastErr = "no attempt";
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    const key = keys[(startIdx + attempt) % keys.length]; // key diversa ad ogni retry → aggira il rate-limit per-key
+    const ctrl = new AbortController();
+    const killer = setTimeout(() => ctrl.abort(), TIMEOUT);
+    try {
+      const res = await fetch(`${BASE_URL}/chat/completions`, {
+        method: "POST", signal: ctrl.signal,
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+        body: JSON.stringify({ model: MODEL_ID, messages: [{ role: "user", content: prompt }], temperature: 0, max_tokens: MAX_TOKENS }),
+      });
+      if (res.status === 429 || res.status >= 500) { lastErr = `HTTP ${res.status}`; await sleep(Math.min(8000, 500 * 2 ** attempt)); continue; }
+      if (!res.ok) return { error: `HTTP ${res.status}` }; // 4xx non-429 = errore vero → non ritentare
+      const j = await res.json();
+      const text = j?.choices?.[0]?.message?.content ?? "";
+      return typeof text === "string" && text.trim() !== "" ? { text } : { error: "empty completion" };
+    } catch (e) {
+      lastErr = (e?.name === "AbortError" ? "timeout" : String(e?.message ?? e)).slice(0, 120);
+      await sleep(Math.min(8000, 500 * 2 ** attempt));
+    } finally { clearTimeout(killer); }
+  }
+  return { error: `${lastErr} (dopo ${MAX_RETRIES} retry)` };
 }
 
 async function main() {
-  const apiKey = await resolveKey();
+  const keys = await resolveKeys();
   const probes = PROBE_CATEGORY ? BASE_PROBES.filter((p) => p.category === PROBE_CATEGORY) : BASE_PROBES;
   writeFileSync(OUT, "");
-  console.error(`[base-probe] model=${MODEL_ID} base=${BASE_URL} probes=${probes.length} cats=${probeCategories().length} out=${OUT}`);
+  console.error(`[base-probe] model=${MODEL_ID} base=${BASE_URL} probes=${probes.length} cats=${probeCategories().length} keys=${keys.length} retries=${MAX_RETRIES} out=${OUT}`);
 
   const byCat = {};
   let valid = 0, invalid = 0, passed = 0;
   for (let i = 0; i < probes.length; i++) {
     const p = probes[i];
-    const r = await chat(apiKey, p.prompt);
+    const r = await chat(keys, p.prompt, i);
     byCat[p.category] ??= { valid: 0, passed: 0, invalid: 0 };
     if (r.error) {
       invalid++; byCat[p.category].invalid++;
