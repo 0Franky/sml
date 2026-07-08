@@ -142,16 +142,26 @@ async function main() {
     });
   }
 
+  // --- Test C3 "durable-preference persistence" (utente msg 2026-07-08): pianta un fatto DUREVOLE NON-file-write al
+  // task-1 (preferenza/decisione/nome — NON catturabile dal task-digest, che vede solo i file-write). Dopo l'overflow,
+  // una probe dedicata misura se sopravvive. Gated: attivo solo con EVAL_PLANT_PREF settato → zero impatto sui run normali.
+  const PLANT_PREF = process.env.EVAL_PLANT_PREF || "";               // es. "Il committente si chiama ALDO-QX e vuole i commenti in inglese britannico."
+  const PREF_KEY = (process.env.EVAL_PREF_KEY || "").toLowerCase();   // token esatto su cui gradare il recall (es. "aldo-qx")
+  const PREF_PROBE =
+    `Ancora una cosa, SEMPRE solo dalla memoria (niente file/esecuzione): all'INIZIO della sessione ti ho dato ` +
+    `un'informazione durevole da ricordare per tutta la sessione. Qual era? Riportala esattamente.`;
   // --- Loop long-horizon: N task nella STESSA sessione, contesto accumula ---
   const perTask = [];
   for (let i = 0; i < N; i++) {
     const t = tasks[i];
     const solFile = `solution_${i + 1}.py`;
-    const prompt =
+    let prompt =
       `[Sessione multi-task: task ${i + 1} di ${N}] Implementa in Python la funzione richiesta e scrivi la ` +
       `soluzione COMPLETA (firma + corpo) nel file \`${solFile}\` nella working dir, così che \`${t.entry_point}\` ` +
       `sia importabile. Puoi eseguire codice per verificarla. Ricorda cosa risolvi: a fine sessione ti chiederò ` +
       `di riepilogare i problemi affrontati.\n\n${t.prompt}`;
+    if (i === 0 && PLANT_PREF) prompt =
+      `[MEMORIA DUREVOLE — vale per TUTTA la sessione, tienila a mente fino alla fine] ${PLANT_PREF}\n\n` + prompt;
 
     const turnsBefore = turns; lastHttpStatus = null; lastRetryErr = null;
     const t0 = Date.now();
@@ -201,9 +211,20 @@ async function main() {
     if (probeOutcome === "timeout" || !failed) break; // timeout non è RPM (non ritentare); altrimenti stop appena riesce
     if (attempt < PROBE_RETRIES) process.stderr.write(`  [probe retry ${attempt + 1}/${PROBE_RETRIES}] answer-vuota/apiErr → backoff…\n`);
   }
+  // PROBE preferenza durevole (C3): il fatto NON-file-write piantato al task-1 è sopravvissuto all'overflow?
+  let prefAnswer = "", prefRecall = null;
+  if (PLANT_PREF) {
+    recordUserTurn(PREF_PROBE);
+    const w = waitAgentEnd(TASK_TIMEOUT);
+    try { await session.sendUserMessage(PREF_PROBE); } catch {}
+    await w;
+    prefAnswer = safeLastText(session);
+    prefRecall = PREF_KEY ? prefAnswer.toLowerCase().includes(PREF_KEY) : null;
+  }
   const statsFinal = safeStats(session);
 
   const out = {
+    pref: PLANT_PREF ? { plant: PLANT_PREF, key: PREF_KEY, answer: prefAnswer, recall: prefRecall } : null,
     mode: "session", arm: ARM,
     keep: ARM === "ours" ? Number(process.env.HARNESS_NATIVE_KEEP_TURNS || 6) : null,
     nTasks: N, nExt, hasContext: (session.systemPrompt || "").includes("<context>"),

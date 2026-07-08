@@ -33,6 +33,52 @@ function firstKey(obj, keys) {
 export function pathOf(args) { const v = firstKey(args, PATH_KEYS); return v == null ? null : String(v); }
 export function contentOf(args) { const v = firstKey(args, CONTENT_KEYS); return v == null ? null : String(v); }
 
+// ── Fallback SHELL (utente msg 2026-07-08): il modello può scrivere un file con una redirection di shell invece che con
+// un write-tool strutturato — `echo "…" > f`, `cat > f <<'EOF' … EOF`, `printf … > f`, `tee f`, PowerShell `Out-File`/
+// `Set-Content`. Questi arrivano come UN arg-comando (command/cmd/script), NON path+content → il digest li mancava. È
+// sintassi STRUTTURALE (redirection), non linguaggio naturale → parser deterministico è appropriato (regola #24).
+// Solo arg INEQUIVOCABILMENTE-shell: escludo `code`/`input` (contengono codice con `>` di confronto → falsi positivi).
+export const CMD_KEYS = ["command", "cmd", "script", "shell_command"];
+export function cmdOf(args) { const v = firstKey(args, CMD_KEYS); return v == null ? null : String(v); }
+
+function looksLikeFile(p) {
+  if (!p) return false;
+  if (/^\/dev\//.test(p) || /^&?\d+$/.test(p)) return false; // /dev/null, fd (2>&1, >&2)
+  return /\S/.test(p);
+}
+
+/**
+ * shellWriteFromCommand — PURO. Da una stringa-comando shell → { path, content } del file scritto per redirection,
+ * o null se il comando non scrive file. `content` può essere "" (file registrato ma corpo non estraibile → nessun def).
+ * Copre bash/sh/zsh (echo/printf/cat-heredoc/tee/redirect) e PowerShell (Out-File/Set-Content/Add-Content).
+ */
+export function shellWriteFromCommand(cmd) {
+  if (typeof cmd !== "string" || !cmd) return null;
+  // 1) heredoc `> file <<EOF … EOF` (content ricco → def estraibili). Marker quotato o no; `-` (<<-) tollerato.
+  const hd = cmd.match(/>\s*['"]?([^\s'"<>|;&]+)['"]?\s*<<-?\s*['"]?([A-Za-z_]\w*)['"]?\r?\n([\s\S]*?)\r?\n[ \t]*\2\b/);
+  if (hd && looksLikeFile(hd[1])) return { path: hd[1], content: hd[3] };
+  // 1b) heredoc PRIMA del redirect: `cat <<EOF > file … EOF`
+  const hd2 = cmd.match(/<<-?\s*['"]?([A-Za-z_]\w*)['"]?\s*>\s*['"]?([^\s'"<>|;&]+)['"]?\r?\n([\s\S]*?)\r?\n[ \t]*\1\b/);
+  if (hd2 && looksLikeFile(hd2[2])) return { path: hd2[2], content: hd2[3] };
+  // 2) `echo|printf "content" > file` (content dalla stringa quotata)
+  const ep = cmd.match(/\b(?:echo|printf)\s+(?:-e\s+)?(['"])([\s\S]*?)\1\s*>>?\s*['"]?([^\s'"<>|;&]+)/);
+  if (ep && looksLikeFile(ep[3])) return { path: ep[3], content: ep[2] };
+  // 3) PowerShell `Set-Content/Add-Content/Out-File [-Path] file` (path only)
+  const ps = cmd.match(/\b(?:Set-Content|Add-Content|Out-File)\b[^|>\n]*?(?:-(?:FilePath|Path|LiteralPath)\s+)?['"]?([^\s'"<>|;&]+)/i);
+  if (ps && looksLikeFile(ps[1])) return { path: ps[1], content: "" };
+  // 4) `tee [-a] file`
+  const tee = cmd.match(/\btee\s+(?:-a\s+)?['"]?([^\s'"<>|;&]+)/);
+  if (tee && looksLikeFile(tee[1])) return { path: tee[1], content: "" };
+  // 5) redirection generica `> file` / `>> file` (path only) — ultima risorsa. Richiede un target con ESTENSIONE o
+  //    SEPARATORE (difesa extra anti-falso-positivo: non cattura target-bizzarri/variabili nude).
+  const strictFile = (p) => looksLikeFile(p) && (/\.\w{1,8}$/.test(p) || /[\\/]/.test(p));
+  let m, lastPath = null;
+  const RE = />>?\s*['"]?([^\s'"<>|;&]+)/g;
+  while ((m = RE.exec(cmd)) !== null) if (strictFile(m[1])) lastPath = m[1];
+  if (lastPath) return { path: lastPath, content: "" };
+  return null;
+}
+
 // Estrae i nomi di funzione/definizione dal content (Python def / class; JS function). È il segnale che la probe-recall
 // richiede (il NOME esatto, non prosa). Deterministico.
 const DEF_RE = /\b(?:def|class)\s+([A-Za-z_]\w*)|\bfunction\s+([A-Za-z_]\w*)|\b(?:export\s+)?(?:const|let|var)\s+([A-Za-z_]\w*)\s*=\s*(?:async\s*)?\(/g;
@@ -69,9 +115,13 @@ export function buildTaskDigest(toolCalls, { maxLines = 40, maxDefsPerFile = 6 }
     const name = tc && tc.name ? String(tc.name) : "";
     if (!name || MEMORY_TOOLS.has(name) || READONLY_TOOLS.has(name)) continue;
     const args = tc.args || {};
-    const p = pathOf(args);
-    const c = contentOf(args);
-    if (p == null || c == null) continue; // non è una scrittura-file → skip (v1 focalizzato sull'outcome-file)
+    let p = pathOf(args);
+    let c = contentOf(args);
+    if (p == null || c == null) {           // non è un write-tool strutturato → prova il fallback SHELL (redirection)
+      const sw = shellWriteFromCommand(cmdOf(args));
+      if (!sw) continue;                    // non è nemmeno una scrittura-file via shell → skip
+      p = sw.path; c = sw.content;          // c può essere "" (registra il file, nessun def)
+    }
     const defs = extractDefs(c).slice(0, maxDefsPerFile);
     const defPart = defs.length ? ` → ${defs.map((d) => "def " + d).join(", ")}` : "";
     const errPart = tc.status === "error" ? " (error)" : "";
@@ -96,9 +146,13 @@ export const TASK_FACT_IMPORTANCE = 100;    // pinned in cima a <facts> (la task
 export function digestFactFromCall({ name, args, status } = {}) {
   const n = name ? String(name) : "";
   if (!n || MEMORY_TOOLS.has(n) || READONLY_TOOLS.has(n)) return null;
-  const p = pathOf(args);
-  const c = contentOf(args);
-  if (p == null || c == null) return null;
+  let p = pathOf(args);
+  let c = contentOf(args);
+  if (p == null || c == null) {             // fallback SHELL: scrittura via redirection (echo>f, cat<<EOF, Out-File…)
+    const sw = shellWriteFromCommand(cmdOf(args));
+    if (!sw) return null;
+    p = sw.path; c = sw.content;            // c può essere "" → nessun def, ma il file resta registrato
+  }
   const base = basename(p);
   const defs = extractDefs(c).slice(0, 6);
   const defPart = defs.length ? ` → ${defs.map((d) => "def " + d).join(", ")}` : "";
@@ -106,4 +160,4 @@ export function digestFactFromCall({ name, args, status } = {}) {
   return { key: TASK_FACT_PREFIX + base, text: `${base}${defPart}${errPart}`, importance: TASK_FACT_IMPORTANCE };
 }
 
-export default { buildTaskDigest, digestFactFromCall, extractDefs, pathOf, contentOf, MEMORY_TOOLS, READONLY_TOOLS, TASK_FACT_PREFIX, TASK_FACT_IMPORTANCE };
+export default { buildTaskDigest, digestFactFromCall, extractDefs, pathOf, contentOf, cmdOf, shellWriteFromCommand, MEMORY_TOOLS, READONLY_TOOLS, CMD_KEYS, TASK_FACT_PREFIX, TASK_FACT_IMPORTANCE };

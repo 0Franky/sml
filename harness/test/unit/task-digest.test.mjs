@@ -3,7 +3,7 @@
  * Puro + deterministico, nessun modello. Encoda l'invariante: dalla traccia-tool osservata → i nomi-funzione esatti
  * dei file scritti, escluse le memory-op del modello (il buco di F24).
  */
-import { buildTaskDigest, extractDefs, pathOf, contentOf } from "../../src/task-digest.mjs";
+import { buildTaskDigest, extractDefs, pathOf, contentOf, shellWriteFromCommand, digestFactFromCall } from "../../src/task-digest.mjs";
 
 let pass = 0, fail = 0;
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; console.error("  ✗ " + msg); } }
@@ -84,6 +84,38 @@ ok(buildTaskDigest([wf("data.txt", "just text")])[0] === "data.txt", "digest: fi
 }
 // ── input degenere ──
 ok(buildTaskDigest([]).length === 0 && buildTaskDigest(null).length === 0, "digest: vuoto/null → []");
+
+// ── FALLBACK SHELL (utente msg 2026-07-08): scritture via redirection catturate come i write-tool ──
+{
+  const echo = shellWriteFromCommand('echo "def foo(): return 1" > solution_1.py');
+  ok(echo && echo.path === "solution_1.py" && echo.content.includes("def foo"), "shell: echo \"…\" > file (path+content)");
+  const hd = shellWriteFromCommand("cat > sol.py <<'EOF'\ndef bar(x):\n  return x\nEOF");
+  ok(hd && hd.path === "sol.py" && hd.content.includes("def bar"), "shell: heredoc cat > file <<EOF");
+  const hd2 = shellWriteFromCommand("cat <<EOF > out.py\ndef baz(): pass\nEOF");
+  ok(hd2 && hd2.path === "out.py" && hd2.content.includes("def baz"), "shell: heredoc <<EOF > file");
+  const pf = shellWriteFromCommand("printf 'def qux(): pass' > q.py");
+  ok(pf && pf.path === "q.py" && pf.content.includes("def qux"), "shell: printf > file");
+  ok(shellWriteFromCommand("echo hi | tee notes.txt").path === "notes.txt", "shell: tee file");
+  ok(shellWriteFromCommand("$c | Out-File -FilePath sol.py").path === "sol.py", "shell: PS Out-File -FilePath");
+  ok(shellWriteFromCommand("Set-Content -Path a.py -Value $x").path === "a.py", "shell: PS Set-Content -Path");
+  ok(shellWriteFromCommand("echo more >> log.txt").path === "log.txt", "shell: append >>");
+  // guardie anti-falso-positivo
+  ok(shellWriteFromCommand("python solution_1.py") === null, "shell: run (no redirect) → null");
+  ok(shellWriteFromCommand("cat solution_1.py") === null, "shell: cat read → null");
+  ok(shellWriteFromCommand("echo done > /dev/null") === null, "shell: /dev/null → null");
+  ok(shellWriteFromCommand("ls -la") === null, "shell: no redirect → null");
+  ok(shellWriteFromCommand("test $a -gt $b") === null, "shell: confronto -gt (no >) → null");
+}
+// ── integrazione: bash-write nel digest + digestFactFromCall (fix utente) ──
+{
+  const d = buildTaskDigest([{ name: "bash", args: { command: 'echo "def solve(): pass" > solution_7.py' }, status: "ok" }]);
+  ok(d.length === 1 && d[0] === "solution_7.py → def solve", "digest: bash echo>file CATTURATO (fix utente)");
+  const f = digestFactFromCall({ name: "run_terminal", args: { command: "cat > s.py <<'EOF'\ndef m(): pass\nEOF" } });
+  ok(f && f.text === "s.py → def m", "digestFact: heredoc via shell catturato");
+  ok(digestFactFromCall({ name: "bash", args: { command: "pytest -q" } }) === null, "digestFact: comando non-write → null");
+  // il code-arg (run_python) NON è shell → un `>` di confronto non è mai una scrittura
+  ok(digestFactFromCall({ name: "run_python", args: { code: "if a > b:\n print(a)" } }) === null, "digestFact: code-arg con > NON è shell → null");
+}
 
 console.log(`\ntask-digest: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);
