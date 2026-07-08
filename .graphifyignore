@@ -35,6 +35,12 @@ convert_to_markdown.py
 # --- Runtime state dell'harness (DB/sessioni/report transitori dei dogfood) — non project-knowledge ---
 harness/.pi/state/
 
+# --- Report d'esperimento (report-*.json = output macchina degli eval, non project-knowledge → ~100 nodi-noise nel grafo) ---
+harness/eval/data/
+# --- Probe/smoke throwaway di sessione (prefisso _ o one-off, non tooling stabile) ---
+harness/eval/_*.mjs
+harness/reddit_post.js
+
 # --- Monorepo sub-progetti: includi il SORGENTE (extension TS, verifier JSON, lm code) nel grafo,
 #     escludi solo build/lock/runtime (noise, non project-knowledge) ---
 harness/node_modules/
