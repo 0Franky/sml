@@ -4,7 +4,7 @@ description: Protocollo execute-ready per LA validazione critica dell'harness �
 type: concept
 tags: [harness, evaluation, long-horizon, validation, benchmark, memory, gate]
 last_updated: 2026-07-08
-status: proposta-da-approvare
+status: Regime-A CONFERMATO (E12 2026-07-08 — overflow qwen-ctx16k×he12: ours-digest recall 100% vs vanilla 25%)
 ---
 
 # Protocollo — "dove l'harness VINCE" (la validazione che dà senso all'harness)
@@ -31,7 +31,31 @@ Matrice modello×feature in corso (`eval/run-matrix.mjs`). Dati long-horizon (hu
 
 → **Conferma la diagnosi**: 30 task = ~403K token < finestra 1M → vanilla **non va MAI in overflow** → ricorda tutto gratis (recall 100%); ours (finestra nativa ridotta + lane) fa **PEGGIO** (77%) e costa di più = **overhead**. Su un modello a contesto enorme l'harness-memoria è ridondante *a qualunque scala pratica di task*.
 
-**Implicazione operativa**: la vittoria (Regime A) è dimostrabile SOLO dove la finestra va in **overflow reale**. Con Gemini serve una sessione da >1M token (impraticabile). Il banco giusto = **modelli locali con `num_ctx` limitato** (es. `qwen-ctx16k` = num_ctx 16384): a 30 task la finestra **satura** → vanilla perde l'early-context → ours con **task-digest** (fatti early pinned) dovrebbe finalmente **vincere sul recall**. **Il test decisivo è `qwen-ctx16k` × humaneval-30** (in coda). [Nota infra: i locali via Ollama servono con num_ctx di default ~4096 → il braccio ours (system-prompt grande) veniva troncato; risolto con varianti Modelfile `PARAMETER num_ctx 16384`, `eval/_Modelfile-*-ctx`.]
+**Implicazione operativa**: la vittoria (Regime A) è dimostrabile SOLO dove la finestra va in **overflow reale**. Con Gemini serve una sessione da >1M token (impraticabile). Il banco giusto = **modelli locali con `num_ctx` limitato** (es. `qwen-ctx16k` = num_ctx 16384): a ~12 task la finestra **satura** → vanilla perde l'early-context → ours con **task-digest** (fatti early pinned) **vince sul recall**. [Nota infra: i locali via Ollama servono con num_ctx di default ~4096 → il braccio ours (system-prompt grande) veniva troncato; risolto con varianti Modelfile `PARAMETER num_ctx 16384`, `eval/_Modelfile-*-ctx`. num_ctx=8192 è insufficiente per il braccio ours multi-task → api-error dopo il task-0; num_ctx=16384 = valido.]
+
+## ⭐ REGIME A DIMOSTRATO (E12, 2026-07-08) — l'harness VINCE in overflow
+
+Test decisivo **`qwen-ctx16k` (num_ctx 16384) × he12** (12 task, stessa sessione, probe di recall valida su entrambi):
+
+| arm | keepTurns | task-ok | **recall** | digestFacts | token |
+|---|---|---|---|---|---|
+| vanilla | (nativo pieno) | 12/12 | **25%** (3/12) | 0 | 516K |
+| **ours digest** | **1** | 11/12 | **100%** (12/12) | **11** | 682K (1.3×) |
+
+→ **+75pt di recall a 1.3× token.** Il punto forte: **keepTurns=1** = il modello vede nativamente **un solo turno** (~zero storia) → senza harness recall≈0; la sola lane **task-digest** (11 fatti file-write catturati deterministicamente da `digestFactFromCall`, pinnati a importance MAX in `<facts>`) gli dà **100% recall**. Vanilla, con la finestra nativa PIENA, resta al **25%** perché 12 task la fanno overfloware (~516K ≫ 16K) e l'early-context cade fuori. **La memoria deterministica dell'harness batte la finestra nativa quando la sessione va in overflow** — esattamente la promessa del progetto. **Meccanismo**: la cattura scatta solo su write-tool strutturati (path+content); il modello che scrive via `bash echo>` o inline bypasserebbe il digest (robustezza da estendere). **Caveat**: n=1/cella, 9B locale (banco); direzione netta, da riconfermare n≥3 + sul target ≥27B.
+
+**Contrasto coi regimi NO-overflow** (stessa matrice E12, gemini-flash-lite 1M): he6 recall 100%=100% ma harness 2.6× token (overhead); he30 recall 77%<100% (harness PEGGIORA). → **Il valore dell'harness è REGIME-DIPENDENTE**: overhead/dannoso quando la finestra tiene la sessione, decisivo quando la finestra satura. **Config-produzione = ADATTIVA** (vedi sotto + [[harness-experiment-log]] §F32).
+
+## Config di PRODUZIONE consolidata (E12, risposta a msg 1395/B)
+
+La matrice modello×feature dà una regola **adattiva**, non un set fisso — perché il valore dell'harness dipende dal rapporto **contesto-modello ÷ lunghezza-sessione**:
+
+| condizione | keepTurns | task-digest | context-views | razionale |
+|---|---|---|---|---|
+| **finestra tiene la sessione** (modello a contesto grande e/o sessione corta; es. flash-lite 1M su task normali) | **alto/illimitato** (= vanilla) | **off** | off | le lane sono ridondanti → puro overhead (E12: he6 2.6× tok, he30 recall −23pt). Non pagare ciò che il contesto nativo dà gratis. |
+| **sessione va in overflow** (finestra piccola O sessione lunga/agentica che satura; es. target ≥27B su SWE-scale multi-file, long-horizon) | **basso** (1–6) | **on** | valutare | il digest deterministico **rescue** la memoria oltre la finestra (E12: recall 100% vs 25% a 1.3× token). Qui l'harness è **essenziale**. |
+
+**Default operativo**: poiché il **target reale** (≥27-32B su sessioni agentiche lunghe con molti file-write — SWE-bench scale) **cadrà nel regime di overflow**, la config di produzione base è **task-digest ON + keepTurns basso**, con **auto-disattivazione** quando l'harness stima che la sessione stia comodamente dentro la finestra nativa (evita l'overhead sui task corti). Il `laneMemoryHintLevel: lean` resta preferito (E10: −16% token a parità). **Robustezza da estendere**: la cattura digest oggi vede solo write-tool strutturati (path+content) → aggiungere il riconoscimento delle scritture via bash/inline perché il rescue valga anche lì.
 
 ## I 3 regimi candidati di vittoria (la scelta-di-design)
 
