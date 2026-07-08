@@ -22,6 +22,9 @@ last_updated: 2026-06-30
 > ✅ **MCQ a distrattori-confondibili — FORMALIZZATA** (utente msg 1372 idea, msg 1378 accetta tutto: i,ii + i 5 fix + posizione-sempre-randomizzata): metodologia cross-cutting (NON classe), per TUTTE le classi, fase recognition E generation. Concept [[concepts/discriminative-mcq-hard-distractors]] (via subagent + review) + oracolo IMPLEMENTATO `harness/verifiers/mcq-distractor-gen.mjs` (assembleMCQ shuffle-seeded + auditMCQ exactly-one/tell + positionBalance dataset-level, **test 11/0**). Mirror in [[concepts/training-set-construction-principles]] §Tecniche-label-gen. Wired index+todo+log.
 > **RESTA (forward)**: applicare la metodologia alle classi di ragionamento esistenti (generare i near-twin dai loro failure-mode reali) — quando si costruiscono i dataset per-classe; generare la superficie-testuale delle domande (oggi il modulo assembla+audita+randomizza sopra distrattori dati).
 
+> ✅ **PLAYBOOK dataset FATTO** (utente msg 1381 + regola #25): [[training-taxonomy/dataset-construction-playbook]] = SSOT operativa (regole #10+#18-#25 · workflow · label-gen · **§4 catalogo ~50 caveat** da sweep-wiki · §5 coherence-audit 10-check · §6 registry classi). + regola #25 in CLAUDE.md + memory `feedback_dataset_playbook_and_coherence` + MEMORY.md. Wired index+principles.
+> **RESTA (forward, 3 GAP dalla sweep-wiki 2026-07-08)**: (a) estrarre un concept cross-cutting **`position-answer-randomization`** (oggi vive solo in MCQ fix#4 + hack-check sparsi di frontend-ux); (b) concept **`oracle-design-pitfalls`** (sha256/autocrlf-portabilità, non-determinismo→check-statico, predicato-∀-non-esempio, detector-pinned) — oggi solo in gold-methodology; (c) **indice di applicazione MCQ** (tracciare a quali classi la metodologia è già stata innestata). Non bloccanti; il playbook li elenca nel §4-GAP.
+
 ---
 
 ## ⏭️ NOTE UTENTE 2026-07-07 — STATO (msg 1294-1311) — quasi tutto processato, gated su approvazione

@@ -8,7 +8,8 @@ last_updated: 2026-07-06
 
 # Principi di costruzione dei training set
 
-> **Perché questa pagina** (utente msg 1218): le regole di costruzione del training vivono in `CLAUDE.md` (istruzioni per l'agente), ma servono anche **navigabili nella wiki** come SSOT — così ogni classe/gold può linkarle e un revisore le trova. Questa pagina **mirrora** #18-#21; la fonte autoritativa resta CLAUDE.md. Tutte discendono dal principio-cardine [[../feedback_reward_hacking_principle]] (reward ancorato all'OUTCOME) e [[../feedback_optimization_first]].
+> **Perché questa pagina** (utente msg 1218): le regole di costruzione del training vivono in `CLAUDE.md` (istruzioni per l'agente), ma servono anche **navigabili nella wiki** come SSOT — così ogni classe/gold può linkarle e un revisore le trova. Questa pagina **mirrora** #18-#22; la fonte autoritativa resta CLAUDE.md.
+> **Vedi il [[../training-taxonomy/dataset-construction-playbook]]** (regola #25, utente msg 1381): il PLAYBOOK maestro che *indicizza* questi principi + il workflow end-to-end + il **catalogo delle "cose a cui stare attenti"** + il coherence-audit. Questa pagina resta il dettaglio dei principi #18-#22; il playbook è la guida operativa che li usa. Tutte discendono dal principio-cardine [[../feedback_reward_hacking_principle]] (reward ancorato all'OUTCOME) e [[../feedback_optimization_first]].
 
 ## I cinque principi
 
