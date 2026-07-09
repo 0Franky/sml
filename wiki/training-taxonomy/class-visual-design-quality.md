@@ -29,5 +29,9 @@ Ancorato all'OUTCOME misurabile (metrica derivata dalla legge + task-success), *
 
 Frontend-spacing e SVG-composition condividono la stessa radice (legge-di-design verificabile vs gusto) e lo stesso failure-mode (euristica monotòna / estetica soggettiva / reward-hack sui pixel). Il padre fa imparare la radice UNA volta (anti-ridondanza di segnale) + riflette la relazione reale + è composizionale ([[../feedback_hierarchical_training_classes]], CLAUDE.md #20).
 
+## Facet — verify-by-render multi-viewport (mining Stage-2 #13, 2026-07-10)
+
+Per il lavoro su UI la verifica non è "sembra giusto nel codice" ma **rendere davvero e controllare la resa** su ≥2 viewport (desktop+mobile), deterministicamente (screenshot dopo ogni azione). È l'applicazione UI del gate di validazione ([[../feedback_validate_wiring_before_handoff]] / [[../feedback_handoff_validation_gate]]): l'artefatto visivo si valida guardandolo renderizzato, non assumendolo. Reward: la resa reale soddisfa i criteri su tutti i viewport; hack-check: "ho verificato il layout" senza render → 0.
+
 ## Links
 [[class-frontend-ux-spacing-quality]] · [[class-svg-spatial-composition]] · [[class-metacognitive-self-audit]] · [[../concepts/kb-topics-tier1-expansion]] · [[../feedback_hierarchical_training_classes]] · [[../feedback_reward_hacking_principle]] · [[../feedback_intelligence_gap_to_training_class]]
