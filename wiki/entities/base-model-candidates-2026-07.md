@@ -78,5 +78,15 @@ Il bake-off gira su **free-tier** senza spesa (decisione utente: solo quote grat
 
 Alla decisione finale: ADR in `wiki/decisions/` + aggiornare [[../../memory]] `project_test_model_vs_target` + [[../harness-experiment-log]] (rule #23).
 
+## Bake-off — 1° giro FLOOR-CHECK (2026-07-08, via Groq, keys utente)
+
+Groq (key utente in `harness/.env` come `GROQ_KEYS`, loader provider-aware `env-keys.mjs`) serve: **`qwen/qwen3-32b`** ✓, **`qwen/qwen3.6-27b`** ✓ (= scelta protetta + target-class), `openai/gpt-oss-20b`/`gpt-oss-120b`, `llama-3.3-70b-versatile`. **Seed-OSS-36B NON presente su Groq** → serve OpenRouter/Together (key) o self-host Kaggle.
+
+**Base-probes** (`base-probes.mjs`: shell bash/PS/cmd/posix + python + JS + reasoning, 13 probe): **TUTTI e 4 i candidati → 100% (13/13 validi)**. → **Floor superato da tutti** (adeguati a operare OS+harness, il requisito base — [[../../memory]] `project_from_scratch_slm_future`). **MA il floor NON DISCRIMINA** (tutti 100%): serve un metro più fine per SCEGLIERE. **[V]** confermato: qwen3.6-27b solido sui basics.
+
+**Caveat infra**: i Qwen (thinking → più token) hanno saturato il **TPM free di Groq (429)** con 1 sola key; aggirato con `PACE_MS=5000 MAX_RETRIES=6` (validi tutti). Più `GROQ_KEYS` → giri veloci/paralleli (rotazione già in `chat()`).
+
+**Prossimo = DISCRIMINANTE** (proposto utente msg 1422): il metro rilevante non è il floor ma la **capacità di memory-management** che stiamo studiando — il modello capace SALVA i fatti durevoli quando istruito (il 9B NO, [[../harness-experiment-log]] §F33)? Rifare il **durable-preference test (F33) su qwen3.6-27b vs qwen3-32b via Groq** + anti-deflect → discrimina E valida la viabilità memoria-harness sul target (metrica **C4** trained-vs-untrained, [[../concepts/harness-value-and-capture-model]] §4). Richiede wiring run-session→Groq.
+
 ## Links
 [[../../memory]] `project_test_model_vs_target` · `project_base_model_intelligence` · `project_from_scratch_slm_future` · [[open-pretraining-corpora]] (foundation-corpus per il from-scratch) · [[../concepts/catastrophic-forgetting]] · [[../concepts/training-intelligence-optimization]] · [[../decisions/2026-07-08-tier2-justification-analysis]]
