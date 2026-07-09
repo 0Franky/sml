@@ -67,6 +67,23 @@ function makeHeadlessUI() {
   };
 }
 
+// DEBUG (gated): intercetta la fetch HTTP reale verso il provider API → status+body veri (pi ingoia gli errori).
+if (process.env.EVAL_DEBUG_EVENTS) {
+  const _f = globalThis.fetch;
+  globalThis.fetch = async (url, opts) => {
+    const u = String(url?.url ?? url);
+    if (/groq|openrouter|completions/i.test(u)) {
+      try {
+        const r = await _f(url, opts);
+        const body = await r.clone().text();
+        console.error("[FETCH]", u, "→", r.status, "| reqBodyLen", (opts?.body || "").length, "| resp:", body.slice(0, 500));
+        return r;
+      } catch (e) { console.error("[FETCH-ERR]", u, String(e?.message ?? e).slice(0, 300)); throw e; }
+    }
+    return _f(url, opts);
+  };
+}
+
 async function main() {
   // --- Provider: Gemini (cloud, native) O Ollama (locale, OpenAI-compat) — asse-modello della matrice ---
   const auth = AuthStorage.inMemory();
@@ -83,6 +100,26 @@ async function main() {
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, contextWindow: ctx, maxTokens: 8192 }],
     });
     model = reg.find("ollama", MODEL_ID);
+  } else if (PROVIDER === "openai" || PROVIDER === "groq" || PROVIDER === "openrouter") {
+    // Provider OpenAI-compatible via API (Groq/OpenRouter/…) — HARNESS-IN-THE-LOOP: gira il modello capace ATTRAVERSO
+    // il nostro harness (discriminante base-model, utente msg 1423 "quale usa meglio il nostro harness"). Key da .env
+    // via env-keys (KEYS_PREFIX o auto GROQ/OPENROUTER); rotazione a monte se servisse (per ora 1 key → pacing).
+    const baseUrl = (process.env.OPENAI_BASE_URL
+      || (PROVIDER === "openrouter" ? "https://openrouter.ai/api/v1" : "https://api.groq.com/openai/v1")).replace(/\/+$/, "");
+    const ctx = Number(process.env.MODEL_CTX || 131072);
+    const prefix = process.env.KEYS_PREFIX || (PROVIDER === "openrouter" || /openrouter/i.test(baseUrl) ? "OPENROUTER" : "GROQ");
+    const { loadEnvKeys } = await import("./env-keys.mjs");
+    const apiKey = process.env.OPENAI_API_KEY || loadEnvKeys(prefix)[0];
+    if (!apiKey) throw new Error(`nessuna key per provider ${PROVIDER} (prefix ${prefix}) in .env`);
+    // NB: nome provider UNIVOCO `apicompat` — NON "openai" (collide col provider BUILT-IN di pi → api.openai.com →
+    // 401 con la key Groq → 405ms fast-fail+vuoto). Il branch ollama funziona perché usa il nome non-collidente "ollama".
+    auth.set("apicompat", { type: "api_key", key: apiKey });
+    reg.registerProvider("apicompat", {
+      name: "OpenAI-compat", baseUrl, api: "openai-completions", apiKey, authHeader: true,
+      models: [{ id: MODEL_ID, name: MODEL_ID, api: "openai-completions", reasoning: false, input: ["text"],
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, contextWindow: ctx, maxTokens: 8192 }],
+    });
+    model = reg.find("apicompat", MODEL_ID);
   } else {
     // Provider Gemini NATIVO (identico a run-one, verificato).
     const apiKey = loadKey();
@@ -129,6 +166,7 @@ async function main() {
   let turns = 0, lastHttpStatus = null, lastRetryErr = null;
   const allToolCalls = [];
   session.subscribe((ev) => {
+    if (process.env.EVAL_DEBUG_EVENTS) console.error("[EV]", ev.type, JSON.stringify({ status: ev.status, err: ev.error ?? ev.errorMessage ?? ev.message, tool: ev.toolName }).slice(0, 240));
     if (ev.type === "turn_end") turns++;
     else if (ev.type === "tool_execution_start") allToolCalls.push(ev.toolName);
     else if (ev.type === "after_provider_response") lastHttpStatus = ev.status;
