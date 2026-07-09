@@ -9,6 +9,17 @@ last_updated: 2026-06-30
 
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
 
+## 🧭 IN DISCUSSIONE 2026-07-09 (msg 1473) — SITUATIONAL AWARENESS + task-type/tag/wiki-curation (valutazione critica, attende decisione utente)
+
+> L'utente propone idee per il training (valutarle critico/scientifico, poi espandere SOLO le accettate — "se non hanno senso non le facciamo"). Mia valutazione (TG msg 1475/1476), mappata su ciò che ESISTE GIÀ:
+> - **[1] Data corrente (anno/mese)** → RICLASSIFICA: la data la INIETTA l'harness (F-harness, deterministica); il training insegna il RAGIONAMENTO temporale (recency/staleness), con data **RANDOMIZZATA** nel training (anti-overfit, come runtime-symbol-randomization) + reward-outcome. ✅ raccomandato (alto valore/basso costo).
+> - **[2] Task-type awareness → thinking mode** → ESISTE in parte ([[training-taxonomy/class-domain-categorization-routing]]); raffinamento OK ma reward sull'OUTCOME non sul tag (regola #10) + **ablation** "aiuta vs baseline?". Tipo "harness-usability" nuovo.
+> - **[3] Tag implementation/optimization + pensa-ottimizzato-mentre-scrivi** → goal = optimization-first (#8) sul modello; MECCANISMO esiste già ([[concepts/compositional-curriculum-thinking-optimization]] + `class-action-execution-optimization`/`class-batching-repeated-ops`). Tag = metadata di curriculum/cross-ref NOSTRO, **non** reward-target (anti tag-pattern-matching).
+> - **[4] Cross-reference nel training per legare argomenti** → SÌ come metadata di AUTHORING (costruire sequenze composizionali + replay mirato), non tag che il modello imita.
+> - **[5] Wiki-curation (privata/centrale/project-specific)** → NUOVO, forte, allineato north-star. Split #11: F-tools (scrivi/linka) + S-giudizio (dove va, SSOT vs derivato → lega [[training-taxonomy/class-scope-adaptive-knowledge-aggregation]]). ⚠ ORACOLO da progettare (posizionamento "giusto" soggettivo) → stadio avanzato.
+> - **MIE AGGIUNTE**: (A) **situational-awareness = CLASSE-PADRE** (regola #20) che unifica temporal/task-type/knowledge-topology; (B) **harness/environment self-awareness** figlia (già `how_memory_works` lato-harness; come skill è la FONDAZIONE delle gemelle prospective-memory/confabulation); (C) **epistemic-recency** (data → "la mia conoscenza può essere stale" → verifica il volatile, lega #22); (D) **guardrail trasversale**: ogni "awareness" DEVE avere un oracolo d'OUTCOME (altrimenti cerimonia, #10) + ablation prima di filare.
+> - **RACCOMANDAZIONE (attende ok utente)**: partire da **situational-awareness (padre) + figlie temporal-awareness + harness-self-awareness** (le più solide, sbloccano il resto); task-type = raffinamento di domain-categorization-routing; optimize-while-implement = rafforza in compositional-curriculum; wiki-curation per ultima (oracolo da progettare). Poi espansione taxonomy delle accettate. NON filare nulla finché l'utente non conferma.
+
 ## 🔬 IN CORSO 2026-07-08 (msg 1395/B) — MATRICE modello × feature (E12)
 
 > Direttiva utente (msg 1395, dopo il giusto rimprovero sul rimpallo-decisioni): **fai i test con le diverse configurazioni, matrice modello/feature, estrai TUTTI i risultati per esperimento, trova le composizioni migliori, consolida la config di PRODUZIONE**. Compute dato: 4 chiavi Gemini (quota tornata) + Ollama locale (qwen3.5:9b È installato → nessun drift) + Docker.
