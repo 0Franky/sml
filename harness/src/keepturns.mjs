@@ -43,7 +43,7 @@ export function getEffectiveKeepTurns(vq, configDefault = null) {
  * @param {number} [outputReservePct=0]  riserva output (allineato a collectMetrics: percent = tokens/(win*(1-reserve)))
  * @returns {number}  keepTurns effettivo (NON clampato al MAX: highKeep può superare KEEPTURNS_MAX di proposito)
  */
-export function adaptiveKeepTurns(usage, cfg, lowKeep, outputReservePct = 0) {
+export function adaptiveKeepTurns(usage, cfg, lowKeep, outputReservePct = 0, prevKeep = null) {
   const win = usage?.contextWindow;
   if (!Number.isFinite(win) || win <= 0) return cfg.highKeep; // finestra ignota → highKeep (fail-safe, no cap possibile)
   // CAP anti-stallo (fix finding E16, 2026-07-09): il regime vanilla NON deve eccedere `safetyPct` della finestra
@@ -60,7 +60,15 @@ export function adaptiveKeepTurns(usage, cfg, lowKeep, outputReservePct = 0) {
   const reserve = Number.isFinite(outputReservePct) ? outputReservePct : 0;
   const denom = win * (1 - reserve);
   const pct = denom > 0 ? tokens / denom : 0;
-  return pct >= cfg.lowThreshold ? lowKeep : effHigh;
+  // ISTERESI (fix oscillazione, utente 2026-07-09): senza banda il toggle è stateless sul fill ISTANTANEO → comprimere
+  // riduce l'array → il fill scende sotto soglia → tornerebbe vanilla → l'array ricresce → ricomprime… = FLIP-FLOP.
+  // Con la banda [lowThreshold-hysteresis, lowThreshold] si RESTA nel regime precedente (dato da `prevKeep`): una volta
+  // COMPRESSO si torna vanilla SOLO se il fill scende sotto lowThreshold-band (non appena tocca la soglia). band=0 o
+  // prevKeep assente (primo turno) → comportamento istantaneo di prima (retro-compat). Configurabile: adaptiveContext.hysteresis.
+  const band = Number.isFinite(cfg.hysteresis) && cfg.hysteresis > 0 ? cfg.hysteresis : 0;
+  const wasCompressed = Number.isFinite(prevKeep) && prevKeep <= lowKeep;
+  if (band > 0 && wasCompressed) return pct < (cfg.lowThreshold - band) ? effHigh : lowKeep; // sticky-compresso nella banda
+  return pct >= cfg.lowThreshold ? lowKeep : effHigh; // vanilla (o primo turno / band=0): comprime alla soglia
 }
 
 /**

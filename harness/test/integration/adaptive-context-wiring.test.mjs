@@ -92,5 +92,24 @@ function hookKeep(vq, usage) {
   vq.close();
 }
 
+// ISTERESI wiring (fix oscillazione, 2026-07-09) — REGRESSION: simula la SEQUENZA reale di fill che oscilla attorno alla
+// soglia, con prevKeep threaded ESATTAMENTE come fa native-window.ts (ricorda l'adaptiveKeep del turno precedente). Con
+// l'isteresi il regime NON deve flip-floppare nella banda; SENZA (band=0) flip-floppa (dimostra cosa il fix elimina).
+{
+  const cfgH = { lowThreshold: 0.5, highKeep: 9999, hysteresis: 0.1 }; // banda [0.4,0.5]; su 100K effHigh=40
+  const cfg0 = { lowThreshold: 0.5, highKeep: 9999 };                  // no isteresi
+  const seq = [0.30, 0.48, 0.52, 0.45, 0.43, 0.47, 0.38, 0.44];        // fill che oscilla attorno a 0.5
+  const runSeq = (cfg) => { let prev = null; const ks = []; for (const f of seq) { const k = adaptiveKeepTurns({ tokens: f * 100000, contextWindow: 100000 }, cfg, LOW, 0, prev); prev = k; ks.push(k); } return ks; };
+  const withH = runSeq(cfgH);
+  const noH = runSeq(cfg0);
+  // CON isteresi: 40,40 (vanilla<0.5) → 6 (0.52 comprime) → 6,6,6 (banda, RESTA compresso) → 40 (0.38<0.4 torna) → 40
+  ok(JSON.stringify(withH) === JSON.stringify([40, 40, 6, 6, 6, 6, 40, 40]), `isteresi wiring: nessun flip-flop nella banda (${withH.join(",")})`);
+  // SENZA isteresi: il 0.45 dopo il 0.52 torna SUBITO vanilla (40) → flip-flop 6→40 (il difetto che il fix elimina).
+  // In una sessione reale la de-compressione a 0.45 rifà crescere l'array → risupera 0.5 → ricomprime → oscilla.
+  ok(JSON.stringify(noH) === JSON.stringify([40, 40, 6, 40, 40, 40, 40, 40]), `no-isteresi: flip-flop 6→40 presente (${noH.join(",")})`);
+  // il punto DISCRIMINANTE: a fill 0.45 (idx 3, appena dopo la compressione) l'isteresi RESTA compressa, il no-isteresi rimbalza a vanilla
+  ok(withH[3] === 6 && noH[3] === 40, "isteresi: al primo fill nella banda dopo la compressione → resta compresso (vs rimbalzo senza)");
+}
+
 console.log(`\nadaptive-context-wiring: ${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);

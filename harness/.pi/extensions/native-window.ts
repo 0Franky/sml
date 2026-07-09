@@ -32,6 +32,11 @@ const CONFIG_KEEP = HARNESS_CFG.nativeKeepTurns;
 const ADAPTIVE = HARNESS_CFG.adaptiveContext;
 const OUTPUT_RESERVE = HARNESS_CFG.trigger.outputReservePct;
 
+// ISTERESI (fix oscillazione): l'adaptive ha bisogno del regime del turno PRECEDENTE (una funzione stateless non può
+// avere isteresi) → ricordiamo qui l'ultimo keepTurns ADATTIVO (pre-override) e lo ripassiamo come `prevKeep`. Vive per
+// la durata della sessione (modulo per-processo; nell'eval ogni braccio è un processo fresco → nessuna cross-contaminazione).
+let prevAdaptiveKeep: number | null = null;
+
 export default function (pi: ExtensionAPI) {
   pi.on("context", (event, ctx) => {
     let keep = CONFIG_KEEP;
@@ -41,7 +46,8 @@ export default function (pi: ExtensionAPI) {
         // Il DEFAULT del turno = keepTurns dettato dal fill reale (getContextUsage: usage dell'ultima richiesta fatturata).
         // getEffectiveKeepTurns fa comunque VINCERE l'override esplicito del modello (set_keepturns) su questo default.
         const usage = (ctx as any)?.getContextUsage?.();
-        const adaptiveKeep = adaptiveKeepTurns(usage, ADAPTIVE, CONFIG_KEEP, OUTPUT_RESERVE);
+        const adaptiveKeep = adaptiveKeepTurns(usage, ADAPTIVE, CONFIG_KEEP, OUTPUT_RESERVE, prevAdaptiveKeep);
+        prevAdaptiveKeep = adaptiveKeep; // ricorda il regime ADATTIVO (pre-override) per l'isteresi del prossimo turno
         keep = getEffectiveKeepTurns(vq, adaptiveKeep);
       } else {
         keep = getEffectiveKeepTurns(vq, CONFIG_KEEP);

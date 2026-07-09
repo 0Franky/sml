@@ -28,6 +28,8 @@ export interface AdaptiveContextConfig {
   safetyPct?: number;
   /** stima token/turno per derivare il cap = safetyPct·finestra/avgTurnTokens. Default 2000. */
   avgTurnTokens?: number;
+  /** banda d'isteresi sotto lowThreshold: una volta compresso si torna vanilla solo se fill<lowThreshold-hysteresis (anti flip-flop). Default 0.1; 0=off. */
+  hysteresis?: number;
 }
 export type SinkGatingMode = "strict" | "warn" | "off";
 export type RegexIngressMode = "off" | "ask" | "auto";

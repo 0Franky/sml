@@ -105,6 +105,26 @@ const DEF = loadHarnessConfig().nativeKeepTurns; // SSOT — niente literal dupl
   ok(adaptiveKeepTurns({ tokens: 100, contextWindow: 1000000 }, { lowThreshold: 0.5, highKeep: 10 }, LOW) === 10, "cap: highKeep(10) < cap(400) → min = 10");
 }
 
+// 7c) ISTERESI (fix oscillazione, 2026-07-09): banda [lowThreshold-hysteresis, lowThreshold] in cui si RESTA nel regime
+// precedente (dato da prevKeep) → niente flip-flop vanilla↔compresso attorno alla soglia.
+{
+  const LOW = 6;
+  const cfg = { lowThreshold: 0.5, highKeep: 9999, hysteresis: 0.1 }; // banda [0.4,0.5]; su 100K effHigh=floor(0.8·100000/2000)=40
+  const U = (fill) => ({ tokens: fill * 100000, contextWindow: 100000 });
+  // da VANILLA (prevKeep=40): comprime SOLO al bordo alto (fill≥0.5)
+  ok(adaptiveKeepTurns(U(0.45), cfg, LOW, 0, 40) === 40, "isteresi: da vanilla, fill 0.45 (<0.5) → resta vanilla");
+  ok(adaptiveKeepTurns(U(0.50), cfg, LOW, 0, 40) === LOW, "isteresi: da vanilla, fill 0.50 → comprime (bordo alto)");
+  // da COMPRESSO (prevKeep=6): resta compresso finché fill NON scende sotto il bordo basso (0.5-0.1=0.4)
+  ok(adaptiveKeepTurns(U(0.45), cfg, LOW, 0, LOW) === LOW, "isteresi: da compresso, fill 0.45 (banda) → RESTA compresso (anti flip-flop)");
+  ok(adaptiveKeepTurns(U(0.41), cfg, LOW, 0, LOW) === LOW, "isteresi: da compresso, fill 0.41 (banda) → resta compresso");
+  ok(adaptiveKeepTurns(U(0.39), cfg, LOW, 0, LOW) === 40, "isteresi: da compresso, fill 0.39 (<0.4) → torna vanilla (bordo basso)");
+  // primo turno (prevKeep null) → comportamento istantaneo (nessuna storia)
+  ok(adaptiveKeepTurns(U(0.45), cfg, LOW, 0, null) === 40, "isteresi: primo turno (prevKeep null) → istantaneo (0.45<0.5 → vanilla)");
+  // hysteresis=0 / assente (retro-compat): istantaneo anche con prevKeep
+  ok(adaptiveKeepTurns(U(0.45), { lowThreshold: 0.5, highKeep: 9999 }, LOW, 0, LOW) === 40, "isteresi: band assente → istantaneo (ignora prevKeep)");
+  ok(adaptiveKeepTurns(U(0.45), { lowThreshold: 0.5, highKeep: 9999, hysteresis: 0 }, LOW, 0, LOW) === 40, "isteresi: band=0 → istantaneo");
+}
+
 // 8) integrazione adaptive × override-modello: l'override esplicito VINCE sull'adattivo -------------
 {
   const vq = new VarsQueue(":memory:");

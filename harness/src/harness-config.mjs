@@ -66,7 +66,11 @@ export const DEFAULT_HARNESS_CONFIG = {
   //   vanilla può occupare; `avgTurnTokens` = stima token/turno per derivare il cap = safetyPct·finestra/avgTurnTokens.
   //   Su finestra piccola il cap scende fino a nativeKeepTurns (adaptive→sempre-compresso, SAFE); su finestra grande
   //   è enorme → highKeep resta effettivo. Env HARNESS_ADAPTIVE_SAFETY_PCT ([0,1]) / HARNESS_ADAPTIVE_AVG_TURN_TOKENS (≥1).
-  adaptiveContext: { enabled: false, lowThreshold: 0.5, highKeep: 9999, safetyPct: 0.8, avgTurnTokens: 2000 },
+  //   ISTERESI (fix oscillazione): `hysteresis` = banda sotto lowThreshold in cui si RESTA nel regime precedente →
+  //   evita il flip-flop vanilla↔compresso attorno alla soglia (comprimere svuota l'array → il fill scende → senza banda
+  //   tornerebbe vanilla → ricresce → ricomprime). Una volta compresso si torna vanilla solo se fill < lowThreshold-hysteresis.
+  //   0 = disattiva (toggle istantaneo di prima). Env HARNESS_ADAPTIVE_HYSTERESIS ([0,1)).
+  adaptiveContext: { enabled: false, lowThreshold: 0.5, highKeep: 9999, safetyPct: 0.8, avgTurnTokens: 2000, hysteresis: 0.1 },
   // laneMemoryHint (AWARENESS-first, utente msg 830): inietta un blocco <how_memory_works> che SPIEGA al modello
   // piccolo che vede 1 solo messaggio per volta e che le lane (<messages_with_user>, <last_tool_calls>, …) SONO la
   // sua memoria, con una checklist su come ragionare. true (DEFAULT ON, regime SLM: "già configurarlo"); false per
@@ -174,6 +178,7 @@ function applyAdaptiveContext(dst, src) {
   if (typeof src.highKeep === "number" && Number.isFinite(src.highKeep) && src.highKeep >= 1) dst.highKeep = Math.floor(src.highKeep);
   if (typeof src.safetyPct === "number" && Number.isFinite(src.safetyPct) && src.safetyPct > 0 && src.safetyPct <= 1) dst.safetyPct = src.safetyPct;
   if (typeof src.avgTurnTokens === "number" && Number.isFinite(src.avgTurnTokens) && src.avgTurnTokens >= 1) dst.avgTurnTokens = Math.floor(src.avgTurnTokens);
+  if (typeof src.hysteresis === "number" && Number.isFinite(src.hysteresis) && src.hysteresis >= 0 && src.hysteresis < 1) dst.hysteresis = src.hysteresis;
 }
 
 /** Applica i campi `secrets` validi da `src` su `dst` (in place). mode fuori-enum → ignorato (resta default). */
@@ -287,6 +292,8 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
   if (Number.isFinite(adSafety) && adSafety > 0 && adSafety <= 1) cfg.adaptiveContext.safetyPct = adSafety;
   const adAvgTurn = Number(env.HARNESS_ADAPTIVE_AVG_TURN_TOKENS);
   if (Number.isFinite(adAvgTurn) && adAvgTurn >= 1) cfg.adaptiveContext.avgTurnTokens = Math.floor(adAvgTurn);
+  const adHyst = Number(env.HARNESS_ADAPTIVE_HYSTERESIS);
+  if (Number.isFinite(adHyst) && adHyst >= 0 && adHyst < 1) cfg.adaptiveContext.hysteresis = adHyst;
   if (typeof env.HARNESS_PRESSURE_DRIVER === "string" && PRESSURE_DRIVERS.includes(env.HARNESS_PRESSURE_DRIVER)) {
     cfg.trigger.pressureDriver = env.HARNESS_PRESSURE_DRIVER; // A2: quale asse guida il firing (default "max")
   }
