@@ -9,6 +9,10 @@ last_updated: 2026-06-30
 
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
 
+## ✅ 2026-07-10 — Foglia PROPOSTE/MIGLIORIE all'utente (msg 1516e) FATTA + graphify --update in esecuzione
+> - **✅ FATTO (msg 1516e)**: grep-verifica → **nessuna foglia dedicata** al value-add proattivo (area-09 era solo reattiva). Creata `class-proactive-improvement-proposal` (5ª figlia di situational-awareness, OUTWARD "obiettivo-utente & opportunità-di-valore"; tensione-gemella con instruction-fidelity-no-overreach). Wiring COMPLETO: parent child-table+desc+links, reciprocità su instruction-fidelity, area-09 Topic-6+Sintesi, index.md (2 punti + fix "3 figlie"→5), playbook §Catalogo caveat + §registry-gerarchia. Soglia `valore×validità×rilevanza`, 3 negativi simmetrici (over-suggest/under-propose/invalido), reward-outcome, transfer cross-dominio, istanza-nostra held-out. ⏳ **da riferire all'utente** (design summary per refinement, msg 1506 staged-workflow). ⏳ **da committare** (+ push PII-scanned).
+> - **⏳ IN CORSO — graphify --update** (batch mining "integra TUTTO" `3b64d07`/`3bafe0f`/`240e840` + situational family): 5 subagent estrazione completati (chunk 00-04, 100 non-code file). RESTA: merge chunk→cache→merge AST(38 nodi)+existing graph.json (prune 20 ghost deleted)→build/cluster/label/HTML/report→sanitize+push (solo graph.json/graph.html/GRAPH_REPORT.md, escludi manifest, scan PII). **NB**: `class-proactive-improvement-proposal` + wiring-edit di stamattina sono POST-detect → NON in questo run; catturarli al **prossimo** --update (1 file + ~5 edit, cheap).
+
 ## 🧭 IN DISCUSSIONE 2026-07-09 (msg 1473) — SITUATIONAL AWARENESS + task-type/tag/wiki-curation (valutazione critica, attende decisione utente)
 
 > L'utente propone idee per il training (valutarle critico/scientifico, poi espandere SOLO le accettate — "se non hanno senso non le facciamo"). Mia valutazione (TG msg 1475/1476), mappata su ciò che ESISTE GIÀ:

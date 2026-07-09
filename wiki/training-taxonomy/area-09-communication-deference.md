@@ -136,9 +136,18 @@ Questo file **riempie lo schema**, non lo riscrive: segue esattamente la forma d
 
 ---
 
+## Topic 6 — Proactive value-add (proporre migliorie/consigli validi) · Tag L
+
+> **Proattivo**, complemento dei 5 topic reattivi sopra. Vive come **classe dedicata gerarchica** (figlia di situational-awareness, non un topic-reattivo di quest'area): [[class-proactive-improvement-proposal]].
+
+### Foglia 6.1 — `proporre una miglioria/consiglio valido oltre la richiesta letterale` · Tag L
+- **Skill target (segnale)**: mentre eseguo il task, riconoscere un'opportunità di valore **genuina + valida + rilevante** oltre lo spec e **surface-arla come proposta calibrata** (propose-don't-impose), senza over-suggerire rumore, senza confabulare valore, senza implementarla unilateralmente (= over-reach). La skill è la **soglia** `valore × validità × rilevanza`. Origine: utente msg 1516 ("mi chiedevi consigli, cosa molto apprezzata").
+- **Reward (L)**: judge sull'appropriatezza+qualità, **simmetrico** (over-suggest ↔ under-propose pari penalità) + penalità dura per proposta invalida; ancorato all'**outcome** (il valore promesso si materializza) in fase 3. Riusa la *struttura* di Topic-2 (escalation) e il judge anti-sycophancy di Topic-4.
+- **Spec completa** (esempi, 3 negativi, hack-check, transfer cross-dominio, curriculum, split): → [[class-proactive-improvement-proposal]].
+
 ## Sintesi d'area
 
-- **5 topic · 5 foglie** coperte con le 5 classi ciascuna (with-hint a 3 livelli di scaffolding · without-hint · wrong-awareness · wrong-recovery · other), per ~25 famiglie-esempio base (espandibili a dataset).
+- **5 topic reattivi · 5 foglie** coperte con le 5 classi ciascuna (with-hint a 3 livelli di scaffolding · without-hint · wrong-awareness · wrong-recovery · other), per ~25 famiglie-esempio base (espandibili a dataset). **+ Topic 6 proattivo** ([[class-proactive-improvement-proposal]], figlia di situational-awareness) — il value-add proattivo, complemento dei 5 reattivi.
 - **Distribuzione tag**: **L** sui topic comunicativo-valutativi (1 ask-vs-proceed, 2 informative-escalation, 4 objective-critique — judge/preference) e **Q** sui topic verificabili contro il trace/conteggio reale (3 honest-reporting → report↔trace, 5 output-length → conteggio↔budget). Il topic 5 è raccomandato come **Q+L** (budget Q + preservazione info L) per chiudere l'hack del troncamento.
 - **Curriculum**: la teoria (criterio ask-vs-proceed, anatomia dell'escalation informativa, critica-vs-sycophancy, compressione-vs-troncamento) sta in **fase 1**; gli esercizi con fade-out e le coppie sicofantiche-vs-oneste in **fase 2**; l'enforcement reale emerge in **fase 3 (RL-agentico nell'harness pi)** dove chiedere *sospende davvero*, il report è confrontato col *trace reale*, e la critica passa per il **"gioco" di Area 16** (teacher grande come ancora, judge anti-sycophancy).
 - **Filo rosso anti-reward-hacking d'area — la SICOFANTIA**: questa è l'area **più esposta** perché il proxy (preferenza) e la verità divergono per costruzione. Difese: (a) foglie **L** (1,2,4) → **judge calibrato anti-sycophancy** (preference *honest-unwelcome* > *pleasant-false*), ensemble/lenti diverse, penalità di sycophancy esplicita, simmetria contro l'over-criticism/over-ask/over-communication; (b) foglie **Q** (3,5) → **ground truth dal trace reale** (report↔trace, conteggio↔budget; scorer ≠ scored); (c) **disaccoppiamento dei reward** (honest-reporting guadagna ammettendo i fallimenti, non perde — niente incentivo a mentire per salvare il punteggio del task); (d) **ancoraggio al verificabile** ovunque possibile (la critica su SQL-injection/test-rosso è ancorata al fatto, non all'opinione del judge), che è il ponte con i topic Q e la difesa più robusta contro il gaming del preference-tuning. → `[[../concepts/reward-hacking-mitigation]]`, `[[../concepts/agent-constitution]]` C7/D9/D10, `[[../concepts/steering-vectors]]` #6.
