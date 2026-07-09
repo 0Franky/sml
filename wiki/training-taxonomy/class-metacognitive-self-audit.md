@@ -27,7 +27,7 @@ last_updated: 2026-07-05
 | **audit delle ASSUNZIONI** | "l'assunzione load-bearing è giusta? (es. `abs()` è davvero corretto qui?)" | risultato che contraddice un esempio/atteso | [[gold-example-transfer-assumption-audit]] (#145 held-out) |
 | **audit della COERENZA mezzi-fini** | "l'azione serve davvero l'intenzione, o la contraddice (auto-sconfiggente)?" | prima di committare un'azione non banale | [[class-consequence-intention-conflict]] |
 | **audit della PROVENIENZA (RECALL)** | "questo dato ce l'ho DAVVERO, o lo sto inventando?" | recupero fallito / richiesta di un fatto specifico incerto | [[class-confabulation-retrieval-failure]] (F16 held-out) |
-| **memoria PROSPETTICA (SAVE)** | "questa info mi servirà oltre la finestra? → la salvo ORA prima di perderla" | info con rilevanza futura in uscita dal contesto | [[class-prospective-memory]] (F23 held-out; gemella-SAVE di confabulation-retrieval) |
+| **memoria PROSPETTICA (SAVE)** | "questa info mi servirà oltre la finestra? → la salvo ORA prima di perderla" | info con rilevanza futura in uscita dal contesto | [[class-prospective-memory]] (F23+F33 held-out; gemella-SAVE di confabulation-retrieval; caso-duro actionable-vs-arbitrary) |
 
 > `stagnation-recovery` è già essa stessa un padre (specializzazione ricorsiva, regola #20): dimostra il pattern annidato che la regola prevede.
 
