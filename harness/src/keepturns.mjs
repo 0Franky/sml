@@ -29,6 +29,31 @@ export function getEffectiveKeepTurns(vq, configDefault = null) {
 }
 
 /**
+ * keepTurns ADATTIVO alla PRESSIONE (utente msg 1434, opt-in, DEFAULT OFF). Implementazione runtime di F32
+ * ("l'harness-memoria paga SOLO in overflow"): finché il contesto è poco pieno (fill < soglia) tieni keepTurns ALTO
+ * (`highKeep`, praticamente illimitato) → il modello vede TUTTA la conversazione nell'array nativo = regime VANILLA,
+ * nessuna compressione; appena il fill supera la soglia → SCENDI a `lowKeep` (= nativeKeepTurns) = regime harness-
+ * compresso, dove le lane (già riempite) subentrano. La CATTURA resta sempre-on (task-digest/note/lane facts sono
+ * INDIPENDENTI da keepTurns) → i fatti durevoli sono già persistiti quando si comprime (era la preoccupazione dell'utente).
+ * Fail-safe: usage assente / tokens non-finito (primi turni, nessuna richiesta fatturata ancora) → `highKeep` (parti
+ * VANILLA, come richiesto). Vedi [[concepts/adaptive-context-injection]] §pressure-adaptive + harness-config.mjs.
+ * @param {{tokens?:number|null, contextWindow?:number|null}|undefined} usage  da ctx.getContextUsage()
+ * @param {{lowThreshold:number, highKeep:number}} cfg  soglia-fill + keepTurns "vanilla"
+ * @param {number} lowKeep  keepTurns del regime compresso (SSOT = nativeKeepTurns)
+ * @param {number} [outputReservePct=0]  riserva output (allineato a collectMetrics: percent = tokens/(win*(1-reserve)))
+ * @returns {number}  keepTurns effettivo (NON clampato al MAX: highKeep può superare KEEPTURNS_MAX di proposito)
+ */
+export function adaptiveKeepTurns(usage, cfg, lowKeep, outputReservePct = 0) {
+  const tokens = usage?.tokens;
+  const win = usage?.contextWindow;
+  if (!Number.isFinite(tokens) || !Number.isFinite(win) || win <= 0) return cfg.highKeep; // no misura → vanilla
+  const reserve = Number.isFinite(outputReservePct) ? outputReservePct : 0;
+  const denom = win * (1 - reserve);
+  const pct = denom > 0 ? tokens / denom : 0;
+  return pct >= cfg.lowThreshold ? lowKeep : cfg.highKeep;
+}
+
+/**
  * Setta l'override del modello. n valido → clampa [1, MAX] e persiste. n null/<1/NaN → RIMUOVE l'override (default).
  * @param {import("./vars-queue.mjs").VarsQueue} vq
  * @returns {{effective:number, overridden:boolean, def:number}}

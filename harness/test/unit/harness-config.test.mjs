@@ -133,6 +133,26 @@ const noFile = join(dir, "assente.json");
   ok(loadHarnessConfig(noFile, { env: { HARNESS_AUTOFOCUS_MODE: "bogus" } }).autofocus.mode === "nudge", "AUTOFOCUS: env fuori-enum scartato");
 }
 
+// 7b) ADAPTIVE-CONTEXT (utente msg 1434): default OFF, file+env override, clamp lowThreshold[0,1]/highKeep≥1 ---------
+{
+  const c = loadHarnessConfig(noFile, { env: {} });
+  ok(c.adaptiveContext.enabled === false, "ADAPTIVE: default enabled=false (opt-in, l'utente non è fan)");
+  ok(c.adaptiveContext.lowThreshold === 0.5 && c.adaptiveContext.highKeep === 9999, "ADAPTIVE: default lowThreshold=0.5, highKeep=9999");
+  // file override completo
+  writeFileSync(cfgPath, JSON.stringify({ adaptiveContext: { enabled: true, lowThreshold: 0.7, highKeep: 50 } }));
+  const c2 = loadHarnessConfig(cfgPath, { env: {} });
+  ok(c2.adaptiveContext.enabled === true && c2.adaptiveContext.lowThreshold === 0.7 && c2.adaptiveContext.highKeep === 50, "ADAPTIVE: file override completo");
+  // clamp: lowThreshold fuori [0,1] + highKeep <1 scartati → restano i default (enabled valido resta)
+  writeFileSync(cfgPath, JSON.stringify({ adaptiveContext: { enabled: true, lowThreshold: 5, highKeep: 0 } }));
+  const c3 = loadHarnessConfig(cfgPath, { env: {} });
+  ok(c3.adaptiveContext.enabled === true, "ADAPTIVE: enabled valido applicato anche se gli altri campi sono fuori-range");
+  ok(c3.adaptiveContext.lowThreshold === 0.5 && c3.adaptiveContext.highKeep === 9999, "ADAPTIVE: lowThreshold>1 e highKeep<1 scartati → restano i default (clamp)");
+  // env vince sul file + '0'/'false' disabilita
+  const c4 = loadHarnessConfig(noFile, { env: { HARNESS_ADAPTIVE_CONTEXT: "true", HARNESS_ADAPTIVE_LOW_THRESHOLD: "0.6", HARNESS_ADAPTIVE_HIGH_KEEP: "30" } });
+  ok(c4.adaptiveContext.enabled === true && c4.adaptiveContext.lowThreshold === 0.6 && c4.adaptiveContext.highKeep === 30, "ADAPTIVE: env override completo");
+  ok(loadHarnessConfig(noFile, { env: { HARNESS_ADAPTIVE_CONTEXT: "0" } }).adaptiveContext.enabled === false, "ADAPTIVE: env '0' → disabilitato");
+}
+
 // 8) SECRETS (sealed-secrets, msg 577): default sicuro, file/env override, enum-guard ---------------
 {
   const c = loadHarnessConfig(noFile, { env: {} });

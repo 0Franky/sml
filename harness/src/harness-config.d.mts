@@ -17,6 +17,14 @@ export type AutofocusMode = "off" | "nudge" | "auto";
 export interface AutofocusConfig {
   mode: AutofocusMode;
 }
+export interface AdaptiveContextConfig {
+  /** true → keepTurns adattivo alla pressione (default false = keepTurns fisso). */
+  enabled: boolean;
+  /** fill% (tokens/finestra) oltre cui si passa da highKeep a nativeKeepTurns. */
+  lowThreshold: number;
+  /** keepTurns "vanilla" quando fill < lowThreshold (praticamente illimitato). */
+  highKeep: number;
+}
 export type SinkGatingMode = "strict" | "warn" | "off";
 export type RegexIngressMode = "off" | "ask" | "auto";
 export interface SecretsConfig {
@@ -32,6 +40,7 @@ export interface HarnessConfig {
   messagesWindowN: number;
   messagesCharCap: number;
   nativeKeepTurns: number;
+  adaptiveContext: AdaptiveContextConfig;
   laneMemoryHint: boolean;
   laneMemoryHintLevel: "full" | "lean";
   messagesExcludeCurrentTurn: boolean;

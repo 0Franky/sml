@@ -15,7 +15,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { windowNativeMessages } from "../../src/conversation-store.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { getVarsQueue } from "../../src/state-db.mjs";
-import { getEffectiveKeepTurns } from "../../src/keepturns.mjs";
+import { getEffectiveKeepTurns, adaptiveKeepTurns } from "../../src/keepturns.mjs";
 
 // keepTurns dalla config (SSOT: harness-config.mjs — default reale 6, raise ATTIVO msg 863; env HARNESS_NATIVE_KEEP_TURNS
 // per l'A/B). loadHarnessConfig GARANTISCE già un intero ≥1 (clamp file/env) → si legge il campo diretto, niente
@@ -24,15 +24,30 @@ import { getEffectiveKeepTurns } from "../../src/keepturns.mjs";
 // MODEL-CONTROLLED (msg 1062): il valore EFFETTIVO = override del modello (tool set_keepturns, clampato [1,MAX] in un
 // meta condiviso) se presente, altrimenti il default config. Letto PER-TURNO (il modello può cambiarlo a runtime).
 // Fail-safe: qualunque errore nel read → default config (getEffectiveKeepTurns già lo garantisce internamente).
-const CONFIG_KEEP = loadHarnessConfig().nativeKeepTurns;
+const HARNESS_CFG = loadHarnessConfig();
+const CONFIG_KEEP = HARNESS_CFG.nativeKeepTurns;
+// adaptiveContext (utente msg 1434, DEFAULT OFF): quando ON, il keepTurns EFFETTIVO del turno è dettato dal FILL reale
+// del contesto (highKeep sotto soglia = regime vanilla; nativeKeepTurns sopra = regime compresso). La cattura resta
+// sempre-on (indipendente da keepTurns). Vedi keepturns.mjs adaptiveKeepTurns + [[concepts/adaptive-context-injection]].
+const ADAPTIVE = HARNESS_CFG.adaptiveContext;
+const OUTPUT_RESERVE = HARNESS_CFG.trigger.outputReservePct;
 
 export default function (pi: ExtensionAPI) {
-  pi.on("context", (event) => {
+  pi.on("context", (event, ctx) => {
     let keep = CONFIG_KEEP;
     try {
-      keep = getEffectiveKeepTurns(getVarsQueue(), CONFIG_KEEP);
+      const vq = getVarsQueue();
+      if (ADAPTIVE.enabled) {
+        // Il DEFAULT del turno = keepTurns dettato dal fill reale (getContextUsage: usage dell'ultima richiesta fatturata).
+        // getEffectiveKeepTurns fa comunque VINCERE l'override esplicito del modello (set_keepturns) su questo default.
+        const usage = (ctx as any)?.getContextUsage?.();
+        const adaptiveKeep = adaptiveKeepTurns(usage, ADAPTIVE, CONFIG_KEEP, OUTPUT_RESERVE);
+        keep = getEffectiveKeepTurns(vq, adaptiveKeep);
+      } else {
+        keep = getEffectiveKeepTurns(vq, CONFIG_KEEP);
+      }
     } catch {
-      /* fail-safe: se lo store non è disponibile, resta il default config */
+      /* fail-safe: se lo store/usage non è disponibile, resta il default config */
     }
     const windowed = windowNativeMessages(event.messages as any[], { keepTurns: keep });
     if (windowed !== (event.messages as any[])) return { messages: windowed };

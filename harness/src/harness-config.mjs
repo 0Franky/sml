@@ -51,6 +51,17 @@ export const DEFAULT_HARNESS_CONFIG = {
   // turni più vecchi del K-esimo, via nthLastUserSeq → niente doppia-chat). K=6 default (tuning via env
   // HARNESS_NATIVE_KEEP_TURNS). Le REGOLE/reminder restano nel system (autorità + confine tool_result-vs-user).
   nativeKeepTurns: 6,
+  // adaptiveContext (utente msg 1434, opt-in, DEFAULT OFF — "non sono fan, la lascerei disattivata ma con incoraggiamento
+  // a testarla"): keepTurns ADATTIVO alla pressione (implementazione runtime di F32 "l'harness paga solo in overflow").
+  //   enabled=false (DEFAULT) → keepTurns fisso (comportamento attuale, nativeKeepTurns/override-modello).
+  //   enabled=true → finché fill < lowThreshold keepTurns = highKeep (regime VANILLA: il modello vede tutta la
+  //   conversazione nell'array nativo); appena il fill supera lowThreshold → SCENDE a nativeKeepTurns (regime compresso,
+  //   le lane subentrano). La CATTURA (task-digest/note/lane facts) è sempre-on, INDIPENDENTE da keepTurns → i fatti
+  //   durevoli sono già persistiti quando si comprime. L'override esplicito del modello (set_keepturns) vince comunque.
+  //   Env HARNESS_ADAPTIVE_CONTEXT (bool) / HARNESS_ADAPTIVE_LOW_THRESHOLD ([0,1]) / HARNESS_ADAPTIVE_HIGH_KEEP (≥1).
+  //   ⚠ Il VALORE dipende dal modello che salva i fatti in autonomia (F33: 9B no anche incoraggiato; ≥27B forse) → la
+  //   cattura DETERMINISTICA resta la rete. Perciò OFF di default + "provala e misura se il tuo modello è capace".
+  adaptiveContext: { enabled: false, lowThreshold: 0.5, highKeep: 9999 },
   // laneMemoryHint (AWARENESS-first, utente msg 830): inietta un blocco <how_memory_works> che SPIEGA al modello
   // piccolo che vede 1 solo messaggio per volta e che le lane (<messages_with_user>, <last_tool_calls>, …) SONO la
   // sua memoria, con una checklist su come ragionare. true (DEFAULT ON, regime SLM: "già configurarlo"); false per
@@ -150,6 +161,14 @@ function applyAutofocus(dst, src) {
   if (typeof src.mode === "string" && AUTOFOCUS_MODES.includes(src.mode)) dst.mode = src.mode;
 }
 
+/** Applica i campi `adaptiveContext` validi da `src` su `dst` (in place). enabled boolean · lowThreshold [0,1] · highKeep ≥1. */
+function applyAdaptiveContext(dst, src) {
+  if (!src || typeof src !== "object") return;
+  if (typeof src.enabled === "boolean") dst.enabled = src.enabled;
+  if (typeof src.lowThreshold === "number" && Number.isFinite(src.lowThreshold) && src.lowThreshold >= 0 && src.lowThreshold <= 1) dst.lowThreshold = src.lowThreshold;
+  if (typeof src.highKeep === "number" && Number.isFinite(src.highKeep) && src.highKeep >= 1) dst.highKeep = Math.floor(src.highKeep);
+}
+
 /** Applica i campi `secrets` validi da `src` su `dst` (in place). mode fuori-enum → ignorato (resta default). */
 function applySecrets(dst, src) {
   if (!src || typeof src !== "object") return;
@@ -182,6 +201,7 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
     messagesWindowN: DEFAULT_HARNESS_CONFIG.messagesWindowN,
     messagesCharCap: DEFAULT_HARNESS_CONFIG.messagesCharCap,
     nativeKeepTurns: DEFAULT_HARNESS_CONFIG.nativeKeepTurns,
+    adaptiveContext: { ...DEFAULT_HARNESS_CONFIG.adaptiveContext },
     laneMemoryHint: DEFAULT_HARNESS_CONFIG.laneMemoryHint,
     laneMemoryHintLevel: DEFAULT_HARNESS_CONFIG.laneMemoryHintLevel,
     messagesExcludeCurrentTurn: DEFAULT_HARNESS_CONFIG.messagesExcludeCurrentTurn,
@@ -200,6 +220,7 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
       applyTrigger(cfg.trigger, f && f.trigger);
       applyGathering(cfg.gathering, f && f.gathering);
       applyAutofocus(cfg.autofocus, f && f.autofocus);
+      applyAdaptiveContext(cfg.adaptiveContext, f && f.adaptiveContext);
       applySecrets(cfg.secrets, f && f.secrets);
       if (typeof f?.toolGating === "string" && TOOL_GATING_MODES.includes(f.toolGating)) cfg.toolGating = f.toolGating;
       if (typeof f?.toolProfile === "string" && TOOL_PROFILES.includes(f.toolProfile)) cfg.toolProfile = f.toolProfile;
@@ -248,6 +269,13 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
   if (typeof env.HARNESS_AUTOFOCUS_MODE === "string" && AUTOFOCUS_MODES.includes(env.HARNESS_AUTOFOCUS_MODE)) {
     cfg.autofocus.mode = env.HARNESS_AUTOFOCUS_MODE;
   }
+  if (env.HARNESS_ADAPTIVE_CONTEXT != null && env.HARNESS_ADAPTIVE_CONTEXT !== "") {
+    cfg.adaptiveContext.enabled = env.HARNESS_ADAPTIVE_CONTEXT !== "false" && env.HARNESS_ADAPTIVE_CONTEXT !== "0";
+  }
+  const adLow = Number(env.HARNESS_ADAPTIVE_LOW_THRESHOLD);
+  if (Number.isFinite(adLow) && adLow >= 0 && adLow <= 1) cfg.adaptiveContext.lowThreshold = adLow;
+  const adHigh = Number(env.HARNESS_ADAPTIVE_HIGH_KEEP);
+  if (Number.isFinite(adHigh) && adHigh >= 1) cfg.adaptiveContext.highKeep = Math.floor(adHigh);
   if (typeof env.HARNESS_PRESSURE_DRIVER === "string" && PRESSURE_DRIVERS.includes(env.HARNESS_PRESSURE_DRIVER)) {
     cfg.trigger.pressureDriver = env.HARNESS_PRESSURE_DRIVER; // A2: quale asse guida il firing (default "max")
   }

@@ -44,5 +44,15 @@ A/B tracciato su **HumanEval/145** (order_by_points, task algoritmico self-conta
 
 HE/145 è il **caso peggiore** per l'harness: hard di puro ragionamento dove la memoria (= il valore dell'harness) è IRRILEVANTE → tutto costo, zero beneficio. Il valore vero dell'harness si misura dove la memoria SERVE = **Modo 2 long-horizon** ([[architecture/ab-eval-harness]]). Questo finding dice "l'harness può far male sui hard memory-irrilevanti → rendi il contesto adattivo", NON "l'harness è inutile".
 
+## Pressure-adaptive keepTurns — IMPLEMENTATO opt-in (utente msg 1434, 2026-07-09) [EXTRACTED]
+
+Implementazione RUNTIME di **F32** ("l'harness-memoria paga SOLO in overflow"): un keepTurns che **parte ALTO (vanilla) e SCENDE con la pressione**, invece che fisso. Distinto dall'asse-3 (curriculum di training) e da 3b (model-controlled `set_keepturns`): qui l'**HARNESS** adatta il keepTurns al **fill reale** del contesto, deterministicamente.
+
+- **Config** (`harness-config.mjs`): `adaptiveContext: { enabled:false (DEFAULT OFF), lowThreshold:0.5, highKeep:9999 }`. Env `HARNESS_ADAPTIVE_CONTEXT`/`_LOW_THRESHOLD`/`_HIGH_KEEP`. Default OFF perché l'utente "non è fan" → opt-in con incoraggiamento a testare.
+- **Meccanismo** (`keepturns.mjs:adaptiveKeepTurns` + hook `context` in `native-window.ts`): `usage=ctx.getContextUsage()`; `pct = tokens/(win*(1-reserve))`; `pct < lowThreshold → highKeep` (vanilla, vede tutto), `≥ → nativeKeepTurns` (compresso). Fail-safe (usage assente/null nei primi turni) → highKeep (parti vanilla). L'override esplicito del modello (`set_keepturns`) VINCE (via `getEffectiveKeepTurns(vq, adaptiveKeep)`).
+- **CATTURA sempre-on** (il punto critico sollevato dall'utente): task-digest/note/jot/lane `<facts>`/`<vars>` sono INDIPENDENTI da keepTurns → i fatti durevoli si persistono già in regime vanilla, PRIMA che il contesto cresca. La modalità tocca SOLO l'INIEZIONE (finestra nativa), mai la cattura. (Distinzione CAPTURE ≠ INJECTION.)
+- **Test**: `keepturns.test` (adaptiveKeepTurns 9 casi + integrazione override), `harness-config.test` (default OFF + file/env + clamp), `adaptive-context-wiring.test` (rule #14: catena config→usage→keep→`windowNativeMessages` REALE — fill basso→8 turni/vanilla, fill alto→6/compresso, transizione fill↑→turni↓, override-vince). Suite 62/0, typecheck 0.
+- **⚠ Caveat onesto (F33)**: il VALORE dipende dal modello che salva i fatti in autonomia — il 9B NON lo fa nemmeno incoraggiato (→ la cattura DETERMINISTICA resta la rete); un ≥27B potrebbe. Perciò DEFAULT OFF + "provala e MISURA". La validazione E2E con overflow reale è quel passo (non un unit).
+
 ## Links
 [[architecture/ab-eval-harness]] · [[architecture/context-pressure-mechanism]] · [[concepts/harness-capabilities-as-files]] · [[feedback_optimization_first]] · [[feedback_context_window_sizing]] · [[feedback_reward_hacking_principle]] · [[feedback_training_vs_harness_classification]]

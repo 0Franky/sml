@@ -3,7 +3,7 @@
  * round-trip via meta, fail-safe su valori sporchi. Il default reale viene dalla config (SSOT nativeKeepTurns).
  */
 import { VarsQueue } from "../../src/vars-queue.mjs";
-import { getEffectiveKeepTurns, setKeepTurnsOverride, KEEPTURNS_MAX } from "../../src/keepturns.mjs";
+import { getEffectiveKeepTurns, setKeepTurnsOverride, KEEPTURNS_MAX, adaptiveKeepTurns } from "../../src/keepturns.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 
 let passed = 0, failed = 0;
@@ -65,6 +65,34 @@ const DEF = loadHarnessConfig().nativeKeepTurns; // SSOT — niente literal dupl
   ok(getEffectiveKeepTurns(vq, 3) === 3, "configDefault esplicito=3 usato quando nessun override");
   setKeepTurnsOverride(vq, 7);
   ok(getEffectiveKeepTurns(vq, 3) === 7, "override vince sul configDefault esplicito");
+  vq.close();
+}
+
+// 7) adaptiveKeepTurns (utente msg 1434): fill<soglia → highKeep (vanilla); fill≥soglia → lowKeep (compresso) --------
+{
+  const cfg = { lowThreshold: 0.5, highKeep: 9999 };
+  const LOW = 6;
+  ok(adaptiveKeepTurns({ tokens: 1000, contextWindow: 100000 }, cfg, LOW) === 9999, "adaptive: fill 1% < soglia → highKeep (vanilla)");
+  ok(adaptiveKeepTurns({ tokens: 60000, contextWindow: 100000 }, cfg, LOW) === LOW, "adaptive: fill 60% ≥ soglia → lowKeep (compresso)");
+  ok(adaptiveKeepTurns({ tokens: 50000, contextWindow: 100000 }, cfg, LOW) === LOW, "adaptive: fill == soglia (50%) → lowKeep (>=)");
+  // fail-safe → highKeep (parti VANILLA, come richiesto)
+  ok(adaptiveKeepTurns(undefined, cfg, LOW) === 9999, "adaptive: usage undefined → highKeep (fail-safe vanilla)");
+  ok(adaptiveKeepTurns({ tokens: null, contextWindow: 100000 }, cfg, LOW) === 9999, "adaptive: tokens null → highKeep");
+  ok(adaptiveKeepTurns({ tokens: 5000, contextWindow: null }, cfg, LOW) === 9999, "adaptive: contextWindow null → highKeep");
+  ok(adaptiveKeepTurns({ tokens: 5000, contextWindow: 0 }, cfg, LOW) === 9999, "adaptive: contextWindow 0 → highKeep (no div0)");
+  // outputReservePct: riserva riduce il denom → il fill effettivo sale → si comprime prima
+  ok(adaptiveKeepTurns({ tokens: 30000, contextWindow: 100000 }, cfg, LOW, 0.5) === LOW, "adaptive: reserve 0.5 → 30%/(50%)=60% ≥ soglia → lowKeep");
+  ok(adaptiveKeepTurns({ tokens: 30000, contextWindow: 100000 }, cfg, LOW, 0) === 9999, "adaptive: reserve 0 → 30% < soglia → highKeep");
+}
+
+// 8) integrazione adaptive × override-modello: l'override esplicito VINCE sull'adattivo -------------
+{
+  const vq = new VarsQueue(":memory:");
+  const cfg = { lowThreshold: 0.5, highKeep: 9999 };
+  const adKeep = adaptiveKeepTurns({ tokens: 1000, contextWindow: 100000 }, cfg, 6); // fill basso → 9999
+  ok(getEffectiveKeepTurns(vq, adKeep) === 9999, "adaptive×override: nessun override → usa il default adattivo (9999)");
+  setKeepTurnsOverride(vq, 8);
+  ok(getEffectiveKeepTurns(vq, adKeep) === 8, "adaptive×override: override modello (8) VINCE sull'adattivo (default)");
   vq.close();
 }
 
