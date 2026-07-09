@@ -274,6 +274,26 @@ Il *think-or-not / adaptive-depth* (Area 3: S-GRPO/DEER/CoT-Valve) è la stessa 
 
 ---
 
+## Addendum 2026-07-09 — famiglia SITUATIONAL-AWARENESS (padre nuovo) + parte-F harness `<current_date>`
+
+> Idee utente msg 1473 #1/#2/#5. Le leaf temporali di quest'area (Temporal-awareness, Stale/TTL) e le skill di
+> awareness-ambientale trovano ora un **home gerarchico** sotto un padre nuovo: [[class-situational-awareness]] —
+> gemello-filosofico di [[class-metacognitive-self-audit]] sull'asse **interno↔esterno** (àuditare la MENTE vs modellare
+> la SITUAZIONE). Non duplica l'example-space di quest'area: lo **inquadra come classe-di-training** e aggiunge nuove dimensioni.
+
+- **[[class-temporal-awareness]]** (figlia): raccoglie le leaf §Temporal-awareness + §Stale/TTL sotto il padre e aggiunge la
+  faccia **NUOVA recency-EPISTEMICA** (idea #1) — la `<current_date>` che l'harness ora inietta (parte-F **FATTA**:
+  `harness/src/context-assembler.mjs`, anchor granularità-giorno cache-stable + wiring-test) dice al modello che ORA è dopo il
+  training-cutoff → per i fatti **volatili** deve verificare/qualificare, non asserire a memoria. Reward sul VERIFICARE (regola #22).
+- **[[class-harness-environment-awareness]]** (figlia): il *dove/con-cosa* — leggere le affordance (tool/lane) che l'harness offre
+  invece di ri-chiamarle (FIND-7) o allucinarle; **fondamento** dei gemelli-memoria (SAVE [[class-prospective-memory]] / RECALL
+  [[class-confabulation-retrieval-failure]]). Ponte diretto con needle/dynamic-context di quest'area (toolset randomizzato → legge, non memorizza).
+- **[[class-knowledge-base-curation]]** (figlia): generare/usare la wiki + collocazione (idea #5), oracolo crispo a regole-in-fixture.
+- **REFINE**: la foglia §Outer-task summary + type tags si estende col 2° asse TASK-TYPE→thinking-mode in
+  [[class-domain-categorization-routing]] §Addendum (idea #2 — il tag di dominio instrada l'esperto, il tag di tipo instrada la strategia).
+
+---
+
 ## Sources
 - [[README]] §4 Area 4 (topic/foglie/tag/skill) + §3 template canonico + §4.bis curriculum.
 - [[../concepts/adversarial-needle-haystack-training]] (paper-claim #5, 4 variazioni rumore + position-curriculum).

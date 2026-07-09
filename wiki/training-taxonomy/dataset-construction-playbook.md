@@ -3,7 +3,7 @@ name: dataset-construction-playbook
 description: PLAYBOOK maestro (SSOT operativa) per costruire OGNI classe del training dataset — raccoglie requisiti, regole (#10+#18-#25), workflow, tecniche di label-gen, il CATALOGO delle "cose a cui stare attenti", e il coherence-audit che tiene il dataset coerente con le scelte. Segna-SEMPRE qui ogni osservazione nuova (regola #25, utente msg 1381).
 type: playbook
 tags: [training, taxonomy, methodology, dataset-quality, coherence, ssot, playbook, meta]
-last_updated: 2026-07-08
+last_updated: 2026-07-09
 ---
 
 # Playbook di costruzione del dataset — la guida unica
@@ -133,6 +133,8 @@ Principio comune: l'oracolo è **deterministico** e premia l'**esito**; i distra
 - **[COERENZA]** Template-inheritance a 3 livelli per DRY di authoring, MA il modello si addestra sull'**ESPANSO** a piena fedeltà → serve step di espansione. Disambigua `tags:` (graphify) da `reward_tag:`; dichiara le omissioni vs template (no omissioni silenziose). — gold-methodology.
 - **[PROCESSO]** **Review-loop OBBLIGATORIO**: autore verticale → revisore agnostico severo → integratore (il revisore pesca P0 che l'autore razionalizza). — gold-methodology §Review-loop.
 - **[DOPPIO-SCOPO]** Ogni esperimento migliora l'harness E scopre buchi-da-addestrare → collega finding-harness ↔ classe-training (lo scaffold harness recede man mano che la skill sale). — feedback_intelligence_gap_to_training_class.
+- **[SITUATIONAL / F-inietta-il-FATTO, S-RAGIONA] (2026-07-09)** Nelle classi di *situational-awareness* l'harness inietta il **FATTO** (la `<current_date>`, la tool-list, l'indice-KB) = F; la **skill** è il ragionamento su cosa il fatto IMPLICA = S. **Premia il ragionamento/verify-step, MAI la presenza del fatto iniettato** (un fatto pre-masticato che pre-decide l'implicazione = crutch/participation-hack). Caso recency-epistemica: per un fatto **volatile** premia il **VERIFICARE/qualificare** (che la fixture può marcare volatile), NON l'aver-indovinato il valore (rule #22: reward sul verificare, non sul conoscere — la fixture può renderlo volutamente incerto). — class-temporal-awareness / class-harness-environment-awareness / class-knowledge-base-curation.
+- **[AUTHORING-TAG ≠ reward ≠ prompt] (2026-07-09)** I tag di *tipo/topic/cross-reference* sugli esempi (`implementation-code`, `optimization`, i cross-ref idea #4) sono **authoring-metadata**: (a) **NON premiati** (premiare l'emissione del tag = participation-hack / mode-tic → 0); (b) **NON leakati nel prompt runtime** visto dal modello (sarebbe una checklist-in-prompt → shortcut, [[../concepts/dataset-on-the-fly-pseudorandom]] §no-checklist). Vivono SOLO nel layer di sampling/authoring del dataset (compongono il curriculum + il grafo cross-ref). Valida il thinking-mode per **ABLAZIONE** (mode-giusto batte default sull'outcome), non per presenza-del-tag. — compositional-curriculum-thinking-optimization §Addendum / class-domain-categorization-routing §Addendum.
 
 > **GAP dalla sweep — CHIUSI (2026-07-08):** (a) ✅ [[../concepts/position-answer-randomization]] (principio cross-cutting randomizzazione, 3 assi); (b) ✅ [[../concepts/oracle-design-pitfalls]] (6 trappole+difesa); (c) ✅ tracker di applicazione MCQ in [[../concepts/discriminative-mcq-hard-distractors]] §Tracker.
 
@@ -172,7 +174,8 @@ Tutti Y con evidenza → coerente. ≥1 N → correggi prima di dichiarare pront
 Le **aree** (backbone 16): [[area-01-organization-planning]] … [[area-16-self-evaluation-critique]] (vedi [[README]]).
 Le **classi/gerarchie** attuali (padri 👑 → figlie):
 
-- 👑 [[class-metacognitive-self-audit]] → stagnation-recovery (→ focus-decompose / jot) · transfer-assumption-audit (#145) · consequence-intention-conflict (→ subgoal-hijacks-task) · confabulation-retrieval-failure · prospective-memory.
+- 👑 [[class-metacognitive-self-audit]] (INWARD, àudita la MENTE) → stagnation-recovery (→ focus-decompose / jot) · transfer-assumption-audit (#145) · consequence-intention-conflict (→ subgoal-hijacks-task) · confabulation-retrieval-failure · prospective-memory · domain-categorization-routing.
+- 👑 [[class-situational-awareness]] (OUTWARD, modella la SITUAZIONE — gemello del precedente) → temporal-awareness (+recency-epistemica) · harness-environment-awareness (fondamento memory-twins) · knowledge-base-curation. **Refine collegati**: domain-categorization-routing §Addendum (task-type→thinking-mode) · [[../concepts/compositional-curriculum-thinking-optimization]] §Addendum (optimize-while-implement + authoring-tags).
 - 👑 [[class-constraint-fit-decision]] → resource-appropriate-substitution · alternative-path-under-block (→ A parità-per-misura / B best-fit-per-uso).
 - 👑 [[class-action-execution-optimization]] → async-dispatch-and-prioritization · batching-repeated-ops · decision-cache-per-block · (foglie parallelization Area-1).
 - 👑 [[class-visual-design-quality]] → frontend-ux-spacing-quality · svg-spatial-composition.

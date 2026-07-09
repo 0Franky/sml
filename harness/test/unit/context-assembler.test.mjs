@@ -78,6 +78,17 @@ ok(cA.indexOf("<rules>") < cA.indexOf("<vars>") && cA.indexOf("<vars>") < cA.ind
 const cRel = assembleContext(vq, { now: NOW, sinceMs: 0 });
 ok(!cRel.includes("<current_time>") && cRel.includes("s ago"), "regime relativo (default) invariato");
 
+// --- current_date (anchor epistemico, opt-in): assente di default, presente con currentDate:true ---
+ok(!cRel.includes("<current_date>"), "current_date: ASSENTE di default (opt-in, prefisso invariato)");
+const DATE_NOW = Date.UTC(2026, 6, 9, 13, 45, 12); // 2026-07-09 (mese 0-based: 6=luglio)
+const cDate = assembleContext(vq, { now: DATE_NOW, sinceMs: 0, currentDate: true });
+ok(cDate.includes("<current_date>2026-07-09</current_date>"), "current_date: emette la data a granularità GIORNO (ISO YYYY-MM-DD)");
+ok(cDate.indexOf("<current_date>") < cDate.indexOf("<rules>"), "current_date: PRIMA riga del prefisso (anchor in testa)");
+// granularità giorno = cache-stable: stesso giorno a ore diverse → riga <current_date> IDENTICA (non busta il prefisso)
+const cDateLater = assembleContext(vq, { now: DATE_NOW + 6 * 3_600_000, sinceMs: 0, currentDate: true }); // +6h, stesso giorno
+const dateLine = (s) => s.match(/ {2}<current_date>[^<]*<\/current_date>/)[0];
+ok(dateLine(cDate) === dateLine(cDateLater), "current_date: cache-stable entro il giorno (invariata a +6h)");
+
 // cache-stable con la FINESTRA REALE (default sinceMs, nessun override): il prefisso PRIMA di <recent_changes>
 // resta byte-identico cross-now anche quando recent_changes è volatile attraverso il bordo 15 min.
 const realTs = vq.getChangeLog({ limit: 1 })[0].ts;            // i change hanno ts wall-clock reale

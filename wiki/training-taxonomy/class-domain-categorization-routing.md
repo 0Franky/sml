@@ -1,9 +1,9 @@
 ---
 name: class-domain-categorization-routing
-description: Classe di training APPROVATA (utente msg 1317) — data una richiesta, classificarla nel DOMINIO corretto (la funzione-router del Tier-1: decidere quale LoRA/verticale invocare); per i task multi-dominio, scomporli nei domini giusti. Il difetto è il mis-routing / collasso su un dominio di default / confidenza esibita al posto della label corretta. Il base tiene una piccola % di TUTTI i domini per avere l'ISTINTO di categorizzare (riconoscere la firma), non per risolverli.
+description: Classe di training APPROVATA (utente msg 1317) — data una richiesta, classificarla su DUE assi ortogonali (addendum 2026-07-09, idea #2) — (1) DOMINIO (la funzione-router del Tier-1: quale LoRA/verticale) e (2) TASK-TYPE→thinking-mode (generation/classification/optimization/debugging/harness-operation → quale strategia di ragionamento attivare); per i task multi-etichetta, scomporli nelle categorie giuste su entrambi gli assi. Il difetto è il mis-routing / collasso su una default / confidenza-o-tag esibiti al posto della label corretta. Il base tiene una piccola % di TUTTI i domini per avere l'ISTINTO di categorizzare (riconoscere la firma), non per risolverli.
 type: training-class
-tags: [reasoning, metacognition, categorization, routing, classification, tier1, self-audit, area-01, area-04, held-out]
-last_updated: 2026-07-08
+tags: [reasoning, metacognition, categorization, routing, classification, task-type, thinking-mode, tier1, self-audit, area-01, area-04, held-out]
+last_updated: 2026-07-09
 ---
 
 # Classe di training — DOMAIN CATEGORIZATION & ROUTING (che TIPO di problema è questo?)
@@ -86,5 +86,30 @@ Bilanciati: la skill NON è "spacca sempre in più domini" né "trova sempre un 
 - **Over-triggering l'astensione** (dire sempre "generale/chiedo" per non sbagliare) → neutralizzato dalla **simmetria**: fallisce ogni caso con un dominio reale → niente reward (come la calibrazione della sorella confabulation).
 - **Over-fit all'istanza osservata** → mitigato: istanza held-out + training su A/B/C disgiunti e cross-dominio.
 
+## Addendum 2026-07-09 — il 2° asse: TASK-TYPE → thinking-mode (idea utente msg 1473 #2)
+
+> Utente msg 1473 #2: *"dare al modello l'awareness: se un task è di generation o di classification… se è di ottimizzazione… triggerare la categoria di pensiero migliore, e mettere dei tag (es. implementation-code e optimization, due tag separati)."* → la categorizzazione ha **DUE assi ortogonali**, non uno.
+
+La classe finora copre l'**asse-DOMINIO** (*di CHE ARGOMENTO è? → quale LoRA/verticale*). L'idea #2 aggiunge l'**asse-TIPO** (*di CHE GENERE di operazione è? → quale MODALITÀ DI PENSIERO attivare*). Sono ortogonali: un task può essere `frontend` (dominio) **e** `debugging` (tipo). Stessa skill-radice (categorizzare la richiesta prima di committare), specializzata su cosa si instrada — il **dominio** instrada l'*esperto*, il **tipo** instrada la *strategia di ragionamento*.
+
+**Mappa TASK-TYPE → thinking-mode** (esempi, non tassonomia chiusa):
+
+| Task-type | Thinking-mode attivata | Perché |
+|---|---|---|
+| **generation** (produrre codice/testo nuovo) | esplorativo/costruttivo | spazio aperto; ma **già-ottimizzato-mentre-costruisce** (ponte idea #3, [[../concepts/compositional-curriculum-thinking-optimization]]) |
+| **classification/triage** (decidere una categoria) | discriminativo/breve | risposta chiusa; catena lunga = overthinking (H6) |
+| **optimization** (migliorare l'esistente) | optimize-first + misura-prima | trigger del mindset di ottimizzazione (idea #3) |
+| **debugging/repair** | ipotesi→verifica loop | ancorare a un tool-call/artefatto ([[class-stagnation-recovery]], verification-discipline) |
+| **analysis/research** | gathering→sintesi | raccogli il contesto giusto prima di concludere |
+| **harness-operation/usability** (operare i tool/l'ambiente) | environment-grounding-first | legge le affordance disponibili ([[class-harness-environment-awareness]]) invece di agire alla cieca |
+
+> Il **tag** che l'utente chiede (es. `implementation-code`, `optimization`) è **authoring-metadata**: etichetta il task col suo tipo → serve (a) a triggerare il thinking-mode giusto, (b) come **cross-reference** per legare esempi dello stesso tipo nel training set (idea #4). Dettaglio del sistema-tag+cross-ref in [[../concepts/compositional-curriculum-thinking-optimization]] §Addendum.
+
+**Reward (asse-tipo) — OUTCOME + ABLATION, mai il tag**: il credito NON è per *aver emesso* il tag/mode (participation-hack), ma perché il thinking-mode attivato **ha migliorato l'esito** — verificato per **ablazione**: `(task-type ∧ mode-giusto)` batte `(task-type ∧ mode-default)` sull'outcome del task. Se attivare "deep-think" su un tipo non migliora vs il default → niente reward (il mode è un tic). Ancora [[../feedback_reward_hacking_principle]].
+
+**Negativi (asse-tipo, regola #21)**: (a) **over-triggering deep-think** su un task banale (classification a risposta secca trattata con catena esplorativa → overthinking, penalizzato); (b) **mis-typing** che perde la strategia (un task di *optimization* trattato come pura *generation* → salta l'optimize-first → codice non-ottimizzato: fallimento d'outcome); (c) **mode-tic** (dichiarare "attivo modalità X" senza che cambi l'esito) → 0. Bilanciamento come per l'asse-dominio.
+
+**Multi-label sui due assi**: gold = coppia (dominio/i, tipo/i); oracolo = set-match su **entrambi** gli assi, con l'ablazione a validare che il tipo scelto sia *causale* sull'outcome, non decorativo.
+
 ## Links
-[[class-metacognitive-self-audit]] (padre) · [[class-confabulation-retrieval-failure]] (sorella — simmetria astieniti-quando-manca) · [[class-stagnation-recovery]] · [[gold-example-transfer-assumption-audit]] · [[class-consequence-intention-conflict]] · [[class-prospective-memory]] · [[../architecture/orchestrator-layer]] · [[../architecture/three-tier-design]] · [[../concepts/out-of-domain-refusal-training]] · [[area-01-organization-planning]] · [[area-04-context-metacognition]] · [[area-11-refusal-scope]] · [[../feedback_reward_hacking_principle]] · [[../feedback_intelligence_gap_to_training_class]] · [[../feedback_transfer_always_cross_domain]]
+[[class-metacognitive-self-audit]] (padre) · [[class-situational-awareness]] (legge il TIPO della situazione-task — l'asse-tipo è grounding situazionale) · [[class-harness-environment-awareness]] (task-type harness-operation) · [[../concepts/compositional-curriculum-thinking-optimization]] (thinking-mode / tag authoring-metadata / cross-ref idee #3-#4) · [[class-confabulation-retrieval-failure]] (sorella — simmetria astieniti-quando-manca) · [[class-stagnation-recovery]] · [[gold-example-transfer-assumption-audit]] · [[class-consequence-intention-conflict]] · [[class-prospective-memory]] · [[../architecture/orchestrator-layer]] · [[../architecture/three-tier-design]] · [[../concepts/out-of-domain-refusal-training]] · [[area-01-organization-planning]] · [[area-04-context-metacognition]] · [[area-11-refusal-scope]] · [[../feedback_reward_hacking_principle]] · [[../feedback_intelligence_gap_to_training_class]] · [[../feedback_transfer_always_cross_domain]]

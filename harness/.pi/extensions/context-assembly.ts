@@ -91,11 +91,11 @@ export default function (pi: ExtensionAPI) {
     if (stack.length > 0) {
       // Uno scope è aperto → workspace NESTED: <frame> (zoom-OUT) + <context> FILTRATO + lane <messages_with_user>.
       const top = stack[stack.length - 1];
-      workspace = buildNestedWorkspace(vq, { focusScopeId: top.scope_id, store: convStore, convId, messagesN: MESSAGES_WINDOW_N, messagesCharCap: MESSAGES_CHAR_CAP, afterSeq: checkpointSeq, excludeCurrentTurn: EXCLUDE_CURRENT_TURN, nativeKeepTurns: NATIVE_KEEP_TURNS, secrets: listSecretsMeta() });
+      workspace = buildNestedWorkspace(vq, { focusScopeId: top.scope_id, store: convStore, convId, messagesN: MESSAGES_WINDOW_N, messagesCharCap: MESSAGES_CHAR_CAP, afterSeq: checkpointSeq, excludeCurrentTurn: EXCLUDE_CURRENT_TURN, nativeKeepTurns: NATIVE_KEEP_TURNS, secrets: listSecretsMeta(), currentDate: true });
     } else {
       // Nessuno scope → resume? + <context> + <focus_hint>? + lane <messages_with_user>.
       const resume = buildResumeDigest(vq);
-      const base = assembleContext(vq, { secrets: listSecretsMeta() });
+      const base = assembleContext(vq, { secrets: listSecretsMeta(), currentDate: true });
       const trig = evaluateTrigger(vq, { tokens, contextWindow }, HARNESS_CFG.trigger);
       let hint = "";
       // focus_hint = il NUDGE: emesso SOLO in autofocus.mode='nudge' (default). In 'off' niente segnale; in 'auto'

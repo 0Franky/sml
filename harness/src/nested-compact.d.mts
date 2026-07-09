@@ -103,5 +103,7 @@ export function buildNestedWorkspace(
     nativeKeepTurns?: number;
     /** inventario sealed-secrets (nomi+sink+flag, MAI valori) per la lane <secrets> nel ramo nested (gate-critical). */
     secrets?: import("./sealed-secrets.d.mts").SecretMeta[];
+    /** ANCHOR EPISTEMICO: se true, `<current_date>` (granularità giorno) nel <context> anche nel ramo nested. */
+    currentDate?: boolean;
   },
 ): string;

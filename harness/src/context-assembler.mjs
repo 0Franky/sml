@@ -30,6 +30,14 @@ const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 /** Timestamp assoluto stabile (ISO-8601 al secondo, UTC). Deterministico: `new Date(ms)` con argomento esplicito. */
 const isoSec = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
 
+/** Data corrente a granularità GIORNO (ISO-8601 YYYY-MM-DD, UTC). Deterministico. È l'ANCHOR EPISTEMICO
+ *  (`<current_date>`): a differenza di `<current_time>` (al secondo, volatile, per il calcolo-età) cambia solo
+ *  una volta al giorno → cache-stable nel prefisso. Fornisce al modello il "quando siamo" per il ragionamento di
+ *  recency/staleness — la conoscenza del modello è congelata al training-cutoff, questa riga dice che ORA è dopo.
+ *  Split F/S (CLAUDE.md #11): l'harness INIETTA il fatto-data (F); ragionare su cosa IMPLICA (la mia conoscenza è
+ *  vecchia → verifico invece di asserire) è la skill di TRAINING (class-temporal-awareness / epistemic-recency). */
+const isoDate = (ms) => new Date(ms).toISOString().slice(0, 10);
+
 /**
  * Età di un'entry, in due regimi:
  *  - relativo (default): "Ns fa" → leggibile ma VOLATILE (cambia ad ogni richiesta → rompe il KV-cache).
@@ -53,6 +61,8 @@ const capDetail = (s) => {
 
 /* ── CONTRATTO stable-prefix (cache-stable-prefix, 2026-06-29) ───────────────────────────────────────────────
  * Per massimizzare gli hit di KV-cache del provider il <context> è ordinato STABILE-in-testa / VOLATILE-in-fondo:
+ *   ANCHOR EPISTEMICO : <current_date> (opt-in `currentDate`, granularità GIORNO → cambia 1×/giorno, resta nel
+ *                       prefisso cacheabile: NON è la riga volatile-per-richiesta, quella è <current_time> sotto)
  *   PREFISSO STABILE  : <rules> → <current_aim> → <task_list> → <verify_queue>   (nessun timestamp; cambia SOLO
  *                       su evento semantico; sort con tiebreaker deterministico per id → byte-identico cross-turno)
  *   ZONA VOLATILE     : <vars> → <recent_changes> → <notes>                       (in coda; in regime
@@ -196,6 +206,12 @@ export function assembleContext(vq, opts = {}) {
   const abs = opts.absoluteTimestamps ?? false; // cache-stable-prefix: età assolute @ISO invece di "Ns fa"
 
   const lines = ["<context>"];
+
+  // --- current_date (ANCHOR EPISTEMICO, opt-in `currentDate`): prima riga del prefisso STABILE. Granularità GIORNO
+  //     → cache-stable nel prefisso (cambia 1×/giorno, non per-richiesta come <current_time>). Dà al modello il
+  //     "quando siamo" per il ragionamento di recency (la sua conoscenza è ferma al training-cutoff). Solo il FATTO
+  //     (F, CLAUDE.md #11); il ragionamento su cosa implica è la skill di training (class-temporal-awareness). ---
+  if (opts.currentDate) lines.push(`  <current_date>${isoDate(now)}</current_date>`);
 
   // --- rules: RAGGRUPPATE per categoria (concentrazione del modello, msg 1067), poi per severità (hard>strong>soft),
   // poi per id → prefisso cache-stabile (categorie in ordine fisso + tiebreaker deterministico) byte-identico cross-turno.

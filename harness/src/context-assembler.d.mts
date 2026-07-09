@@ -15,6 +15,9 @@ export interface AssembleOpts {
   focusTaskIds?: (string | number)[] | null;
   /** inventario sealed-secrets (nomi+sink+flag, MAI valori) per la lane <secrets> — passato da context-assembly.ts. */
   secrets?: SecretMeta[];
+  /** ANCHOR EPISTEMICO: se true, emette `<current_date>YYYY-MM-DD</current_date>` (granularità giorno, cache-stable)
+   *  come prima riga del prefisso. È il FATTO-data (F, CLAUDE.md #11); il ragionamento di recency è la skill di training. */
+  currentDate?: boolean;
 }
 
 export function assembleContext(vq: VarsQueue, opts?: AssembleOpts): string;

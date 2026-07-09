@@ -10,6 +10,7 @@ last_updated: 2026-07-05
 
 > **Ruolo**: nodo-radice della gerarchia di training per la **metacognizione**. Regola #20 (utente msg 1195): le classi si costruiscono SEMPRE gerarchiche (padre→figlia) e una figlia si specializza ulteriormente quando lo merita. Questo è il padre che unifica cinque skill di "audit del proprio ragionamento/stato-cognitivo" emerse separatamente (dai filoni #145, F16, F23).
 > **Origine**: le tre figlie nascono da modi-di-fallimento reali del modello (o miei) — vedi [[../harness-experiment-log]] (F14) + [[../feedback_intelligence_gap_to_training_class]].
+> **Gemello-filosofico** (twin di pari livello, 2026-07-09): [[class-situational-awareness]]. Asse **interno↔esterno**: questo padre àudita il proprio **ragionamento/stato-cognitivo** (INWARD); l'altro modella la propria **situazione/ambiente** (OUTWARD — quando siamo / che tool ho / che knowledge-base). Le due famiglie **compongono** (es. la memoria-prospettica qui richiede la harness-awareness lì: non salvi ciò che non sai di poter salvare).
 
 ## La skill-RADICE (livello padre)
 
@@ -46,4 +47,4 @@ Ogni figlia ha i propri generatori (i disguised di [[class-sign-wrap-blindspot]]
 - **Decontaminazione**: le istanze osservate (#145, il pre-flight) restano **held-out** → misurano il transfer, non la memorizzazione.
 
 ## Links
-[[class-stagnation-recovery]] · [[gold-example-transfer-assumption-audit]] · [[class-consequence-intention-conflict]] · [[class-confabulation-retrieval-failure]] · [[class-prospective-memory]] · [[../concepts/compositional-curriculum-thinking-optimization]] · [[area-03-reasoning-scientific-method]] · [[area-04-context-metacognition]] · [[../feedback_reward_hacking_principle]] · [[../feedback_intelligence_gap_to_training_class]] · [[../feedback_transfer_always_cross_domain]]
+[[class-situational-awareness]] (gemello-OUTWARD) · [[class-stagnation-recovery]] · [[gold-example-transfer-assumption-audit]] · [[class-consequence-intention-conflict]] · [[class-confabulation-retrieval-failure]] · [[class-prospective-memory]] · [[class-domain-categorization-routing]] · [[../concepts/compositional-curriculum-thinking-optimization]] · [[area-03-reasoning-scientific-method]] · [[area-04-context-metacognition]] · [[../feedback_reward_hacking_principle]] · [[../feedback_intelligence_gap_to_training_class]] · [[../feedback_transfer_always_cross_domain]]

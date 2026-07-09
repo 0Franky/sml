@@ -2,11 +2,12 @@
 name: compositional-curriculum-thinking-optimization
 description: "Analisi proposta utente msg 1140: (A) curriculum RL a SKILL ISOLATE (gathering→implementazione→scrivere-test→eseguire), ciascuna allenata a competenza, poi COMPOSTE a finestra scorrevole (1+2, 2+3, … poi 1+2+3, …) fino alla lane completa; (B) THINKING-OPTIMIZATION progressiva: catene lunghe-ma-perfette mentre impara, poi compresse (dritto alla soluzione) quando la traccia è internalizzata. Verdetto: SENSATO + allineato a H6/verification-discipline/curriculum, con guardrail (reward per-skill ancorato al downstream, replay anti-forgetting, gate di competenza, PRM per la coerenza-catena, compressione outcome-gated)."
 type: concept
-tags: [training, curriculum, rl, composition, thinking-optimization, cot-compression, prm, catastrophic-forgetting, h6, proposal, phase-3]
-last_updated: 2026-07-05
+tags: [training, curriculum, rl, composition, thinking-optimization, cot-compression, prm, catastrophic-forgetting, h6, proposal, phase-3, optimize-while-implement, authoring-tags, cross-reference]
+last_updated: 2026-07-09
 status: proposal-under-evaluation
 sources:
   - "Utente TG msg 1140 (2026-07-05): curriculum a skill isolate + composizione a finestra scorrevole + thinking-optimization progressiva"
+  - "Utente msg 1473 (2026-07-09) idee #3-#4: optimize-while-implement + tag implementation-code/optimization (authoring-metadata) + cross-reference nel training set (§Addendum 2026-07-09)"
   - "Estende l'idea utente pre-esistente: [[project_post_training_strategy|curriculum SFT staged 4 fasi]]"
 ---
 
@@ -124,5 +125,28 @@ come stadio DEDICATO dopo il plateau, con reward outcome-gated. Costruire prima 
 - PRM: costruirne uno o approssimare la coerenza-catena con ancoraggio-a-tool-call (più economico, meno gameable)?
 - Ratio di replay ottimale per stage: da calibrare empiricamente (come il 10% coding-replay di Tier-1, [[project_replay_strategy]]).
 
+## Addendum 2026-07-09 — thought-flow condiviso impl↔optim + tag authoring-metadata + cross-reference (idee utente msg 1473 #3-#4)
+
+> Utente msg 1473 #3: *"tag per esempio implementation-code e optimization (due tag SEPARATI), così lo stesso FLUSSO DI PENSIERO possa valere sia per l'implementazione del codice sia per l'ottimizzazione; e se il modello vuole scrivere del codice magari inizia GIÀ a pensare in modo ottimizzato."* · #4: *"creare una cross-reference nel training set così da legare gli argomenti."*
+
+### (#3) Optimize-WHILE-implement — lo stesso thought-flow per due tag
+La Parte-B sopra tratta la thinking-optimization come **stadio successivo** (impara-lungo → distilla-corto). L'idea #3 aggiunge un asse **ortogonale e diverso**: l'ottimizzazione **del prodotto** (il codice) non è (solo) uno stadio del curriculum, è una **modalità di pensiero da attivare GIÀ durante l'implementazione**. Due tag **separati** su un esempio:
+- `implementation-code` — l'esempio esercita il *costruire* (produrre codice corretto).
+- `optimization` — l'esempio esercita il *migliorare* (perf/leggibilità/costo).
+- Un esempio che porta **entrambi** insegna la versione **fusa**: *"implementa QUESTO, e fallo già ottimizzato"* → optimize-while-implement, non optimize-as-afterthought.
+
+**Perché "stesso flusso di pensiero"**: la catena `why → problema → soluzione` (CLAUDE.md #10) è **la stessa** che si implementi o si ottimizzi — cambia l'*oggetto* (funzionalità vs costo/qualità), non lo *scheletro* del ragionamento. Il curriculum **riusa lo scheletro** su entrambi i tag → il modello impara UNA disciplina di ragionamento e la applica ai due, invece di due skill scollegate (allineato a [[../training-taxonomy/class-metacognitive-self-audit]]: skill-radice condivisa). Il trigger dal lato-routing è il task-type `optimization` di [[../training-taxonomy/class-domain-categorization-routing]] §Addendum (task-type→thinking-mode).
+
+**Reward (optimize-while-implement) — OUTCOME-GATED, mai il tag**: come il guardrail Parte-B (corretto **AND** ottimizzato, mai ottimizzato-a-scapito-di-corretto), qui il credito esige codice **funzionalmente corretto E misurabilmente migliore** (metrica di perf/costo/qualità vs baseline non-ottimizzato). Il **tag `optimization` NON è premiato** (è metadata): premiare l'emissione-del-tag = participation-hack (l'esatto rischio-tic di [[../training-taxonomy/class-domain-categorization-routing]]). Ablazione: (impl ∧ optimize-mode) batte (impl ∧ default) sulla metrica → altrimenti il mode è decorativo. [[feedback_reward_hacking_principle]].
+
+### (#4) Cross-reference nel training set — legare gli argomenti
+I tag di cui sopra sono **authoring-metadata**: NON output che il modello emette a runtime, NON un tag da premiare — sono **etichette sugli esempi** (tipo + topic + classi-correlate) che servono a:
+1. **Comporre il curriculum** — la composizione a finestra scorrevole (Parte-A) e il mixing anti-forgetting selezionano gli esempi **per tag** (allena insieme gli esempi che condividono skill-radice/topic).
+2. **Cross-reference tra esempi** (#4) — ogni esempio porta riferimenti agli esempi/classi **correlati** (stessa skill-radice, stesso topic, gemelli SAVE↔RECALL, transfer cross-dominio della stessa logica). Effetto: il modello vede il **grafo delle relazioni** tra argomenti (non esempi isolati) → rinforza il transfer e la composizionalità. È il duale-in-training del knowledge-graph della wiki: la stessa disciplina di cross-linking che [[../training-taxonomy/class-knowledge-base-curation]] insegna come skill, qui è **struttura del dataset**.
+
+**Vincolo di integrità (regola #22)**: i cross-ref sono metadata *strutturali* (relazioni tra esempi), NON fatti-del-mondo → non introducono claim da verificare. **Vincolo SSOT/DRY** (CLAUDE.md #16): il grafo dei cross-ref ha una sola sorgente (i tag sugli esempi) → niente liste-di-relazioni duplicate a mano. **Anti-overfit**: i tag NON entrano nel prompt visto dal modello a runtime (sarebbe un leak di checklist — [[dataset-on-the-fly-pseudorandom]] §no-checklist-in-prompt); vivono nel *layer di authoring/sampling* del dataset.
+
+> **Verdetto idee #3-#4**: **sensate e coerenti** col curriculum composizionale (rinforzano Parte-A/B, non le contraddicono). Il rischio è unico e noto — trattare i tag come reward invece che come metadata → neutralizzato dall'ancoraggio-outcome + ablazione. Da prototipare insieme al primo test 2-skill (aggiungere un esempio doppio-tag impl+optim e misurare l'optimize-delta per ablazione).
+
 ## Links
-[[verification-discipline-training]] · [[harness-experiment-log]] (H6/F7, F11) · [[catastrophic-forgetting]] · [[project_post_training_strategy]] · [[project_replay_strategy]] · [[stuck-state-focus-protocol]] · [[gold-example-transfer-assumption-audit]] · [[feedback_reward_hacking_principle]] · [[feedback_intelligence_gap_to_training_class]]
+[[verification-discipline-training]] · [[harness-experiment-log]] (H6/F7, F11) · [[catastrophic-forgetting]] · [[project_post_training_strategy]] · [[project_replay_strategy]] · [[stuck-state-focus-protocol]] · [[gold-example-transfer-assumption-audit]] · [[../training-taxonomy/class-domain-categorization-routing]] (task-type→thinking-mode) · [[../training-taxonomy/class-knowledge-base-curation]] (cross-linking come skill) · [[../training-taxonomy/class-situational-awareness]] · [[dataset-on-the-fly-pseudorandom]] · [[feedback_reward_hacking_principle]] · [[feedback_intelligence_gap_to_training_class]]
