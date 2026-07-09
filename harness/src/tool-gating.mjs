@@ -58,6 +58,55 @@ export const ESSENTIAL_TOOLS = [
   "find_tool", "open_category", "list_tool_categories", // meta (scoperta)
 ];
 
+/**
+ * PROFILI del set-attivo (utente msg 1431/1433): ASSE ORTOGONALE ai MODI (off/discover/gated di harness-config).
+ * Il MODO decide COME si nasconde; il PROFILO decide QUANTI tool restano attivi quando `gated`. Il default `standard`
+ * = ESSENTIAL_TOOLS (comportamento storico invariato). SSOT: enum + liste vivono QUI (modulo puro, nessuna dep → nessun
+ * ciclo); harness-config importa solo l'enum per validare il campo `toolProfile`.
+ *
+ *  - core    (~8): SOLO core-pi + note. NIENTE meta-tool → il modello NON può riscoprire → è il floor "test NON
+ *                  discriminante" (sa fare il task base coi tool a vista?). Anche il minimo per il free-tier (richiesta
+ *                  più piccola). In PRODUZIONE è per modelli fortissimi o task isolati: senza meta, ciò che una lane
+ *                  cita e non è attivo dà "not found" (caveat coerenza lane→tool, bug B2/B3).
+ *  - minimal (~15): core-pi COMPLETO + note/jot + le META (find_tool/open_category/list_tool_categories). Con le meta il
+ *                  modello CAPACE riscopre tutto il resto → è il profilo DISCRIMINANTE (capace riscopre e passa; debole
+ *                  va in not-found e fallisce = misura di "quanto sa usare l'harness", utente msg 1423). Production-viable
+ *                  per modelli capaci (recuperano ciò che le lane citano via find_tool).
+ *  - standard(~30+): = ESSENTIAL_TOOLS. Flusso secret completo, focus-trio, get_conversation, set_keepturns… DEFAULT
+ *                  (regime SLM: tutto ciò che le lane citano è già attivo → niente not-found anche per un 9B).
+ *  - full        : tutti i tool realmente registrati (nessun set curato). ≈ `off`, ma le meta-tool restano attive.
+ *  - custom      : lista esplicita fornita da harness-config (`toolGatingCustom`), intersecata coi presenti.
+ */
+export const TOOL_PROFILES = ["core", "minimal", "standard", "full", "custom"];
+
+/** core (~8): core-pi + note. Floor puro, NO meta → nessuna riscoperta (test non-discriminante / free-tier). */
+export const PROFILE_CORE = ["bash", "read", "write", "edit", "ls", "grep", "find", "note"];
+
+/** minimal (~15): core-pi COMPLETO + note/jot + meta. Le meta abilitano la riscoperta → profilo DISCRIMINANTE. */
+export const PROFILE_MINIMAL = [
+  "bash", "read", "write", "edit", "ls", "grep", "find", "str_replace", "create", "multiedit", // core-pi completo
+  "note", "jot",                                   // memoria base (durable + volatile scratch)
+  "find_tool", "open_category", "list_tool_categories", // meta = riscoperta di TUTTO il resto
+];
+
+/**
+ * Risolve i NOMI-tool desiderati per un profilo, PRIMA dell'intersezione coi presenti.
+ * `full` → null = sentinel "tutti i presenti" (nessun set curato). Profilo sconosciuto → standard (fail-safe).
+ * @param {string} profile  uno di TOOL_PROFILES
+ * @param {string[]} [custom]  lista per il profilo "custom"
+ * @returns {string[]|null}  lista-nomi, oppure null per "full"
+ */
+export function profileToolNames(profile, custom) {
+  switch (profile) {
+    case "core": return PROFILE_CORE;
+    case "minimal": return PROFILE_MINIMAL;
+    case "full": return null; // sentinel: tutti i presenti
+    case "custom": return Array.isArray(custom) ? custom.filter((n) => typeof n === "string" && n) : [];
+    case "standard": return ESSENTIAL_TOOLS;
+    default: return ESSENTIAL_TOOLS; // fail-safe: profilo ignoto → comportamento storico
+  }
+}
+
 const _reverse = (() => {
   const m = new Map();
   for (const [cat, names] of Object.entries(CATEGORY_TOOLS)) for (const n of names) m.set(n, cat);
@@ -133,10 +182,18 @@ export function listCategories(items) {
   return out;
 }
 
-/** Il set-attivo di default = ESSENTIAL_TOOLS ∩ tool realmente registrati (difensivo: mai attivare nomi inesistenti). */
-export function computeDefaultActive(allToolNames) {
+/**
+ * Il set-attivo di default = lista-del-PROFILO ∩ tool realmente registrati (difensivo: mai attivare nomi inesistenti).
+ * Retro-compat: `computeDefaultActive(all)` senza opts → profilo "standard" = ESSENTIAL_TOOLS (comportamento storico).
+ * @param {string[]} allToolNames  tool realmente registrati
+ * @param {{profile?:string, custom?:string[]}} [opts]  profilo (default "standard") + lista per "custom"
+ * @returns {string[]}
+ */
+export function computeDefaultActive(allToolNames, opts = {}) {
   const present = new Set((Array.isArray(allToolNames) ? allToolNames : []).map(String));
-  return ESSENTIAL_TOOLS.filter((n) => present.has(n));
+  const names = profileToolNames(opts.profile ?? "standard", opts.custom);
+  if (names === null) return [...present]; // full: tutti i presenti (nessun set curato)
+  return names.filter((n) => present.has(n));
 }
 
 /**
@@ -158,4 +215,4 @@ export function classifyToolError(name, activeNames, allNames) {
   return new Set(allNames || []).has(name) ? "reveal" : "unknown";
 }
 
-export default { CATEGORY_TOOLS, ESSENTIAL_TOOLS, categorizeTool, searchTools, toolsInCategory, listCategories, computeDefaultActive };
+export default { CATEGORY_TOOLS, ESSENTIAL_TOOLS, TOOL_PROFILES, PROFILE_CORE, PROFILE_MINIMAL, profileToolNames, categorizeTool, searchTools, toolsInCategory, listCategories, computeDefaultActive };

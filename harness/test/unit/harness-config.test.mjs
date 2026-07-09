@@ -35,6 +35,26 @@ const noFile = join(dir, "assente.json");
   ok(loadHarnessConfig(cfgPath, { env: { HARNESS_TOOL_GATING: "banana" } }).toolGating === "off", "ENV: valore invalido ignorato → resta il file (off)");
 }
 
+// 1c) toolProfile + toolGatingCustom (msg 1431/1433): default standard, file+env override, enum-guard, custom CSV -----
+{
+  const c = loadHarnessConfig(noFile, { env: {} });
+  ok(c.toolProfile === "standard", "DEFAULT: toolProfile = standard (comportamento storico = ESSENTIAL)");
+  ok(Array.isArray(c.toolGatingCustom) && c.toolGatingCustom.length === 0, "DEFAULT: toolGatingCustom = [] vuoto");
+  // file override
+  writeFileSync(cfgPath, JSON.stringify({ toolProfile: "minimal" }));
+  ok(loadHarnessConfig(cfgPath, { env: {} }).toolProfile === "minimal", "FILE: toolProfile overrideato a minimal");
+  // env vince sul file
+  ok(loadHarnessConfig(cfgPath, { env: { HARNESS_TOOL_PROFILE: "core" } }).toolProfile === "core", "ENV: HARNESS_TOOL_PROFILE vince sul file (core)");
+  // enum-guard: valore invalido → resta il file (minimal)
+  ok(loadHarnessConfig(cfgPath, { env: { HARNESS_TOOL_PROFILE: "banana" } }).toolProfile === "minimal", "ENV: toolProfile invalido ignorato → resta il file (minimal)");
+  // custom: file array (non-stringhe/vuoti scartati) + env CSV (trim) vince
+  writeFileSync(cfgPath, JSON.stringify({ toolProfile: "custom", toolGatingCustom: ["bash", "note", 42, ""] }));
+  const cf = loadHarnessConfig(cfgPath, { env: {} });
+  ok(cf.toolProfile === "custom" && cf.toolGatingCustom.join(",") === "bash,note", "FILE: toolGatingCustom array (non-stringhe/vuoti scartati)");
+  const ce = loadHarnessConfig(cfgPath, { env: { HARNESS_TOOL_GATING_CUSTOM: "read, write ,grep" } });
+  ok(ce.toolGatingCustom.join(",") === "read,write,grep", "ENV: HARNESS_TOOL_GATING_CUSTOM CSV (trim) vince sul file");
+}
+
 // 2) FILE opt-in override (profilo "Sonnet": soglie più alte) --------------------------------------
 {
   writeFileSync(cfgPath, JSON.stringify({ trigger: { tokenMatrioskaPct: 0.9, watchMatrioska: 60 }, messagesWindowN: 16, messagesCharCap: 2000, messagesExcludeCurrentTurn: false }));

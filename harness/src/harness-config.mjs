@@ -17,6 +17,7 @@
 import { readFileSync, existsSync } from "node:fs";
 import { DEFAULT_CFG, PRESSURE_DRIVERS } from "./nested-compact.mjs";
 import { DEFAULT_MESSAGES_WINDOW_N, DEFAULT_MESSAGES_CHAR_CAP } from "./lane-defaults.mjs"; // SSOT default lane messaggi
+import { TOOL_PROFILES } from "./tool-gating.mjs"; // SSOT enum profili tool-attivo (msg 1431); tool-gating è puro → no ciclo
 
 /** Modalità di enforcement del gathering pre-focus (msg 528/531). */
 export const GATHERING_MODES = ["delegated", "inject", "require"];
@@ -87,6 +88,15 @@ export const DEFAULT_HARNESS_CONFIG = {
   // set-attivo iniziale = ESSENTIAL (tool-gating.mjs) e la coda lunga si riscopre con find_tool/open_category.
   // Default `gated` = regime SLM (utente msg 807 "tenerlo attivo di default"); per un modello grande → "off" nel file.
   toolGating: "gated",
+  // toolProfile (msg 1431/1433): ASSE ORTOGONALE al modo. Decide QUANTI tool restano attivi quando `gated`.
+  //   core | minimal | standard | full | custom (SSOT liste in tool-gating.mjs). `standard` (DEFAULT) = ESSENTIAL_TOOLS
+  //   = comportamento storico invariato. `core` = floor no-meta (~8, free-tier/test-non-discriminante); `minimal` =
+  //   core-pi+meta → riscoperta (~15, profilo DISCRIMINANTE, capace-vs-debole); `full` = tutti i registrati; `custom` =
+  //   lista `toolGatingCustom`. Env HARNESS_TOOL_PROFILE. Ha effetto SOLO quando toolGating="gated".
+  toolProfile: "standard",
+  // toolGatingCustom: lista-nomi per toolProfile="custom" (file JSON: array di stringhe; env HARNESS_TOOL_GATING_CUSTOM:
+  // CSV). Intersecata coi tool presenti in computeDefaultActive (difensiva: nomi inesistenti scartati).
+  toolGatingCustom: [],
   // NB: il rung anti-fissazione NON è qui di proposito (utente msg 930.1): è un'estensione DEDICATA
   // (.pi/extensions/anti-fixation.ts) gatata via env HARNESS_ANTI_FIXATION, non un flag harness-config. Presenza-file =
   // opt-in; l'A/B si fa con l'env senza rimuovere il file. Niente accoppiamento config ↔ scaffold sperimentale.
@@ -180,6 +190,8 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
     autofocus: { ...DEFAULT_HARNESS_CONFIG.autofocus },
     secrets: { ...DEFAULT_HARNESS_CONFIG.secrets },
     toolGating: DEFAULT_HARNESS_CONFIG.toolGating,
+    toolProfile: DEFAULT_HARNESS_CONFIG.toolProfile,
+    toolGatingCustom: [...DEFAULT_HARNESS_CONFIG.toolGatingCustom],
   };
   // 2) file opt-in
   try {
@@ -190,6 +202,8 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
       applyAutofocus(cfg.autofocus, f && f.autofocus);
       applySecrets(cfg.secrets, f && f.secrets);
       if (typeof f?.toolGating === "string" && TOOL_GATING_MODES.includes(f.toolGating)) cfg.toolGating = f.toolGating;
+      if (typeof f?.toolProfile === "string" && TOOL_PROFILES.includes(f.toolProfile)) cfg.toolProfile = f.toolProfile;
+      if (Array.isArray(f?.toolGatingCustom)) cfg.toolGatingCustom = f.toolGatingCustom.filter((n) => typeof n === "string" && n);
       if (typeof f?.messagesWindowN === "number" && Number.isFinite(f.messagesWindowN) && f.messagesWindowN >= 1) {
         cfg.messagesWindowN = Math.floor(f.messagesWindowN);
       }
@@ -245,6 +259,12 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
   }
   if (typeof env.HARNESS_TOOL_GATING === "string" && TOOL_GATING_MODES.includes(env.HARNESS_TOOL_GATING)) {
     cfg.toolGating = env.HARNESS_TOOL_GATING;
+  }
+  if (typeof env.HARNESS_TOOL_PROFILE === "string" && TOOL_PROFILES.includes(env.HARNESS_TOOL_PROFILE)) {
+    cfg.toolProfile = env.HARNESS_TOOL_PROFILE;
+  }
+  if (typeof env.HARNESS_TOOL_GATING_CUSTOM === "string" && env.HARNESS_TOOL_GATING_CUSTOM !== "") {
+    cfg.toolGatingCustom = env.HARNESS_TOOL_GATING_CUSTOM.split(",").map((s) => s.trim()).filter(Boolean);
   }
   if (env.HARNESS_SECRETS_ALLOW_FILE != null && env.HARNESS_SECRETS_ALLOW_FILE !== "") {
     cfg.secrets.allowSecretToFile = env.HARNESS_SECRETS_ALLOW_FILE !== "false" && env.HARNESS_SECRETS_ALLOW_FILE !== "0";

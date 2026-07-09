@@ -36,6 +36,10 @@
   "singleUser": true,
   "_toolGating": "scoperta tool per modelli piccoli. 'off' (nessun effetto) · 'discover' (le meta-tool esistono, niente nascosto) · 'gated' (set-attivo curato che nasconde la coda lunga, regime SLM; il modello riscopre con find_tool/open_category). Per un modello grande → 'off'.",
   "toolGating": "gated",
+  "_toolProfile": "QUANTI tool restano attivi quando toolGating='gated' (ORTOGONALE al modo). 'core' (~8: core-pi+note, NO meta → nessuna riscoperta, floor/test/free-tier) · 'minimal' (~15: core-pi completo+note/jot+meta → il modello capace riscopre il resto: profilo DISCRIMINANTE) · 'standard' (~30 = ESSENTIAL, DEFAULT: flusso completo, niente not-found anche per un 9B) · 'full' (tutti i registrati) · 'custom' (usa toolGatingCustom). Env HARNESS_TOOL_PROFILE.",
+  "toolProfile": "standard",
+  "_toolGatingCustom": "Lista-nomi dei tool da tenere attivi quando toolProfile='custom' (altrimenti ignorata). Array di stringhe; nomi non registrati scartati. Env HARNESS_TOOL_GATING_CUSTOM = CSV (es. 'bash,read,write,note').",
+  "toolGatingCustom": [],
   "_gathering": "QUANTO è forzato il 'guarda l'ordine dei task prima di entrare a fuoco' (focus-gathering v1). mode: 'delegated' (il modello decide quando consultare get_execution_order — lean), 'inject' (l'harness allega la vista ordinata nel focus_hint — anti-cecità, consigliato per SLM piccoli), 'require' (enter_focus bloccato finché non chiami get_execution_order). minTasksForForce: inject/require agiscono SOLO con ≥ N task open (sotto-soglia → no-op). Per Sonnet: 'delegated' basta.",
   "gathering": {
     "mode": "delegated",

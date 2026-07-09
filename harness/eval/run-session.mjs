@@ -67,18 +67,36 @@ function makeHeadlessUI() {
   };
 }
 
-// DEBUG (gated): intercetta la fetch HTTP reale verso il provider API → status+body veri (pi ingoia gli errori).
-if (process.env.EVAL_DEBUG_EVENTS) {
+// Cattura HTTP leggera SEMPRE attiva: n° di SCHEMI-TOOL realmente inviati al provider = ground-truth del gating/profilo
+// (rule #14/#15: verifico che il profilo RIDUCA davvero la richiesta, non a voce). Gestisce openai-completions
+// (tools = [{type:'function',...}] → length) e google-generative-ai (tools = [{functionDeclarations:[...]}] → conta le
+// declarations). pi ingoia gli errori HTTP → l'intercetto è l'unico modo di vedere il payload reale. Log/dump: solo DEBUG.
+let __toolsSent = null;   // n° tool-schema nell'ULTIMA richiesta al provider (null = nessuna catturata)
+let __reqBodyLen = 0;
+{
   const _f = globalThis.fetch;
   globalThis.fetch = async (url, opts) => {
     const u = String(url?.url ?? url);
-    if (/groq|openrouter|completions/i.test(u)) {
+    const isProvider = /groq|openrouter|generativelanguage|api\.openai|completions|:generateContent/i.test(u);
+    if (isProvider && opts?.body) {
       try {
-        const r = await _f(url, opts);
-        const body = await r.clone().text();
-        console.error("[FETCH]", u, "→", r.status, "| reqBodyLen", (opts?.body || "").length, "| resp:", body.slice(0, 500));
-        return r;
-      } catch (e) { console.error("[FETCH-ERR]", u, String(e?.message ?? e).slice(0, 300)); throw e; }
+        const p = JSON.parse(opts.body);
+        if (Array.isArray(p?.tools)) {
+          __toolsSent = p.tools[0]?.functionDeclarations
+            ? p.tools.reduce((s, t) => s + (t.functionDeclarations?.length || 0), 0) // google-generative-ai
+            : p.tools.length;                                                         // openai-completions
+          __reqBodyLen = opts.body.length;
+        }
+      } catch { /* body non-JSON → ignora */ }
+      if (process.env.EVAL_DEBUG_EVENTS) {
+        if (process.env.EVAL_DUMP_REQ) { try { const fs = await import("node:fs"); fs.writeFileSync(process.env.EVAL_DUMP_REQ, opts?.body || ""); } catch {} }
+        try {
+          const r = await _f(url, opts);
+          const body = await r.clone().text();
+          console.error("[FETCH]", u, "→", r.status, "| tools", __toolsSent, "| reqBodyLen", __reqBodyLen, "| resp:", body.slice(0, 500));
+          return r;
+        } catch (e) { console.error("[FETCH-ERR]", u, String(e?.message ?? e).slice(0, 300)); throw e; }
+      }
     }
     return _f(url, opts);
   };
@@ -288,6 +306,11 @@ async function main() {
     // Cattura deterministica (F24/F25): quante auto-note-digest ha scritto l'harness (key `fact:_task:*`). Ground-truth
     // del "il digest ha sparato sul tool-write REALE?" (rule #14) — 0 con HARNESS_TASK_DIGEST off o se il wiring non aggancia.
     taskDigestFacts: (() => { try { return getVarsQueue().listVars({ namespace: "fact" }).filter((v) => String(v.id).startsWith("fact:_task:")).length; } catch { return null; } })(),
+    // toolsSent (rule #14/#15): n° SCHEMI-TOOL realmente inviati al provider nell'ultima richiesta HTTP — ground-truth del
+    // profilo/gating (core~8 vs standard~30 vs full~54). reqBodyLen = byte della richiesta. Verifica END-TO-END che il
+    // profilo riduca davvero la richiesta (non solo il set-attivo in memoria). null = nessuna richiesta catturata (apiError).
+    toolsSent: __toolsSent,
+    reqBodyLen: __reqBodyLen,
   };
   session.dispose();
   process.stdout.write(JSON.stringify(out) + "\n");

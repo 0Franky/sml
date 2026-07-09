@@ -20,9 +20,11 @@ import { Type } from "typebox";
 import { searchTools, toolsInCategory, listCategories, computeDefaultActive, CATEGORY_TOOLS } from "../../src/tool-gating.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 
-// off | discover | gated. Da harness-config (default `gated`, regime SLM): file `.pi/harness.config.json` o env
-// HARNESS_TOOL_GATING. Meccanismo AFFIDABILE (readFileSync), non dipende dal caricamento di `.env` (che pi non fa).
-const MODE = loadHarnessConfig().toolGating; // SSOT harness-config: enum lowercase validato (no `?? "gated"`/toLowerCase)
+// Config caricata UNA volta (SSOT harness-config, readFileSync affidabile: non dipende dal load di `.env`, che pi non fa).
+const CFG = loadHarnessConfig();
+const MODE = CFG.toolGating;         // off | discover | gated (default gated, regime SLM). Enum lowercase validato.
+const PROFILE = CFG.toolProfile;     // core|minimal|standard|full|custom (msg 1431): QUANTI tool restano attivi quando gated.
+const CUSTOM = CFG.toolGatingCustom; // lista-nomi per profile="custom".
 
 export default function (pi: ExtensionAPI) {
   if (MODE === "off") return; // opt-in: zero effetto finché non abilitato
@@ -48,7 +50,7 @@ export default function (pi: ExtensionAPI) {
   function desiredActive(): string[] {
     const all = (api.getAllTools?.() ?? []).map((t: any) => t?.name).filter(Boolean);
     const present = new Set<string>(all);
-    const out = new Set<string>(computeDefaultActive(all));
+    const out = new Set<string>(computeDefaultActive(all, { profile: PROFILE, custom: CUSTOM }));
     for (const n of revealed) if (present.has(n)) out.add(n);
     return [...out];
   }

@@ -1,7 +1,7 @@
 /**
  * tool-gating — unit test della logica di scoperta tool (utente msg 801/803/804).
  */
-import { categorizeTool, searchTools, toolsInCategory, listCategories, computeDefaultActive, ESSENTIAL_TOOLS, classifyToolError } from "../../src/tool-gating.mjs";
+import { categorizeTool, searchTools, toolsInCategory, listCategories, computeDefaultActive, ESSENTIAL_TOOLS, classifyToolError, TOOL_PROFILES, PROFILE_CORE, profileToolNames } from "../../src/tool-gating.mjs";
 
 let pass = 0, fail = 0;
 function ok(cond, msg) { if (cond) { pass++; } else { fail++; console.error("  ✗ " + msg); } }
@@ -116,6 +116,53 @@ ok(searchTools(ITEMS, "secret", { limit: 1 }).length === 1, "search: limit rispe
   ok(classifyToolError("set_var", ["set_var"], ["set_var"]) === "execution", "classify: attivo → execution (errore reale)");
   ok(classifyToolError("request_secret", ["set_var"], ["set_var", "request_secret"]) === "reveal", "classify: registrato ma nascosto → reveal");
   ok(classifyToolError("ghost_tool", ["set_var"], ["set_var"]) === "unknown", "classify: nome allucinato → unknown");
+}
+
+// ── PROFILI del set-attivo (msg 1431/1433): asse ORTOGONALE ai modi. core/minimal/standard/full/custom ──
+{
+  const all = ["bash", "read", "write", "edit", "ls", "grep", "find", "str_replace", "create", "multiedit", "note", "jot",
+    "list_secrets", "request_sink", "list_tasks", "set_var", "enter_focus", "pop_focus", "focus_status", "set_keepturns",
+    "get_conversation", "find_tool", "open_category", "list_tool_categories", "sliding_var_read", "remember_lesson"];
+
+  // retro-compat: nessun opts → standard = ESSENTIAL (comportamento storico invariato)
+  const std = computeDefaultActive(all);
+  const stdExplicit = computeDefaultActive(all, { profile: "standard" });
+  ok(JSON.stringify(std) === JSON.stringify(stdExplicit), "profili: default (no opts) === standard esplicito (retro-compat)");
+  ok(std.includes("list_secrets") && std.includes("get_conversation") && std.includes("set_keepturns"), "profili: standard = flusso completo (secret/get_conversation/set_keepturns)");
+
+  // core (~8): SOLO core-pi + note, NIENTE meta → nessuna riscoperta (floor non-discriminante)
+  const core = computeDefaultActive(all, { profile: "core" });
+  ok(core.includes("bash") && core.includes("note"), "profili: core include core-pi + note");
+  ok(!core.includes("find_tool") && !core.includes("open_category"), "profili: core NON ha meta-tool (no riscoperta = floor)");
+  ok(!core.includes("list_secrets") && !core.includes("get_conversation"), "profili: core esclude il resto");
+  ok(core.length === PROFILE_CORE.filter((n) => all.includes(n)).length, "profili: core = PROFILE_CORE ∩ presenti");
+
+  // minimal (~15): core-pi completo + note/jot + META (riscoperta) → profilo DISCRIMINANTE
+  const minimal = computeDefaultActive(all, { profile: "minimal" });
+  ok(minimal.includes("find_tool") && minimal.includes("open_category"), "profili: minimal HA le meta (riscoperta → discriminante)");
+  ok(minimal.includes("str_replace") && minimal.includes("jot"), "profili: minimal ha core-pi completo + jot");
+  ok(!minimal.includes("list_secrets") && !minimal.includes("get_conversation"), "profili: minimal nasconde la coda (riscopribile via meta)");
+  ok(core.length < minimal.length && minimal.length < std.length, "profili: core < minimal < standard (dimensione crescente)");
+
+  // full: tutti i presenti (nessun set curato)
+  const full = computeDefaultActive(all, { profile: "full" });
+  ok(full.length === all.length && all.every((n) => full.includes(n)), "profili: full = tutti i presenti");
+  ok(full.includes("sliding_var_read") && full.includes("remember_lesson"), "profili: full include anche la coda lunga");
+
+  // custom: lista esplicita ∩ presenti; nomi inesistenti scartati (difensivo)
+  const custom = computeDefaultActive(all, { profile: "custom", custom: ["bash", "jot", "ghost_inesistente"] });
+  ok(custom.includes("bash") && custom.includes("jot"), "profili: custom attiva la lista fornita");
+  ok(!custom.includes("ghost_inesistente"), "profili: custom scarta nomi non registrati");
+  ok(custom.length === 2, "profili: custom = solo i nomi presenti");
+  ok(computeDefaultActive(all, { profile: "custom" }).length === 0, "profili: custom senza lista → vuoto");
+
+  // profilo ignoto → fail-safe standard (mai rompere)
+  ok(JSON.stringify(computeDefaultActive(all, { profile: "zzz" })) === JSON.stringify(std), "profili: profilo ignoto → fail-safe standard");
+
+  // enum + profileToolNames (SSOT: standard è ESSENTIAL_TOOLS per RIFERIMENTO, non una copia)
+  ok(TOOL_PROFILES.length === 5 && TOOL_PROFILES.includes("core") && TOOL_PROFILES.includes("custom"), "profili: enum TOOL_PROFILES completo (5)");
+  ok(profileToolNames("full") === null, "profili: profileToolNames('full') = null (sentinel tutti)");
+  ok(profileToolNames("standard") === ESSENTIAL_TOOLS, "profili: profileToolNames('standard') === ESSENTIAL_TOOLS (SSOT, no copia)");
 }
 
 console.log(`\ntool-gating: ${pass} pass, ${fail} fail`);

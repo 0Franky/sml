@@ -25,6 +25,8 @@ export interface SecretsConfig {
   allowSecretToFile: boolean;
 }
 export type ToolGatingMode = "off" | "discover" | "gated";
+export type { ToolProfile } from "./tool-gating.mjs"; // SSOT: il tipo vive col valore TOOL_PROFILES in tool-gating
+import type { ToolProfile } from "./tool-gating.mjs";
 export interface HarnessConfig {
   trigger: TriggerConfig;
   messagesWindowN: number;
@@ -38,6 +40,10 @@ export interface HarnessConfig {
   autofocus: AutofocusConfig;
   secrets: SecretsConfig;
   toolGating: ToolGatingMode;
+  /** Profilo del set-attivo quando gated (ORTOGONALE al modo). Default "standard" = ESSENTIAL (storico). */
+  toolProfile: ToolProfile;
+  /** Lista-nomi per toolProfile="custom" (altrimenti []). Intersecata coi tool presenti. */
+  toolGatingCustom: string[];
 }
 export const GATHERING_MODES: GatheringMode[];
 export const AUTOFOCUS_MODES: AutofocusMode[];
