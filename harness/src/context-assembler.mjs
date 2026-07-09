@@ -32,10 +32,13 @@ const isoSec = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
 
 /** Data corrente a granularità GIORNO (ISO-8601 YYYY-MM-DD, UTC). Deterministico. È l'ANCHOR EPISTEMICO
  *  (`<current_date>`): a differenza di `<current_time>` (al secondo, volatile, per il calcolo-età) cambia solo
- *  una volta al giorno → cache-stable nel prefisso. Fornisce al modello il "quando siamo" per il ragionamento di
- *  recency/staleness — la conoscenza del modello è congelata al training-cutoff, questa riga dice che ORA è dopo.
- *  Split F/S (CLAUDE.md #11): l'harness INIETTA il fatto-data (F); ragionare su cosa IMPLICA (la mia conoscenza è
- *  vecchia → verifico invece di asserire) è la skill di TRAINING (class-temporal-awareness / epistemic-recency). */
+ *  una volta al giorno → cache-stable nel prefisso. È l'**anchor del PRESENTE-OPERATIVO**, con DUE scopi (le due
+ *  facce della stessa riga): (1) **recency** — la conoscenza del modello è congelata al training-cutoff, questa riga
+ *  dice che ORA è dopo → per i fatti volatili verifica invece di asserire; (2) **non-displacement** — se il contesto
+ *  è pieno di un'epoca (Orwell/1986), impedisce al frame dell'argomento di spostare il presente-operativo del modello
+ *  (temporal anchoring / nostalgia bias): resta nel 2026, tratta l'epoca come oggetto non come presente vissuto.
+ *  Split F/S (CLAUDE.md #11): l'harness INIETTA il fatto-data (F); ragionare su cosa IMPLICA (verifica-recency +
+ *  resta-ancorato-al-presente) è la skill di TRAINING ([[wiki/training-taxonomy/class-temporal-awareness]] facce i / i-bis). */
 const isoDate = (ms) => new Date(ms).toISOString().slice(0, 10);
 
 /**
