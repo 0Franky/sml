@@ -84,6 +84,9 @@ Principio comune: l'oracolo è **deterministico** e premia l'**esito**; i distra
 - **[NEGATIVI]** Contro-esempi dove la skill NON scatta / la risposta corretta è l'opposto o il non-agire; senza, un default fisso "passa" come hack. — #21.
 - **[NEGATIVI]** Positivi↔negativi **BILANCIATI** (non 90/10) e il negativo **non-ovvio** (non segnalato da cue lessicale). — [[../concepts/training-set-completeness-audit]] §2.
 - **[NEGATIVI]** Confine **dual-use**: su richieste legittime-ma-rischiose il gold DISCRIMINA (analisi + fermati prima del passo weaponizzato + chiedi conferma), non rifiuta in blocco. — class-prompt-injection-resistance (N8).
+- **[NEGATIVI]** ⚠️ **Anti-sycophancy simmetrico** (dal mining #5, [[class-context-over-parametric-authority]]): "fatto-utente autorevole" NON è "utente-ha-sempre-ragione" — il negativo obbligatorio è la **claim-utente SBAGLIATA** (non cedere per compiacere) accanto al **fatto-iniettato/avversariale** (non adottare ciecamente). Il gold è l'ARBITRATO verificato, non la deferenza né l'ostinazione. — analogo alla false-block bilanciata.
+- **[NEGATIVI]** ⚠️ **Fedeltà bidirezionale** (dal mining #6, [[class-instruction-fidelity-no-overreach]]): la simmetria è a 4 poli — over-reach / under-delivery / obbedienza-al-pericoloso / over-flag-sul-benigno; nessun default fisso ("aggiungi-sempre", "fai-il-minimo", "obbedisci-sempre", "segnala-sempre") deve vincere.
+- **[VERIFICA]** ⚠️ **Non-contaminazione del verificatore** (dal mining #2, [[class-independent-verification-integrity]]): quando il gold è una VERIFICA indipendente, la fixture deve permettere al verificatore di raggiungere una conclusione DIVERSA (non passargli l'expected-value del produttore) — altrimenti misura auto-conferma, non audit. Indipendenza proporzionale alla posta (non paranoia su tutto).
 
 ### TRANSFER (#19) & GERARCHIA (#20)
 - **[TRANSFER]** SEMPRE ≥3-4 domini lontani (vita quotidiana, economia/policy, ecologia, salute, business) + complessità variabile; MAI concentrato in software → altrimenti il modello **LOCALIZZA** la skill. — #19.
@@ -174,13 +177,13 @@ Tutti Y con evidenza → coerente. ≥1 N → correggi prima di dichiarare pront
 Le **aree** (backbone 16): [[area-01-organization-planning]] … [[area-16-self-evaluation-critique]] (vedi [[README]]).
 Le **classi/gerarchie** attuali (padri 👑 → figlie):
 
-- 👑 [[class-metacognitive-self-audit]] (INWARD, àudita la MENTE) → stagnation-recovery (→ focus-decompose / jot) · transfer-assumption-audit (#145) · consequence-intention-conflict (→ subgoal-hijacks-task) · confabulation-retrieval-failure · prospective-memory · domain-categorization-routing.
-- 👑 [[class-situational-awareness]] (OUTWARD, modella la SITUAZIONE — gemello del precedente) → temporal-awareness (+recency-epistemica) · harness-environment-awareness (fondamento memory-twins) · knowledge-base-curation. **Refine collegati**: domain-categorization-routing §Addendum (task-type→thinking-mode) · [[../concepts/compositional-curriculum-thinking-optimization]] §Addendum (optimize-while-implement + authoring-tags).
+- 👑 [[class-metacognitive-self-audit]] (INWARD, àudita la MENTE) → stagnation-recovery (→ focus-decompose / jot) · transfer-assumption-audit (#145) · consequence-intention-conflict (→ subgoal-hijacks-task · **anticipation-and-irreversibility** [mining #16]) · confabulation-retrieval-failure · prospective-memory · instruction-phase-clarification · **instruction-fidelity-no-overreach** [mining #6] · **independent-verification-integrity** [mining #2] · domain-categorization-routing.
+- 👑 [[class-situational-awareness]] (OUTWARD, modella la SITUAZIONE — gemello del precedente) → temporal-awareness (+recency-epistemica) · harness-environment-awareness (fondamento memory-twins) · knowledge-base-curation · **context-over-parametric-authority** (autorità-della-fonte, mining #5). **Refine collegati**: domain-categorization-routing §Addendum (task-type→thinking-mode) · [[../concepts/compositional-curriculum-thinking-optimization]] §Addendum (optimize-while-implement + authoring-tags).
 - 👑 [[class-constraint-fit-decision]] → resource-appropriate-substitution · alternative-path-under-block (→ A parità-per-misura / B best-fit-per-uso).
 - 👑 [[class-action-execution-optimization]] → async-dispatch-and-prioritization · batching-repeated-ops · decision-cache-per-block · (foglie parallelization Area-1).
 - 👑 [[class-visual-design-quality]] → frontend-ux-spacing-quality · svg-spatial-composition.
 - Safety: [[class-prompt-injection-resistance]] · [[class-non-overridable-protection]] · [[class-secret-hygiene-under-distraction]].
-- Reasoning/interazione: [[class-requirements-driven-tree-navigation]] · [[class-instruction-phase-clarification]] · [[class-scope-adaptive-knowledge-aggregation]] · [[class-domain-categorization-routing]] · [[class-sign-wrap-blindspot]].
+- Reasoning/interazione: [[class-requirements-driven-tree-navigation]] · [[class-scope-adaptive-knowledge-aggregation]] · [[class-domain-categorization-routing]] · [[class-sign-wrap-blindspot]]. *(instruction-phase-clarification / -fidelity ora sotto metacognitive-self-audit.)*
 - Metodologia trasversale (non-classe): [[../concepts/discriminative-mcq-hard-distractors]].
 
 > Aggiornare questo registry a ogni classe nuova (parte del wiring #12) → è la mappa che rende visibili le contraddizioni/gap di coerenza.

@@ -1,6 +1,6 @@
 ---
 name: class-situational-awareness
-description: Classe-PADRE (radice) di training — mantenere un MODELLO ACCURATO della propria SITUAZIONE OPERATIVA e ancorare le azioni ad esso, invece di operare in un "vuoto senza contesto". Gemello-filosofico di metacognitive-self-audit (quello àudita la MENTE dall'INTERNO; questo modella l'AMBIENTE dall'ESTERNO). Tre figlie: consapevolezza TEMPORALE (quando siamo / recency-epistemica), consapevolezza dell'AMBIENTE-HARNESS (quali tool/lane/meccanismi ho), CURAZIONE della KNOWLEDGE-BASE (generare/usare la wiki + dove collocare le cose). Gerarchia obbligatoria (regola #20).
+description: Classe-PADRE (radice) di training — mantenere un MODELLO ACCURATO della propria SITUAZIONE OPERATIVA e ancorare le azioni ad esso, invece di operare in un "vuoto senza contesto". Gemello-filosofico di metacognitive-self-audit (quello àudita la MENTE dall'INTERNO; questo modella l'AMBIENTE dall'ESTERNO). Figlie: consapevolezza TEMPORALE (quando siamo / recency-epistemica), consapevolezza dell'AMBIENTE-HARNESS (quali tool/lane/meccanismi ho), CURAZIONE della KNOWLEDGE-BASE (generare/usare la wiki + dove collocare le cose), AUTORITÀ-DELLA-FONTE (fatti-in-context freschi/utente > conoscenza parametrica stantia). Gerarchia obbligatoria (regola #20).
 type: training-class
 tags: [reasoning, metacognition, situational-awareness, grounding, area-01, area-04, parent-class, held-out]
 last_updated: 2026-07-09
@@ -30,13 +30,14 @@ last_updated: 2026-07-09
 
 > Composizione: le due famiglie **si innestano**. Es.: la memoria-prospettica (metacognitive) richiede di sapere che esistono `note`/`set_var` (harness-awareness, situational) → non puoi *salvare* ciò che non sai di poter salvare. Cross-link espliciti nelle figlie.
 
-## Le tre figlie (quale dimensione della situazione si ancora)
+## Le figlie (quale dimensione della situazione si ancora)
 
 | Figlia | Dimensione | Trigger | Doc |
 |---|---|---|---|
 | **consapevolezza TEMPORALE** | *QUANDO* siamo (data, recency-epistemica, staleness/timing) | prima di asserire un fatto volatile / usare un dato datato / decidere wait-retry | [[class-temporal-awareness]] (+ sub-skill epistemic-recency; leaf area-04 Temporal/Stale-TTL) |
 | **consapevolezza dell'AMBIENTE-HARNESS** | *DOVE / con-COSA* opero (tool, lane, meccanismi, cosa è già in context) | prima di chiamare un tool / cercare un'info / lamentare un limite | [[class-harness-environment-awareness]] (fondamento dei gemelli-memoria SAVE/RECALL) |
 | **CURAZIONE della KNOWLEDGE-BASE** | *RISPETTO a quale conoscenza / DOVE collocarla* (wiki: privata/centrale/di-progetto) | quando emerge/serve conoscenza durevole da collocare o consultare | [[class-knowledge-base-curation]] (oracolo crispo: regole-di-placement date in fixture) |
+| **AUTORITÀ-DELLA-FONTE** | *RISPETTO a quale conoscenza è AUTOREVOLE* (fatto-in-context fresco/dall'utente vs memoria parametrica stantia) | conflitto tra un fatto in-context e la credenza interna / dubbio-di-dominio dell'utente | [[class-context-over-parametric-authority]] (mining #5; compone con temporal-awareness [staleness] e confabulation [non-inventare]) |
 
 > Se una figlia cresce (es. temporal-awareness → epistemic-recency come sotto-classe propria) si **specializza ricorsivamente** (regola #20), come `stagnation-recovery` sotto l'altro padre.
 
@@ -59,4 +60,4 @@ Ogni figlia ha i propri generatori e **fixture self-contained** (regola #22: fat
 - **Decontaminazione**: le istanze osservate (FIND-7, F23, F33, `EVAL_PLANT_PREF`) restano **held-out** → misurano il transfer, non la memorizzazione.
 
 ## Links
-[[class-temporal-awareness]] · [[class-harness-environment-awareness]] · [[class-knowledge-base-curation]] · [[class-metacognitive-self-audit]] (gemello-INWARD) · [[class-domain-categorization-routing]] (legge il TIPO della situazione-task) · [[class-prospective-memory]] / [[class-confabulation-retrieval-failure]] (memoria — compongono con harness-awareness) · [[../concepts/compositional-curriculum-thinking-optimization]] · [[area-01-organization-planning]] · [[area-04-context-metacognition]] · [[../feedback_reward_hacking_principle]] · [[../feedback_intelligence_gap_to_training_class]] · [[../feedback_transfer_always_cross_domain]] · [[../harness-experiment-log]]
+[[class-temporal-awareness]] · [[class-harness-environment-awareness]] · [[class-knowledge-base-curation]] · [[class-context-over-parametric-authority]] · [[class-metacognitive-self-audit]] (gemello-INWARD) · [[class-domain-categorization-routing]] (legge il TIPO della situazione-task) · [[class-prospective-memory]] / [[class-confabulation-retrieval-failure]] (memoria — compongono con harness-awareness) · [[../concepts/compositional-curriculum-thinking-optimization]] · [[area-01-organization-planning]] · [[area-04-context-metacognition]] · [[../feedback_reward_hacking_principle]] · [[../feedback_intelligence_gap_to_training_class]] · [[../feedback_transfer_always_cross_domain]] · [[../harness-experiment-log]]

@@ -1,6 +1,6 @@
 ---
 name: class-metacognitive-self-audit
-description: Classe-PADRE (radice) di training — auditare il PROPRIO ragionamento/stato-cognitivo contro il ground-truth invece di fidarsi del primo-passo. Cinque figlie: audit-del-progresso (stagnation-recovery), audit-delle-assunzioni (transfer-assumption-audit), audit-coerenza-mezzi-fini (consequence-intention-conflict), audit-della-provenienza / RECALL (confabulation-retrieval-failure), memoria-prospettica / SAVE (prospective-memory). Gerarchia obbligatoria (regola #20).
+description: Classe-PADRE (radice) di training — auditare il PROPRIO ragionamento/stato-cognitivo contro il ground-truth invece di fidarsi del primo-passo. Figlie: audit-del-progresso (stagnation-recovery), audit-delle-assunzioni (transfer-assumption-audit), audit-coerenza-mezzi-fini (consequence-intention-conflict), audit-della-provenienza / RECALL (confabulation-retrieval-failure), memoria-prospettica / SAVE (prospective-memory), audit-presa-in-carico (instruction-phase-clarification), audit-impulso-esecutivo / fedeltà (instruction-fidelity-no-overreach), audit-integrità-della-verifica (independent-verification-integrity). Gerarchia obbligatoria (regola #20).
 type: training-class
 tags: [reasoning, metacognition, self-audit, anti-reward-hacking, area-03, area-04, parent-class, held-out]
 last_updated: 2026-07-05
@@ -8,7 +8,7 @@ last_updated: 2026-07-05
 
 # Classe-PADRE (radice) — METACOGNITIVE SELF-AUDIT
 
-> **Ruolo**: nodo-radice della gerarchia di training per la **metacognizione**. Regola #20 (utente msg 1195): le classi si costruiscono SEMPRE gerarchiche (padre→figlia) e una figlia si specializza ulteriormente quando lo merita. Questo è il padre che unifica cinque skill di "audit del proprio ragionamento/stato-cognitivo" emerse separatamente (dai filoni #145, F16, F23).
+> **Ruolo**: nodo-radice della gerarchia di training per la **metacognizione**. Regola #20 (utente msg 1195): le classi si costruiscono SEMPRE gerarchiche (padre→figlia) e una figlia si specializza ulteriormente quando lo merita. Questo è il padre che unifica le skill di "audit del proprio ragionamento/stato-cognitivo" emerse separatamente (dai filoni #145, F16, F23 + mining Stage-2 #2/#6).
 > **Origine**: le tre figlie nascono da modi-di-fallimento reali del modello (o miei) — vedi [[../harness-experiment-log]] (F14) + [[../feedback_intelligence_gap_to_training_class]].
 > **Gemello-filosofico** (twin di pari livello, 2026-07-09): [[class-situational-awareness]]. Asse **interno↔esterno**: questo padre àudita il proprio **ragionamento/stato-cognitivo** (INWARD); l'altro modella la propria **situazione/ambiente** (OUTWARD — quando siamo / che tool ho / che knowledge-base). Le due famiglie **compongono** (es. la memoria-prospettica qui richiede la harness-awareness lì: non salvi ciò che non sai di poter salvare).
 
@@ -20,7 +20,7 @@ last_updated: 2026-07-05
 
 **Perché padre + figlie** (regola #20): le tre skill condividono il trigger metacognitivo ("fermati e verifica te stesso") — impararlo UNA volta e poi specializzare *cosa* auditare (i) evita segnale ridondante, (ii) riflette la relazione reale (sono facce dello stesso muscolo), (iii) è composizionale ([[../concepts/compositional-curriculum-thinking-optimization]]).
 
-## Le cinque figlie (cosa si audita)
+## Le figlie (cosa si audita)
 
 | Figlia | Oggetto dell'audit | Trigger | Doc |
 |---|---|---|---|
@@ -29,8 +29,11 @@ last_updated: 2026-07-05
 | **audit della COERENZA mezzi-fini** | "l'azione serve davvero l'intenzione, o la contraddice (auto-sconfiggente)?" | prima di committare un'azione non banale | [[class-consequence-intention-conflict]] |
 | **audit della PROVENIENZA (RECALL)** | "questo dato ce l'ho DAVVERO, o lo sto inventando?" | recupero fallito / richiesta di un fatto specifico incerto | [[class-confabulation-retrieval-failure]] (F16 held-out) |
 | **memoria PROSPETTICA (SAVE)** | "questa info mi servirà oltre la finestra? → la salvo ORA prima di perderla" | info con rilevanza futura in uscita dal contesto | [[class-prospective-memory]] (F23+F33 held-out; gemella-SAVE di confabulation-retrieval; caso-duro actionable-vs-arbitrary) |
+| **audit della PRESA-IN-CARICO** | "ho abbastanza per procedere / quale mossa conversazionale?" | ricezione di una richiesta (ambigua/chiara/incompleta) | [[class-instruction-phase-clarification]] (msg 1317) |
+| **audit dell'IMPULSO-ESECUTIVO (fedeltà)** | "sto facendo ESATTAMENTE ciò che è chiesto, o aggiungo/tolgo?" | esecuzione di una spec precisa | [[class-instruction-fidelity-no-overreach]] (mining #6; twin di instruction-phase-clarification, asse ambiguo↔preciso) |
+| **audit dell'INTEGRITÀ-DELLA-VERIFICA** | "questo atteso l'ho derivato io, o me l'ha passato chi verifico?" | verifica indipendente di un artefatto altrui/proprio | [[class-independent-verification-integrity]] (mining #2; gemella-provenienza di confabulation-retrieval, lato VERIFICA) |
 
-> `stagnation-recovery` è già essa stessa un padre (specializzazione ricorsiva, regola #20): dimostra il pattern annidato che la regola prevede.
+> `stagnation-recovery` è già essa stessa un padre (specializzazione ricorsiva, regola #20): dimostra il pattern annidato che la regola prevede. Anche `consequence-intention-conflict` è ora padre → figlia [[class-anticipation-and-irreversibility]] (anticipo/irreversibilità, mining #16).
 
 ## Reward (condiviso, ANCORATO all'OUTCOME)
 
@@ -47,4 +50,4 @@ Ogni figlia ha i propri generatori (i disguised di [[class-sign-wrap-blindspot]]
 - **Decontaminazione**: le istanze osservate (#145, il pre-flight) restano **held-out** → misurano il transfer, non la memorizzazione.
 
 ## Links
-[[class-situational-awareness]] (gemello-OUTWARD) · [[class-stagnation-recovery]] · [[gold-example-transfer-assumption-audit]] · [[class-consequence-intention-conflict]] · [[class-confabulation-retrieval-failure]] · [[class-prospective-memory]] · [[class-domain-categorization-routing]] · [[../concepts/compositional-curriculum-thinking-optimization]] · [[area-03-reasoning-scientific-method]] · [[area-04-context-metacognition]] · [[../feedback_reward_hacking_principle]] · [[../feedback_intelligence_gap_to_training_class]] · [[../feedback_transfer_always_cross_domain]]
+[[class-situational-awareness]] (gemello-OUTWARD) · [[class-stagnation-recovery]] · [[gold-example-transfer-assumption-audit]] · [[class-consequence-intention-conflict]] · [[class-confabulation-retrieval-failure]] · [[class-prospective-memory]] · [[class-instruction-phase-clarification]] · [[class-instruction-fidelity-no-overreach]] · [[class-independent-verification-integrity]] · [[class-domain-categorization-routing]] · [[../concepts/compositional-curriculum-thinking-optimization]] · [[area-03-reasoning-scientific-method]] · [[area-04-context-metacognition]] · [[../feedback_reward_hacking_principle]] · [[../feedback_intelligence_gap_to_training_class]] · [[../feedback_transfer_always_cross_domain]]
