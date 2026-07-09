@@ -7,6 +7,10 @@ dist/
 sandbox/_run/
 # pi runtime state (vars.db datastore, created at runtime — not source)
 .pi/state/
+# driver headless (drive-qwen.mjs): dir di stato ISOLATA per-sessione (test, mai sorgente)
+.pi/state-drive/
+# turn-trace: payload per-turno (diagnostica dev, non sorgente)
+.pi/trace/
 # eval: dataset scaricato + report generati (artefatti derivati, non sorgente)
 eval/data/
 # OS
