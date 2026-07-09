@@ -41,8 +41,8 @@ function hookKeep(vq, usage) {
   const native = makeNative(8);
   const keep = hookKeep(vq, { tokens: 5000, contextWindow: 100000 });
   const windowed = windowNativeMessages(native, { keepTurns: keep });
-  ok(keep === 9999, "fill basso → keep=highKeep (vanilla)");
-  ok(userTurns(windowed) === 8, "fill basso → TUTTI gli 8 turni-utente restano nell'array nativo (regime vanilla)");
+  ok(keep === 40, "fill basso → keep=highKeep CAPPATO alla finestra (40 su 100K)"); // cap E16: floor(0.8·100000/2000)
+  ok(userTurns(windowed) === 8, "fill basso → TUTTI gli 8 turni-utente restano nell'array nativo (cap 40 > 8, regime vanilla)");
   vq.close();
 }
 
@@ -76,6 +76,19 @@ function hookKeep(vq, usage) {
   const windowed = windowNativeMessages(native, { keepTurns: keep });
   ok(keep === 3, "override modello (3) VINCE sull'adattivo anche a fill basso");
   ok(userTurns(windowed) === 3, "override → array finestrato a 3 turni (intento esplicito del modello rispettato)");
+  vq.close();
+}
+
+// CAP anti-stallo (fix E16, msg 1448 — REGRESSION del finding "il 9B/num_ctx=16384 si BLOCCA in adaptive-ON"): finestra
+// PICCOLA + fill basso → keep degrada a LOW (non highKeep=9999) → l'array nativo NON cresce oltre la finestra fisica →
+// niente stallo. PRIMA del cap: keep=9999 → array illimitato su una finestra da 16K → Ollama si bloccava (E16).
+{
+  const vq = new VarsQueue(":memory:");
+  const native = makeNative(50);                                     // conversazione lunga (accumulo reale)
+  const keep = hookKeep(vq, { tokens: 2000, contextWindow: 16384 }); // fill basso MA finestra piccola (il caso 9B)
+  const windowed = windowNativeMessages(native, { keepTurns: keep });
+  ok(keep === LOW, "cap-regression: finestra 16K + fill basso → keep degrada a LOW (no highKeep illimitato)");
+  ok(userTurns(windowed) === LOW, "cap-regression: array finestrato a LOW anche a fill basso → non supera la finestra fisica (no stallo 9B)");
   vq.close();
 }
 

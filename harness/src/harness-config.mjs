@@ -61,7 +61,12 @@ export const DEFAULT_HARNESS_CONFIG = {
   //   Env HARNESS_ADAPTIVE_CONTEXT (bool) / HARNESS_ADAPTIVE_LOW_THRESHOLD ([0,1]) / HARNESS_ADAPTIVE_HIGH_KEEP (≥1).
   //   ⚠ Il VALORE dipende dal modello che salva i fatti in autonomia (F33: 9B no anche incoraggiato; ≥27B forse) → la
   //   cattura DETERMINISTICA resta la rete. Perciò OFF di default + "provala e misura se il tuo modello è capace".
-  adaptiveContext: { enabled: false, lowThreshold: 0.5, highKeep: 9999 },
+  //   CAP anti-stallo (fix E16, msg 1448): highKeep NON deve mai far superare all'array nativo la finestra FISICA
+  //   (il 9B/num_ctx=16384 si BLOCCAVA con highKeep=9999). `safetyPct` = frazione max della finestra che il regime
+  //   vanilla può occupare; `avgTurnTokens` = stima token/turno per derivare il cap = safetyPct·finestra/avgTurnTokens.
+  //   Su finestra piccola il cap scende fino a nativeKeepTurns (adaptive→sempre-compresso, SAFE); su finestra grande
+  //   è enorme → highKeep resta effettivo. Env HARNESS_ADAPTIVE_SAFETY_PCT ([0,1]) / HARNESS_ADAPTIVE_AVG_TURN_TOKENS (≥1).
+  adaptiveContext: { enabled: false, lowThreshold: 0.5, highKeep: 9999, safetyPct: 0.8, avgTurnTokens: 2000 },
   // laneMemoryHint (AWARENESS-first, utente msg 830): inietta un blocco <how_memory_works> che SPIEGA al modello
   // piccolo che vede 1 solo messaggio per volta e che le lane (<messages_with_user>, <last_tool_calls>, …) SONO la
   // sua memoria, con una checklist su come ragionare. true (DEFAULT ON, regime SLM: "già configurarlo"); false per
@@ -161,12 +166,14 @@ function applyAutofocus(dst, src) {
   if (typeof src.mode === "string" && AUTOFOCUS_MODES.includes(src.mode)) dst.mode = src.mode;
 }
 
-/** Applica i campi `adaptiveContext` validi da `src` su `dst` (in place). enabled boolean · lowThreshold [0,1] · highKeep ≥1. */
+/** Applica i campi `adaptiveContext` validi da `src` su `dst` (in place). enabled boolean · lowThreshold [0,1] · highKeep ≥1 · safetyPct [0,1] · avgTurnTokens ≥1. */
 function applyAdaptiveContext(dst, src) {
   if (!src || typeof src !== "object") return;
   if (typeof src.enabled === "boolean") dst.enabled = src.enabled;
   if (typeof src.lowThreshold === "number" && Number.isFinite(src.lowThreshold) && src.lowThreshold >= 0 && src.lowThreshold <= 1) dst.lowThreshold = src.lowThreshold;
   if (typeof src.highKeep === "number" && Number.isFinite(src.highKeep) && src.highKeep >= 1) dst.highKeep = Math.floor(src.highKeep);
+  if (typeof src.safetyPct === "number" && Number.isFinite(src.safetyPct) && src.safetyPct > 0 && src.safetyPct <= 1) dst.safetyPct = src.safetyPct;
+  if (typeof src.avgTurnTokens === "number" && Number.isFinite(src.avgTurnTokens) && src.avgTurnTokens >= 1) dst.avgTurnTokens = Math.floor(src.avgTurnTokens);
 }
 
 /** Applica i campi `secrets` validi da `src` su `dst` (in place). mode fuori-enum → ignorato (resta default). */
@@ -276,6 +283,10 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
   if (Number.isFinite(adLow) && adLow >= 0 && adLow <= 1) cfg.adaptiveContext.lowThreshold = adLow;
   const adHigh = Number(env.HARNESS_ADAPTIVE_HIGH_KEEP);
   if (Number.isFinite(adHigh) && adHigh >= 1) cfg.adaptiveContext.highKeep = Math.floor(adHigh);
+  const adSafety = Number(env.HARNESS_ADAPTIVE_SAFETY_PCT);
+  if (Number.isFinite(adSafety) && adSafety > 0 && adSafety <= 1) cfg.adaptiveContext.safetyPct = adSafety;
+  const adAvgTurn = Number(env.HARNESS_ADAPTIVE_AVG_TURN_TOKENS);
+  if (Number.isFinite(adAvgTurn) && adAvgTurn >= 1) cfg.adaptiveContext.avgTurnTokens = Math.floor(adAvgTurn);
   if (typeof env.HARNESS_PRESSURE_DRIVER === "string" && PRESSURE_DRIVERS.includes(env.HARNESS_PRESSURE_DRIVER)) {
     cfg.trigger.pressureDriver = env.HARNESS_PRESSURE_DRIVER; // A2: quale asse guida il firing (default "max")
   }

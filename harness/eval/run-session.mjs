@@ -27,6 +27,7 @@ import {
   AuthStorage, ModelRegistry, createAgentSession, DefaultResourceLoader, SessionManager,
 } from "@earendil-works/pi-coding-agent";
 import { loadGeminiKeys, pickKey } from "./gemini-keys.mjs"; // SSOT multi-key (rule #16): rotazione per-config via EVAL_KEY_INDEX
+import { fetchWithRotation } from "./key-rotation.mjs"; // rotazione IN-PROCESS on-429/5xx (msg 1448, pattern run-base-probe)
 import { getConversationStore, getVarsQueue } from "../src/state-db.mjs"; // F22: registra i turni-USER nel path SDK + legge la meta eviction
 import { convIdFor } from "../src/session-context.mjs"; // convId della sessione (registrato da conversation-capture su session_start)
 import { EVICTION_ORDINAL_META } from "../src/meta-keys.mjs"; // F22: per leggere se l'eviction-checkpoint ha girato (guardia di regressione)
@@ -77,38 +78,64 @@ let __reqBodyLen = 0;
 // VANILLA (keepTurns alto) l'array cresce coi turni; in regime COMPRESSO (keepTurns basso) resta piccolo. maxMsgs alto
 // + minMsgs basso nella STESSA sessione = l'adaptive è passato da vanilla a compresso (la transizione osservata).
 let __msgsLast = null, __msgsMax = 0, __msgsMin = null;
+let __keyRotations = 0;   // n° rotazioni-chiave scattate (ground-truth rule #15: verifico che la rotazione FIRI davvero)
+
+// --- Rotazione multi-key on-429/5xx (utente msg 1448): STESSO meccanismo di run-base-probe.mjs chat() (retry+backoff+
+// chiave-SUCCESSIVA) — NON reinventato. L'interceptor è il punto dove pi fa la fetch al provider, quindi la ri-eseguiamo
+// con la chiave dopo finché il provider smette di rate-limitare (aggira la quota per-chiave). Loader SSOT: loadGeminiKeys
+// (Gemini) / loadEnvKeys (openai-compat). La chiave si sostituisce nell'header giusto: x-goog-api-key per Gemini (SDK
+// @google/genai la mette lì, verificato) · Authorization: Bearer per openai-compat. Con 1 sola chiave la rotazione è
+// no-op ma il retry+backoff copre comunque i 5xx transitori (identico a run-base-probe). Ollama (locale) → 0 chiavi → skip.
+let __rotKeys = null; // lazy + cached (evita problemi di import-order all'avvio del modulo)
+async function getRotKeys() {
+  if (__rotKeys) return __rotKeys;
+  try {
+    if (PROVIDER === "ollama") { __rotKeys = []; }
+    else if (PROVIDER === "openai" || PROVIDER === "groq" || PROVIDER === "openrouter") {
+      if (process.env.OPENAI_API_KEY) { __rotKeys = [process.env.OPENAI_API_KEY]; } // key esplicita singola → no rotazione
+      else {
+        const { loadEnvKeys } = await import("./env-keys.mjs");
+        const baseUrl = process.env.OPENAI_BASE_URL || (PROVIDER === "openrouter" ? "https://openrouter.ai/api/v1" : "https://api.groq.com/openai/v1");
+        const prefix = process.env.KEYS_PREFIX || (PROVIDER === "openrouter" || /openrouter/i.test(baseUrl) ? "OPENROUTER" : "GROQ");
+        __rotKeys = loadEnvKeys(prefix);
+      }
+    } else { __rotKeys = loadGeminiKeys(); }
+  } catch { __rotKeys = []; }
+  return __rotKeys || [];
+}
+const ROT_START = Number.parseInt(process.env.EVAL_KEY_INDEX ?? "0", 10) || 0; // stessa base di loadKey → coerenza
+const ROT_MAX = Number(process.env.EVAL_ROT_MAX_RETRIES || 6); // max retry (attempt 0..MAX, come run-base-probe)
 {
   const _f = globalThis.fetch;
   globalThis.fetch = async (url, opts) => {
     const u = String(url?.url ?? url);
     const isProvider = /groq|openrouter|generativelanguage|api\.openai|completions|:generateContent/i.test(u);
-    if (isProvider && opts?.body) {
-      try {
-        const p = JSON.parse(opts.body);
-        if (Array.isArray(p?.tools)) {
-          __toolsSent = p.tools[0]?.functionDeclarations
-            ? p.tools.reduce((s, t) => s + (t.functionDeclarations?.length || 0), 0) // google-generative-ai
-            : p.tools.length;                                                         // openai-completions
-          __reqBodyLen = opts.body.length;
-        }
-        const msgs = Array.isArray(p?.messages) ? p.messages : (Array.isArray(p?.contents) ? p.contents : null); // openai / gemini
-        if (msgs) {
-          __msgsLast = msgs.length;
-          if (__msgsLast > __msgsMax) __msgsMax = __msgsLast;
-          if (__msgsMin == null || __msgsLast < __msgsMin) __msgsMin = __msgsLast;
-        }
-      } catch { /* body non-JSON → ignora */ }
-      if (process.env.EVAL_DEBUG_EVENTS) {
-        if (process.env.EVAL_DUMP_REQ) { try { const fs = await import("node:fs"); fs.writeFileSync(process.env.EVAL_DUMP_REQ, opts?.body || ""); } catch {} }
-        try {
-          const r = await _f(url, opts);
-          const body = await r.clone().text();
-          console.error("[FETCH]", u, "→", r.status, "| tools", __toolsSent, "| reqBodyLen", __reqBodyLen, "| resp:", body.slice(0, 500));
-          return r;
-        } catch (e) { console.error("[FETCH-ERR]", u, String(e?.message ?? e).slice(0, 300)); throw e; }
+    if (!(isProvider && opts?.body)) return _f(url, opts);
+    try {
+      const p = JSON.parse(opts.body);
+      if (Array.isArray(p?.tools)) {
+        __toolsSent = p.tools[0]?.functionDeclarations
+          ? p.tools.reduce((s, t) => s + (t.functionDeclarations?.length || 0), 0) // google-generative-ai
+          : p.tools.length;                                                         // openai-completions
+        __reqBodyLen = opts.body.length;
       }
-    }
-    return _f(url, opts);
+      const msgs = Array.isArray(p?.messages) ? p.messages : (Array.isArray(p?.contents) ? p.contents : null); // openai / gemini
+      if (msgs) {
+        __msgsLast = msgs.length;
+        if (__msgsLast > __msgsMax) __msgsMax = __msgsLast;
+        if (__msgsMin == null || __msgsLast < __msgsMin) __msgsMin = __msgsLast;
+      }
+    } catch { /* body non-JSON → ignora */ }
+    if (process.env.EVAL_DUMP_REQ) { try { const fs = await import("node:fs"); fs.writeFileSync(process.env.EVAL_DUMP_REQ, opts?.body || ""); } catch {} }
+    // fetch CON rotazione on-429/5xx (modulo key-rotation, pattern run-base-probe): attempt 0 = chiave corrente, poi
+    // chiave-successiva + backoff. onRotate incrementa il ground-truth __keyRotations (rule #15).
+    return fetchWithRotation({
+      fetchFn: _f, url, opts, u, keys: await getRotKeys(), start: ROT_START, max: ROT_MAX, sleep,
+      onRotate: () => { __keyRotations++; },
+      onAttempt: process.env.EVAL_DEBUG_EVENTS
+        ? async (attempt, res) => { try { const body = await res.clone().text(); console.error("[FETCH]", u, "→", res.status, "| tools", __toolsSent, "| reqBodyLen", __reqBodyLen, "| attempt", attempt, "| resp:", body.slice(0, 300)); } catch {} }
+        : undefined,
+    });
   };
 }
 
@@ -131,7 +158,7 @@ async function main() {
   } else if (PROVIDER === "openai" || PROVIDER === "groq" || PROVIDER === "openrouter") {
     // Provider OpenAI-compatible via API (Groq/OpenRouter/…) — HARNESS-IN-THE-LOOP: gira il modello capace ATTRAVERSO
     // il nostro harness (discriminante base-model, utente msg 1423 "quale usa meglio il nostro harness"). Key da .env
-    // via env-keys (KEYS_PREFIX o auto GROQ/OPENROUTER); rotazione a monte se servisse (per ora 1 key → pacing).
+    // via env-keys (KEYS_PREFIX o auto GROQ/OPENROUTER); l'interceptor RUOTA le chiavi on-429/5xx (msg 1448, vedi getRotKeys).
     const baseUrl = (process.env.OPENAI_BASE_URL
       || (PROVIDER === "openrouter" ? "https://openrouter.ai/api/v1" : "https://api.groq.com/openai/v1")).replace(/\/+$/, "");
     const ctx = Number(process.env.MODEL_CTX || 131072);
@@ -324,6 +351,9 @@ async function main() {
     // msgs* (rule #15): n° messaggi NATIVI nelle richieste HTTP della sessione. maxMsgs≫minMsgs = adaptive-context ha
     // transitato vanilla→compresso (keepTurns alto→basso). Con adaptive OFF resta ~costante (keepTurns fisso).
     msgsLast: __msgsLast, msgsMax: __msgsMax, msgsMin: __msgsMin,
+    // keyRotations (msg 1448, ground-truth rule #15): quante volte la rotazione multi-key è scattata (429/5xx). >0 =
+    // la sessione ha superato un rate-limit ruotando chiave (aggira la quota free per-key); 0 = nessun limite colpito.
+    keyRotations: __keyRotations,
   };
   session.dispose();
   process.stdout.write(JSON.stringify(out) + "\n");

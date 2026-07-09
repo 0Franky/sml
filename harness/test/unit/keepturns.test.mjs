@@ -68,29 +68,49 @@ const DEF = loadHarnessConfig().nativeKeepTurns; // SSOT — niente literal dupl
   vq.close();
 }
 
-// 7) adaptiveKeepTurns (utente msg 1434): fill<soglia → highKeep (vanilla); fill≥soglia → lowKeep (compresso) --------
+// 7) adaptiveKeepTurns (utente msg 1434 + cap E16 msg 1448): fill<soglia → highKeep CAPPATO; fill≥soglia → lowKeep --------
 {
-  const cfg = { lowThreshold: 0.5, highKeep: 9999 };
+  const cfg = { lowThreshold: 0.5, highKeep: 9999 }; // safetyPct/avgTurnTokens → default 0.8 / 2000
   const LOW = 6;
-  ok(adaptiveKeepTurns({ tokens: 1000, contextWindow: 100000 }, cfg, LOW) === 9999, "adaptive: fill 1% < soglia → highKeep (vanilla)");
+  // cap su finestra 100K = floor(0.8·100000/2000) = 40 → highKeep effettivo = min(9999, 40) = 40
+  ok(adaptiveKeepTurns({ tokens: 1000, contextWindow: 100000 }, cfg, LOW) === 40, "adaptive: fill 1% < soglia → highKeep CAPPATO alla finestra (40)");
   ok(adaptiveKeepTurns({ tokens: 60000, contextWindow: 100000 }, cfg, LOW) === LOW, "adaptive: fill 60% ≥ soglia → lowKeep (compresso)");
   ok(adaptiveKeepTurns({ tokens: 50000, contextWindow: 100000 }, cfg, LOW) === LOW, "adaptive: fill == soglia (50%) → lowKeep (>=)");
-  // fail-safe → highKeep (parti VANILLA, come richiesto)
-  ok(adaptiveKeepTurns(undefined, cfg, LOW) === 9999, "adaptive: usage undefined → highKeep (fail-safe vanilla)");
-  ok(adaptiveKeepTurns({ tokens: null, contextWindow: 100000 }, cfg, LOW) === 9999, "adaptive: tokens null → highKeep");
-  ok(adaptiveKeepTurns({ tokens: 5000, contextWindow: null }, cfg, LOW) === 9999, "adaptive: contextWindow null → highKeep");
+  // fail-safe SENZA finestra nota → highKeep pieno (no cap derivabile)
+  ok(adaptiveKeepTurns(undefined, cfg, LOW) === 9999, "adaptive: usage undefined → highKeep (fail-safe, no finestra)");
+  ok(adaptiveKeepTurns({ tokens: 5000, contextWindow: null }, cfg, LOW) === 9999, "adaptive: contextWindow null → highKeep (no cap)");
   ok(adaptiveKeepTurns({ tokens: 5000, contextWindow: 0 }, cfg, LOW) === 9999, "adaptive: contextWindow 0 → highKeep (no div0)");
+  // finestra nota ma tokens non-finito (primi turni) → vanilla CAPPATO (non highKeep pieno)
+  ok(adaptiveKeepTurns({ tokens: null, contextWindow: 100000 }, cfg, LOW) === 40, "adaptive: tokens null + finestra → highKeep CAPPATO (40)");
   // outputReservePct: riserva riduce il denom → il fill effettivo sale → si comprime prima
   ok(adaptiveKeepTurns({ tokens: 30000, contextWindow: 100000 }, cfg, LOW, 0.5) === LOW, "adaptive: reserve 0.5 → 30%/(50%)=60% ≥ soglia → lowKeep");
-  ok(adaptiveKeepTurns({ tokens: 30000, contextWindow: 100000 }, cfg, LOW, 0) === 9999, "adaptive: reserve 0 → 30% < soglia → highKeep");
+  ok(adaptiveKeepTurns({ tokens: 30000, contextWindow: 100000 }, cfg, LOW, 0) === 40, "adaptive: reserve 0 → 30% < soglia → highKeep CAPPATO (40)");
+}
+
+// 7b) CAP anti-stallo (fix E16, msg 1448): il regime vanilla non supera safetyPct della finestra FISICA + configurabile
+{
+  const LOW = 6;
+  const cfg = { lowThreshold: 0.5, highKeep: 9999 };
+  // finestra PICCOLA (16384 = il caso 9B che si BLOCCAVA): cap = floor(0.8·16384/2000) = 6 → effHigh = min(9999,6) = 6 = LOW
+  //   → l'adaptive degrada a "sempre compresso" (SAFE, niente stallo)
+  ok(adaptiveKeepTurns({ tokens: 100, contextWindow: 16384 }, cfg, LOW) === LOW, "cap: finestra piccola (16K) → highKeep cappato a LOW (no stallo)");
+  // finestra GRANDE (1M): cap = floor(0.8·1e6/2000) = 400 → effHigh = min(9999,400) = 400 (vanilla ampio)
+  ok(adaptiveKeepTurns({ tokens: 100, contextWindow: 1000000 }, cfg, LOW) === 400, "cap: finestra grande (1M) → highKeep cappato a 400 (vanilla ampio)");
+  // safetyPct/avgTurnTokens CONFIGURABILI: avgTurn più alto → cap più basso → floor(0.5·100000/5000)=10
+  ok(adaptiveKeepTurns({ tokens: 100, contextWindow: 100000 }, { lowThreshold: 0.5, highKeep: 9999, safetyPct: 0.5, avgTurnTokens: 5000 }, LOW) === 10,
+     "cap: configurabile (safetyPct 0.5, avgTurn 5000, win 100K) → 10");
+  // cap non scende MAI sotto lowKeep: floor(0.8·4000/2000)=1 < LOW → cap = LOW
+  ok(adaptiveKeepTurns({ tokens: 100, contextWindow: 4000 }, cfg, LOW) === LOW, "cap: floor→1 < LOW → cap = LOW (mai sotto lowKeep)");
+  // highKeep esplicito PIÙ BASSO del cap vince (min): highKeep=10, cap=400 → 10
+  ok(adaptiveKeepTurns({ tokens: 100, contextWindow: 1000000 }, { lowThreshold: 0.5, highKeep: 10 }, LOW) === 10, "cap: highKeep(10) < cap(400) → min = 10");
 }
 
 // 8) integrazione adaptive × override-modello: l'override esplicito VINCE sull'adattivo -------------
 {
   const vq = new VarsQueue(":memory:");
   const cfg = { lowThreshold: 0.5, highKeep: 9999 };
-  const adKeep = adaptiveKeepTurns({ tokens: 1000, contextWindow: 100000 }, cfg, 6); // fill basso → 9999
-  ok(getEffectiveKeepTurns(vq, adKeep) === 9999, "adaptive×override: nessun override → usa il default adattivo (9999)");
+  const adKeep = adaptiveKeepTurns({ tokens: 1000, contextWindow: 100000 }, cfg, 6); // fill basso → 40 (cappato alla finestra)
+  ok(getEffectiveKeepTurns(vq, adKeep) === 40, "adaptive×override: nessun override → usa il default adattivo cappato (40)");
   setKeepTurnsOverride(vq, 8);
   ok(getEffectiveKeepTurns(vq, adKeep) === 8, "adaptive×override: override modello (8) VINCE sull'adattivo (default)");
   vq.close();

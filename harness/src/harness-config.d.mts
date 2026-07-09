@@ -24,6 +24,10 @@ export interface AdaptiveContextConfig {
   lowThreshold: number;
   /** keepTurns "vanilla" quando fill < lowThreshold (praticamente illimitato). */
   highKeep: number;
+  /** frazione max della finestra fisica occupabile dal regime vanilla (cap anti-stallo). Default 0.8. */
+  safetyPct?: number;
+  /** stima token/turno per derivare il cap = safetyPct·finestra/avgTurnTokens. Default 2000. */
+  avgTurnTokens?: number;
 }
 export type SinkGatingMode = "strict" | "warn" | "off";
 export type RegexIngressMode = "off" | "ask" | "auto";

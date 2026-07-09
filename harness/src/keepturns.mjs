@@ -44,13 +44,23 @@ export function getEffectiveKeepTurns(vq, configDefault = null) {
  * @returns {number}  keepTurns effettivo (NON clampato al MAX: highKeep può superare KEEPTURNS_MAX di proposito)
  */
 export function adaptiveKeepTurns(usage, cfg, lowKeep, outputReservePct = 0) {
-  const tokens = usage?.tokens;
   const win = usage?.contextWindow;
-  if (!Number.isFinite(tokens) || !Number.isFinite(win) || win <= 0) return cfg.highKeep; // no misura → vanilla
+  if (!Number.isFinite(win) || win <= 0) return cfg.highKeep; // finestra ignota → highKeep (fail-safe, no cap possibile)
+  // CAP anti-stallo (fix finding E16, 2026-07-09): il regime vanilla NON deve eccedere `safetyPct` della finestra
+  // FISICA, altrimenti su finestra PICCOLA (il 9B/num_ctx=16384 si BLOCCAVA con highKeep=9999) l'array supera la
+  // finestra prima che la compressione scatti. Cap = safetyPct·finestra / avgTurnTokens (quanti turni "entrano" nella
+  // quota-vanilla). Su finestra grande il cap è enorme → highKeep resta effettivo (vanilla); su finestra piccola il cap
+  // scende fino a lowKeep → l'adaptive degrada a "sempre compresso" (SAFE, niente stallo). Entrambi configurabili.
+  const safetyPct = Number.isFinite(cfg.safetyPct) ? cfg.safetyPct : 0.8;
+  const avgTurn = Number.isFinite(cfg.avgTurnTokens) && cfg.avgTurnTokens > 0 ? cfg.avgTurnTokens : 2000;
+  const cap = Math.max(lowKeep, Math.floor((safetyPct * win) / avgTurn));
+  const effHigh = Math.min(cfg.highKeep, cap);
+  const tokens = usage?.tokens;
+  if (!Number.isFinite(tokens)) return effHigh; // nessuna usage ancora (primi turni) → vanilla CAPPATO
   const reserve = Number.isFinite(outputReservePct) ? outputReservePct : 0;
   const denom = win * (1 - reserve);
   const pct = denom > 0 ? tokens / denom : 0;
-  return pct >= cfg.lowThreshold ? lowKeep : cfg.highKeep;
+  return pct >= cfg.lowThreshold ? lowKeep : effHigh;
 }
 
 /**
