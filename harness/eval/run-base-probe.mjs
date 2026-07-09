@@ -40,8 +40,17 @@ const OUT = process.env.OUT || join(process.env.SCRATCH || tmpdir(), `base-probe
 async function resolveKeys() {
   if (process.env.OPENAI_API_KEYS) return process.env.OPENAI_API_KEYS.split(",").map((s) => s.trim()).filter(Boolean);
   if (process.env.OPENAI_API_KEY) return [process.env.OPENAI_API_KEY];
+  // Provider-aware da .env (utente 2026-07-08: GROQ_KEYS/KAGGLE_KEYS + rotazione). Prefix esplicito `KEYS_PREFIX`
+  // oppure auto-detect dall'endpoint (groq.com → GROQ, kaggle → KAGGLE). La rotazione multi-key è in chat() (429→key successiva).
+  const prefix = process.env.KEYS_PREFIX
+    || (/groq\./i.test(BASE_URL) ? "GROQ" : /kaggle/i.test(BASE_URL) ? "KAGGLE" : null);
+  if (prefix) {
+    const { loadEnvKeys } = await import("./env-keys.mjs");
+    const k = loadEnvKeys(prefix);
+    if (k.length) return k;
+  }
   try { const { loadGeminiKeys } = await import("./gemini-keys.mjs"); const k = loadGeminiKeys(); if (k.length) return k; } catch { /* nessuna */ }
-  throw new Error("OPENAI_API_KEY(S) assente e nessuna GEMINI key in .env");
+  throw new Error(`nessuna key: OPENAI_API_KEY(S) assente, ${prefix ? `${prefix}_KEYS assente in .env, ` : ""}nessuna GEMINI key`);
 }
 const MAX_RETRIES = Number(process.env.MAX_RETRIES || 3);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

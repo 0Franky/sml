@@ -7,30 +7,16 @@
  * Il free-tier Gemini ha quota per-DAY per-modello: con N chiavi si distribuisce il carico (round-robin per-task) e si
  * ruota su errore-API (retry su chiave fresca) → N× headroom prima dell'esaurimento. MAI stampare i valori delle chiavi.
  */
-import { readFileSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-
-const ENV_PATH = join(dirname(fileURLToPath(import.meta.url)), "..", ".env");
+import { loadEnvKeys } from "./env-keys.mjs";
 
 /**
- * Estrae la lista di chiavi da un testo .env (o dal file .env se non passato).
+ * Estrae la lista di chiavi Gemini da un testo .env (o dal file .env se non passato).
+ * Delega al loader generico `env-keys` (SSOT #16) con prefix "GEMINI_API" → GEMINI_API_KEYS (plurale) → GEMINI_API_KEY.
  * @param {string} [envText] contenuto .env (iniettabile per i test); default = legge harness/.env
  * @returns {string[]} chiavi non vuote (GEMINI_API_KEYS ha precedenza; fallback GEMINI_API_KEY)
  */
 export function loadGeminiKeys(envText) {
-  let text = envText;
-  if (text == null) { try { text = readFileSync(ENV_PATH, "utf-8"); } catch { text = ""; } }
-  const keys = [];
-  const plural = text.match(/^\s*GEMINI_API_KEYS\s*=\s*(.+?)\s*$/m);
-  if (plural) {
-    for (const k of plural[1].replace(/^["']|["']$/g, "").split(/[,\s]+/)) { const t = k.trim(); if (t) keys.push(t); }
-  }
-  if (keys.length === 0) {
-    const single = text.match(/^\s*GEMINI_API_KEY\s*=\s*(.+?)\s*$/m);
-    if (single) { const t = single[1].replace(/^["']|["']$/g, "").trim(); if (t) keys.push(t); }
-  }
-  return keys;
+  return loadEnvKeys("GEMINI_API", envText);
 }
 
 /** Sceglie la chiave all'`index` (modulo, wrap-around difensivo). Lancia se non c'è alcuna chiave. */
