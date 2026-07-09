@@ -73,6 +73,10 @@ function makeHeadlessUI() {
 // declarations). pi ingoia gli errori HTTP → l'intercetto è l'unico modo di vedere il payload reale. Log/dump: solo DEBUG.
 let __toolsSent = null;   // n° tool-schema nell'ULTIMA richiesta al provider (null = nessuna catturata)
 let __reqBodyLen = 0;
+// n° MESSAGGI NATIVI nella richiesta = firma diretta dell'effetto keepTurns/adaptive-context (rule #15): in regime
+// VANILLA (keepTurns alto) l'array cresce coi turni; in regime COMPRESSO (keepTurns basso) resta piccolo. maxMsgs alto
+// + minMsgs basso nella STESSA sessione = l'adaptive è passato da vanilla a compresso (la transizione osservata).
+let __msgsLast = null, __msgsMax = 0, __msgsMin = null;
 {
   const _f = globalThis.fetch;
   globalThis.fetch = async (url, opts) => {
@@ -86,6 +90,12 @@ let __reqBodyLen = 0;
             ? p.tools.reduce((s, t) => s + (t.functionDeclarations?.length || 0), 0) // google-generative-ai
             : p.tools.length;                                                         // openai-completions
           __reqBodyLen = opts.body.length;
+        }
+        const msgs = Array.isArray(p?.messages) ? p.messages : (Array.isArray(p?.contents) ? p.contents : null); // openai / gemini
+        if (msgs) {
+          __msgsLast = msgs.length;
+          if (__msgsLast > __msgsMax) __msgsMax = __msgsLast;
+          if (__msgsMin == null || __msgsLast < __msgsMin) __msgsMin = __msgsLast;
         }
       } catch { /* body non-JSON → ignora */ }
       if (process.env.EVAL_DEBUG_EVENTS) {
@@ -146,7 +156,7 @@ async function main() {
       name: "Gemini", baseUrl: "https://generativelanguage.googleapis.com/v1beta",
       api: "google-generative-ai", apiKey, authHeader: false,
       models: [{ id: MODEL_ID, name: MODEL_ID, api: "google-generative-ai", reasoning: false, input: ["text"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, contextWindow: 1048576, maxTokens: 8192 }],
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, contextWindow: Number(process.env.MODEL_CTX || 1048576), maxTokens: 8192 }],
     });
     model = reg.find("gemini", MODEL_ID);
   }
@@ -311,6 +321,9 @@ async function main() {
     // profilo riduca davvero la richiesta (non solo il set-attivo in memoria). null = nessuna richiesta catturata (apiError).
     toolsSent: __toolsSent,
     reqBodyLen: __reqBodyLen,
+    // msgs* (rule #15): n° messaggi NATIVI nelle richieste HTTP della sessione. maxMsgs≫minMsgs = adaptive-context ha
+    // transitato vanilla→compresso (keepTurns alto→basso). Con adaptive OFF resta ~costante (keepTurns fisso).
+    msgsLast: __msgsLast, msgsMax: __msgsMax, msgsMin: __msgsMin,
   };
   session.dispose();
   process.stdout.write(JSON.stringify(out) + "\n");
