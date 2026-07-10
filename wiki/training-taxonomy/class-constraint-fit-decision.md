@@ -3,7 +3,7 @@ name: class-constraint-fit-decision
 description: Classe-PADRE (radice) di training — scegliere l'opzione le cui proprietà/costi COMBACIANO coi requisiti-e-vincoli REALI del compito, invece del default / più-potente / più-a-portata-di-mano. Incarnazione-training dell'optimization-first. Figlia iniziale: resource-appropriate-substitution (Gemma-vs-Gemini). Gerarchia obbligatoria (regola #20).
 type: training-class
 tags: [reasoning, planning, optimization, decision-making, resource-awareness, parent-class, area-03]
-last_updated: 2026-07-05
+last_updated: 2026-07-10
 ---
 
 # Classe-PADRE (radice) — DECISIONE PER FIT-AI-VINCOLI
@@ -24,7 +24,7 @@ last_updated: 2026-07-05
 | **sostituzione risorsa-appropriata** | quale RISORSA (costosa vs sostituto equivalente) | Gemma per il meccanismo, Gemini per i dati | [[class-resource-appropriate-substitution]] (gold Gemma/Gemini held-out) |
 | **percorso-alternativo sotto-blocco** *(a sua volta padre di 2 sotto-classi)* | come SBLOCCARSI quando la default è bloccata + **quale "equivalente" secondo il REGIME** (misura→parità / uso→best-fit) | modelli bloccati→parità (misura) · Yahoo deprecato→Gmail (uso) | [[class-alternative-path-under-block]] (msg 1229+1233; discriminatore misura-vs-goal) |
 | *(futura)* right-tool-for-job | quale STRUMENTO | grep vs parser AST vs LLM | — |
-| *(futura)* right-effort-for-stakes | quanto SFORZO/rigore | one-liner vs design-doc | — |
+| *(futura)* right-effort-for-stakes | quanto SFORZO/rigore | one-liner vs design-doc | — (**riceve la POSTA da** [[class-project-stakes-awareness]]: quella LEGGE stadio×blast-radius, questa SCEGLIE il tier conseguente) |
 
 > Le figlie "future" sono placeholder estensibili (regola #20 — la gerarchia cresce quando emerge un gap reale, non a priori).
 

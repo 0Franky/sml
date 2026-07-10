@@ -2,12 +2,13 @@
 name: compositional-curriculum-thinking-optimization
 description: "Analisi proposta utente msg 1140: (A) curriculum RL a SKILL ISOLATE (gathering→implementazione→scrivere-test→eseguire), ciascuna allenata a competenza, poi COMPOSTE a finestra scorrevole (1+2, 2+3, … poi 1+2+3, …) fino alla lane completa; (B) THINKING-OPTIMIZATION progressiva: catene lunghe-ma-perfette mentre impara, poi compresse (dritto alla soluzione) quando la traccia è internalizzata. Verdetto: SENSATO + allineato a H6/verification-discipline/curriculum, con guardrail (reward per-skill ancorato al downstream, replay anti-forgetting, gate di competenza, PRM per la coerenza-catena, compressione outcome-gated)."
 type: concept
-tags: [training, curriculum, rl, composition, thinking-optimization, cot-compression, prm, catastrophic-forgetting, h6, proposal, phase-3, optimize-while-implement, authoring-tags, cross-reference]
-last_updated: 2026-07-09
+tags: [training, curriculum, rl, composition, thinking-optimization, cot-compression, prm, catastrophic-forgetting, h6, proposal, phase-3, optimize-while-implement, authoring-tags, cross-reference, context-sensitivity, project-stakes]
+last_updated: 2026-07-10
 status: proposal-under-evaluation
 sources:
   - "Utente TG msg 1140 (2026-07-05): curriculum a skill isolate + composizione a finestra scorrevole + thinking-optimization progressiva"
   - "Utente msg 1473 (2026-07-09) idee #3-#4: optimize-while-implement + tag implementation-code/optimization (authoring-metadata) + cross-reference nel training set (§Addendum 2026-07-09)"
+  - "Utente msg 1586 (2026-07-10, approvato 1591): curriculum stadio-progetto + la compressione preserva la context-sensitivity (§Addendum 2026-07-10)"
   - "Estende l'idea utente pre-esistente: [[project_post_training_strategy|curriculum SFT staged 4 fasi]]"
 ---
 
@@ -148,5 +149,17 @@ I tag di cui sopra sono **authoring-metadata**: NON output che il modello emette
 
 > **Verdetto idee #3-#4**: **sensate e coerenti** col curriculum composizionale (rinforzano Parte-A/B, non le contraddicono). Il rischio è unico e noto — trattare i tag come reward invece che come metadata → neutralizzato dall'ancoraggio-outcome + ablazione. Da prototipare insieme al primo test 2-skill (aggiungere un esempio doppio-tag impl+optim e misurare l'optimize-delta per ablazione).
 
+## Addendum 2026-07-10 — la compressione deve preservare la CONTEXT-SENSITIVITY (utente msg 1586, approvato 1591)
+
+> Utente msg 1586: curriculum per **stadio-progetto** (usa-e-getta → MVP → MVP-finanziario → produzione) + thinking-optimization: all'inizio catena lunga che *"elenca tutte le possibilità e poi, per questa esatta condizione, sceglie X"* (es. segreti: vault vs `.env` vs … **dipende dallo stadio**); poi nelle fasi successive il modello *"riconosce l'ambiente e pensa già diretto per quella fase"*.
+
+Questo raffina il **guardrail #2 della Parte-B** (compressione outcome-gated) con un vincolo NUOVO e più forte quando la risposta corretta è **condizionale al contesto**:
+
+- **La compressione va gated non solo sull'accuratezza MA sulla CONTEXT-SENSITIVITY.** Rischio preciso: comprimendo "enumera-opzioni → seleziona-per-la-condizione" in "vai-dritto", il modello può collassare sulla **risposta modale** (dice sempre "usa il vault") perdendo il **condizionamento** → ha imparato una **scorciatoia**, non il ragionamento (è lo *shortcut learning* di [[phased-reward-and-rh-detection]] §Rifinitura, msg 1580).
+- **Test che lo becca (deterministico) = CONTEXT-FLIP / MCQ controfattuale**: dopo la compressione, **flippa lo stadio** (throwaway→produzione) e verifica che la scelta **CAMBI**. Se cambia → ha compresso il *ragionamento condizionale*; se resta fissa → ha memorizzato una risposta → **compressione RIGETTATA** (torna allo stadio-lungo su quel caso). È l'implementazione, sul curriculum-di-compressione, del **segnale ③ (transfer)** e del **segnale ② (MCQ controfattuale)** dello standard a 3-segnali.
+- **L'enumerazione-lunga è SCAFFOLD, non reward-target** (ribadito): premiare "ha elencato tutte le opzioni" = cerimonia (#10). Reward sull'**esito condizionato-al-contesto**; l'enumerazione fada col progredire dell'interiorizzazione (il "pensa già diretto" dell'utente = il fading, intuizione giusta).
+
+La **classe** che porta questa condizionalità (leggere la POSTA vera — stadio×blast-radius — che poi condiziona la scelta a valle) è [[../training-taxonomy/class-project-stakes-awareness]] (figlia di situational-awareness): le sue coppie controfattuali (posta bassa↔alta) sono il context-flip su cui si valida che la compressione non abbia distrutto la context-sensitivity. Curriculum-B (comprimi) e classe-stakes (valuta la posta) si validano a vicenda.
+
 ## Links
-[[verification-discipline-training]] · [[harness-experiment-log]] (H6/F7, F11) · [[catastrophic-forgetting]] · [[project_post_training_strategy]] · [[project_replay_strategy]] · [[stuck-state-focus-protocol]] · [[gold-example-transfer-assumption-audit]] · [[../training-taxonomy/class-domain-categorization-routing]] (task-type→thinking-mode) · [[../training-taxonomy/class-knowledge-base-curation]] (cross-linking come skill) · [[../training-taxonomy/class-situational-awareness]] · [[dataset-on-the-fly-pseudorandom]] · [[feedback_reward_hacking_principle]] · [[feedback_intelligence_gap_to_training_class]]
+[[../training-taxonomy/class-project-stakes-awareness]] · [[phased-reward-and-rh-detection]] (standard 3-segnali) · [[../concepts/discriminative-mcq-hard-distractors]] (MCQ controfattuale) · [[verification-discipline-training]] · [[harness-experiment-log]] (H6/F7, F11) · [[catastrophic-forgetting]] · [[project_post_training_strategy]] · [[project_replay_strategy]] · [[stuck-state-focus-protocol]] · [[gold-example-transfer-assumption-audit]] · [[../training-taxonomy/class-domain-categorization-routing]] (task-type→thinking-mode) · [[../training-taxonomy/class-knowledge-base-curation]] (cross-linking come skill) · [[../training-taxonomy/class-situational-awareness]] · [[dataset-on-the-fly-pseudorandom]] · [[feedback_reward_hacking_principle]] · [[feedback_intelligence_gap_to_training_class]]
