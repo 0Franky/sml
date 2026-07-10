@@ -83,8 +83,8 @@ L'oracolo confronta l'affermazione del modello col **ground-truth** (cosa era da
 
 ## Doppio scopo (harness ↔ training — regola #18)
 
-- **HARNESS (fatto, [[concepts/eviction-checkpoint]]/F16)**: `get_var` su chiave inesistente ora risponde *"chiama `get_shared_view` per vedere tutte le var; se è un FATTO è già in `<facts>`, leggilo, NON inventare"* (scaffold che punta al canale giusto + nudge anti-invenzione, ORA).
+- **HARNESS (fatto, [[../concepts/eviction-checkpoint]]/F16)**: `get_var` su chiave inesistente ora risponde *"chiama `get_shared_view` per vedere tutte le var; se è un FATTO è già in `<facts>`, leggilo, NON inventare"* (scaffold che punta al canale giusto + nudge anti-invenzione, ORA).
 - **TRAINING (questa classe)**: il modello internalizza il non-confabulare **anche senza** l'hint — audita la provenienza da sé. Lo scaffold recede man mano che il training attecchisce ([[../decisions/2026-07-05-slm-scaffolding-extension]]).
 
 ## Links
-[[class-metacognitive-self-audit]] · [[class-prospective-memory]] (gemella-SAVE: salva-ciò-che-ti-servirà) · [[class-stagnation-recovery]] · [[gold-example-transfer-assumption-audit]] · [[class-consequence-intention-conflict]] · [[concepts/eviction-checkpoint]] · [[area-04-context-metacognition]] · [[../feedback_reward_hacking_principle]] · [[../feedback_intelligence_gap_to_training_class]] · [[../feedback_transfer_always_cross_domain]] · [[../harness-experiment-log]]
+[[class-metacognitive-self-audit]] · [[class-prospective-memory]] (gemella-SAVE: salva-ciò-che-ti-servirà) · [[class-stagnation-recovery]] · [[gold-example-transfer-assumption-audit]] · [[class-consequence-intention-conflict]] · [[../concepts/eviction-checkpoint]] · [[area-04-context-metacognition]] · [[../feedback_reward_hacking_principle]] · [[../feedback_intelligence_gap_to_training_class]] · [[../feedback_transfer_always_cross_domain]] · [[../harness-experiment-log]]

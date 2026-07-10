@@ -53,7 +53,7 @@ Il segnale premia la **classificazione corretta del regime** PRIMA della scelta 
 
 Positivo sse: (a) regime classificato correttamente; (b) alternativa scelta coerente col regime (A parità / B best-fit); (c) outcome valido (A: confronto non contaminato · B: goal raggiunto entro i vincoli). **Simmetrico**: premia anche il **NON-agire giusto** (A: rifiutare un upgrade tentante; B: rifiutare un "meglio" che rompe un vincolo; entrambi: fermarsi/aspettare se nessun'alternativa valida). **Hack-check**: *participation* ("ho valutato le alternative…" senza scelta corretta) → 0; *default fisso* (sempre-upgrade / sempre-parità) → neutralizzato dal discriminatore; *falso-progresso* (sblocca ma degrada/contamina) → penalizzato (il reward richiede la validità dell'outcome). ([[../feedback_reward_hacking_principle]])
 
-## Label-generation (mutation/oracle — riusa [[../concepts/deceptive-task-gen|deceptive-task-gen]])
+## Label-generation (mutation/oracle — riusa [[../../harness/verifiers/deceptive-task-gen|deceptive-task-gen]])
 
 Istanze *(blocco, regime, set-di-alternative, oracolo)*. **Mutazione-chiave del discriminatore**: STESSO scenario di superficie con **regime flippato** ("stiamo *facendo un benchmark* di X" vs "*ci serve* X per un utente") → la risposta corretta si INVERTE (parità ↔ upgrade). Testa direttamente la classificazione del regime. Altre mutazioni: variare la parità delle alternative (positivi ∧ N-A1/N-B*), togliere ogni equivalente (fermarsi/escalare), aggiungere un vincolo che vieta il "migliore" (N-B1). Bilanciamento positivi↔negativi e A↔B obbligatorio.
 
