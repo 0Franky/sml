@@ -20,8 +20,8 @@ last_updated: 2026-07-10
 
 ## Priorità 2 (P2) — wiring & confini (per lo più fix meccanici)
 
-- **[wiring] 2 wikilink ROTTI**: `class-alternative-path-under-block.md:56` (`../concepts/deceptive-task-gen` → inesistente; va `../../harness/verifiers/deceptive-task-gen`) + `class-confabulation-retrieval-failure.md:90` (`concepts/eviction-checkpoint` manca `../`). → FIX.
-- **[wiring] index.md:127 conteggio stantio "5 figlie"** di situational-awareness (sono 6, project-stakes non conteggiata). → FIX.
+- **✅ VERIFICATO GIÀ-CORRETTI (2026-07-10, falsi-positivi/stale dell'audit) — [wiring] 2 wikilink**: `class-alternative-path-under-block.md:56` ha GIÀ `[[../../harness/verifiers/deceptive-task-gen|…]]` (corretto); `class-confabulation-retrieval-failure.md:90` ha GIÀ `[[../concepts/eviction-checkpoint]]` col `../` (corretto). Erano stati fixati dopo la generazione dell'audit → NON-issue. (Lezione arXiv: verificare PRIMA di agire, l'audit stesso può essere stale.)
+- **✅ VERIFICATO GIÀ-6 (2026-07-10) — [wiring] index.md:127**: dice GIÀ "**6 figlie**" di situational-awareness (temporal · harness-env · kb-curation · context-over-parametric · proactive · project-stakes). Conteggio corretto → NON-issue.
 - **[wiring] registry §6** duplica domain-categorization + elenca req/scope come "flat" invece che sotto il padre dichiarato. → FIX.
 - **[wiring] class-sign-wrap-blindspot ORFANA** (nessun padre) → dichiarare padre (candidato: stagnation-recovery) o motivare lo standalone.
 - **[coerenza] confini da DICHIARARE** (sovrapposizioni reali ma separabili, no merge): proactive ⇆ instruction-phase-clarification (#5 propose-alternativa); context-over-parametric N2 ⇆ instruction-phase #4 (anti-sycophancy); requirements-driven ⇆ scope-adaptive (naviga-profondità vs seleziona-conoscenza). Pattern-fix = come project-stakes(LEGGE)/constraint-fit(SCEGLIE): confine netto + cross-link + dedup transfer condivisi.
