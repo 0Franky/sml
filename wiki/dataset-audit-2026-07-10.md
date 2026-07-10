@@ -25,7 +25,7 @@ last_updated: 2026-07-10
 - **[wiring] registry §6** duplica domain-categorization + elenca req/scope come "flat" invece che sotto il padre dichiarato. → FIX.
 - **[wiring] class-sign-wrap-blindspot ORFANA** (nessun padre) → dichiarare padre (candidato: stagnation-recovery) o motivare lo standalone.
 - **[coerenza] confini da DICHIARARE** (sovrapposizioni reali ma separabili, no merge): proactive ⇆ instruction-phase-clarification (#5 propose-alternativa); context-over-parametric N2 ⇆ instruction-phase #4 (anti-sycophancy); requirements-driven ⇆ scope-adaptive (naviga-profondità vs seleziona-conoscenza). Pattern-fix = come project-stakes(LEGGE)/constraint-fit(SCEGLIE): confine netto + cross-link + dedup transfer condivisi.
-- **[factual] citazione arXiv 2606.27275** (−58% perplessità) non verificata / probabilmente confabulata, asserita senza tag → verificare o rimuovere/`[UNVERIFIED]`.
+- **✅ VERIFICATO REAL (falso-positivo dell'audit, 2026-07-10) — [factual] citazione arXiv 2606.27275** (−58% perplessità): il paper ESISTE (*How Surprising Is Historical Italian to Language Models?*, arXiv:2606.27275) e la claim è ACCURATA (−58% medio, range −43%/−66%, italiano del '600 con prepend del periodo). Il finding era prudenziale (flag-for-verify); la verifica web l'ha scagionato → citazione arricchita + tag `[EXTRACTED]` in `class-temporal-awareness`. **Lezione**: verificare PRIMA di rimuovere — l'audit stesso può avere falsi-positivi (coerente col loop-until-dry: si valida, non si assume).
 - **[coverage] completeness-audit eseguito 1 sola volta** (decomposition); le 16 aree mai auditate.
 - **[coverage] area-03 long-correct-CoT+verify-loop** (cuore PRM) senza gold eseguibile.
 
