@@ -31,13 +31,29 @@ Dato un task/contesto (mentre lo eseguo o rispondo), **riconoscere quando esiste
 - **[NEGATIVO — over-reach: fatto invece di proposto]** Vedo la miglioria e la **implemento da solo** allargando lo scope non richiesto → violazione [[class-instruction-fidelity-no-overreach]]; la forma corretta della stessa intuizione è **proporla**.
 - **[NEGATIVO — missed value / under-propose]** C'è un'ovvia miglioria ad alto valore e valida (l'utente la vorrebbe di certo) e resto zitto per "non disturbare" → valore-mancato, il fallimento speculare (è esattamente il comportamento che l'utente ha detto di *apprezzare* quando c'è).
 
-## Reward design (Tag L — judgment/preference)
+## Reward design (Tag L — judgment/preference) — allineato al gemello-L [[gold-example-area02-6.2-defer]]
 
-**Judge/preference calibrato sull'APPROPRIATEZZA della decisione-di-proporre + qualità**, con ground-truth annotata per scenario: *(alto-valore + valido + rilevante → propose atteso)*; *(trivia/speculativo/off-goal/momento-critico → stay-silent atteso)*; *(idea invalida → mai proporre)*. Dimensioni del judge: la proposta è **specifica** al contesto reale (non boilerplate)? è **valida** (tecnicamente sound)? è **proposta-non-imposta** (lascia decidere)? è **concisa** (non deraglia)?
+> ⚠️ **Il reward NON premia il RAMO (propose vs stay-silent)** — premiarlo sarebbe reward-hacking (degenera in "proponi-sempre" o "non-proporre-mai"), **identico** al motivo per cui 6.2-defer non premia act-vs-defer. Premia la **qualità/coerenza dell'ASSESSMENT** + la **forma propose-don't-impose** + (fase-3) l'**outcome reale**. `[EXTRACTED]` CLAUDE.md #10. *(Fix audit 2026-07-10 P1: la versione precedente scorava l'"appropriatezza della decisione-di-proporre" contro un ramo-atteso annotato → gameabile; ri-ancorata sull'assessment.)*
 
-**Simmetria (regola #21)** — **doppia penalità di pari forza**: *over-suggest* (rumore) **e** *under-propose* (valore mancato) penalizzati ugualmente; nessuna delle due policy degeneri ("proponi-sempre" / "non-proporre-mai") deve massimizzare. **Penalità dura** extra per proposta **invalida/confabulata** (peggio del silenzio).
+**Oggetto-di-giudizio = un ASSESSMENT strutturato** (analogo del *contract* di 6.2-defer), emesso SEMPRE — anche quando la decisione è `silent`: `{opportunità_notata, valore, validità, rilevanza, momento, decisione∈{propose|silent}, perché, (se propose) proposta_concisa}`. Così **anche lo `silent` ha qualcosa da giudicare** (il suo assessment) e non serve premiare il ramo per penalizzare un miss.
 
-**Ancoraggio all'OUTCOME (fase 3, regola #10)** — dove possibile: quando una proposta viene *accettata*, il beneficio dichiarato **si materializza davvero**? Una proposta il cui valore-promesso non si realizza è penalizzata → si àncora al **valore reale**, non a quello *plausibile-a-parole*. → [[../feedback_reward_hacking_principle]].
+**Penalità simmetrica SENZA premiare il ramo** (il trucco centrale di 6.2-defer, portato qui — via coerenza-interna, proprietà del *ragionamento* non del ramo):
+- `silent` il cui assessment dichiara `valore:basso` MA la fixture contiene una miglioria **alto-valore-e-valida** → assessment **incoerente** con la realtà-della-fixture → penalizzato per la QUALITÀ dell'assessment, non per "ramo sbagliato";
+- `propose` con assessment **generico/non-ancorato** (boilerplate) → penalizzato per **mancanza di specificità** (proprietà del ragionamento);
+- così *under-propose su alto-valore* e *over-suggest su trivia* sono **entrambi** penalizzati via coerenza-assessment, senza mai assegnare punti al ramo "giusto".
+
+**Ground-truth annotata → SOLO per l'held-out bilanciato, NON come label da matchare**: per ogni scenario si annota la natura (genuinamente-proponibile vs genuinamente-da-tacere vs idea-invalida) — è un **fatto sulla fixture** (inter-annotatore stabile), usato per **costruire** un held-out ~50/50 (metà dove proporre è giusto, metà dove tacere è giusto) così che né proponi-sempre né taci-sempre incassino reward. Non è la label che il giudice matcha sulla scelta.
+
+**Difese del judge (portate 1:1 da 6.2-defer / [[../concepts/judge-design]] §"Anti reward-hacking"):**
+- **council OPEN a lenti diverse** (DeepSeek-R1/Qwen open-weight — **non un giudice singolo**, che era il difetto flaggato): riduce il judge-gaming (lunghezza/tono/boilerplate); Claude/GPT/Gemini **fuori dal loop** per ToS ([[../decisions/2026-06-28-decisions-d1-d5|D5]] §council-policy);
+- **pre-check deterministico (gate)**: assessment mal-formato / proposta non-ancorata al contesto reale / non-concisa → reward basso **senza** far giudicare il merito (forma rotta = non si premia);
+- **oracolo-di-validità** per la condizione (2): uno scorer verifica che la miglioria sia tecnicamente sound nella fixture (una "ottimizzazione" scorretta-per-costruzione → **penalità-dura**, peggio del silenzio);
+- **audit-trail / calibrazione ECE**: un campione dei giudizi L è ri-controllato cross-judge (agreement/ECE) per stimare il rumore del giudice **prima** di usarlo come reward;
+- **scorer ≠ scored**: council = modelli diversi dal nostro SLM in training; il pre-check è un parser deterministico.
+
+**Simmetria (regola #21)** — over-suggest (rumore) e under-propose (valore mancato) penalizzati **ugualmente** via coerenza-assessment; **penalità dura** per proposta **invalida/confabulata** (peggio del silenzio). Nessuna policy degenere massimizza.
+
+**Ancoraggio all'OUTCOME (fase 3, regola #10)** — proposta accettata → il beneficio dichiarato **si materializza davvero**? Se no → penalizzata (àncora al **valore reale**, non a quello *plausibile-a-parole*). → [[../feedback_reward_hacking_principle]].
 
 ## Hack-check ("come massimizzerei SENZA la skill?")
 
