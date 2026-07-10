@@ -2,7 +2,7 @@
  * Test sealed-secrets (F-harness, node-pure): registry sigillato + injection + SINK-GATING + regex-ingress + env.
  */
 import {
-  setSecret, setAllowLocalHttp, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp,
+  setSecret, setAllowLocalHttp, listSecretsMeta, listSecretsView, EMPTY_SECRETS_SESSION_SCOPED_MSG, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp,
   hasCommandComposition, hasForeignHostToken, hasHostPinning, isLoopbackLiteral, checkSink, injectSecrets, injectIntoStrings, scanIngress, autoSealIngress, loadFromEnv, clearSealed,
   isValidSinkHost, addAllowedSink, removeAllowedSink, setSecretDescription, renameSecret, removeSecret, computeSecretEditDiff, applySecretEdit, validateSecretRefs, previewSecretUse,
 } from "../../src/sealed-secrets.mjs";
@@ -463,6 +463,27 @@ const reset = () => { clearSealed(); clearSecrets(); };
   ok(sealed.length === 0, "C5-c: registry pieno → nessun nuovo seal");
   ok(!text.includes(VAL), "C5-c: il valore RAW NON resta nel testo (fail-closed)");
   ok(/\[REDACTED-SECRET\]/.test(text), "C5-c: valore sostituito col marker inerte");
+  reset();
+}
+
+// LIST-VIEW (item-2, utente msg 1519): list_secrets deve rendere il modello CONSAPEVOLE che i sealed sono
+// session-scoped. Bug: `[]` nudo → il modello confabulava "il secret è pronto/persistito". Regressione al livello
+// del WIRING che il modello riceve davvero (la view che l'estensione serializza), non solo listSecretsMeta puro.
+{
+  reset();
+  // vuoto → messaggio session-scoped, count 0, flag true (NON un JSON `[]` muto)
+  const empty = listSecretsView();
+  ok(empty.count === 0 && empty.sessionScoped === true, "LIST-VIEW: vuoto → count 0 + sessionScoped true");
+  ok(empty.text === EMPTY_SECRETS_SESSION_SCOPED_MSG, "LIST-VIEW: vuoto → testo = messaggio SSOT (non '[]')");
+  ok(/session-scoped/i.test(empty.text) && /never on disk/i.test(empty.text), "LIST-VIEW: il testo spiega session-scoped + never-on-disk");
+  ok(/Do NOT claim/i.test(empty.text), "LIST-VIEW: il testo vieta di dichiarare il secret 'ready/persisted'");
+  ok(empty.text.indexOf("[]") === -1, "LIST-VIEW: nessun '[]' nudo (era la causa della confabulazione)");
+  // con un secret → JSON dei meta (NO valore), count>0, flag false
+  setSecret("VIEW_KEY", "viewvalue-1234567890", { description: "d", allowedSinks: ["api.openai.com"] });
+  const full = listSecretsView();
+  ok(full.count === 1 && full.sessionScoped === false, "LIST-VIEW: con secret → count 1 + sessionScoped false");
+  ok(full.text.includes("VIEW_KEY") && full.text.indexOf("viewvalue-1234567890") === -1, "LIST-VIEW: con secret → JSON meta senza il VALORE");
+  ok(JSON.parse(full.text).length === 1, "LIST-VIEW: con secret → testo è JSON parsabile dei meta");
   reset();
 }
 

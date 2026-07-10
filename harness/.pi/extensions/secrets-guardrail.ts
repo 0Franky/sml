@@ -28,7 +28,7 @@ import { redactText } from "../../src/secrets-redact.mjs";
 import { addSecret, getDynamicSecrets, clearSecrets } from "../../src/secrets-registry.mjs";
 // SEALED-SECRETS (msg 577/578/579): registry sigillato + reference-injection + sink-gating. Il valore non entra MAI
 // nel context del modello; provisioning out-of-band (env SEALED_SECRET_* + metadata .pi/secrets.config.json).
-import { loadFromEnv, listSecretsMeta, injectIntoStrings, clearSealed, hasSecret, isValidSinkHost, validateSecretRefs, previewSecretUse, ingestEnvContent, validateEnvPath } from "../../src/sealed-secrets.mjs";
+import { loadFromEnv, listSecretsView, injectIntoStrings, clearSealed, hasSecret, isValidSinkHost, validateSecretRefs, previewSecretUse, ingestEnvContent, validateEnvPath } from "../../src/sealed-secrets.mjs";
 // CONSENSO (node-puro, testabile senza jiti): Ask-con-diff + frizione reale (type-to-confirm) + degrade headless
 // accurato + create-con-valore-digitato-dall'utente. Estratto da qui (i rami che prima erano inline nei tool).
 import { askAndApplyEdit, askAndDestroy, askLocalHttp, askAndCreate } from "../../src/secrets-consent.mjs";
@@ -102,11 +102,15 @@ export default function (pi: ExtensionAPI) {
       "Secrets are managed IN-SESSION via tools, NEVER via the shell/CLI. To create a new one: propose_secret_create (you give the metadata only — the user types the value, you never see it). To let a secret reach a host: request_sink(name, host, why). To rename/edit (sink, description, allowLocalHttp): propose_secret_edit. To delete: propose_secret_destroy. You only PROPOSE — the user approves a clear before→after diff; widening permissions (new host, enabling allowLocalHttp) needs a stronger confirmation where the user must TYPE the host to confirm. Never invent or run CLI commands like `pi set-secret`/`pi update-secret` (they may not exist) — if unsure, verify (read a --help) instead of guessing.",
       "An `INGRESS_N` secret is a value the USER pasted: it is ALREADY sealed and usable as-is — it does NOT need to be re-provisioned. If it is blocked, it only lacks a sink: to 'use the token you pasted', call request_sink for its host (e.g. oauth.reddit.com). Do not tell the user to paste it again or to set an env var.",
       "Before using {{secret:NAME}}, if unsure the name is correct call check_secret_refs(text) — it confirms existence and suggests the closest name on a typo. Never read a secret value from a plaintext env var as a workaround for a blocked sealed secret: use {{secret:NAME}} and request the sink.",
+      "SESSION-SCOPED (do not over-promise persistence): a sealed secret's VALUE lives ONLY in this session's memory and is NEVER written to disk — that is the security property, not a bug. After a /resume or a restart the value is GONE and list_secrets may be EMPTY even if you sealed secrets earlier this run. So: NEVER tell the user a secret 'persists' / 'is ready' / 'is saved' across sessions; if after a resume you need a secret you had before, ask the user to re-provide it (paste again, or set env SEALED_SECRET_<NAME>). Only the sink GRANTS/metadata are policy — the value itself is always ephemeral.",
     ],
     parameters: Type.Object({}),
     async execute() {
-      const meta = listSecretsMeta();
-      return { content: [{ type: "text", text: JSON.stringify(meta, null, 2) }], details: { count: meta.length } };
+      // listSecretsView (pura, SSOT): se vuoto ritorna il messaggio session-scoped invece di un `[]` nudo
+      // (fix bug item-2 "list_secrets 2→[] al /resume": i valori sealed sono session-scoped/memory-only →
+      // dopo un resume la lista è vuota by-design; il `[]` nudo confondeva il modello → "erano pronti").
+      const view = listSecretsView();
+      return { content: [{ type: "text", text: view.text }], details: { count: view.count, sessionScoped: view.sessionScoped } };
     },
   });
   pi.registerTool({

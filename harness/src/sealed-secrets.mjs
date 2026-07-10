@@ -320,6 +320,27 @@ export function listSecretsMeta() {
   return [...SEALED.entries()].map(([name, s]) => ({ name, description: s.description, allowedSinks: s.allowedSinks, allowLocalHttp: s.allowLocalHttp === true, fingerprint: s.fingerprint }));
 }
 
+/**
+ * Messaggio di awareness quando NON ci sono sealed-secret (item-2, utente msg 1519).
+ * SSOT del testo così è testabile + riusabile. I valori sealed sono session-scoped (memory-only,
+ * mai su disco = proprietà di sicurezza) → dopo un /resume o restart la lista è VUOTA anche se ne
+ * avevi sigillati prima. Un `[]` nudo confondeva il modello ("erano pronti" → confabulazione).
+ */
+export const EMPTY_SECRETS_SESSION_SCOPED_MSG =
+  "No sealed secrets in THIS session. Note: sealed-secret VALUES are session-scoped (kept only in memory, never on disk — the security property), so this list is empty after a /resume or restart even if you sealed some earlier. If you need one, ask the user to re-provide it (paste again, or set env SEALED_SECRET_<NAME>). Do NOT claim any secret is 'ready'/'persisted' across sessions.";
+
+/**
+ * Vista model-facing di list_secrets: pura + testabile. Ritorna il TESTO (JSON meta se ce ne sono,
+ * altrimenti il messaggio session-scoped) + count + flag. L'estensione la avvolge nella tool-response.
+ */
+export function listSecretsView() {
+  const meta = listSecretsMeta();
+  if (meta.length === 0) {
+    return { text: EMPTY_SECRETS_SESSION_SCOPED_MSG, count: 0, sessionScoped: true };
+  }
+  return { text: JSON.stringify(meta, null, 2), count: meta.length, sessionScoped: false };
+}
+
 /** Esiste un sealed-secret con questo nome? */
 export function hasSecret(name) {
   return SEALED.has(name);
@@ -816,7 +837,7 @@ export function clearSealed() {
   ingressCounter = 0;
 }
 
-export default { setSecret, setAllowLocalHttp, listSecretsMeta, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp, hasCommandComposition, hasForeignHostToken, hasHostPinning, isLoopbackLiteral, checkSink, injectSecrets, injectIntoStrings, scanIngress, loadFromEnv, clearSealed,
+export default { setSecret, setAllowLocalHttp, listSecretsMeta, listSecretsView, EMPTY_SECRETS_SESSION_SCOPED_MSG, hasSecret, referencedSecrets, extractHosts, hasFileOrPipeExfil, hasInsecureHttp, hasCommandComposition, hasForeignHostToken, hasHostPinning, isLoopbackLiteral, checkSink, injectSecrets, injectIntoStrings, scanIngress, loadFromEnv, clearSealed,
   // lifecycle in-sessione (msg 708/713/715/718) + pre-flight (msg 724) + renewal (msg 799) + env-ingest (msg 811)
   isValidSinkHost, addAllowedSink, removeAllowedSink, setSecretDescription, renameSecret, removeSecret, renewSecretValue, ingestEnvContent, validateEnvPath, computeSecretEditDiff, applySecretEdit, validateSecretRefs, previewSecretUse,
   // canale TIPIZZATO http_request (ADR 2026-06-30, arch H2): sink-gating su new URL(), niente shell-parsing

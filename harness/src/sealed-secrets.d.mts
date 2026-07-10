@@ -37,6 +37,8 @@ export function setAllowLocalHttp(
   allow?: boolean,
 ): { ok: boolean; name?: string; allowLocalHttp?: boolean; reason?: string };
 export function listSecretsMeta(): SecretMeta[];
+export const EMPTY_SECRETS_SESSION_SCOPED_MSG: string;
+export function listSecretsView(): { text: string; count: number; sessionScoped: boolean };
 export function hasSecret(name: string): boolean;
 export function referencedSecrets(text: string): string[];
 export function extractHosts(opText: string): string[];
@@ -153,6 +155,8 @@ declare const _default: {
   setSecret: typeof setSecret;
   setAllowLocalHttp: typeof setAllowLocalHttp;
   listSecretsMeta: typeof listSecretsMeta;
+  listSecretsView: typeof listSecretsView;
+  EMPTY_SECRETS_SESSION_SCOPED_MSG: typeof EMPTY_SECRETS_SESSION_SCOPED_MSG;
   hasSecret: typeof hasSecret;
   referencedSecrets: typeof referencedSecrets;
   extractHosts: typeof extractHosts;
