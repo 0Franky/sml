@@ -94,6 +94,8 @@ Questo file **riempie lo schema**, non lo riscrive: segue esattamente la forma d
 
 **Segnale d'area**: dato un'azione, **classificarla** reversibile vs irreversibile (skill di *classificazione*, distinta dal *rilevare* la criticità del topic 1) e **richiedere conferma** sulle irreversibili. 2 foglie.
 
+> 🥇 **GOLD ESPANSI (2026-07-10) — famiglia 2.x COMPLETA**: [[gold-example-area02-2.1-reversibility.expanded|2.1 classificazione reversibilità]] (3-way REV/RWL/IRREV + fatto-decisivo enum) + [[gold-example-area02-2.2-confirm.expanded|2.2 conferma-su-irreversibile]] (l'ATTO al bivio, reward su entrambi i rami). **Standalone** (non templatizzati): il template gruppo-3 pre-flight è specializzato su dep-graph/symbol-presence (O1-O7) → non ospita né la classificazione (2.1) né il confirm-emitted binario (2.2); skeleton-singleton, templatizzare non paga (nessun sibling condiviso). Chiude l'ultima gold-family fattibile (resto = Docker-gated).
+
 ### Foglia 2.1 — `distinguere reversibile / irreversibile` · Tag Q
 - **Skill target (segnale)**: produrre una **classificazione corretta** reversible/irreversible per un'azione data, con la ragione (esiste un undo? git/backup/trash/soft-delete?).
 - **Esempi**:
