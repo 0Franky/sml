@@ -86,6 +86,8 @@ status: generated
 - **Area**: Algorithmic & Mathematical Reasoning (A14). **Tag**: **Q** (l'esito è oggettivo: passa entro il time/memory limit, o va in TLE/MLE).
 - **Skill target (segnale)**: produrre codice che **rispetta i limiti di tempo e memoria** — evitare TLE (Time Limit Exceeded) e MLE (Memory Limit Exceeded) scegliendo una complessità adeguata ai constraint e curando le **costanti** (evitare allocazioni inutili, I/O lento, operazioni ripetute estraibili dal loop). Distinta da `algorithm-design`: qui il focus è il **costo eseguito misurato contro un limite**, non la scelta concettuale dell'approccio (anche se le due si toccano).
 
+> **Confine vs [[class-code-optimization]]** (classe agganciata a quest'area): QUESTA foglia = **scrivi codice DA-SPEC che stia in un limite FISSO** (reward **binario TLE/AC**, un solo asse). La classe `code-optimization` = **MIGLIORA codice ESISTENTE-e-corretto verso un target RELATIVO** (−X% proxy), col cancello **behavior-preserving** dominante + **no-regressione multi-invariante**. Adiacenti, **cross-linkate, non sovrapposte** (SSOT #16): il loop `O(n²)→TLE→AC` (esempio 4) è *write-from-spec*; la classe parte da codice già corretto da rendere più efficiente senza cambiarne il comportamento.
+
 - **Esempi**:
   - **(1) WITH-hint** — hint **forte→debole**:
     - *forte*: *"Scrivi una funzione che conta le coppie `(i, j)` con `a[i] + a[j] == k` in un array di `n ≤ 10^6` interi. **Time limit: 1s. Considera la complessità target O(n)** (non O(n²)). Usa una hash-map dei complementi. Attento all'I/O: leggi tutto l'input in un colpo, non riga per riga in un loop lento."*
