@@ -108,6 +108,7 @@ Ogni agente prende **template §1 + la sua riga di §4**. Le "variazioni del cas
 - **[[../feedback_decision_provenance|#26 decision-provenance]]** — `CONFIRMED` vs `PLAUSIBLE`: non dichiarare certezza senza evidenza.
 - **[[../feedback_instrument_before_hypothesizing|strumenta-prima]]** — l'evidenza obbligatoria costringe a guardare il ground-truth prima di asserire.
 - **[[../training-taxonomy/dataset-construction-playbook|playbook]] §[PROCESSO] review-loop** — author→reviewer→integrator è la **prima istanza** di questo protocollo (3 agenti, 3 brief §1, schema §2). Questo doc la generalizza. **Iterato fino a DRY** (utente 2026-07-10): si ripete finché il verificatore non torna a **zero findings validati** — loop-until-dry, mai un solo giro ([[../feedback_review_loop_until_dry]]).
+  - **⚠️ CAVEAT criterio-di-stop** (utente 2026-07-11): "dry" (zero findings) è raggiungibile solo su oggetti con **ground-truth FINITO** (bug, fatti verificabili — gli artefatti-dataset lo sono). Su oggetti **GENERATIVI** (design, piani sperimentali, strategie) la critica è ricorsivamente raffinabile → non c'è dry, il loop non termina e degenera in gold-plating. Per questi: **loop-until-VoI-negative** con **tier-di-rigore fissato a monte** ("materiale"=cambia una decisione concreta, non "raffinamento valido in astratto"). Classifica l'oggetto PRIMA di scegliere il criterio → [[../feedback_convergence_voi_generative]].
 
 ---
 
