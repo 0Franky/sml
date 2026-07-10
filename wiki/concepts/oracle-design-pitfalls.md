@@ -3,7 +3,7 @@ name: oracle-design-pitfalls
 description: Trappole di design degli ORACOLI (reward verifier) e le relative difese, consolidate in un posto solo (prima sparse in gold-methodology + playbook §4). L'oracolo È il reward → mal-progettato = gameabile (reward-hack) o non-portabile (rompe cross-device) → il training impara la cosa sbagliata.
 type: concept
 tags: [oracle, reward, verifier, reward-hacking, gold, training-data, portability, determinism, sha256, autocrlf]
-last_updated: 2026-07-08
+last_updated: 2026-07-10
 ---
 
 # Oracle design — trappole & difese
@@ -19,7 +19,7 @@ L'**oracolo È il reward**: è il predicato che decide se un'istanza di training
 
 In entrambi i casi **il modello impara la cosa sbagliata**. Anti-principio cardine: il reward va ancorato all'**OUTCOME** (l'errore reale evitato/colto), MAI alla cerimonia o alla partecipazione — [[../feedback_reward_hacking_principle]], CLAUDE.md #10. Ogni oracolo è un *reward proxy* e va passato all'hack-check: *«come lo massimizza SENZA la skill? qual è la difesa?»*.
 
-## Le sei trappole + la difesa
+## Le sette trappole + la difesa
 
 ### 1. Esempio invece di ∀
 **Trappola.** L'oracolo verifica **UN caso esemplificativo** di una proprietà "per tutti" (es. "il core è comune a TUTTE le foglie" testato su una sola foglia). → **gameabile**: il modello soddisfa l'esempio noto e **viola il resto**.
@@ -45,6 +45,10 @@ In entrambi i casi **il modello impara la cosa sbagliata**. Anti-principio cardi
 **Trappola.** Considerare "pronto" un gold i cui output (git/grep/pytest) **non** sono stati eseguiti in **sandbox reale**. Il pilota ha mostrato che gli output non-eseguiti contengono **bug di ragionamento** = oracoli logicamente **sbagliati** che nessuno ha ancora smascherato.
 **Difesa.** Marca `[UNVERIFIED — format-only, sandbox-execution pending]` in §0/frontmatter, **correggi ORA a mano i bug logici** dell'oracolo (non aspettare), e lascia che l'esecuzione reale — gated sullo scaffold verifier-sandbox — catturi il resto. Il marker è un debito **tracciato**, non un lasciapassare.
 
+### 7. Ramo≈campo (branch-reward mascherato) — CLAUDE.md #32
+**Trappola.** Quando la DECISIONE da premiare (il *ramo*: proponi/deferisci/agisci) è ≈ funzione diretta di un CAMPO (es. `propose ⟺ valore-alto`, dove il valore È la soglia stessa della decisione), grondare quel campo **per-esempio** contro un oracolo/annotazione **re-introduce il reward-sul-ramo** — anche se travestito da "fatto duro derivabile". È un branch/participation-hack (viola #10): il modello massimizza **scegliendo il ramo pagante**, non possedendo la skill di *soglia*. Ci siamo cascati **2 volte** nel loop-until-dry di [[../training-taxonomy/class-proactive-improvement-proposal]] (r1: annotazione-di-proponibilità → r2: "magnitudo-di-valore derivabile" = stesso leak solo ri-spostato). È la ragione per cui il gemello [[../training-taxonomy/gold-methodology]] §6.2-defer **non gronda MAI** il ramo act↔defer per-esempio.
+**Difesa.** Per-esempio gronda SOLO ciò che è genuinamente **NON-ramo**: un vero *input* alla decisione (soundness/validità/correttezza) a una pesatura soft *senza oracolo* (come reversibilità/costo in §6.2-defer, che sono input ⊥ dal ramo). Il **determinante-del-ramo** (la magnitudo/soglia stessa) va al segnale **DISTRIBUZIONALE**: held-out bilanciato + **ECE** (calibrazione), MAI per-esempio. **Un limite onesto** (over/under coerente-e-mirato preso solo distribuzionalmente) **batte un oracolo-finto** che riporta il branch-reward. **Test decisivo**: *«se gronda questo campo per-esempio, gronda un INPUT o la DECISIONE stessa?»*; blinda gli assi ortogonali (correttezza ⊥ magnitudo). Cfr. `feedback_reward_branch_field_trap`.
+
 ## Regola operativa (checklist pre-"oracolo pronto")
 
 Prima di dichiarare un oracolo pronto, TUTTE devono valere:
@@ -55,6 +59,7 @@ Prima di dichiarare un oracolo pronto, TUTTE devono valere:
 - [ ] **statico-se-nondeterministico** (check sull'azione proposta, non exit-code osservato) — trappola 4
 - [ ] **discrimination-gate** `T(B)=FAIL ∧ T(C)=PASS` dal vivo, scorer ≠ scored — trappola 5
 - [ ] **eseguito-in-sandbox** oppure marcato **[UNVERIFIED]** con la logica già corretta a mano — trappola 6
+- [ ] **input-non-ramo** per-esempio (se il ramo≈un campo, quel campo → held-out+ECE, MAI grondato per-esempio) — trappola 7
 
 Trasversale a tutte: **hack-check** esplicito (come si massimizza senza la skill?) + reward ancorato all'**outcome** ([[../feedback_reward_hacking_principle]]).
 
