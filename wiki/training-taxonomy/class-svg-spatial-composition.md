@@ -1,9 +1,9 @@
 ---
 name: class-svg-spatial-composition
-description: Classe di training APPROVATA (utente msg 1317) — generare/editare una composizione visiva (SVG), confrontarla col ground-truth per STRUTTURA (relazioni spaziali, non pixel), e validarla contro le leggi di design/UX (prossimità=significato, allineamento, gerarchia, leggibilità). Il difetto: composizioni dove gli elementi sono troppo vicini/disallineati/gerarchia rotta → illeggibili = UX pessima.
+description: Classe di training APPROVATA (utente msg 1317) — generare/editare una composizione visiva (SVG), confrontarla col ground-truth per STRUTTURA (relazioni spaziali, non pixel), e validarla contro le leggi di design/UX (prossimità=significato, allineamento, gerarchia, leggibilità). Il difetto: composizioni dove gli elementi sono troppo vicini/disallineati/gerarchia rotta → illeggibili = UX pessima. + FACET OBJECT-DEPICTION (msg 1535, approvata 1545): comporre le PARTI di un oggetto su layer distinti perché il render del tutto lo DEPINGA correttamente (simmetria/connettività/ordine-relativo), reward geometrico deterministico NON-percettivo.
 type: training-class
-tags: [visual-design, svg, spatial-composition, ux-laws, ground-truth-comparison, structural-similarity, vertical, area-svg-spatial, held-out]
-last_updated: 2026-07-08
+tags: [visual-design, svg, spatial-composition, object-depiction, ux-laws, ground-truth-comparison, structural-similarity, vertical, area-svg-spatial, held-out]
+last_updated: 2026-07-10
 ---
 
 # Classe di training — SVG SPATIAL COMPOSITION (composizione spaziale che ignora le leggi di design → illeggibile)
@@ -75,6 +75,37 @@ Reward **simmetrico**: un falso-positivo (rompere una composizione già sana per
 - **Whitespace-inflation** ("più spazio è sempre meglio" → sparpaglia tutto): → **Neutralizzato** dai negativi #1/#4 (allargare correlati o riempire negative-space voluto = penalità) + reward simmetrico: la prossimità *intra-gruppo* è anch'essa misurata → l'over-spacing rompe il raggruppamento e **abbassa** la similarità strutturale.
 - **Over-triggering / cerimonia**: bocciare composizioni sane gridando "disallineato/troppo vicino" per lucrare il segnale, o narrare l'applicazione delle leggi senza cambiare nulla. → **Neutralizzato**: la cerimonia senza delta-metrico = 0; i negativi #2/#3 penalizzano il flag su target-validi e su diff cosmetiche; il reward esige il *raggiungimento* della struttura+leggi, non l'atto di criticare.
 - **Over-fitting all'istanza osservata**: → **held-out** dei ground-truth + transfer cross-dominio obbligatorio (A/B/C) → misura la generalizzazione della *logica spaziale*, non la memorizzazione di un layout.
+
+## Facet — OBJECT-DEPICTION (comporre le PARTI di un oggetto su layer → il tutto lo DEPINGE)
+
+> **Origine**: utente msg 1535/1536 ("crea lo stelo di una rosa e tutti i petali uno a uno su layer SVG differenti → visti nel complesso danno l'immagine di una rosa"), **approvata** msg 1545. **SSOT/DRY** (rule #16/#20): NON è una classe nuova — è una **facet** di questa (stesso reward-engine: relation-match strutturale vs ground-truth, invariante, non-pixel), su un tipo diverso di target. Il framing precedente è UX-layout (leggibilità); questa facet è **rappresentazionale** (il render depinge l'oggetto voluto).
+
+**Il gap (facet)**: il modello sa disporre elementi per un LAYOUT, ma quando deve comporre le **parti di un OGGETTO** (rosa = stelo + petali; faccia = occhi + naso + bocca) perché il render del *tutto* lo depinga, sbaglia le **relazioni geometriche di rappresentazione**: petali non radiali attorno al centro, stelo staccato dal fiore, tutte le parti su **un unico layer** indistinto (non ispezionabili/manipolabili singolarmente), ordine relativo errato (occhi sotto la bocca). Non è percettivo (le coordinate sono esplicite) né di conoscenza (sa com'è una rosa): è **mancata validazione della composizione-oggetto contro le relazioni geometriche che la rendono riconoscibile**.
+
+**La skill (facet)** — estende `estrai-relazioni → confronta-struttura → valida → correggi` con predicati di DEPICTION:
+1. **Part-decomposition + LAYER-SEPARATION**: ogni parte semantica su un proprio layer/`<g>` etichettato (stelo, ciascun petalo) → il conteggio-layer combacia con le parti-semantiche attese del ground-truth. Tutto-su-un-layer **fallisce**; layer vuoti/duplicati per gonfiare il numero **penalizzati**.
+2. **Relazioni geometriche di depiction** (oltre prossimità/allineamento): **distribuzione/simmetria** (petali ~equi-angolari attorno al centro, varianza angolare ≤ soglia); **connettività** (endpoint dello stelo adiacente alla base del fiore, gap ≤ ε); **ordine relativo** (stelo SOTTO il fiore: y_stelo > y_fiore; occhi SOPRA naso SOPRA bocca — segni di Δy/Δx corretti); **contenimento/stacking** (tetto sopra i muri, muri sopra il suolo, porta dentro i muri).
+3. **Confronto strutturale col ground-truth**: stesso relation-isomorfismo, invariante a traslazione/scala (una rosa più piccola/spostata è ancora corretta).
+
+**Gold instance (HELD-OUT)**: la **rosa** — stelo + N petali su N+1 layer, petali a distribuzione radiale (Δθ ~ uniforme), stelo connesso alla base del fiore, y-ordering stelo-sotto-fiore. Oracolo **geometrico deterministico** sulle coordinate date (nessuna verità-del-mondo: la fixture è self-contained, #22).
+
+**Reward (stesso engine, esteso)**: (a) structural-match vs ground-truth (come sopra) **+ (b′) predicati-depiction**: layer-separation (≙ parti attese), radial-distribution (varianza angolare ≤ soglia dove il GT la richiede), connectivity (gap endpoint ≤ ε), relative-order (segni y/x corretti). **MAI** "sembra una rosa" percettivo (hack → 0); **MAI** pixel-diff. Il credito esige i *predicati geometrici raggiunti*, non l'atto di comporre.
+
+**Negativi (facet — il CONFINE, reward simmetrico)**:
+- **N-5 oggetto GIÀ valido** → non "ri-comporre"/spostare parti di una rosa target ben formata = falso-positivo penalizzato.
+- **N-6 over-decomposition**: un elemento **unitario** (il disco-centro del fiore) spezzato in finti sotto-layer arbitrari → la separazione-layer serve alle parti-semantiche REALI, non a inflazionare i layer → penalizzato.
+- **N-7 simmetria NON voluta**: un oggetto **asimmetrico** per design (una "e" minuscola, una freccia direzionale, un logo asimmetrico) forzato a simmetria radiale → rompe la depiction. Il predicato-simmetria si applica SOLO dove il ground-truth lo richiede (taglia in entrambi i versi, come prossimità).
+
+**Transfer object-depiction (domini-oggetto, cross-campo — rule #19)**: logica astratta unica = *le parti, disposte con le giuste relazioni geometriche (ordine/simmetria/connettività/contenimento) e separate per parte, compongono un tutto che DEPINGE il target; valida per struttura, non per pixel*.
+- **A software/diagram**: schema di un **circuito**/mappa-metro (nodi + connessioni topologiche corrette, non incroci spuri); una **casa** in un'icona (tetto-su-muri-su-suolo).
+- **B vita quotidiana**: **faccia** schematica (occhi-sopra-naso-sopra-bocca, simmetria bilaterale); **orologio** analogico (12 tacche equi-angolari, lancette dal centro all'ora *data*); disporre i **pezzi degli scacchi** nella posizione iniziale corretta.
+- **C sistemico**: **planimetria** (stanze adiacenti nel modo giusto, ingresso connesso ai corridoi); **fiore/albero** botanico (radiale/ramificato con connettività ramo→tronco); **costellazione** (stelle nelle posizioni relative che formano la figura).
+
+**Hack-check (facet)**: (i) "sembra l'oggetto" percettivo → 0 (solo predicati geometrici deterministici); (ii) **layer-inflation** (layer vuoti/finti per gonfiare il conteggio) → il conteggio è confrontato con le parti-semantiche del GT, non un numero assoluto; vuoti/duplicati penalizzati; (iii) pixel-copy → held-out target a inference + invarianza traslazione/scala (come la classe base).
+
+**Cugino TEXT-ONLY (recupera l'idea-1 dell'utente SENZA multimodalità)**: dato un albero **DOM/SVG in TESTO** (elementi con coordinate/stili espliciti) + domanda "quale elemento è X? (il bottone rosso al centro / il petalo più in alto)" → identificazione per **ragionamento su coordinate/stili/relazioni nel markup**, input testuale (no vision). L'idea-1 dell'utente (identificare un widget in un'immagine JPEG) era deferita perché serviva l'input multimodale; questo cugino la recupera come ragionamento spaziale su una scena **simbolica**. Reward: id-elemento corretto (exact-match) + la RAGIONE geometrica (bounding-box/centro/colore) verificata sui dati della fixture, non a parole.
+
+**Training-vs-harness split** (invariato, [[../concepts/training-vs-harness-classification]]): la skill Tier-1 = il **piano spaziale** (decomporre l'oggetto in parti, definire le relazioni geometriche, validare vs ground-truth, decidere le correzioni); l'emissione della sintassi SVG (path/transform/`<g>`) = **LoRA verticale svg**. Il Tier-1 possiede il *piano e la critica*, non la sintassi.
 
 ## Links
 [[class-visual-design-quality]] (padre) · [[class-frontend-ux-spacing-quality]] (sorella) · [[class-metacognitive-self-audit]] (audit-anti-reward-hacking, zia) · [[area-06-code-quality-architecture]] (verticale Tier-3 `svg-spatial` da creare quando si costruisce la LoRA) · [[project_base_model_intelligence]] · [[../concepts/training-vs-harness-classification]] · [[../concepts/training-set-construction-principles]] · [[../../harness/verifiers/deceptive-task-gen]] · [[../feedback_reward_hacking_principle]] · [[../feedback_intelligence_gap_to_training_class]] · [[../feedback_transfer_always_cross_domain]] · [[../feedback_training_set_factual_integrity]]
