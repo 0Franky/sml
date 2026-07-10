@@ -63,6 +63,14 @@ Prima di dichiarare un oracolo pronto, TUTTE devono valere:
 
 Trasversale a tutte: **hack-check** esplicito (come si massimizza senza la skill?) + reward ancorato all'**outcome** ([[../feedback_reward_hacking_principle]]).
 
+## Principio trasversale — RIMUOVI l'incentivo, non stringere il guardrail (2026-07-10)
+
+Quando un **segnale-proxy PREMIATO** continua a perdere attraverso un enforcement sempre più stretto **E** un'alternativa **non-gameable** copre già l'obiettivo → **togli il reward dal proxy** invece di inseguire ogni canale. Non è una resa: è riconoscere che un guardrail che va reso *sempre più* stretto sta rincorrendo un **incentivo mal-posto** — e *rimuovere l'incentivo* chiude l'hack **per costruzione** (niente reward = niente da gameare), mentre ogni nuovo guardrail lascia aperto il prossimo canale.
+
+**Caso canonico** ([[../training-taxonomy/class-code-optimization]], sotto-thread H1→K1→L1, round-3/4/5): la leg *previsione-quantitativa* dell'attribuzione (② PROCESSO) era gameable via *measure-then-declare* (misura il delta, poi "predicilo" copiandolo). Il **sigillo-pre-misura** è stato bucato **3 volte** — prima i tool verifier-owned, poi il proxy-counter deterministico (delta esatto), poi l'**auto-strumentazione nel sandbox** (il modello è un coding-agent: può sempre misurare da sé senza tool tracciati). Soluzione terminale: **declassare la previsione a segnale NON-premiato** (illustrativo); l'attribuzione resta all'**MCQ-controfattuale**, non-gameable (si sceglie fra alternative, nessun numero da copiare).
+
+**Quando applicarlo**: (a) l'enforcement è già stato bucato ≥2× su canali diversi (segnale che il proxy è strutturalmente misurabile dall'agente); (b) esiste un'alternativa non-gameable che copre lo stesso obiettivo; (c) il proxy ha valore **pedagogico** ma non **discriminativo** → tienilo come gold-behavior illustrativo non premiato. **Quando NON**: se il proxy è l'**unica** leg dell'obiettivo (rimuoverlo lo lascerebbe non-verificato) → allora serve il guardrail, non la rimozione. Corollario di CLAUDE.md #10 + cugino di [[clear-instructions-over-patches]] (rimuovi-la-debolezza > guardrail-pezza).
+
 ## Links
 
 [[../training-taxonomy/gold-methodology]] · [[verification-discipline-training]] · [[reward-hacking-mitigation]] · [[../training-taxonomy/dataset-construction-playbook]] · [[../feedback_reward_hacking_principle]]
