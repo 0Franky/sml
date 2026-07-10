@@ -3,7 +3,7 @@ name: base-model-candidates-2026-07
 description: "Ricerca comparativa (utente msg 1325, 2026-07-08) — il base attuale Qwen3.6-27B è davvero il più intelligente+knowledgeable per i nostri requisiti, o c'è di meglio? Ranking di 9+ candidati ~27-36B (dense preferiti, msg 1326) con verdetto, caveat e reco BAKE-OFF. NON decide: input per l'utente."
 type: entity
 tags: [base-model, continual-pretrain, model-selection, dense-vs-moe, qwen, seed-oss, glm, olmo, gemma, reference, decision-input]
-last_updated: 2026-07-08
+last_updated: 2026-07-10
 ---
 
 # Base model candidates — ricerca 2026-07-08
@@ -87,6 +87,17 @@ Groq (key utente in `harness/.env` come `GROQ_KEYS`, loader provider-aware `env-
 **Caveat infra**: i Qwen (thinking → più token) hanno saturato il **TPM free di Groq (429)** con 1 sola key; aggirato con `PACE_MS=5000 MAX_RETRIES=6` (validi tutti). Più `GROQ_KEYS` → giri veloci/paralleli (rotazione già in `chat()`).
 
 **Prossimo = DISCRIMINANTE** (proposto utente msg 1422): il metro rilevante non è il floor ma la **capacità di memory-management** che stiamo studiando — il modello capace SALVA i fatti durevoli quando istruito (il 9B NO, [[../harness-experiment-log]] §F33)? Rifare il **durable-preference test (F33) su qwen3.6-27b vs qwen3-32b via Groq** + anti-deflect → discrimina E valida la viabilità memoria-harness sul target (metrica **C4** trained-vs-untrained, [[../concepts/harness-value-and-capture-model]] §4). Richiede wiring run-session→Groq.
+
+## Bake-off — 2° giro DISCRIMINANTE C4 (2026-07-10, via OpenRouter, credito utente msg 1520) ⭐
+
+Eseguito il durable-preference test (F33) sui candidati capaci via OpenRouter (`eval/run-durable-discriminant.mjs`, ARM=ours keep6, anti-deflect, he12, fatto 2-parti ALDO-QX+inglese-britannico). **RISULTATO — split MODEL-SPECIFIC** ([[../harness-experiment-log]] §F34):
+
+| Modello | coding | probe-memoria | **note (salva?)** | **prefRecall (durevole)** | verdetto C4 |
+|---|---|---|---|---|---|
+| **qwen3.6-27b** | 12/12 | 100%/100% | **10** (proattivo, no-nudge) | **TRUE** (recall verbatim ALDO-QX) | ✅ **SALVA** |
+| **qwen3-32b** | 12/12 | 100%/100% | **0** (come il 9B) | **FALSE** (confabula col task-1) | ❌ non-salva |
+
+**La viabilità memoria-harness è MODEL-SPECIFIC, non size-monotona**: il 3.6-27b (più recente/agentic) usa i tool di memoria di sua iniziativa; il 32B (gen mag-2025) confabula invece di salvare, nonostante sia un base più grosso — **ed è 2.6× più lento** (861s vs 331s). → **Sull'asse C4 il candidato protetto qwen3.6-27b >> qwen3-32b** (valida il pick attuale proprio sulla capacità in studio). **⚠️ NON è la scelta-base finale**: (a) manca **Seed-OSS-36B-Instruct** = il vero co-leader (msg 1538/1539) — **NON su OpenRouter/Groq/DeepInfra/Novita**; servito da **SiliconFlow** (OpenAI-compat, ~$0.21/$0.57 per-M) o **TokenMix.ai** (1 key → Seed-OSS + DeepSeek-V4-teacher) → attende key utente, poi stesso identico test; (b) il C4-memoria è UN asse — l'idoneità-CPT si misura sui benchmark del BASE (asse diverso). Caveat: n=1/config. Il finding NON annulla il research-gap cattura-deterministica: lo rafforza (un base forte può fallire il save → backstop model-agnostico necessario).
 
 ## Links
 [[../../memory]] `project_test_model_vs_target` · `project_base_model_intelligence` · `project_from_scratch_slm_future` · [[open-pretraining-corpora]] (foundation-corpus per il from-scratch) · [[../concepts/catastrophic-forgetting]] · [[../concepts/training-intelligence-optimization]] · [[../decisions/2026-07-08-tier2-justification-analysis]]
