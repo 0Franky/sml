@@ -3,7 +3,7 @@ name: dataset-construction-playbook
 description: PLAYBOOK maestro (SSOT operativa) per costruire OGNI classe del training dataset — raccoglie requisiti, regole (#10+#18-#25), workflow, tecniche di label-gen, il CATALOGO delle "cose a cui stare attenti", e il coherence-audit che tiene il dataset coerente con le scelte. Segna-SEMPRE qui ogni osservazione nuova (regola #25, utente msg 1381).
 type: playbook
 tags: [training, taxonomy, methodology, dataset-quality, coherence, ssot, playbook, meta]
-last_updated: 2026-07-09
+last_updated: 2026-07-10
 ---
 
 # Playbook di costruzione del dataset — la guida unica
@@ -39,7 +39,7 @@ Ogni classe si costruisce applicando TUTTE insieme (fonte autoritativa = CLAUDE.
 4. **Scrivi il gold** come **HELD-OUT** (istanza osservata, decontaminata #18) — [[gold-methodology]].
 5. **Positivi + NEGATIVI** del confine, con **reward simmetrico** (#21).
 6. **Transfer cross-dominio** ≥3-4 non-tecnici, banale→sistemico (#19) — gruppi A software / B vita-quotidiana / C sistemico.
-7. **Reward = OUTCOME** verificato da oracolo; definisci l'**hack-check** (#10) — *"come massimizza senza la skill? qual è la difesa?"*.
+7. **Reward = design a 3 SEGNALI** (standard, utente msg 1579/1580, deep-dive [[../concepts/phased-reward-and-rh-detection]]): ① **OUTCOME** verificato da oracolo (ancora DOMINANTE) · ② **CORRETTEZZA-DEI-PASSI** dove esiste un oracolo (test intermedi / proof-checker / ancoraggio-fatti; sfumato → rollout-derived, MAI judge-a-sensazione come unica ancora) · ③ **TRANSFER** come reward diretto anti-scorciatoia (premia la soluzione che vale ANCHE sulle varianti held-out). ② è co-pilota, ① resta dominante. Definisci l'**hack-check** (#10) — *"come massimizza senza la skill? qual è la difesa?"*.
 8. **Integrità fattuale** del substrato (#22): fixture self-contained o fatti verificati+citati; incerto→verify-step.
 9. **Label-gen** (§3): oracolo/generatore deterministico + distrattori load-bearing.
 10. **Coherence-audit** (§5) + **completeness-audit** ([[../concepts/training-set-completeness-audit]]) PRIMA di "pronto".
@@ -71,6 +71,7 @@ Principio comune: l'oracolo è **deterministico** e premia l'**esito**; i distra
 - **[REWARD]** `R_discipline` sempre **SUBORDINATO** a `R_outcome` (non standalone) → non incassi la disciplina spedendo codice rotto. — verification-discipline-training §2.
 - **[REWARD]** **Scorer ≠ scored**: il reward L viene da un giudice **indipendente**, MAI dal self-score del modello (il self-score comunica il gap, non è reward). — reward-hacking-mitigation §3.
 - **[REWARD-L]** Scelte-di-valore/deferral: NIENTE reward sul ramo; solo penalità simmetrica via coerenza campi-tipizzati↔facts + razionale↔campi. — [[gold-methodology]] §Reward-L.
+- **[REWARD-DESIGN] ⭐ STANDARD a 3 SEGNALI (2026-07-10, utente msg 1579/1580)** — quando la classe lo supporta, il reward NON è solo l'esito ma **doppia/tripla validazione**: ① **OUTCOME** (oracolo, DOMINANTE — pavimento e soffitto) · ② **correttezza-dei-PASSI** *dove esiste un oracolo* (test intermedi / proof-checker / ancoraggio-fatti reali; per il ragionamento sfumato → **rollout-derived** à la [[../entities/rstar-math-paper]], NON un judge-a-sensazione da solo) · ③ **TRANSFER = reward diretto anti-scorciatoia** (premia ciò che vale ANCHE sulle varianti held-out; la scelta "casualmente-corretta-nel-contesto-stretto" prende reward basso perché fallisce alcune varianti). **Perché**: risolve il *right-answer-for-wrong-reasons* + lo *shortcut/spurious learning* (la generalizzazione NON è certificabile da dentro il contesto stretto → serve ③ fuori-contesto). **Paga** nei casi di DISACCORDO ①↔② (fortunato-ma-sbagliato / esito-sbagliato-ma-passi-buoni). **Caveat**: ① dominante, ② co-pilota (se ② pesa troppo → passi "formalmente-ok" ma inefficienti); il modello **non introspette** — il segnale glielo diamo noi (②/③). Deep-dive + safeguard PBRS in [[../concepts/phased-reward-and-rh-detection]]; evidenza ORM<PRM in [[../entities/prm-paper]]. È un **raffinamento di #10** (l'outcome resta l'ancora), non un reward sulla FORMA.
 
 ### HACK-CHECK (come massimizzare senza la skill + difesa)
 - **[HACK-CHECK]** **OBBLIGATORIO** per ogni foglia/classe: *"come massimizza il modello senza la skill?"* → elenca gli hack + la difesa che li neutralizza. — [[README]] §1, reward-hacking-mitigation §4.
@@ -160,7 +161,7 @@ Il dataset resta **coerente con scelte e impostazioni** (regola #25). Convenzion
 
 **Coherence-audit (checklist Y/N con evidenza — gira PRIMA di "pronto")**:
 1. La classe rispetta la struttura-sezioni condivisa? (Y/N)
-2. Il reward è outcome-anchored + c'è l'hack-check? (Y/N)
+2. Il reward è outcome-anchored + c'è l'hack-check? (Y/N) — e **dove gli oracoli esistono**, usa i **3 segnali** (esito + correttezza-passi + transfer, §4 [REWARD-DESIGN])? (Y/N/NA)
 3. È agganciata a un padre (o dichiarata padre)? Nessuna sorella scollegata? (Y/N)
 4. Gold held-out dichiarato + decontaminato? (Y/N)
 5. Transfer cross-dominio A/B/C (≥3-4 non-tecnici)? (Y/N)
