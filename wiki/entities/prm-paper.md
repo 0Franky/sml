@@ -9,7 +9,7 @@ sources:
   - https://openreview.net/forum?id=v8L0pN6EOi
   - https://github.com/openai/prm800k
   - https://huggingface.co/papers/2305.20050
-last_updated: 2026-05-21
+last_updated: 2026-07-10
 ---
 
 # PRM — Let's Verify Step by Step
@@ -126,6 +126,8 @@ PRM è direttamente rilevante per Wave 6 (post-training) e potenzialmente per Wa
 **[[entities/rstar-math-paper]]** — rStar-Math usa una variante moderna di PRM chiamata PPM (Process Preference Model), che usa preferenze tra step alternativi invece di label assoluti. Filosoficamente è discesa diretta di Lightman et al., con miglioramenti per ridurre noise di annotation. Per noi: capire PRM "classico" è il prerequisito per implementare PPM. `[INFERRED]`
 
 **[[concepts/contradiction-detection-layer]]** — Il nostro gap di letteratura "contradiction detection layer" è essenzialmente l'idea di un PRM che invece di valutare "questo step è corretto matematicamente?" valuta "questo step contraddice altri elementi del contesto (system prompt, retrieved docs, recent user messages)?". È una formulazione domain-shift di PRM, dal dominio math al dominio organizational. Il framework di Lightman et al. è direttamente adattabile: cambia il labelling protocol per annotare "contradizioni" invece di "errori matematici". `[INFERRED]`
+
+**[[concepts/phased-reward-and-rh-detection]]** — Il nostro schema di phase-reward + RH-detection è l'applicazione operativa (e safeguarded) di PRM al nostro dominio: process-reward come **potential-based shaping** su sotto-goal verificabili (Safeguard #1) invece del PRM human-labeled costoso; la 2ª via automatica (rollout-derived) viene da [[entities/rstar-math-paper]]. `[INFERRED]`
 
 **[[concepts/pre-flight-safety-checks]]** — Il PRM può essere il backbone di pre-flight safety checks: prima di mostrare una risposta all'utente, scorri gli step di reasoning, e se il PRM segnala uno step con score basso, blocca o re-genera. Pattern direttamente preso dal paper. `[INFERRED]`
 

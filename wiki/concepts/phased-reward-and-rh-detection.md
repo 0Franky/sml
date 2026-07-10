@@ -3,8 +3,8 @@ name: phased-reward-and-rh-detection
 description: Reward per-fase (process reward) di un task spezzettato in step + twin-pair discriminanti per inibire il participation-hack + final-report-reward pesato da quanto il modello ha tentato di hackerare le reward (RH-monitor = giudice LLM più capace). Verdetto critico su fattibilità/sensatezza/convenienza dell'idea utente 2026-06-27 msg 158.
 type: concept
 tags: [reward-design, reward-hacking, process-reward, rlaif, twin-scenarios, staged-curriculum]
-sources: [user notes 2026-06-27 msg 158]
-last_updated: 2026-06-27
+sources: [user notes 2026-06-27 msg 158, user msg 1576 2026-07-10]
+last_updated: 2026-07-10
 status: draft v1
 confidence: provisional
 ---
@@ -65,9 +65,21 @@ L'idea è valida **solo** con questi safeguard; senza, sposta soltanto l'hacking
 
 `[INFERRED]` la quantificazione del trade-off costo/rendimento è da validare; `[EXTRACTED]` il twin-pair pattern e l'outcome-anchor sono già ground truth nel progetto.
 
+## Nota — richiamo utente 2026-07-10 (msg 1576): "reward deterministico anche sulla DECISIONE?"
+
+L'utente ri-solleva la domanda da un altro angolo: *l'outcome-reward non garantisce che il **processo** che ha portato alla soluzione sia corretto (right-answer-for-wrong-reasons) → si può premiare la decisione **in modo deterministico** come l'outcome?*. Risposta consegnata (TG 1576/1577/1578), coerente con questo concept:
+
+- **SÌ, ed è provato** che il process-reward batte l'outcome-only sui task di reasoning ([[../entities/prm-paper]] "Let's Verify Step by Step", ORM vs PRM, +5.8pt MATH). Ma premiare la **forma** del ragionamento (giudice soggettivo su "sembra buono") è il vettore RH #1 → **regola #10 anti-cerimonia**.
+- **Due vie DETERMINISTICHE** (nessun giudice soggettivo come ancora):
+  1. **Spezza l'esito in tappe VERIFICABILI** e premia lo STATO-raggiunto come **PBRS** (`Φ` = frazione di sotto-goal verificabili completati) — è il Safeguard #1 di questo doc. Deterministico perché ogni tappa ha un oracolo; sicuro perché telescopa (non crea nuovo optimum).
+  2. **Deriva il valore del passo DALL'esito** via rollout (un passo è buono se, continuando, si raggiunge spesso l'esito verificato-corretto) = **Math-Shepherd / PPM** di [[../entities/rstar-math-paper]]. Process-reward **automatico**, ancorato all'oracolo deterministico dell'outcome, senza annotazione umana.
+- **Contro il "fortunato-ma-sbagliato"** (timore preciso dell'utente): (a) la **verifica delle tappe intermedie** becca il caso "due errori si annullano" (un passo intermedio non torna); (b) il **transfer cross-dominio/perturbato** (regole #18/#19) è una prova quasi-deterministica che il processo era causale e non fortuna — chi ha capito la logica ri-applica sui gemelli, chi ha indovinato crolla. → il **successo-sul-transfer = segnale di correttezza-di-processo**, riuso dell'held-out come discriminante.
+
 ## Linked
 
 - [[reward-hacking-mitigation]] — vincolo cross-pipeline (participation-hack #12, scorer≠scored #3, judge-ensemble #5, overoptimization-monitor #9, check-fantasma).
+- [[../entities/prm-paper]] — ORM vs PRM (process-supervision batte outcome-only su reasoning); la fondazione empirica del "premiare anche il processo".
+- [[../entities/rstar-math-paper]] — PPM / process-reward **automatico** derivato da rollout-fino-all'esito verificato = la 2ª via deterministica (senza annotazione umana).
 - [[staged-curriculum-training]] — il task spezzettato in fasi è il curriculum a stadi su cui poggia il phase-reward.
 - [[../training-taxonomy/gold-example-area02-criticality]] — il twin-pair (untracked→HALT / tracked→procedi, penalità simmetrica) da generalizzare a ogni fase.
 - [[error-memo-system]] — il verify-loop reale (rosso→verde) come fase verificabile ancorabile all'outcome.
