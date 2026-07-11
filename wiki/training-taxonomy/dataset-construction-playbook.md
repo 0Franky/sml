@@ -34,7 +34,7 @@ Ogni classe si costruisce applicando TUTTE insieme (fonte autoritativa = CLAUDE.
 ## §2 — Workflow per una classe nuova (end-to-end)
 
 1. **Astrai il gap** in una classe (#18) — nome, skill-radice, modo-di-fallimento reale osservato.
-2. **Trova/crea il PADRE** e aggancia come figlia (#20); valuta sotto-specializzazioni.
+2. **Trova/crea il PADRE** e aggancia come figlia (#20); valuta sotto-specializzazioni. **Se sei incerto sul padre → SCANSIONA l'albero + DECOMPONI-su-misfit** (§4 [GERARCHIA]): scorri dalla radice, e se un anello non fitta tratta il misfit come segnale che il padre va DECOMPOSTO, non forzare il figlio.
 3. **Proponi all'utente** (home taxonomy + reward-tag + label-gen + hack-check) e **attendi l'ok** (#18) prima di filare.
 4. **Scrivi il gold** come **HELD-OUT** (istanza osservata, decontaminata #18) — [[gold-methodology]].
 5. **Positivi + NEGATIVI** del confine, con **reward simmetrico** (#21).
@@ -62,6 +62,9 @@ Principio comune: l'oracolo è **deterministico** e premia l'**esito**; i distra
 ## §4 — CATALOGO "cose a cui stare attenti" (segna-SEMPRE qui — regola #25)
 
 > Raccolta VIVA (sweep-wiki 2026-07-08 + ogni osservazione futura). Formato: **[TEMA]** osservazione — *fonte*. Quando emerge un caveat nuovo → aggiungilo qui SUBITO.
+
+### GERARCHIA (placement padre→figlia, #20)
+- **[GERARCHIA]** Incerto sul padre → **SCANSIONE-dell'albero + DECOMPONI-il-padre-su-misfit** (utente msg 2026-07-11): scorri root→giù; se un anello **non fitta** (il figlio non condivide la skill-radice REALE del padre, solo un tema di superficie) NON forzarlo → il misfit è il **SEGNALE DIAGNOSTICO** che il padre fa doppio-lavoro → **decomponi il padre** in radici pulite. Decomporre un padre esistente = ristrutturazione → **segnala+ratifica** (#34/#26), mai di slancio. Istanza canonica: `evaluation-integrity` (anti-manomissione) non fittava sotto `metacognitive-self-audit` ("audita il TUO ragionamento" ≠ "non corrompere un valutatore esterno") → proposta decomposizione (self-audit vs `ground-truth-integrity`). — [[../feedback_hierarchy_placement_by_traversal]], [[../feedback_hierarchical_training_classes]] #20.
 
 ### REWARD (ancoraggio outcome / anti-cerimonia / simmetria)
 - **[REWARD]** Ancora SEMPRE all'**OUTCOME** verificabile (errore reale scovato/evitato), MAI alla cerimonia/forma ("valuto le alternative…", "per la legge di prossimità…" → 0). — [[../concepts/reward-hacking-mitigation]], tutte le class-*.
