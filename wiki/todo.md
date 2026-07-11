@@ -9,6 +9,28 @@ last_updated: 2026-07-11
 
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
 
+## 📌 2026-07-11 — SNAPSHOT STATO APERTO (consolidato, utente "salva tutto nei todo")
+
+> Quadro unico dei pendenti a fine sessione taxonomy. Dettaglio nelle sezioni datate sotto.
+
+**✅ FATTO+committato oggi (arco taxonomy metacognizione+integrità)** — commit `7587577`→`a4fdef0`, validato da analisi-gap multi-agente (67 candidati, **0 gap-fantasma**):
+> - **3 radici-sorelle** (nessun ombrello, twin-link): `metacognitive-self-audit` **relabellato a radice-AUDIT** (non più "ombrello metacognizione") · `situational-awareness` (OUTWARD) · **`ground-truth-integrity` 🆕** (integrità-verifica).
+> - **`evaluation-integrity`** (anti-manomissione, msg 1658) — padre CEMENTATO sotto ground-truth-integrity · **`independent-verification`** RE-HOMED (capacità spostata, non persa) · **`effort-honesty-under-difficulty` 🆕** (gap forethought — "mai la strada-facile in silenzio → AVVISA", padre AUDIT cementato/ratificato) · **`instruction-phase-clarification` esteso** (6ª situazione ill-posed/falsa-premessa → flag + grill-me).
+
+**⏳ DECISIONI ATTESE — GRILL (msg 1608, uno alla volta su TG)** *(dettaglio §sezione grill sotto)*:
+> - **[C]** padre-conteso `req/scope/domain-categorization` → sblocca registry §6 + reciprocità-padre di **code-optimization** (constraint-fit sì/no, TRANSFORM≠SELECT). **Il più sbloccante.**
+> - **[D]** priorità classi NUOVE: Area-09 (critique/honest-report **P1**) → 08 (tool-use/routing) → 13 (SWE) → 05/14/10/06.
+> - **[E]** retrofit reward **3-segnali + MCQ-controfattuale**: scope + ondate.
+
+**⏳ AZIONI DEFERITE (attendono un tuo ok / una condizione)**:
+> - **`index.md`** — aggiungere le voci delle 3 classi nuove (`ground-truth-integrity`, `evaluation-integrity`, `effort-honesty-under-difficulty`). **DIFFERITO** perché `index.md` ha modifiche non-committate del lab-plan → non entanglo.
+> - **File non-committati del filo LAB-PLAN — ATTENDE DECISIONE UTENTE**: `wiki/lab-plan-capable-models-validation.md` (untracked) + backlink modificati (`index.md`, `harness-experiment-log.md`, `harness-wins-validation-protocol.md`, `entities/base-model-candidates-2026-07.md`). **Già uncommitted a inizio conversazione**, NON del mio arco taxonomy. → committarli a parte o lasciarli WIP? **⚠️ Correzione (#27)**: NON è "una sessione parallela che scrive ora" (mia sovra-interpretazione dei timestamp) — sono modifiche **pre-esistenti** del filo lab-plan; da chiarire con l'utente.
+> - **rebuild grafo** `/graphify --update` (~250K token, manifest stantio da 129 file → di fatto rebuild-full): al tuo **ok-costo**. NB regola-portabilità: escludere `manifest.json`, sanitizzare path assoluti/username prima di ogni push.
+
+**📌 PLACEHOLDER condizionali** (NON creare finché non scatta il trigger — tracciati in `class-ground-truth-integrity.md §Placeholder` + `class-metacognitive-self-audit`): super-padre-metacognizione · reporting/measurement-integrity (3ª figlia ground-truth-integrity) · values-grand-root.
+
+**🚫 Untracked da NON committare** (git add sempre MIRATO): `harness/eval/_probe-*.mjs`, `_list-gemma.mjs`, `qualitative-review.mjs`, `harness/reddit_post.js`.
+
 ## ⏳ 2026-07-11 — Lab-plan validazione harness modelli-capaci (consolidato in wiki)
 > - **✅ FATTO — piano consolidato in wiki** (SSOT versionata): [[lab-plan-capable-models-validation]] (proposta; gate P0 verificato, §R 7-famiglie-rigore, §VoI triage MUST/OPT, CAP $7.50). Wiring completo (index/log + back-link da harness-wins / harness-experiment-log / base-model-candidates). ⏳ graphify --update.
 > - **⏳ FUTURO — eseguire la prima ondata MUST del lab-plan** (attende scelta scope+budget dall'utente, budget CAP $7.50): P0 (pinning provider/quant + noise-floor probe + protocollo anti-sycophancy) → ondata cheap ROI (T1.1 oracolo + T1.4 temporal-anchoring + T1.6 red-team-grader). **Prerequisito codice**: assemblare i runner dei lab nuovi (router-canary/arm-set per T1.2, iniezione-msg per T1.3, cheap-baseline/flat-dump/cold-start non esistono ancora). NON eseguire finché l'utente non decide scope+budget (staged-workflow #30). Vincoli-di-disegno obbligatori = §VoI gruppo-A (validità cheap) su OGNI lab.
