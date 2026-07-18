@@ -129,3 +129,12 @@ harness/.pi/secrets.config.json
 
 #Ignore vscode AI rules
 .github\instructions\codacy.instructions.md
+
+# Config di tool esterni non discussa nel progetto (Codacy MCP): resta LOCALE, mai pushata.
+# Il file ordina comportamenti agli agenti AI ("critical error" se non eseguono codacy_cli_analyze) e
+# il repo e PUBBLICO -> chiunque lo aprisse con un agente se lo ritroverebbe come istruzione autorevole.
+.github/
+
+# Artefatti di eval che finiscono nel working tree invece che in una temp (bug tracciato in todo.md)
+harness/solution_*.py
+harness/test_solution_*.py

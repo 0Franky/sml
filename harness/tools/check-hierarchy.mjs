@@ -12,10 +12,18 @@
  *  - **padre FANTASMA**: la figlia dichiara un padre che non e' un file (es. "famiglia safety/protection").
  *  - **padre inesistente**: il file dichiarato non c'e'.
  *
+ * ⚠️ "NON SO LEGGERLO" E' UN ERRORE, NON UNA NOTA (utente 2026-07-18: *"se il parser non legge il padre non
+ * sarebbe meglio che torni errore?"* — ha ragione).
+ * Prima versione: le classi senza marcatore riconosciuto finivano in un bucket informativo e il tool usciva
+ * **0**. Cioe' dichiarava "0 rotti" mentre 20 legami su 47 erano semplicemente **IGNOTI** → falsa sicurezza,
+ * ed e' lo **stesso difetto** del `grep -c` che ritorna 1 su zero-risultati: trattare *"non lo so"* come
+ * *"va bene"*. Un check che non sa e tace e' peggio di nessun check, perche' produce fiducia.
+ * Ora: `unparsed` e' **ERRORE** (exit 1) → l'unico modo di far passare la suite e' **standardizzare il
+ * marcatore**, che e' il fix vero. Il rumore diventa pressione a sistemare invece che sfondo tollerato.
+ *
  * COSA NON VERIFICA (dichiarato, non taciuto — #0)
- *  - se il padre e' quello GIUSTO (e' un giudizio di design, non meccanico);
- *  - le classi che dichiarano il padre in prosa libera senza i marcatori riconosciuti → finiscono in
- *    `unparsed` ed elencate: vanno lette a mano, NON contate come "ok".
+ *  - se il padre e' quello GIUSTO: e' un giudizio di design, non meccanico. Questo tool garantisce che il
+ *    legame sia DICHIARATO e RECIPROCO, non che sia corretto.
  *
  * USO
  *   node harness/tools/check-hierarchy.mjs            # report leggibile
@@ -89,11 +97,17 @@ if (asJson) {
     }
   }
   if (unparsed.length) {
-    console.log(`\n⚪ SENZA MARCATORE RICONOSCIUTO — ${unparsed.length} (da leggere a mano, NON contate come ok)`);
+    console.log(`\n🔴 PADRE NON LEGGIBILE — ${unparsed.length} (NON verificate: "non lo so" ≠ "va bene")`);
+    console.log(`   Il padre e' dichiarato in prosa libera. Usa un marcatore riconosciuto:`);
+    console.log(`     **Padre**: [[class-nome]]      oppure      figlia di [[class-nome]]`);
+    console.log(`   (o marca la classe come radice: "Classe-PADRE (radice)")`);
     console.log("   " + unparsed.join(" · "));
   }
-  console.log(`\n${files.length} classi · ${roots.length} radici · ${declared.length} legami dichiarati · ` +
-    `${problems.length} ROTTI (${byKind("senso-unico").length} a senso unico, ${byKind("padre-FANTASMA").length} padri fantasma) · ${unparsed.length} da leggere a mano`);
+  const total = problems.length + unparsed.length;
+  console.log(`\n${files.length} classi · ${roots.length} radici · ${declared.length} legami LEGGIBILI su ${declared.length + unparsed.length} · ` +
+    `${problems.length} rotti (${byKind("senso-unico").length} senso-unico, ${byKind("padre-FANTASMA").length} fantasma) · ${unparsed.length} illeggibili`);
+  console.log(total ? `❌ ${total} da sistemare` : `✅ ogni classe ha un padre leggibile e reciproco`);
 }
 
-process.exit(problems.length ? 1 : 0);
+// Rotti E illeggibili falliscono: un legame che non so leggere non e' un legame verificato (#0).
+process.exit(problems.length + unparsed.length ? 1 : 0);

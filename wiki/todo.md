@@ -54,6 +54,42 @@ last_updated: 2026-07-18
 - [ ] **Cappare i VALORI (non il numero di entry) in `<recent_changes>`/`<vars>`/`<facts>`**. `context-assembler.mjs:344` rende `old_value→new_value` **senza cap-char**; `:305` idem per vars; `:176` per facts. Il cap esistente (12) è sul **NUMERO di entry**, non sulla **dimensione** → il commento `:294` *"lane bounded anche su sessioni lunghe"* è **falso in char/token**. **Asimmetria che lo prova bug**: `VERIFY_DETAIL_CAP=200` + `capDetail()` (`:64-68`, usato a `:290`) applica GIÀ il principio con razionale documentato — a **1 lane su 4**. **Misura strumentata**: doc 3829 char → set_var → context 4084 (1.07×); **UNA modifica → context 11913 = 3.11×**, perché la riga-modifica porta vecchio+nuovo (7658 char in UNA riga); persiste 15 min, ri-emesso ogni turno. **Fix**: cap sul valore + marker `…[+N]` + puntatore al pull-tool. ⚠ **Caveat `<facts>`**: troncare rischia di rompere la **self-containedness** premiata da [[training-taxonomy/class-memory-lane-tool-discipline]] → cap più generoso o taglio a fine-frase (non meccanico → discutere).
 - [ ] **`test/integration/temp-read.test.mjs` — il test NON valida il wiring** (viola #14): asserisce `loaded < total/10` ma usa una `VarsQueue` grezza e **non chiama MAI `assembleContext`** → dimostra l'economia solo sul valore di ritorno di `slidingRead`, non sul context reale. Nel wiring vero: **leggi il 2.5% e paghi il 311%** (il set_var del doc è già dumpato intero nel changelog). → riscrivere il test **al livello del context assemblato** dopo il fix.
 
+### 🔴 GATE PRE-TRAINING — SAFETY-AUDIT del codice su cui addestriamo (utente 2026-07-18)
+
+> **Richiesta testuale**: *"metti come to-do da fare PRIMA del training un check su tutti i codici su cui faremo
+> training e RL del modello di cyber security. Non vorrei che faccia cose sbagliate, o che eseguendo alcuni
+> comandi automatici — per esempio un `ls` particolare — possa seguire altri file dannosi, o comunque aprire una
+> catena di chiamate per cui poi esegua file pericolosi"*.
+> **Blocca il training**: non è un "sarebbe bene", è una precondizione.
+
+- [ ] **(a) SCANSIONE STATICA di tutto il corpus di training/RL** — primitive pericolose nelle fixture e nelle
+  traiettorie-gold: `eval`/`exec`, `subprocess(..., shell=True)`, `curl|sh`, `rm -rf`, path-traversal,
+  scrittura fuori dalla sandbox, download+esecuzione. **Ogni hit va giustificato o defanged**, non tollerato.
+- [ ] **(b) 🔴 IL RISCHIO-CATENA che nomina l'utente — ed è ESATTAMENTE la distinzione statico/dinamico**
+  ([[class-static-dynamic-evidence-modality]]): un comando **innocuo alla lettura** può essere pericoloso
+  **all'esecuzione**, perché il suo effetto dipende dall'ambiente e non dal testo — `ls` che **segue i symlink**
+  in un path sensibile · glob che si espande su file non previsti · `$PATH`/alias che dirottano il binario ·
+  un tool che apre una **catena** di chiamate fino a eseguire qualcosa. **Conseguenza operativa**: la
+  scansione statica **NON basta per costruzione** → serve un **rollout in sandbox isolata** che osservi cosa
+  il comando fa *davvero* (file toccati, processi lanciati, rete). *(È il caso d'uso che giustifica la classe:
+  la stessa legge, applicata alla nostra sicurezza.)*
+- [ ] **(c) NEGATIVE EXAMPLES — sono il rischio PIÙ ALTO, non un'eccezione** *(domanda esplicita dell'utente:
+  «anche i negative examples non dovrebbero richiederlo?» → **sì, e più degli altri**)*. Un negativo insegna
+  cosa NON fare, quindi **per costruzione CONTIENE il pattern pericoloso**. Se l'etichetta o il reward sono
+  imperfetti, il modello può imparare **il pattern** invece del **divieto**.
+  **Requisito**: in un negativo il pattern pericoloso dev'essere **INERTE PER COSTRUZIONE** — path inesistenti,
+  comandi defanged, host non risolvibili, sandbox senza rete — così che **anche se il modello lo imitasse alla
+  lettera, non succeda nulla**. Un negativo "realistico e funzionante" è un'arma nel dataset.
+- [ ] **(d) 🔴 IL BUCO DI ENFORCEMENT — VERIFICATO ALLA FONTE 2026-07-18**: `harness/sandbox/Dockerfile`
+  **esiste**, ma `run-all.mjs:4` lo cita **solo in un commento** (`docker run --rm -v "$PWD:/work" slm-sandbox …`).
+  **Nessun runner impone l'isolamento**: `node sandbox/run-all.mjs` lanciato direttamente **esegue sull'host**.
+  Per l'SFT è un rischio moderato; **per l'RL è il rischio principale**, perché i rollout **eseguono davvero**.
+  → o il runner **rifiuta di partire fuori dal container**, o l'RL sul modello cyber non parte.
+- [ ] **(e) COMPLIANCE dei sorgenti** (#29): provenienza e licenza del codice-security usato per il training —
+  conta l'**USO**, non solo l'accesso.
+- [ ] **(f) Dove vive l'output**: i materiali cyber restano **fuori dal repo pubblico** (vedi decisione utente
+  2026-07-18) — il check stesso non deve produrre report con payload pericolosi dentro `wiki/`.
+
 ### Fix azionabili emersi dal triage
 - [ ] **I8 · oracolo composito** (F-harness, bug reale): `harness/verifiers/injection-suite.mjs:291-302` — `checkResistance` è una **DISGIUNZIONE di predicati per-call** (commento `:315` *"leak/azione a QUALSIASI punto = breach"*) → una sequenza in cui **nessuna singola call è breach ma la congiunzione produce il danno** viene scorata `resisted`. È il caso "attacchi multi-step non considerati" dell'utente.
 - [ ] **I8 · triangolazione/mosaic-effect**: `grep triangolaz|re-identif|mosaic|de-anonim` su tutto il repo = **0 hit** → foglia in `area-07-security-privacy` §Data minimization (`:135-157`). `area-07:153` copre solo l'aggregazione-lecita.
