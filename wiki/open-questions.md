@@ -165,7 +165,21 @@ Ragione: utente è ricercatore solo, dataset interni proprietari improbabili. Co
 
 **Implicazione**: dataset Tier 1 deve essere generato con ratio coding/organization parametrizzabile (non hard-coded). Generator B1 (vedi `pipeline-architecture-data-generation`) deve avere flag `--coding-ratio 0.10`.
 
-### #14 Composition-aware training per verticali — open
+### #14 Composition-aware training per verticali — ⚠️ STATO CONTESO (attende utente)
+
+> **⚠️ Questo file si contraddice su #14 e NON lo risolvo da solo** (rilevato 2026-07-16 da un confronto
+> sistematico corpo-vs-tabella, non a occhio). Esistono **due header** per la stessa domanda:
+> - **`:87`** — *"#14 Composition-aware training ✅ CLOSED 2026-05-21 (decisione combinata)"* → chiusa insieme a #8
+>   (stacking programming + verticale), come parte della stessa decisione;
+> - **questo header (`:168`)** → *open*, e la tabella riassuntiva concorda con questo (`⏳ open`).
+>
+> **Perché non lo decido io**: la domanda vera è **se la decisione combinata di #8 copra davvero anche #14**,
+> e questo lo sa solo chi l'ha presa. A differenza di #15/#16/#17 — dove il corpo era corroborato da una fonte
+> INDIPENDENTE (le memory `project_post_training_strategy` / `project_framework_stack` / `project_eval_suite`,
+> tutte datate 2026-05-21) e la tabella era l'unica fuori linea — qui **nessuna fonte terza discrimina**.
+> Chiudere a caso produrrebbe un errore con l'autorità di un fatto (regola #0).
+>
+> **Serve da te**: #14 è coperta dalla decisione di #8, o è ancora aperta? Poi si cancella l'header duplicato.
 **Raccomandazione precompilata**: **Sì** (vedi #8). Costo 2x giustificato.
 
 ### #15 Post-training ✅ CLOSED 2026-05-21 (+ idea curriculum staged)
@@ -341,9 +355,9 @@ Sotto-domande emerse durante grill-me #1 (da approfondire in grill-me #2):
 | 12 | Dataset interni | ⏳ open | rec: no, costruire da OSS |
 | 13 | Replay coding % | ✅ closed | 10% adaptive (calibrato empiricamente Wave 5) |
 | 14 | Composition-aware | ⏳ open | rec: sì (vedi #8) |
-| 15 | Post-training | ⏳ open | rec: ORPO, skip RLHF classic |
-| 16 | Framework | ⏳ open | rec: Unsloth → Axolotl → TRL+DeepSpeed |
-| 17 | Benchmark | ⏳ open | rec: quad-suite SWE+LCB+BCB+Aider |
+| 15 | Post-training | ✅ closed 2026-05-21 | skip RL in MVP v1 · ORPO+PRM+GRPO Wave 6 · curriculum SFT a 4 fasi (corpo §#15:171 + memory `project_post_training_strategy`) |
+| 16 | Framework | ✅ closed 2026-05-21 | Unsloth → Axolotl → ms-swift/TRL+DeepSpeed, pipeline mista per wave (corpo §#16:193 + memory `project_framework_stack`) |
+| 17 | Benchmark | ✅ closed 2026-05-21 | quad-suite SWE+LCB+BCB+Aider (corpo §#17:214 + memory `project_eval_suite`) |
 | 18 | Custom eval | ⏳ open | rec: 200/verticale + 50 human |
 | 19 | Baseline + soffitto | ⏳ open (parz.) | floor: Qwen3-4B base Phase 0 · **ceiling: Claude-Sonnet-4-6** (reference, non target; fuori dal reward-loop per ToS) |
 | 20 | Timeline | ⏳ open | da chiederti deadline |

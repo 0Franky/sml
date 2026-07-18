@@ -4,11 +4,27 @@ description: Briefing per l'utente (non-tecnico) sulle decisioni/ADR aperte — 
 type: decision-briefing
 tags: [briefing, decisions, adr, datasets, licensing, glossary, non-technical]
 sources: [user msg 2026-06-28 (234/235/238), sota-techniques-catalog review-loop, 2 research agent (coding+instruction datasets)]
-last_updated: 2026-06-28
-status: open — awaiting decisioni utente
+last_updated: 2026-07-16
+status: closed — tutte e 6 le decisioni ratificate, vedi [[2026-06-28-decisions-d1-d5]]
 ---
 
-# Briefing — Decisioni aperte (2026-06-28)
+# Briefing — Decisioni aperte (2026-06-28) — ✅ CHIUSO
+
+> **✅ CHIUSO il 2026-07-16.** Questo documento era ancora `status: open — awaiting decisioni utente` mentre
+> **tutte e 6** le decisioni che pone erano già state prese e registrate. Ratifica citabile (#26): **msg 245**.
+> **Dove vivono ora le risposte** → [`2026-06-28-decisions-d1-d5`](2026-06-28-decisions-d1-d5.md) `status: accepted`:
+> D1 aLoRA-sequencing · D2 tokenizer/special-token · D3 KV-policy su Turing · D4 latent-reasoning vs i marker
+> `[V]/[A]/[?]` · D5 judge-selection · **D6** data-licensing `:40` (`accepted, design in corso` — la decisione
+> è presa, il design prosegue).
+>
+> **Perché era un problema e non solo un dettaglio**: un documento che dichiara *"aspetto le tue decisioni"*
+> quando le decisioni ci sono è un **falso item aperto** — chi lo trova (o io dopo una compaction) ci ricasca e
+> ri-apre una discussione chiusa. È lo stesso difetto, in direzione opposta, dei *"→ TODO tracciato"* che non
+> esistevano: **lo stato dichiarato non corrisponde allo stato reale**, e in entrambi i versi costa lavoro.
+> Rilevato dall'inventario sistematico del 2026-07-16 (`wiki/_private/stato-aperto-2026-07-16.md`).
+>
+> Il testo sotto resta come **record storico** del contesto con cui le decisioni furono poste. Non è un
+> documento vivo: non aggiungerci decisioni nuove, vanno nell'ADR.
 
 > **Come leggere** (formato richiesto, msg 238): ho fatto **io** tutto il gathering/ricerca; ti chiedo **solo il residuo che non potevi inferire**. Per ogni punto: *contesto → come funziona (in parole semplici) → opzioni e trade-off → la mia raccomandazione professionale (production-ready + sicura) → cosa serve da te*. Il principio "gather in autonomia, chiedi solo il residuo, presenta ho-cercato-X→trovato-Y→reco-A" è già formalizzato in [[../concepts/low-confidence-gather-and-reorg]] + `feedback_be_autonomous_safe` + [[../concepts/scientific-method-operating-protocol]] — questo documento lo applica.
 
