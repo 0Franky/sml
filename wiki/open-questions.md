@@ -165,21 +165,22 @@ Ragione: utente è ricercatore solo, dataset interni proprietari improbabili. Co
 
 **Implicazione**: dataset Tier 1 deve essere generato con ratio coding/organization parametrizzabile (non hard-coded). Generator B1 (vedi `pipeline-architecture-data-generation`) deve avere flag `--coding-ratio 0.10`.
 
-### #14 Composition-aware training per verticali — ⚠️ STATO CONTESO (attende utente)
+### #14 Composition-aware training per verticali → ✅ CHIUSA, vedi §#14 a `:87` (moncone rimosso 2026-07-16)
 
-> **⚠️ Questo file si contraddice su #14 e NON lo risolvo da solo** (rilevato 2026-07-16 da un confronto
-> sistematico corpo-vs-tabella, non a occhio). Esistono **due header** per la stessa domanda:
-> - **`:87`** — *"#14 Composition-aware training ✅ CLOSED 2026-05-21 (decisione combinata)"* → chiusa insieme a #8
->   (stacking programming + verticale), come parte della stessa decisione;
-> - **questo header (`:168`)** → *open*, e la tabella riassuntiva concorda con questo (`⏳ open`).
+> **✅ RISOLTA il 2026-07-16 — questo era un MONCONE, non una domanda aperta.**
+> La risposta vera vive a **`:87`**, accanto a #8: *"Risposta utente: **Strategia A confermata** —
+> composition-aware training + additive runtime"*, col setup completo (Tier-3 addestrato con **Tier-2 caricato
+> e frozen** → i gradienti del verticale "vedono" il generalista e si adattano a non interferire; costo ~+50%
+> wall-clock; fallback su X-LoRA/MoLE/HMoRA se l'interferenza diventa ingestibile in Wave 7-8).
+> Questa sezione conteneva **solo** *"Raccomandazione precompilata: Sì (vedi #8)"* — cioè la scheda
+> **pre-decisione** rimasta indietro dopo che la risposta era arrivata ed era stata registrata sopra.
 >
-> **Perché non lo decido io**: la domanda vera è **se la decisione combinata di #8 copra davvero anche #14**,
-> e questo lo sa solo chi l'ha presa. A differenza di #15/#16/#17 — dove il corpo era corroborato da una fonte
-> INDIPENDENTE (le memory `project_post_training_strategy` / `project_framework_stack` / `project_eval_suite`,
-> tutte datate 2026-05-21) e la tabella era l'unica fuori linea — qui **nessuna fonte terza discrimina**.
-> Chiudere a caso produrrebbe un errore con l'autorità di un fatto (regola #0).
->
-> **Serve da te**: #14 è coperta dalla decisione di #8, o è ancora aperta? Poi si cancella l'header duplicato.
+> **Nota di processo (perché lo scrivo invece di cancellare in silenzio).** Il 2026-07-16 l'avevo marcata
+> *"CONTESA, la sa solo l'utente"* — **sbagliato**: mi ero fermato ai **titoli** senza aprire i **corpi**, e i
+> corpi discriminavano da soli. È l'errore **simmetrico** alla regola #0: non fermarsi al livello comodo, ma
+> nemmeno **dichiarare non-decidibile ciò che una lettura in più decide**. L'eccesso di cautela non è gratis —
+> produce un **falso gate** che consuma l'attenzione dell'utente su una domanda già chiusa (la simmetria di
+> #0 e #30: over-gating è un fallimento quanto l'under-verification).
 **Raccomandazione precompilata**: **Sì** (vedi #8). Costo 2x giustificato.
 
 ### #15 Post-training ✅ CLOSED 2026-05-21 (+ idea curriculum staged)

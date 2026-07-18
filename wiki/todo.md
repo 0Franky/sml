@@ -2,12 +2,38 @@
 name: wiki-todo
 description: Tracker vivo di TODO/pending — tutto ciò che è rinviato o aperto va QUI, non lasciato in chat (regola utente 2026-06-28 "tracciamo sempre tutto"). Stato: open/in-progress/done.
 type: todo
-last_updated: 2026-07-11
+last_updated: 2026-07-18
 ---
 
 # TODO Tracker
 
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
+
+## 🆕 2026-07-18 — Ristrutturazione RATIFICATA: nodo `instrument-epistemic-reach` + figlia statico/dinamico
+
+> Ratifica utente **2026-07-16** (*"sono d'accordo"*, opzione 2) — copre la **STRUTTURA**, non il testo dei file (#26). Eseguita 2026-07-18. File: `class-instrument-epistemic-reach.md` (nuovo, padre), `class-static-dynamic-evidence-modality.md` (nuovo, figlia b), `class-tool-perception-fidelity.md` (RE-HOME a figlia a), `class-metacognitive-self-audit.md` (tabella-figlie + §Reciprocità). `check-anchors`: **0 ERROR** ✅.
+
+**🔴 GATE — decisioni utente (non anticipate, #26/#30)**
+- [ ] **Posizione 3 dell'asse — COPERTURA/SCOPE: SCOPERTA.** *"Lo strumento giusto, alla risoluzione giusta, puntato sulla PORZIONE sbagliata"* (dir sbagliata · un solo branch/OS · `head` che tronca · un solo ambiente). Nessuna classe la insegna. È la posizione che ha prodotto il nostro stesso falso-negativo (*"nessuna pagina copre F2"* → era un regex tematico che non poteva matchare). **Terza figlia sì/no?**
+- [ ] **F2 (Chesterton's fence) è fuori-asse.** Dentro `tool-perception-fidelity`, F1 è pulitamente RISOLUZIONE, **F2 no** — appartiene a COPERTURA. Il re-home **non l'ha causato e non lo risolve**: l'ha reso visibile. **Spostare F2 / farne una sotto-figlia / lasciarla?** Dipende dalla decisione sopra.
+- [ ] **Reciprocità `metacognitive-self-audit`: 6 figlie dichiarate e non elencate** (nominate una per una in §Reciprocità del padre, non più un aggregato *"11/44"*). **NON aggiunte di proposito**: `scope-adaptive-knowledge-aggregation` + `requirements-driven-tree-navigation` + `domain-categorization-routing` dicono tutte e tre *"audit di un'assunzione"* → sospetto **sotto-famiglia mancante**, non 3 righe mancanti. **Decidere prima di cementare.**
+
+**🟠 Lavoro dovuto sulla figlia (b)** — `class-static-dynamic-evidence-modality`
+- [ ] **Ri-materializzare la fixture-madre in `harness/verifiers/`.** Gli script (`fmt.py`, matrice racy/sane, i probe `pdb`) vivono nello **scratchpad di sessione** → **non sopravvivono**. La classe cita numeri che oggi nessuno può riprodurre dal repo. **Priorità alta**: è l'artefatto load-bearing dell'intera classe.
+- [ ] **Costruire il polo SANE ed ESEGUIRLO.** La matrice della policy-stupida è **misurata** per P1/P2 sul materiale reale, ma **P3/P4 e la colonna "polo SANE" di P2 sono DEDOTTE dal design**: la fixture SANE non esiste ancora. È la parte più debole del file, ed è esattamente dove la lezione del 2026-07-16 dice di non fidarsi.
+- [ ] **Verificare il caveat (v) del generatore**: che **nessuna feature di superficie** (import, lunghezza del diff, presenza di `Lock`) correli col polo. Difetto più probabile del generatore, **non testato**.
+- [ ] **Ri-misurare la matrice fuori da Windows/Python 3.10.11.** Il *meccanismo* (evento di trace per riga fisica) è solido; **le frazioni no**.
+- [ ] **Reciprocità D1 mancante**: questa classe cita `gold-example-area02-3.2-dep-check.expanded.md` (fixture `FX-dynamic`), il gold **non sa** di questa classe. Link in uscita sì, in entrata no.
+- [ ] **Giro-1 di review** (la classe è a **giro-0**, mai guardata). Punti nuovi da revisionare per primi: il **discriminante** col padre, la **fixture-madre come cura strutturale**, il **minimal-pair racy/sane**, ②(a) condizionato.
+- [ ] **Held-out + metrica di successo: NON ESISTONO.** Probe minimo proposto (modulo racy con suite verde vs gemello sincronizzato → discrimina?). Finché non esiste, la classe **non ha metrica** e non va spesa come priorità.
+
+**🔧 Difetto PREESISTENTE emerso (non causato da questo lavoro, e non l'ho inventato un fix)**
+- [ ] **Citazione rotta in `todo.md`** (riga ~903, item *"Cleanup mecc. `[ref?]`"*, contesto **SAD mis-match**): punta a `area-04-context-metacognition.md:268`, che è una **riga vuota**. **Presente già a HEAD** (verificato con `git show HEAD:wiki/todo.md` → 1 occorrenza) — la mia insersione in testa a `todo.md` l'ha solo **fatta emergere** in `check-anchors`. ⚠️ **NON corretta di slancio**: la riga successiva (`:269`, *"[FOGLIA NUOVA] Low-confidence → gather/ask"*) **non parla di SAD**, quindi non è un off-by-one con risposta certa — il target vero è **indeterminato** e va ricostruito da chi ha scritto l'item. Correggerlo a occhio sarebbe **sostituire un numero sbagliato con un altro numero sbagliato**, che è il difetto esatto già registrato 4 volte in `class-tool-perception-fidelity`.
+
+**🟡 Gap segnalati dal GAP-SCAN, non filati (#28)**
+- [ ] **Fase "DICHIARA IL RESIDUO"** (*"verificato solo a livello X, resta Y"*, #0b) — **non ha casa in nessuna delle due figlie** e le attraversa entrambe. Plausibilmente la stessa lacuna che la roadmap registra come *"Regola #0 senza classe"*.
+- [ ] **Modalità SIMULAZIONE / modello formale** (type-checker, model-checker, prova) — né lettura né esecuzione, produce un `∀` **esatto su un'astrazione**. Toccata dal positivo [F] (calcolo del ponte), **non insegnata come modalità propria**.
+- [ ] **Posizione 4 dell'asse — VALIDITÀ TEMPORALE** (cache/snapshot/numero-di-riga scaduto): coperta **parzialmente e sotto altra radice** (`class-temporal-awareness` + tool `check-anchors`). Cross-link fatto, **re-home non deciso**.
 
 ## 🆕 2026-07-16 — TRIAGE note-utente `idee-raw.txt` (20 idee) + 2 idee a voce
 
