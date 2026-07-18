@@ -86,6 +86,17 @@ for (const f of files) {
   declared.push({ child, parent, raw });
 }
 
+/**
+ * Una figlia NON RATIFICATA (⛔ NON VALIDATA / STATO: PROPOSTA) che il padre non elenca **non e' un difetto**:
+ * e' lo stato CORRETTO. Scriverla nella tabella-figlie di un padre validato **asserirebbe una ratifica che non
+ * esiste** (#26) — e un padre lo dice pure a chiare lettere: *"non pre-costruiamo la gerarchia a priori"*.
+ * Ripararlo renderebbe verde il check al prezzo di far dire alla wiki una cosa che nessuno ha deciso: e' il
+ * **padre-inventato un livello piu' in la'**.
+ * → va nel bucket "in attesa dell'utente", non fra i rotti. (Segnalato dall'agente su compositional-reversibility,
+ *   2026-07-18; verificato: **4/4** i senso-unico di allora erano figlie non ratificate.)
+ */
+const isUnratified = (slug) => /NON VALIDATA|STATO:\s*PROPOSTA|—\s*PROPOSTA|attende (ok|ratifica)/i.test((bodies.get(slug) ?? "").slice(0, 3000));
+
 const problems = [];
 for (const d of declared) {
   if (!bodies.has(d.parent)) {
@@ -94,7 +105,8 @@ for (const d of declared) {
   }
   // reciprocita': il padre nomina la figlia?
   if (!bodies.get(d.parent).toLowerCase().includes(d.child)) {
-    problems.push({ kind: "senso-unico", child: d.child, parent: d.parent, raw: d.raw });
+    if (isUnratified(d.child)) undecided.push(`${d.child} → ${d.parent} (figlia non ratificata: il padre NON deve elencarla finche' non e' approvata)`);
+    else problems.push({ kind: "senso-unico", child: d.child, parent: d.parent, raw: d.raw });
   }
 }
 

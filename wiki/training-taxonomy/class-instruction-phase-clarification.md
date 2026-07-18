@@ -9,7 +9,7 @@ last_updated: 2026-07-08
 # Classe di training — INSTRUCTION-PHASE / CLARIFICATION (triage della mossa nella fase di istruzione)
 
 > **Stato**: APPROVATA (rule #18, utente msg 1317).
-> **Padre** (rule #20): [[class-metacognitive-self-audit]] — è l'audit del PROPRIO stato-cognitivo applicato al **momento della presa-in-carico**: "ho davvero abbastanza per procedere? l'assunzione che sto per fare è load-bearing? questo fatto ce l'ho o lo sto asserendo?". **Sorelle**: [[class-confabulation-retrieval-failure]] (audit della provenienza — se applicato all'*enunciare-un-fatto* in fase di dialogo), [[class-stagnation-recovery]] (audit del progresso), [[class-consequence-intention-conflict]] (audit mezzi-fini), [[class-prospective-memory]] (SAVE).
+> **Padre**: [[class-metacognitive-self-audit]] (rule #20) — è l'audit del PROPRIO stato-cognitivo applicato al **momento della presa-in-carico**: "ho davvero abbastanza per procedere? l'assunzione che sto per fare è load-bearing? questo fatto ce l'ho o lo sto asserendo?". **Sorelle**: [[class-confabulation-retrieval-failure]] (audit della provenienza — se applicato all'*enunciare-un-fatto* in fase di dialogo), [[class-stagnation-recovery]] (audit del progresso), [[class-consequence-intention-conflict]] (audit mezzi-fini), [[class-prospective-memory]] (SAVE).
 > **Identità del soggetto**: Tier-1 = orchestratore INTELLIGENTE ("problem analysis & task decomposition", [[../project_base_model_intelligence]]). Questa classe è la **porta d'ingresso** del suo lavoro: il triage della richiesta PRIMA di decomporre/eseguire. Non è una skill di coding (quello sta nelle LoRA).
 
 ## Il gap

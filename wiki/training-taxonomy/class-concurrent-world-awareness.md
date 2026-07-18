@@ -10,7 +10,7 @@ last_updated: 2026-07-16
 
 > ⚠️ **STATO: PROPOSTA** in attesa di ratifica formale del *placement* (#26). L'utente ha ratificato **il contenuto e il procedere** (msg 1717: *"Per favore poi capisci come procedere con tutti questi findings che mi stai dicendo. **Fixa tutto**"* + *"Ok aggiorna anche i docs e tienili allineati allo stato attuale"*); la **specifica della skill è sua**, verbatim sotto.
 
-> **Ruolo** (#20): **7ª figlia** di [[class-situational-awareness]] (radice OUTWARD). Il padre enumera le dimensioni della situazione da ancorare — *QUANDO* · *DOVE/con-COSA* · *rispetto-a-quale-CONOSCENZA* · *quale-AUTORITÀ* · *OBIETTIVO-utente* · *POSTA* — e **non ha mai enumerato «CHI ALTRO AGISCE»**. Ogni figlia esistente è corretta; **l'insieme era incompleto**. È il **Difetto 1** del [[gap-report-2026-07-16]] (6 gap su 18 ci ricadono).
+> **Ruolo** (#20): **7ª figlia di [[class-situational-awareness]]** (radice OUTWARD). Il padre enumera le dimensioni della situazione da ancorare — *QUANDO* · *DOVE/con-COSA* · *rispetto-a-quale-CONOSCENZA* · *quale-AUTORITÀ* · *OBIETTIVO-utente* · *POSTA* — e **non ha mai enumerato «CHI ALTRO AGISCE»**. Ogni figlia esistente è corretta; **l'insieme era incompleto**. È il **Difetto 1** del [[gap-report-2026-07-16]] (6 gap su 18 ci ricadono).
 > **Twin obbligatorio**: [[class-temporal-awareness]] è la sorella sull'**altro asse dello stesso decadimento** — lì l'osservazione decade per **ETÀ**, qui per **EVENTO**. **Compongono**: l'età dice *quanto tempo ha avuto per cambiare*, questa dice *se esiste qualcuno che possa averlo cambiato*. Senza la seconda, la prima è una falsa sicurezza (*"fresco di 2 secondi" ⇏ valido*).
 
 ---
