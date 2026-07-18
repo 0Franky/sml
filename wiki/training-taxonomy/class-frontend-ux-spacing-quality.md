@@ -10,7 +10,7 @@ last_updated: 2026-07-08
 
 > **Stato**: APPROVATA (rule #18, utente msg 1317; origine nota-design 1295b, `wiki/_private/proposal-design-notes-2026-07-07.md` §P1).
 > **Home**: area verticale **`frontend-ux`** → **LoRA Tier-3 frontend** (NON base). L'INTELLIGENZA Tier-1 ([[../project_base_model_intelligence]]) resta orchestrazione/decomposizione; il *coding/rendering* frontend è nella LoRA verticale. Ciò che questa classe addestra è il **giudizio di qualità** (skill di ragionamento spaziale ancorato a legge) che vive nella verticale.
-> **Padre** (rule #20): **famiglia `visual-design-quality`** (skill-radice: "giudicare la composizione visiva contro leggi verificabili, non contro il gusto"). **Sorella**: [[class-svg-spatial-composition]] (P3 — stessa radice legge-UX applicata a generazione/editing SVG e conformità struttura↔ground-truth). Vedi [[../feedback_intelligence_gap_to_training_class]], [[../feedback_hierarchical_training_classes]].
+> **Padre**: [[class-visual-design-quality]] (rule #20 — famiglia `visual-design-quality`, skill-radice: "giudicare la composizione visiva contro leggi verificabili, non contro il gusto"). **Sorella**: [[class-svg-spatial-composition]] (P3 — stessa radice legge-UX applicata a generazione/editing SVG e conformità struttura↔ground-truth). Vedi [[../feedback_intelligence_gap_to_training_class]], [[../feedback_hierarchical_training_classes]].
 
 ## Il gap
 

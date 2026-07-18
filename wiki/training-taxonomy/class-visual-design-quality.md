@@ -6,7 +6,7 @@ tags: [visual-design, ux, spatial-reasoning, gestalt, quality-judgment, parent-c
 last_updated: 2026-07-08
 ---
 
-# Classe-PADRE — VISUAL DESIGN QUALITY (giudicare la composizione contro leggi verificabili, non contro il gusto)
+# Classe-PADRE (radice) — VISUAL DESIGN QUALITY (giudicare la composizione contro leggi verificabili, non contro il gusto)
 
 > **Ruolo**: PADRE di famiglia (rule #20 — gerarchia obbligatoria). Raccoglie la **skill-radice** condivisa dalle figlie visuali; la radice si impara UNA volta, le figlie la specializzano su *cosa/come*.
 > **Figlie**: [[class-frontend-ux-spacing-quality]] (P1 — spaziatura/layout frontend, gradiente a/b/c/d) · [[class-svg-spatial-composition]] (P3 — generazione/editing SVG + conformità struttura↔ground-truth; **2 facet**: UX-layout *e* OBJECT-DEPICTION — comporre le parti di un oggetto su layer perché il render lo depinga, msg 1535/1545). Se emergono altre specializzazioni visuali (tipografia, color-contrast/accessibilità, data-viz — cfr. [[../concepts/kb-topics-tier1-expansion]] Gruppo B "information design") si appendono qui.

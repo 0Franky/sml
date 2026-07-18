@@ -15,9 +15,9 @@ last_updated: 2026-07-18
 
 # Nodo INTERMEDIO — LA PORTATA DEL MIO STRUMENTO
 
-> **Ruolo** (#20): **figlio** di [[class-metacognitive-self-audit]] (radice INWARD — *"sospendere la fiducia nel
+> **Ruolo** (#20): **Padre**: [[class-metacognitive-self-audit]] — radice INWARD (*"sospendere la fiducia nel
 > proprio output/stato intermedio e verificarlo contro un riferimento oggettivo"*,
-> `class-metacognitive-self-audit.md:19`) e **padre di 2**.
+> `class-metacognitive-self-audit.md:19`). Questo nodo ne e' **figlio** ed e' a sua volta **padre di 2**.
 > **La torsione, dichiarata**: nel padre l'oggetto sospeso e' un **ragionamento**; qui e' **il risultato di uno
 > strumento** — e il "riferimento oggettivo" del padre e' precisamente cio' che questo nodo problematizza,
 > perche' *un riferimento e' oggettivo solo dentro la portata dello strumento che lo produce*. Questo nodo e'

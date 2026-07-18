@@ -12,6 +12,18 @@
  *  - **padre FANTASMA**: la figlia dichiara un padre che non e' un file (es. "famiglia safety/protection").
  *  - **padre inesistente**: il file dichiarato non c'e'.
  *
+ * ⚠️ TRE STATI, NON DUE — e la differenza decide l'exit code:
+ *   1. **ROTTO** (senso-unico / padre fantasma / padre inesistente) → **errore**: e' un difetto reale.
+ *   2. **ILLEGGIBILE** (padre in prosa libera, nessun marcatore) → **errore**: e' *"non lo so"*, e non lo so
+ *      perche' il lavoro di forma non e' stato fatto. E' MIO da chiudere.
+ *   3. **DA-DECIDERE** (marcato esplicitamente \`**Padre**: DA-DECIDERE\`) → **NON e' un errore**: e' uno stato
+ *      *determinato* — sappiamo esattamente cosa manca (una decisione dell'utente) ed e' tracciato nei gate.
+ * Perche' il 3 non fallisce (segnalato dall'agente su class-code-optimization, 2026-07-18): se le decisioni
+ * pendenti tenessero il check **rosso in permanenza**, nessuno potrebbe piu' distinguere i rossi **azionabili**
+ * da quelli **parcheggiati** → il rosso perde significato e viene ignorato, e un check ignorato non protegge
+ * piu' nulla. Restano **elencati e contati** a ogni run: visibili, non silenziosi.
+ * La differenza sostanziale col caso 2: *"non lo so"* ≠ *"lo so, ed e' in attesa di lui"*.
+ *
  * ⚠️ "NON SO LEGGERLO" E' UN ERRORE, NON UNA NOTA (utente 2026-07-18: *"se il parser non legge il padre non
  * sarebbe meglio che torni errore?"* — ha ragione).
  * Prima versione: le classi senza marcatore riconosciuto finivano in un bucket informativo e il tool usciva
@@ -51,7 +63,8 @@ const bodies = new Map();
 for (const f of files) bodies.set(norm(f), readFileSync(`${TAX}/${f}`, "utf8"));
 
 const declared = [];   // { child, parent, raw }
-const unparsed = [];   // figlie senza marcatore riconosciuto → lettura manuale
+const unparsed = [];   // nessun marcatore → "non lo so": ERRORE, lavoro di forma non fatto
+const undecided = [];  // `**Padre**: DA-DECIDERE` → stato DETERMINATO in attesa dell'utente: elencato, non fallisce
 const roots = [];
 
 for (const f of files) {
@@ -59,6 +72,10 @@ for (const f of files) {
   const src = bodies.get(child);
   // una radice si auto-dichiara
   if (/Classe-PADRE\s*\(radice\)|\bradice\b.*\bnessun padre\b/i.test(src.slice(0, 2500))) { roots.push(child); continue; }
+
+  // DA-DECIDERE va riconosciuto PRIMA dei pattern normali: e' una dichiarazione esplicita di non-decisione,
+  // non un'assenza di dichiarazione.
+  if (/\*\*Padre(?:-skill)?\*\*\s*[:(]?\s*DA-DECIDERE/i.test(src)) { undecided.push(child); continue; }
 
   let parent = null, raw = null;
   for (const re of PARENT_PATTERNS) {
@@ -85,7 +102,7 @@ const byKind = (k) => problems.filter((p) => p.kind === k);
 const asJson = process.argv.includes("--json");
 
 if (asJson) {
-  console.log(JSON.stringify({ stats: { classes: files.length, roots: roots.length, links: declared.length, broken: problems.length, unparsed: unparsed.length }, problems, unparsed, roots }, null, 2));
+  console.log(JSON.stringify({ stats: { classes: files.length, roots: roots.length, links: declared.length, broken: problems.length, unparsed: unparsed.length, undecided: undecided.length }, problems, unparsed, undecided, roots }, null, 2));
 } else {
   for (const k of ["padre-FANTASMA", "padre-inesistente", "senso-unico"]) {
     const g = byKind(k);
@@ -103,10 +120,17 @@ if (asJson) {
     console.log(`   (o marca la classe come radice: "Classe-PADRE (radice)")`);
     console.log("   " + unparsed.join(" · "));
   }
+  if (undecided.length) {
+    console.log(`\n🟡 PADRE DA-DECIDERE — ${undecided.length} (in attesa dell'utente: NON un difetto, elencati per non dimenticarli)`);
+    console.log("   " + undecided.join(" · "));
+  }
   const total = problems.length + unparsed.length;
-  console.log(`\n${files.length} classi · ${roots.length} radici · ${declared.length} legami LEGGIBILI su ${declared.length + unparsed.length} · ` +
-    `${problems.length} rotti (${byKind("senso-unico").length} senso-unico, ${byKind("padre-FANTASMA").length} fantasma) · ${unparsed.length} illeggibili`);
-  console.log(total ? `❌ ${total} da sistemare` : `✅ ogni classe ha un padre leggibile e reciproco`);
+  console.log(`\n${files.length} classi · ${roots.length} radici · ${declared.length} legami verificati · ` +
+    `${problems.length} rotti (${byKind("senso-unico").length} senso-unico, ${byKind("padre-FANTASMA").length} fantasma) · ` +
+    `${unparsed.length} illeggibili · ${undecided.length} in attesa di decisione`);
+  console.log(total
+    ? `❌ ${total} DA SISTEMARE (${problems.length} rotti + ${unparsed.length} illeggibili)` + (undecided.length ? `  —  ${undecided.length} parcheggiati, non contano` : "")
+    : `✅ ogni legame verificato e reciproco` + (undecided.length ? `  —  restano ${undecided.length} in attesa di una tua decisione` : ""));
 }
 
 // Rotti E illeggibili falliscono: un legame che non so leggere non e' un legame verificato (#0).

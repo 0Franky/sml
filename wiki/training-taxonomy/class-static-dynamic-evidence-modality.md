@@ -15,8 +15,8 @@ last_updated: 2026-07-18
 
 # Classe (figlia b) — LO STRUMENTO RISPONDE A UN'ALTRA DOMANDA (statico ⇄ dinamico)
 
-> **Ruolo** (#20): **figlia (b)** di [[class-instrument-epistemic-reach]] — la posizione **MODALITA'** del suo
-> asse. **Sorella**: [[class-tool-perception-fidelity]], posizione **RISOLUZIONE**.
+> **Ruolo** (#20): **Padre**: [[class-instrument-epistemic-reach]] — questa ne e' la **figlia (b)**, la
+> posizione **MODALITA'** del suo asse. **Sorella**: [[class-tool-perception-fidelity]], posizione **RISOLUZIONE**.
 > **Il discriminante, in una riga** (il contratto e' nel padre): la' il rimedio e' **guardare MEGLIO** (stesso
 > oggetto, strumento piu' fedele); **qui** e' **guardare ALTROVE** (oggetto diverso). Test:
 > *"con risoluzione infinita la questione sarebbe chiusa?"* — la' **si'**, qui **no**, perche' l'informazione
