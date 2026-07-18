@@ -25,7 +25,8 @@ import { convIdFor } from "../../src/session-context.mjs";
 import { CHECKPOINT_SEQ_META } from "../../src/meta-keys.mjs"; // SSOT del prefisso segment-boundary (reader ↔ writer checkpoint.ts)
 import { TRACE_DIR } from "../../src/state-paths.mjs"; // SSOT dir trace/log
 import { parseSessionStartMs } from "../../src/time-shift.mjs"; // ancoraggio temporale lane (msg 848/849)
-import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint, markFocusHintEmitted, shouldEmitReorgHint, markReorgEmitted, maybeAutoFocus } from "../../src/nested-compact.mjs";
+import { effectiveKeepForTurn } from "../../src/keepturns.mjs"; // AS4: confine lane sul keep EFFETTIVO (override/adaptive), non lo statico
+import { getFocusStack, buildNestedWorkspace, evaluateTrigger, shouldEmitFocusHint, markFocusHintEmitted, shouldEmitReorgHint, markReorgEmitted, maybeAutoFocus, maybeAutoPop, exhaustedFocusScope, backlogOutsideSubset } from "../../src/nested-compact.mjs"; // maybeAutoPop/exhausted/backlog: fix UD3 stranding a subset esaurito
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { redactText } from "../../src/secrets-redact.mjs";
 import { getDynamicSecrets } from "../../src/secrets-registry.mjs";
@@ -82,20 +83,47 @@ export default function (pi: ExtensionAPI) {
     // messaggi DOPO l'ultimo checkpoint per questa conversazione (la chat pre-checkpoint è ripiegata nel digest).
     const checkpointSeq = Number(vq.getMeta(`${CHECKPOINT_SEQ_META}${convId}`)) || 0;
 
+    // AS4: confine della lane <messages_with_user> sul keep EFFETTIVO del turno (override set_keepturns / adaptive
+    // pubblicato da native-window), NON sul NATIVE_KEEP_TURNS statico — altrimenti la lane e l'array nativo divergono
+    // → amnesia (gap di turni) o doppia-chat (overlap). Order-independent (legge il meta pubblicato, ≤1 turno stale).
+    const effectiveKeep = effectiveKeepForTurn(vq, convId, NATIVE_KEEP_TURNS);
+
     // autofocus.mode=auto (OQ-A, msg 551): l'harness entra in focus DA SOLO sotto pressione matrioska, PRIMA di
     // leggere lo stack → il workspace di QUESTO turno riflette già lo scope aperto. No-op in off/nudge (default nudge).
-    if (HARNESS_CFG.autofocus.mode === "auto") maybeAutoFocus(vq, { tokens, contextWindow }, HARNESS_CFG.trigger);
+    // fix UD3 (auto-pop, utente "1 si" 2026-07-16): l'auto-mode entrava ma non USCIVA mai (popFocus era chiamato solo
+    // dal tool pop_focus) → finiti i task del subset il modello restava con <task_list focus="0"> VUOTA e il backlog
+    // visibile solo nel <frame>: proprio il modello che non sa auto-organizzarsi per ENTRARE non sa poppare = stranding.
+    // Il pop va PRIMA dell'enter: srotola gli scope esauriti, poi maybeAutoFocus ri-valuta la pressione sul resto.
+    if (HARNESS_CFG.autofocus.mode === "auto") {
+      maybeAutoPop(vq, {}, HARNESS_CFG.trigger);
+      maybeAutoFocus(vq, { tokens, contextWindow }, HARNESS_CFG.trigger);
+    }
 
     const stack = getFocusStack(vq);
     let workspace: string;
     if (stack.length > 0) {
       // Uno scope è aperto → workspace NESTED: <frame> (zoom-OUT) + <context> FILTRATO + lane <messages_with_user>.
       const top = stack[stack.length - 1];
-      workspace = buildNestedWorkspace(vq, { focusScopeId: top.scope_id, store: convStore, convId, messagesN: MESSAGES_WINDOW_N, messagesCharCap: MESSAGES_CHAR_CAP, afterSeq: checkpointSeq, excludeCurrentTurn: EXCLUDE_CURRENT_TURN, nativeKeepTurns: NATIVE_KEEP_TURNS, secrets: listSecretsMeta(), currentDate: true });
+      workspace = buildNestedWorkspace(vq, { focusScopeId: top.scope_id, store: convStore, convId, messagesN: MESSAGES_WINDOW_N, messagesCharCap: MESSAGES_CHAR_CAP, afterSeq: checkpointSeq, excludeCurrentTurn: EXCLUDE_CURRENT_TURN, nativeKeepTurns: effectiveKeep, secrets: listSecretsMeta(), currentDate: true });
+      // <pop_hint> (fix UD3): il ramo nested non emetteva ALCUN hint (focus_hint/reorg_hint vivono solo nel ramo
+      // non-nested) → a subset esaurito il modello non aveva nessun segnale di poppare. Emesso in OGNI modo, non solo
+      // nudge/off: in auto-mode è la rete di sicurezza se il pop qui sopra è fallito (LIFO/report rotto).
+      // Gate sul backlog NON vuoto: se non resta nulla fuori dallo scope non c'è stranding (il modello ha davvero finito).
+      // NESSUN cooldown, di proposito: a differenza del focus_hint (che nudga una SCELTA discrezionale) questo segnala
+      // uno stato BLOCCATO e si auto-risolve col pop → deve restare visibile finché non è risolto.
+      const exhausted = exhaustedFocusScope(vq);
+      if (exhausted && exhausted.scope_id === top.scope_id) {
+        const hidden = backlogOutsideSubset(vq, exhausted).length;
+        if (hidden > 0) {
+          workspace += `\n<pop_hint backlog="${hidden}">Every task in this focus scope is done, but ${hidden} open task(s) remain OUTSIDE it and are hidden from <task_list>. Call pop_focus to close this scope and get the full task list back.</pop_hint>`;
+        }
+      }
     } else {
       // Nessuno scope → resume? + <context> + <focus_hint>? + lane <messages_with_user>.
       const resume = buildResumeDigest(vq);
-      const base = assembleContext(vq, { secrets: listSecretsMeta(), currentDate: true });
+      // maxOpenFileViews: la lane <open_file_view> stampa `count="N/M"` → M dev'essere quello della config, lo stesso che
+      // usa il RIFIUTO in file-view.ts (altrimenti la lane dichiara un budget e il tool ne applica un altro).
+      const base = assembleContext(vq, { convId, secrets: listSecretsMeta(), currentDate: true, maxOpenFileViews: HARNESS_CFG.maxOpenFileViews }); // convId → shift [+Xs] in <scratch> (AS1)
       const trig = evaluateTrigger(vq, { tokens, contextWindow }, HARNESS_CFG.trigger);
       let hint = "";
       // focus_hint = il NUDGE: emesso SOLO in autofocus.mode='nudge' (default). In 'off' niente segnale; in 'auto'
@@ -125,7 +153,7 @@ export default function (pi: ExtensionAPI) {
       }
       // excludeCurrentTurn (config, default true): la native-window (native-window.ts) tiene keepTurns=1 = il turno
       // corrente; la lane mostra la STORIA → escludere il turno in volo evita la doppia-chat (overlap=1). (P1-B.)
-      const lane = buildMessagesLane(convStore, convId, { n: MESSAGES_WINDOW_N, charCap: MESSAGES_CHAR_CAP, afterSeq: checkpointSeq, excludeCurrentTurn: EXCLUDE_CURRENT_TURN, nativeKeepTurns: NATIVE_KEEP_TURNS });
+      const lane = buildMessagesLane(convStore, convId, { n: MESSAGES_WINDOW_N, charCap: MESSAGES_CHAR_CAP, afterSeq: checkpointSeq, excludeCurrentTurn: EXCLUDE_CURRENT_TURN, nativeKeepTurns: effectiveKeep });
       workspace = (resume ? `${resume}\n` : "") + base + hint + (lane ? `\n${lane}` : "");
     }
     // Scaffolding-crutch letto LAZY dal registry (popolato da .pi/extensions/slm.ts al load; VUOTO se slm non installato

@@ -16,7 +16,7 @@
  */
 import { readFileSync, existsSync } from "node:fs";
 import { DEFAULT_CFG, PRESSURE_DRIVERS } from "./nested-compact.mjs";
-import { DEFAULT_MESSAGES_WINDOW_N, DEFAULT_MESSAGES_CHAR_CAP } from "./lane-defaults.mjs"; // SSOT default lane messaggi
+import { DEFAULT_MESSAGES_WINDOW_N, DEFAULT_MESSAGES_CHAR_CAP, DEFAULT_MAX_OPEN_FILE_VIEWS } from "./lane-defaults.mjs"; // SSOT default lane messaggi + open_file_view
 import { TOOL_PROFILES } from "./tool-gating.mjs"; // SSOT enum profili tool-attivo (msg 1431); tool-gating è puro → no ciclo
 
 /** Modalità di enforcement del gathering pre-focus (msg 528/531). */
@@ -51,6 +51,13 @@ export const DEFAULT_HARNESS_CONFIG = {
   // turni più vecchi del K-esimo, via nthLastUserSeq → niente doppia-chat). K=6 default (tuning via env
   // HARNESS_NATIVE_KEEP_TURNS). Le REGOLE/reminder restano nel system (autorità + confine tool_result-vs-user).
   nativeKeepTurns: 6,
+  // maxOpenFileViews (utente 2026-07-16, "rendilo configurabile"): quante view <open_file_view> restano aperte insieme.
+  // Superato → RIFIUTO esplicito col messaggio che elenca cosa è aperto (mai sfratto silenzioso: scegliere cosa chiudere
+  // è l'atto deliberato che vogliamo ADDESTRARE, cfr. class-memory-lane-tool-discipline; sfrattare da soli insegnerebbe
+  // che le risorse si gestiscono da sole). Ogni view sta nel context OGNI TURNO finché non viene chiusa → il cap è un
+  // budget di finestra, non burocrazia: alzarlo costa contesto per-turno (cfr. E14/F37: gli schemi tool già dominano).
+  // ⚠ Il default è 3 (il rifiuto scatta alla 4ª apertura). Env HARNESS_MAX_OPEN_FILE_VIEWS (intero ≥1).
+  maxOpenFileViews: DEFAULT_MAX_OPEN_FILE_VIEWS,
   // adaptiveContext (utente msg 1434, opt-in, DEFAULT OFF — "non sono fan, la lascerei disattivata ma con incoraggiamento
   // a testarla"): keepTurns ADATTIVO alla pressione (implementazione runtime di F32 "l'harness paga solo in overflow").
   //   enabled=false (DEFAULT) → keepTurns fisso (comportamento attuale, nativeKeepTurns/override-modello).
@@ -199,6 +206,7 @@ const ENV_MAP = {
   HARNESS_MESSAGES_WINDOW_N: ["root", "messagesWindowN"],
   HARNESS_MESSAGES_CHAR_CAP: ["root", "messagesCharCap"],
   HARNESS_NATIVE_KEEP_TURNS: ["root", "nativeKeepTurns"],
+  HARNESS_MAX_OPEN_FILE_VIEWS: ["root", "maxOpenFileViews"],
 };
 
 /**
@@ -213,6 +221,7 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
     messagesWindowN: DEFAULT_HARNESS_CONFIG.messagesWindowN,
     messagesCharCap: DEFAULT_HARNESS_CONFIG.messagesCharCap,
     nativeKeepTurns: DEFAULT_HARNESS_CONFIG.nativeKeepTurns,
+    maxOpenFileViews: DEFAULT_HARNESS_CONFIG.maxOpenFileViews,
     adaptiveContext: { ...DEFAULT_HARNESS_CONFIG.adaptiveContext },
     laneMemoryHint: DEFAULT_HARNESS_CONFIG.laneMemoryHint,
     laneMemoryHintLevel: DEFAULT_HARNESS_CONFIG.laneMemoryHintLevel,
@@ -246,6 +255,9 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
       if (typeof f?.nativeKeepTurns === "number" && Number.isFinite(f.nativeKeepTurns) && f.nativeKeepTurns >= 1) {
         cfg.nativeKeepTurns = Math.floor(f.nativeKeepTurns);
       }
+      if (typeof f?.maxOpenFileViews === "number" && Number.isFinite(f.maxOpenFileViews) && f.maxOpenFileViews >= 1) {
+        cfg.maxOpenFileViews = Math.floor(f.maxOpenFileViews);
+      }
       if (typeof f?.laneMemoryHint === "boolean") cfg.laneMemoryHint = f.laneMemoryHint;
       if (f?.laneMemoryHintLevel === "full" || f?.laneMemoryHintLevel === "lean") cfg.laneMemoryHintLevel = f.laneMemoryHintLevel;
       if (typeof f?.messagesExcludeCurrentTurn === "boolean") cfg.messagesExcludeCurrentTurn = f.messagesExcludeCurrentTurn;
@@ -270,6 +282,8 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
       cfg.messagesCharCap = Math.floor(n);
     } else if (field === "nativeKeepTurns" && n >= 1) {
       cfg.nativeKeepTurns = Math.floor(n);
+    } else if (field === "maxOpenFileViews" && n >= 1) {
+      cfg.maxOpenFileViews = Math.floor(n);
     }
   }
   // gathering env (mode = stringa-enum, fuori dallo schema numerico di ENV_MAP)
@@ -284,15 +298,19 @@ export function loadHarnessConfig(path = DEFAULT_PATH, opts = {}) {
   if (env.HARNESS_ADAPTIVE_CONTEXT != null && env.HARNESS_ADAPTIVE_CONTEXT !== "") {
     cfg.adaptiveContext.enabled = env.HARNESS_ADAPTIVE_CONTEXT !== "false" && env.HARNESS_ADAPTIVE_CONTEXT !== "0";
   }
-  const adLow = Number(env.HARNESS_ADAPTIVE_LOW_THRESHOLD);
+  // fix audit-B #12: env numerica present-but-empty ("") → Number("")=0 superava i range-check (adLow 0>=0&&0<=1,
+  // adHyst 0>=0&&0<1) e sovrascriveva il default con 0 (adaptive bloccato in compresso). numEnv tratta "" come assente
+  // (NaN → skip → resta il default SSOT), come già fa il loop ENV_MAP (`raw===""` continue).
+  const numEnv = (v) => (v == null || v === "") ? NaN : Number(v);
+  const adLow = numEnv(env.HARNESS_ADAPTIVE_LOW_THRESHOLD);
   if (Number.isFinite(adLow) && adLow >= 0 && adLow <= 1) cfg.adaptiveContext.lowThreshold = adLow;
-  const adHigh = Number(env.HARNESS_ADAPTIVE_HIGH_KEEP);
+  const adHigh = numEnv(env.HARNESS_ADAPTIVE_HIGH_KEEP);
   if (Number.isFinite(adHigh) && adHigh >= 1) cfg.adaptiveContext.highKeep = Math.floor(adHigh);
-  const adSafety = Number(env.HARNESS_ADAPTIVE_SAFETY_PCT);
+  const adSafety = numEnv(env.HARNESS_ADAPTIVE_SAFETY_PCT);
   if (Number.isFinite(adSafety) && adSafety > 0 && adSafety <= 1) cfg.adaptiveContext.safetyPct = adSafety;
-  const adAvgTurn = Number(env.HARNESS_ADAPTIVE_AVG_TURN_TOKENS);
+  const adAvgTurn = numEnv(env.HARNESS_ADAPTIVE_AVG_TURN_TOKENS);
   if (Number.isFinite(adAvgTurn) && adAvgTurn >= 1) cfg.adaptiveContext.avgTurnTokens = Math.floor(adAvgTurn);
-  const adHyst = Number(env.HARNESS_ADAPTIVE_HYSTERESIS);
+  const adHyst = numEnv(env.HARNESS_ADAPTIVE_HYSTERESIS);
   if (Number.isFinite(adHyst) && adHyst >= 0 && adHyst < 1) cfg.adaptiveContext.hysteresis = adHyst;
   if (typeof env.HARNESS_PRESSURE_DRIVER === "string" && PRESSURE_DRIVERS.includes(env.HARNESS_PRESSURE_DRIVER)) {
     cfg.trigger.pressureDriver = env.HARNESS_PRESSURE_DRIVER; // A2: quale asse guida il firing (default "max")

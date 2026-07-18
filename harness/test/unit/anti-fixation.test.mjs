@@ -15,6 +15,13 @@ ok(classifyTurnSignal(["=== 3 passed in 0.1s ==="]) === "pass", "classify: '3 pa
 ok(classifyTurnSignal(["1 failed, 2 passed"]) === "neutral", "classify: misto fail+pass → neutral (non muove)");
 ok(classifyTurnSignal([]) === "neutral", "classify: vuoto → neutral");
 ok(classifyTurnSignal(["wrote solution.py"]) === "neutral", "classify: output neutro → neutral");
+// UD7/UD8 regression: un GREEN con conteggi-zero NON deve essere "neutral" (prima la stagnazione escalava DOPO un successo)
+ok(classifyTurnSignal(["test result: ok. 5 passed; 0 failed; 0 ignored"]) === "pass", "UD7: cargo green (5 passed; 0 failed) → pass, non neutral");
+ok(classifyTurnSignal(["Tests: 5 passed, 0 failed, 5 total"]) === "pass", "UD7: jest green (0 failed) → pass");
+ok(classifyTurnSignal(["ok  \tmypkg\t0.31s\nPASS"]) === "pass", "UD8: go-test 'ok pkg' a inizio-riga in mezzo al blob → pass (^ok /m)");
+ok(classifyTurnSignal(["0 passed; 3 failed"]) === "fail", "UD7: '0 passed; 3 failed' → fail (ancora al conteggio, non alla parola 'passed')");
+ok(classifyTurnSignal(["FAILED. 0 passed; 2 failed"]) === "fail", "UD7: all-fail (0 passed, 2 failed) → fail");
+ok(classifyTurnSignal(["running 1 test\ntest it_works ... ok\ntest result: ok. 1 passed; 0 failed"]) === "pass", "UD7: cargo full green → pass");
 
 // --- updateStagnation ---
 ok(updateStagnation({ consecutiveFails: 2 }, "fail").consecutiveFails === 3, "update: fail incrementa");

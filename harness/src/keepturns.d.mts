@@ -15,3 +15,4 @@ export function setKeepTurnsOverride(
   vq: VarsQueue,
   n: number | null,
 ): { effective: number; overridden: boolean; def: number };
+export function effectiveKeepForTurn(vq: VarsQueue, convId: string, configDefault: number): number;

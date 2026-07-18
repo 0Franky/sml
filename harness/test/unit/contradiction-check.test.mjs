@@ -30,6 +30,10 @@ ok(contradicts({ key: "region", op: "eq", value: "EU" }, { key: "region", op: "n
 ok(!contradicts({ key: "emails_per_user", op: "eq", value: 1 }, { key: "currency", op: "eq", value: "USD" }), "key diverse → NO contraddizione");
 // tipi non comparabili (numerico vs stringa) → conservativo
 ok(!contradicts({ key: "z", op: "gt", value: 5 }, { key: "z", op: "eq", value: "ciao" }), "gt 5 vs eq 'ciao' → tipi non comparabili, NO contraddizione (conservativo)");
+// AS11 (audit-B): eq/eq cross-tipo (string↔number, bool↔string) NON deve entrare nella branch numerica e sfuggire → cade nella categorica (riga 74)
+ok(contradicts({ key: "db", op: "eq", value: "postgres" }, { key: "db", op: "eq", value: 5 }), "AS11: eq 'postgres' vs eq 5 (cross-tipo) → contraddizione (branch categorica)");
+ok(contradicts({ key: "flag", op: "eq", value: true }, { key: "flag", op: "eq", value: "true" }), "AS11: eq true vs eq 'true' (bool vs string) → contraddizione categorica");
+ok(contradicts({ key: "n", op: "eq", value: 3 }, { key: "n", op: "eq", value: 5 }), "AS11 sanity: eq 3 vs eq 5 (entrambi num) → contraddizione (branch numerica intatta)");
 
 // ---- checkContradiction() multi-decisione ----
 const decisions = [

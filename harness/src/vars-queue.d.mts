@@ -94,7 +94,7 @@ export class VarsQueue {
   close(): void;
 
   // change-log
-  getChangeLog(opts?: { since?: number; entity?: string | null; entityId?: string | null; limit?: number; includeSilent?: boolean }): ChangeLogEntry[];
+  getChangeLog(opts?: { since?: number; entity?: string | null; entityId?: string | null; limit?: number; includeSilent?: boolean; seq?: number | null }): ChangeLogEntry[];
   gcChangeLog(beforeTs: number): number;
 
   // VARS

@@ -154,7 +154,9 @@ ok(searchTools(ITEMS, "secret", { limit: 1 }).length === 1, "search: limit rispe
   ok(custom.includes("bash") && custom.includes("jot"), "profili: custom attiva la lista fornita");
   ok(!custom.includes("ghost_inesistente"), "profili: custom scarta nomi non registrati");
   ok(custom.length === 2, "profili: custom = solo i nomi presenti");
-  ok(computeDefaultActive(all, { profile: "custom" }).length === 0, "profili: custom senza lista → vuoto");
+  ok(JSON.stringify(computeDefaultActive(all, { profile: "custom" })) === JSON.stringify(std), "profili: custom senza lista → fallback standard (UD2: era [] = lockout totale silenzioso)");
+  ok(JSON.stringify(computeDefaultActive(all, { profile: "custom", custom: [] })) === JSON.stringify(std), "profili: custom con lista VUOTA esplicita → fallback standard (UD2)");
+  ok(JSON.stringify(computeDefaultActive(all, { profile: "custom", custom: ["ghost_inesistente"] })) === JSON.stringify(std), "profili: custom con soli nomi ignoti (risolve a vuoto) → fallback standard (UD2)");
 
   // profilo ignoto → fail-safe standard (mai rompere)
   ok(JSON.stringify(computeDefaultActive(all, { profile: "zzz" })) === JSON.stringify(std), "profili: profilo ignoto → fail-safe standard");

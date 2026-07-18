@@ -8,7 +8,8 @@
  * default vive nella config (SSOT `nativeKeepTurns`); l'override sta in un meta condiviso cross-extension. Cap sul MAX
  * (anti context-bloat se il modello alza e non riabbassa). Vedi wiki/concepts/adaptive-context-injection.md §3b.
  */
-import { loadHarnessConfig } from "./harness-config.mjs";
+import { loadHarnessConfig, DEFAULT_HARNESS_CONFIG } from "./harness-config.mjs";
+import { EFFECTIVE_KEEP_META } from "./meta-keys.mjs"; // meta condiviso: keep effettivo pubblicato da native-window (AS4/AS5)
 
 export const KEEPTURNS_MAX = 20;                         // cap sul massimo (SSOT)
 export const KEEPTURNS_OVERRIDE_META = "keepturns_override";
@@ -51,8 +52,10 @@ export function adaptiveKeepTurns(usage, cfg, lowKeep, outputReservePct = 0, pre
   // finestra prima che la compressione scatti. Cap = safetyPct·finestra / avgTurnTokens (quanti turni "entrano" nella
   // quota-vanilla). Su finestra grande il cap è enorme → highKeep resta effettivo (vanilla); su finestra piccola il cap
   // scende fino a lowKeep → l'adaptive degrada a "sempre compresso" (SAFE, niente stallo). Entrambi configurabili.
-  const safetyPct = Number.isFinite(cfg.safetyPct) ? cfg.safetyPct : 0.8;
-  const avgTurn = Number.isFinite(cfg.avgTurnTokens) && cfg.avgTurnTokens > 0 ? cfg.avgTurnTokens : 2000;
+  // fix audit-B AS7 (#16 SSOT/DRY): default = SSOT importato, non literal ri-scritto (0.8/2000 divergerebbero in
+  // silenzio se il default cambiasse). loadHarnessConfig garantisce sempre questi campi; il fallback copre solo cfg parziali (test).
+  const safetyPct = Number.isFinite(cfg.safetyPct) ? cfg.safetyPct : DEFAULT_HARNESS_CONFIG.adaptiveContext.safetyPct;
+  const avgTurn = Number.isFinite(cfg.avgTurnTokens) && cfg.avgTurnTokens > 0 ? cfg.avgTurnTokens : DEFAULT_HARNESS_CONFIG.adaptiveContext.avgTurnTokens;
   const cap = Math.max(lowKeep, Math.floor((safetyPct * win) / avgTurn));
   const effHigh = Math.min(cfg.highKeep, cap);
   const tokens = usage?.tokens;
@@ -86,4 +89,23 @@ export function setKeepTurnsOverride(vq, n) {
   const clamped = Math.min(Math.max(parsed, 1), KEEPTURNS_MAX);
   vq.setMeta(KEEPTURNS_OVERRIDE_META, clamped);
   return { effective: clamped, overridden: true, def };
+}
+
+/**
+ * effectiveKeepForTurn — keepTurns EFFETTIVO CONDIVISO del turno = SSOT letta da context-assembly (confine lane
+ * <messages_with_user>) e eviction-checkpoint (ordinale eviction), fix AS4/AS5: prima leggevano il nativeKeepTurns
+ * STATICO mentre native-window finestrava l'array col keep REALE (override set_keepturns / adaptive) → amnesia o
+ * doppia-chat / miss-eviction. Precedenza, TUTTA order-independent (nessuna dipendenza dall'ordine-hook):
+ *   1. override esplicito del modello (set_keepturns, KEEPTURNS_OVERRIDE_META) — sempre live in vq → vince;
+ *   2. altrimenti l'ultimo keep PUBBLICATO da native-window (EFFECTIVE_KEEP_META, adaptive-aware; ≤1 turno stale
+ *      perché before_agent_start precede il context-hook del turno) — copre il regime adaptive senza fragilità d'ordine;
+ *   3. altrimenti il default config (`configDefault`, tipicamente nativeKeepTurns).
+ * Sotto config default (no override, adaptive off) il meta pubblicato == configDefault → comportamento INVARIATO.
+ * @param {import("./vars-queue.mjs").VarsQueue} vq  @param {string} convId  @param {number} configDefault  @returns {number}
+ */
+export function effectiveKeepForTurn(vq, convId, configDefault) {
+  let published = NaN;
+  try { published = Number(vq?.getMeta?.(EFFECTIVE_KEEP_META + String(convId))); } catch { /* meta assente/errore → default */ }
+  const base = Number.isFinite(published) && published >= 1 ? Math.trunc(published) : configDefault;
+  return getEffectiveKeepTurns(vq, base);
 }

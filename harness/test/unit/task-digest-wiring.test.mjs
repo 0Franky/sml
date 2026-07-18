@@ -48,7 +48,12 @@ ok(digestFactFromCall({ name: "set_var", args: { key: "k", value: "v" } }) === n
 ok(digestFactFromCall({ name: "run_python", args: { code: "print(1)" } }) === null, "digestFactFromCall: no path/content → null");
 {
   const f = digestFactFromCall({ name: "write_file", args: { path: "a/b/solution_3.py", content: "def truncate_number(n): return n%1" } });
-  ok(f && f.text === "solution_3.py → def truncate_number" && f.key === TASK_FACT_PREFIX + "solution_3.py", "digestFactFromCall: basename + def estratto + key prefissata");
+  ok(f && f.text === "b/solution_3.py → def truncate_number" && f.key === TASK_FACT_PREFIX + "b/solution_3.py", "digestFactFromCall: last-two path + def estratto + key prefissata (AS6)");
+  // AS6 regression: file OMONIMI in dir diverse → key DISTINTE + text self-contained (basename-only li faceva collidere/sovrascrivere)
+  const a = digestFactFromCall({ name: "write_file", args: { path: "app/models.py", content: "def User(): pass" } });
+  const b = digestFactFromCall({ name: "write_file", args: { path: "api/models.py", content: "def Router(): pass" } });
+  ok(a.key === TASK_FACT_PREFIX + "app/models.py" && b.key === TASK_FACT_PREFIX + "api/models.py" && a.key !== b.key, "AS6: file omonimi in dir diverse → key distinte (no collisione)");
+  ok(a.text === "app/models.py → def User" && b.text === "api/models.py → def Router", "AS6: text self-contained con la dir");
 }
 
 try { vq.close?.(); } catch { /* best-effort */ }

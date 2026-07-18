@@ -26,4 +26,9 @@ export const CONV_ID_META = "_conv_id";
 /** Chiave COMPLETA del token "gather fatta" (writer: vars-queue.ts/nested-compact.ts; reader: nested-compact.mjs). */
 export const GATHER_TOKEN_META = "_gather_token";
 
-export default { CHECKPOINT_SEQ_META, EVICTION_ORDINAL_META, CONV_ID_META, GATHER_TOKEN_META };
+/** Prefisso del keepTurns EFFETTIVO del turno per-conversazione. WRITER: native-window.ts (hook `context`, unico posto
+ *  dove si calcola il keep adaptive con getContextUsage+isteresi). READER: context-assembly.ts (confine lane) +
+ *  eviction-checkpoint.ts (ordinale eviction), via keepturns.effectiveKeepForTurn → confini allineati (AS4/AS5). */
+export const EFFECTIVE_KEEP_META = "_effective_keep:";
+
+export default { CHECKPOINT_SEQ_META, EVICTION_ORDINAL_META, CONV_ID_META, GATHER_TOKEN_META, EFFECTIVE_KEEP_META };

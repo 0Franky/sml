@@ -24,6 +24,8 @@ import { REPORTS_DIR } from "./state-paths.mjs"; // SSOT dir report matrioska
 import { DEFAULT_MESSAGES_WINDOW_N } from "./lane-defaults.mjs"; // SSOT finestra lane messaggi
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+// escAttr: esc + escape virgolette per VALORI in attributi XML (id/status model-controlled → anti attribute-break, fix UD1).
+const escAttr = (s) => esc(s).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 const sanitizeScope = (s) => String(s).replace(/[^A-Za-z0-9_.-]/g, "_");
 
 /** Config di default. Soglie [CALIBRATE] (first-principles, pass empirico sui dogfood — ADR difersce). */
@@ -251,6 +253,71 @@ export function maybeAutoFocus(vq, usage = {}, cfg = DEFAULT_CFG) {
 }
 
 /**
+ * exhaustedFocusScope — PURO. Lo scope APERTO più PROFONDO il cui `task_subset` non ha più task OPEN
+ * (pending/in_progress), altrimenti null. È la condizione di STRANDING dell'auto-mode (fix UD3): il modello ha
+ * portato a done tutti i task del subset ma lo scope resta aperto → `<task_list>` è filtrata al subset e appare
+ * VUOTA, il backlog resta visibile solo nel `<frame>` e nessun segnale invita a poppare.
+ * Subset VUOTO (scope aperto sul solo aimTask) → null: non c'era nulla da esaurire, non è stranding.
+ * Il più profondo è anche l'unico poppabile senza violare il LIFO (i figli hanno depth+1 → non ne ha di aperti).
+ * @param {import("./vars-queue.mjs").VarsQueue} vq
+ * @returns {object|null} il focus-frame esaurito (record `focus_frames`), o null
+ */
+export function exhaustedFocusScope(vq) {
+  const deepest = vq.listFocusFrames({ status: "open" }).sort((a, b) => b.depth - a.depth)[0] ?? null;
+  if (!deepest) return null;
+  const subset = new Set((deepest.task_subset ?? []).map(String));
+  if (!subset.size) return null;
+  const open = [...vq.listTasks({ status: "pending" }), ...vq.listTasks({ status: "in_progress" })];
+  return open.some((t) => subset.has(String(t.id))) ? null : deepest;
+}
+
+/**
+ * backlogOutsideSubset — PURO. Task OPEN che stanno FUORI dal subset dello scope dato, in EXECUTION-ORDER
+ * (ready-first, stesso ordinamento di `<task_list>`) = esattamente ciò che il filtro-scope NASCONDE al modello.
+ * SSOT condivisa (#16): la usano `buildFrame` (lane `<backlog>`) e il `<pop_hint>` dell'extension — era la stessa
+ * derivazione scritta due volte. Subset vuoto/assente → tutti gli open (niente è nascosto).
+ * @param {import("./vars-queue.mjs").VarsQueue} vq
+ * @param {{task_subset?: string[]}|null} frame
+ * @returns {Array<object>}
+ */
+export function backlogOutsideSubset(vq, frame) {
+  const subset = new Set((frame?.task_subset ?? []).map(String));
+  const orderedOpen = vq.listTasksOrdered().tasks; // pending + in_progress, ready-first
+  return subset.size ? orderedOpen.filter((t) => !subset.has(String(t.id))) : orderedOpen;
+}
+
+/**
+ * maybeAutoPop — SPECULARE a maybeAutoFocus (fix UD3, utente "1 si" 2026-07-16). In `autofocus.mode='auto'`
+ * l'harness ENTRA da solo in focus ma non ne USCIVA mai: `popFocus` era chiamato solo dal tool `pop_focus` e dai
+ * test → un modello che non sa auto-organizzarsi per entrare (il razionale stesso della auto-mode) non sa nemmeno
+ * poppare → restava bloccato con `<task_list focus="0">` vuota e il backlog invisibile. Qui chiudiamo l'asimmetria:
+ * finché lo scope più profondo ha il subset ESAURITO, lo si chiude deterministicamente.
+ * LOOP (bounded a maxDepth+1): chiudendo un figlio esaurito il padre può risultare a sua volta esaurito → si
+ * srotola l'intera pila esaurita nello stesso turno, invece di uno scope per turno. Ogni pop produce il suo report.
+ * Fail-safe: qualunque throw di popFocus interrompe il loop in silenzio (la diagnostica non rompe mai il turno) —
+ * il `<pop_hint>` dell'extension resta come rete di sicurezza.
+ * @param {import("./vars-queue.mjs").VarsQueue} vq
+ * @param {{ now?: number, reportDir?: string }} [opts]
+ * @param {typeof DEFAULT_CFG} [cfg]
+ * @returns {string[]|null} scope_id poppati (in ordine, dal più profondo), o null se nessuno
+ */
+export function maybeAutoPop(vq, opts = {}, cfg = DEFAULT_CFG) {
+  const c = { ...DEFAULT_CFG, ...cfg };
+  const popped = [];
+  for (let i = 0; i <= c.maxDepth; i++) { // bound: non si può poppare più di maxDepth scope annidati
+    const scope = exhaustedFocusScope(vq);
+    if (!scope) break;
+    try {
+      popFocus(vq, scope.scope_id, { now: opts.now, reportDir: opts.reportDir });
+      popped.push(scope.scope_id);
+    } catch {
+      break; // LIFO/report rotto → lascia lo stato com'è, ci pensa il pop_hint
+    }
+  }
+  return popped.length ? popped : null;
+}
+
+/**
  * Frame (zoom-OUT) — truthful by construction, no summarization. Letture DIRETTE dallo stato durevole.
  * @returns {{ aim, decisions, constraints, sharedState, backlog, depth, frameTs }}
  */
@@ -265,10 +332,9 @@ export function buildFrame(vq, opts = {}) {
   // backlog = task aperti FUORI dal subset dello scope più profondo, in EXECUTION-ORDER (come <task_list>): così il
   // display-cap del <frame> tiene i task più IMPORTANTI (ready-first), non i primi-inseriti — fix slice-direction
   // load-bearing (context-section-sizing-study bug #1). (review-loop 2026-06-30.)
+  // La derivazione vive in backlogOutsideSubset (SSOT #16): la condivide col <pop_hint> dell'extension (UD3).
   const deepest = vq.listFocusFrames({ status: "open" }).sort((a, b) => b.depth - a.depth)[0] ?? null;
-  const subset = new Set(deepest ? deepest.task_subset : []);
-  const orderedOpen = vq.listTasksOrdered().tasks; // pending + in_progress, ready-first (stesso ordinamento di <task_list>)
-  const backlog = subset.size ? orderedOpen.filter((t) => !subset.has(t.id)) : orderedOpen;
+  const backlog = backlogOutsideSubset(vq, deepest);
   return { aim, decisions, constraints, sharedState, backlog, depth, frameTs: now };
 }
 
@@ -277,7 +343,7 @@ export function serializeFrame(frame, opts = {}) {
   const dispCap = opts.displayCap ?? 8;
   const L = [`<frame depth="${frame.depth}">`];
   L.push(frame.aim
-    ? `  <aim id="${esc(frame.aim.id)}" status="${esc(frame.aim.status)}">${esc(frame.aim.title)}</aim>`
+    ? `  <aim id="${escAttr(frame.aim.id)}" status="${escAttr(frame.aim.status)}">${esc(frame.aim.title)}</aim>`
     : `  <aim>(none)</aim>`);
 
   // constraints — MAI troncate (sono le regole che vincolano anche dentro il focus)
@@ -484,7 +550,7 @@ export function buildNestedWorkspace(vq, opts = {}) {
   // secrets: anche nel ramo NESTED l'inventario sealed va mostrato (gate-critical) — altrimenti in focus mode il
   // modello perde la vista <secrets> e ri-chiama list_secrets (gemello di FIND-7). La lane filtra i TASK al subset,
   // NON i secret (un secret è globale, non legato al focus). (context-bounds-study §gate-completeness, 2026-06-30.)
-  parts.push(assembleContext(vq, { now, focusTaskIds, absoluteTimestamps: opts.absoluteTimestamps, secrets: opts.secrets, currentDate: opts.currentDate }));
+  parts.push(assembleContext(vq, { now, focusTaskIds, convId: opts.convId, absoluteTimestamps: opts.absoluteTimestamps, secrets: opts.secrets, currentDate: opts.currentDate })); // convId → shift [+Xs] in <scratch> (AS1)
 
   if (opts.store && opts.convId) {
     const lane = buildMessagesLane(opts.store, opts.convId, { n: opts.messagesN ?? DEFAULT_MESSAGES_WINDOW_N, charCap: opts.messagesCharCap, afterSeq: opts.afterSeq, excludeCurrentTurn: opts.excludeCurrentTurn, nativeKeepTurns: opts.nativeKeepTurns });

@@ -16,6 +16,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { getToolCallStore } from "../../src/state-db.mjs";
 import { getConvId } from "../../src/session-context.mjs";
+import { parseSessionStartMs } from "../../src/time-shift.mjs"; // fix AS8: la vista pull deve avere gli stessi [+Xs] della lane inline
 
 /** Coercizione difensiva Integer|String→number (i modelli piccoli passano "5" come stringa — lezione F5 set_keepturns). */
 function num(v: any): number | undefined {
@@ -55,6 +56,7 @@ export default function (pi: ExtensionAPI) {
           to: num(p?.to),
           count: num(p?.count),
           includeMemoryOps: p?.include_memory_ops === true || String(p?.include_memory_ops).toLowerCase() === "true",
+          sessionStartMs: parseSessionStartMs(convId), // AS8: prefisso [+Xs] come la lane inline (l'header lo PROMETTE), stesso convId della query
         }); // redazione: NON qui — passa dal secrets-guardrail (tool_result hook), SSOT della redazione
         const st = store.stats(convId);
         return { content: [{ type: "text", text }], details: { ok: true, total: st.total, available: st.total ? `#${st.minSeq}..#${st.maxSeq}` : "" } };

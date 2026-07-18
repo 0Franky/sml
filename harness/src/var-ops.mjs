@@ -158,7 +158,9 @@ export function emitToUser(text, vq, { dynamicSecrets = [], interpolate: doInter
   const { redacted, hit } = redactText(resolved, dynamicSecrets);
   // cap DOPO la redazione (review P1-D): anti-amplificazione applicata sul risultato GIÀ redatto, così nessun
   // prefisso di un segreto a cavallo del cap può sfuggire (redazione su testo completo, poi troncamento).
-  const capped = redacted.length > MAX_INTERP_CHARS ? redacted.slice(0, MAX_INTERP_CHARS) + "…[truncated]" : redacted;
+  // fix AS2: il cap è ANTI-AMPLIFICAZIONE dell'interpolazione ({{var:big}}), NON del canale di redazione della risposta
+  // finale. In passthrough (interpolate:false) non c'è espansione → non troncare output legittimo (>8KB) dell'assistant.
+  const capped = (doInterpolate && redacted.length > MAX_INTERP_CHARS) ? redacted.slice(0, MAX_INTERP_CHARS) + "…[truncated]" : redacted;
   return { text: capped, interpolated: doInterpolate, secretHit: hit };
 }
 

@@ -3,7 +3,8 @@
  * round-trip via meta, fail-safe su valori sporchi. Il default reale viene dalla config (SSOT nativeKeepTurns).
  */
 import { VarsQueue } from "../../src/vars-queue.mjs";
-import { getEffectiveKeepTurns, setKeepTurnsOverride, KEEPTURNS_MAX, adaptiveKeepTurns } from "../../src/keepturns.mjs";
+import { getEffectiveKeepTurns, setKeepTurnsOverride, KEEPTURNS_MAX, adaptiveKeepTurns, effectiveKeepForTurn } from "../../src/keepturns.mjs";
+import { EFFECTIVE_KEEP_META } from "../../src/meta-keys.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 
 let passed = 0, failed = 0;
@@ -133,6 +134,31 @@ const DEF = loadHarnessConfig().nativeKeepTurns; // SSOT — niente literal dupl
   ok(getEffectiveKeepTurns(vq, adKeep) === 40, "adaptive×override: nessun override → usa il default adattivo cappato (40)");
   setKeepTurnsOverride(vq, 8);
   ok(getEffectiveKeepTurns(vq, adKeep) === 8, "adaptive×override: override modello (8) VINCE sull'adattivo (default)");
+  vq.close();
+}
+
+// AS7 (audit-B, #16 SSOT): un cfg PARZIALE senza safetyPct/avgTurnTokens deve usare i default SSOT importati (cap identico al cfg completo) --------
+{
+  const win = 16384, LOW = 6;
+  const usage = { tokens: 0, contextWindow: win };
+  const full = adaptiveKeepTurns(usage, { lowThreshold: 0.5, highKeep: 9999, safetyPct: 0.8, avgTurnTokens: 2000 }, LOW);
+  const partial = adaptiveKeepTurns(usage, { lowThreshold: 0.5, highKeep: 9999 }, LOW); // ← senza safetyPct/avgTurnTokens
+  ok(full === partial, `AS7: cfg parziale usa i default SSOT, non literal (cap: full=${full} partial=${partial})`);
+}
+
+// AS4/AS5 — effectiveKeepForTurn: SSOT del keep condiviso (context-assembly + eviction-checkpoint) ---------
+{
+  const vq = new VarsQueue(":memory:");
+  const CID = "sess-1783000000000-startup";
+  ok(effectiveKeepForTurn(vq, CID, 6) === 6, "effKeepForTurn: no override + no meta pubblicato → configDefault (6)");
+  vq.setMeta(EFFECTIVE_KEEP_META + CID, "40"); // native-window pubblica il keep adaptive del turno
+  ok(effectiveKeepForTurn(vq, CID, 6) === 40, "effKeepForTurn: meta pubblicato 40 (adaptive), no override → 40 (allinea lane/eviction)");
+  setKeepTurnsOverride(vq, 3); // il modello si restringe la finestra a runtime
+  ok(effectiveKeepForTurn(vq, CID, 6) === 3, "effKeepForTurn: override set_keepturns (3) VINCE sul meta pubblicato (40)");
+  ok(effectiveKeepForTurn(vq, "sess-OTHER", 6) === 3, "effKeepForTurn: override è session-global → vale anche per altri convId");
+  setKeepTurnsOverride(vq, 0); // rimuove l'override
+  ok(effectiveKeepForTurn(vq, "sess-OTHER", 6) === 6, "effKeepForTurn: senza override + convId senza meta → configDefault (isolamento per-conv)");
+  ok(effectiveKeepForTurn(vq, CID, 6) === 40, "effKeepForTurn: rimosso l'override, CID torna al meta pubblicato (40)");
   vq.close();
 }
 

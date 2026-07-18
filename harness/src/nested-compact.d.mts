@@ -66,6 +66,17 @@ export function maybeAutoFocus(
   cfg?: Partial<NestedCfg>,
 ): { scopeId: string; depth: number; sinceSeq: number } | null;
 
+/** Lo scope aperto più profondo col task_subset ESAURITO (0 task open), o null. Condizione di stranding (UD3). */
+export function exhaustedFocusScope(vq: VarsQueue): FocusFrameRecord | null;
+/** Task open FUORI dal subset (execution-order) = ciò che il filtro-scope nasconde. SSOT di buildFrame + pop_hint. */
+export function backlogOutsideSubset(vq: VarsQueue, frame: { task_subset?: string[] } | null): TaskRecord[];
+/** Auto-pop speculare all'auto-enter: srotola gli scope esauriti (auto-mode). Ritorna gli scope_id poppati o null. */
+export function maybeAutoPop(
+  vq: VarsQueue,
+  opts?: { now?: number; reportDir?: string },
+  cfg?: Partial<NestedCfg>,
+): string[] | null;
+
 export function buildFrame(vq: VarsQueue, opts?: { now?: number }): Frame;
 export function serializeFrame(frame: Frame, opts?: { displayCap?: number }): string;
 export function getFocusStack(vq: VarsQueue): FocusFrameRecord[];

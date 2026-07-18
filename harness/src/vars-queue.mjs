@@ -119,8 +119,16 @@ CREATE TABLE IF NOT EXISTS focus_frames (
  * Namespace le cui mutazioni sono "silenziose" nel change-log visibile: restano nel log per l'audit
  * (recall on-demand con includeSilent) ma NON compaiono in `recent_changes` del <context> → una nota/memo
  * non inquina il contesto finché non è esplicitamente richiamata. (fix 2026-06-29, finding test-suite.)
+ *
+ * CRITERIO (esplicitato 2026-07-16): è silent ciò che ha GIÀ una lane propria che lo rende ('fact'→<facts>,
+ * 'scratch'→<scratch>, 'fileview'→<open_file_view>) oppure che è deliberatamente fuori-contesto ('memo').
+ * Altrimenti lo stesso contenuto finisce nel <context> DUE volte — e la copia in recent_changes è pure la
+ * peggiore (senza la resa della lane). Misurato su 'fileview' il 2026-07-16: contenuto duplicato 1:1, e la
+ * remove ri-stampava il valore rimosso → `close_file_view` NON liberava davvero il contesto (era F38 al quadrato).
+ * NB: literal e non gli export *_NS dei moduli-feature (SCRATCH_NS/FILEVIEW_NS) di proposito — lo store è lo
+ * strato SOTTO le feature: importarle qui invertirebbe la stratificazione. Aggiungendo un namespace-con-lane, aggiungilo qui.
  */
-const SILENT_NAMESPACES = new Set(["memo", "fact", "scratch"]);
+const SILENT_NAMESPACES = new Set(["memo", "fact", "scratch", "fileview"]);
 
 /**
  * Colonne aggiunte a tabelle ESISTENTI dopo la creazione iniziale → vanno ADD-ate via _ensureColumn sui DB su
@@ -197,11 +205,15 @@ export class VarsQueue {
    * Di default ESCLUDE le mutazioni silenziose (namespace memo): è ciò che alimenta `recent_changes`.
    * `includeSilent:true` per l'audit completo (recall on-demand).
    */
-  getChangeLog({ since = 0, entity = null, entityId = null, limit = 200, includeSilent = false } = {}) {
+  getChangeLog({ since = 0, entity = null, entityId = null, limit = 200, includeSilent = false, seq = null } = {}) {
     let q = `SELECT seq, ts, who, entity, entity_id, field, old_value, new_value, decision_ref, silent
              FROM changelog WHERE ts >= ?`;
     const args = [since];
-    if (!includeSilent) q += " AND silent = 0";
+    // `seq` = handle di UNA singola entry (F38): <recent_changes> mostra un RIASSUNTO del valore + "#seq" → questo è
+    // il modo di riavere il before/after PIENO di quella sola voce, senza ri-stampare tutto ad ogni turno. Bypassa
+    // `includeSilent`: se il modello ha in mano un seq preciso, sta chiedendo QUELLA entry, non sfogliando il flusso.
+    if (seq != null) { q += " AND seq = ?"; args.push(Number(seq)); }
+    else if (!includeSilent) q += " AND silent = 0";
     if (entity)   { q += " AND entity = ?";    args.push(entity); }
     if (entityId) { q += " AND entity_id = ?"; args.push(entityId); }
     q += " ORDER BY seq DESC LIMIT ?"; args.push(limit);

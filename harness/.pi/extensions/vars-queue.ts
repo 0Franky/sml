@@ -145,7 +145,12 @@ export default function (pi: ExtensionAPI) {
           key = `${base}-${n}`;
         }
       }
-      const importance = Number.isFinite(p?.importance) ? Math.trunc(p.importance) : 0;
+      // fix AS3: importance NON passata su un re-note dello stesso fatto → PRESERVA il pin corrente (non azzerarlo a 0,
+      // che lo farebbe scivolare oltre il cap <facts> e sparire senza che nessuno l'abbia deciso). Azzera solo se esplicito.
+      const existingFact = vq.getVar(`fact:${key}`);
+      const importance = Number.isFinite(p?.importance)
+        ? Math.trunc(p.importance)
+        : (existingFact?.value && Number.isFinite((existingFact.value as any).importance) ? (existingFact.value as any).importance : 0);
       vq.setVar(`fact:${key}`, { text, importance }, { namespace: "fact", scope: "private", who: activeWho() });
       return { content: [{ type: "text", text: `Saved fact '${key}': ${text}. It is in <facts> now and persists across the window and the compact. Update it by calling note with key='${key}'; drop it with remove_note('${key}').` }], details: { ok: true, key } };
     },
@@ -332,14 +337,18 @@ export default function (pi: ExtensionAPI) {
   pi.registerTool({
     name: "get_changelog",
     label: "Read change-log (who/when/what)",
-    description: "Return the recent change-log (who/when/what + decision-ref). Changes survive the compact. Optional filters: since (epoch ms), entity, limit.",
+    description:
+      "Return the recent change-log (who/when/what + decision-ref). Changes survive the compact. " +
+      "Use seq:N to get back the FULL before/after value of one single change — <recent_changes> only shows a summary of each value, and #N there is its seq. " +
+      "Other optional filters: since (epoch ms), entity, limit.",
     parameters: Type.Object({
+      seq: Type.Optional(Type.Number({ description: "Fetch ONE change by its id (the #N shown in <recent_changes>), with its full values." })),
       since: Type.Optional(Type.Number()),
       entity: Type.Optional(Type.String()),
       limit: Type.Optional(Type.Number()),
     }),
     async execute(_t: string, p: any) {
-      const log = vq.getChangeLog({ since: p.since ?? 0, entity: p.entity ?? null, limit: p.limit ?? 50 });
+      const log = vq.getChangeLog({ seq: p.seq ?? null, since: p.since ?? 0, entity: p.entity ?? null, limit: p.limit ?? 50 });
       return { content: [{ type: "text", text: JSON.stringify(log, null, 2) }], details: { count: log.length } };
     },
   });

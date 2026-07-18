@@ -18,6 +18,8 @@
 import { buildMessagesLane } from "./conversation-store.mjs";
 import { DEFAULT_MESSAGES_WINDOW_N } from "./lane-defaults.mjs"; // SSOT finestra lane messaggi (buildWorkspace)
 import { listScratch, DEFAULT_MAX_SCRATCH } from "./scratch.mjs"; // SSOT scratchpad VOLATILE rolling (<scratch>)
+import { fileViewLaneLines } from "./file-view.mjs"; // lane <open_file_view>: porzioni di file inline finché il modello chiude (design utente msg 376)
+import { parseSessionStartMs, shiftPrefix } from "./time-shift.mjs"; // ancoraggio temporale #13: shift [+Xs] anche per <scratch> (zona VOLATILE, AS1)
 
 // Display-cap delle lane (context-section-sizing): quante entry mostrare per lane prima del marker "+N nascosti".
 // Nominati una volta (audit SSOT/DRY 2026-07-04, CLAUDE.md #16): erano 4 literal `12` sparsi + un `?? 12` ridondante.
@@ -26,6 +28,10 @@ const DEFAULT_MAX_CHANGES = 12;
 const DEFAULT_MAX_VARS = 12;
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+// escAttr: esc + escape delle virgolette, per VALORI dentro attributi XML (id/status sono model-controlled → un `"` grezzo
+// romperebbe il confine dell'attributo e inietterebbe testo arbitrario nel tag). Fix UD1. NB: non usarlo per il TESTO delle
+// lane (dove un `&quot;` sarebbe visibile e brutto): lì resta esc, che preserva le virgolette reali.
+const escAttr = (s) => esc(s).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
 /** Timestamp assoluto stabile (ISO-8601 al secondo, UTC). Deterministico: `new Date(ms)` con argomento esplicito. */
 const isoSec = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -61,6 +67,44 @@ const capDetail = (s) => {
   const t = String(s);
   return t.length > VERIFY_DETAIL_CAP ? `${t.slice(0, VERIFY_DETAIL_CAP)}…[+${t.length - VERIFY_DETAIL_CAP}]` : t;
 };
+
+/* ── F38: cap sui VALORI renderizzati (<vars> / <recent_changes>) ────────────────────────────────────────────
+ * BUG (misurato 2026-07-16, F38 in wiki/harness-experiment-log.md): entrambe le lane facevano il dump INTEGRALE
+ * di `JSON.stringify(value)` → un valore grosso (una view su file, un blob di tool-output messo in var) veniva
+ * ri-stampato ad OGNI turno, e in <recent_changes> **due volte** (old→new). Misura: 3.11× di bloat. Peggio: rendeva
+ * FALSA la promessa di `close_file_view` ("chiudo e libero il contesto") — il contenuto tornava dal changelog.
+ *
+ * FIX (approvato dall'utente msg 1701, con la sua guida): un valore troppo lungo NON si stampa intero, ma NON si
+ * perde mai ciò che serve a ragionarci e a recuperarlo:
+ *   - ESITO   : cosa è successo (set / changed / cleared) + la FORMA del valore ({chiavi} / array[N] / testo NB)
+ *   - TEMPO   : già presente (fmtAge)
+ *   - HANDLE  : l'ID con cui recuperare QUELLA singola entry (#seq → get_changelog{seq}; per una var, il suo id → get_var)
+ * → il modello sa sempre *che* è cambiato, *quando*, e *come tornare al valore pieno* se gli serve davvero.
+ * Sotto cap → verbatim (caso comune: nessuna perdita, nessun costo). Il troncamento è SEMPRE dichiarato, mai muto. */
+const VALUE_CAP = 160;
+const SHAPE_CAP = 80;
+
+/**
+ * summarizeValue — riassunto di un valore per le lane. PURO ed esportato per i test.
+ * @param {unknown} raw valore GIÀ serializzato (stringa JSON) o grezzo
+ * @param {{ cap?: number }} [opts]
+ * @returns {{ text: string, truncated: boolean }} `text` = verbatim se sotto cap, altrimenti "forma NB: testa…"
+ */
+export function summarizeValue(raw, { cap = VALUE_CAP } = {}) {
+  const s = raw == null ? "null" : String(raw);
+  if (s.length <= cap) return { text: s, truncated: false };
+  // Forma: dice al modello COSA c'è dentro senza stamparlo (è il "riassunto invece del valore totale", msg 1701).
+  let shape;
+  try {
+    const p = JSON.parse(s);
+    if (Array.isArray(p)) shape = `array[${p.length}]`;
+    else if (p && typeof p === "object") {
+      const keys = Object.keys(p).join(",");
+      shape = `{${keys.length > SHAPE_CAP ? `${keys.slice(0, SHAPE_CAP)}…` : keys}}`;
+    } else shape = typeof p;
+  } catch { shape = "text"; }
+  return { text: `${shape} ${s.length}B: ${s.slice(0, cap)}…`, truncated: true };
+}
 
 /* ── CONTRATTO stable-prefix (cache-stable-prefix, 2026-06-29) ───────────────────────────────────────────────
  * Per massimizzare gli hit di KV-cache del provider il <context> è ordinato STABILE-in-testa / VOLATILE-in-fondo:
@@ -180,16 +224,19 @@ export function factsLaneLines(vq, { maxFacts = DEFAULT_MAX_FACTS } = {}) {
  * le più vecchie **rollano via** (potate dallo store o oltre il cap) → è lo scratchpad dell'indagine, non memoria
  * permanente (utente msg 1134, [[concepts/stuck-state-focus-protocol]] §3). Volatile → sta in coda (zona non-cacheata).
  * Un cap superato NON scarta in silenzio: segnala "+N older, recall_scratch/clear_scratch". [] se non ci sono note.
+ * Ogni riga porta il suo shift [+Xs] (AS1, #13): la zona <scratch> è VOLATILE (fuori dal prefisso cacheato) → la
+ * giustificazione cache-stable che omette l'età in <facts> NON si applica; gli item scratch hanno già `ts`. Degrada a
+ * nessun prefisso se sessionStartMs manca (callers/test senza convId invariati).
  * @param {import("./vars-queue.mjs").VarsQueue} vq
- * @param {{ maxScratch?: number }} [opts]
+ * @param {{ maxScratch?: number, sessionStartMs?: number|null }} [opts]
  * @returns {string[]}
  */
-export function scratchLaneLines(vq, { maxScratch = DEFAULT_MAX_SCRATCH } = {}) {
+export function scratchLaneLines(vq, { maxScratch = DEFAULT_MAX_SCRATCH, sessionStartMs = null } = {}) {
   const all = listScratch(vq); // recenti prima
   if (!all.length) return [];
   const shown = all.slice(0, maxScratch);
   const lines = ["  <scratch>"];
-  for (const s of shown) lines.push(`    - ${esc(s.text)}`);
+  for (const s of shown) lines.push(`    - ${shiftPrefix(s.ts, sessionStartMs)}${esc(s.text)}`);
   if (all.length > shown.length) lines.push(`    - (+${all.length - shown.length} older, rolling off — recall_scratch to see more, clear_scratch to reset)`);
   lines.push("  </scratch>");
   return lines;
@@ -197,7 +244,8 @@ export function scratchLaneLines(vq, { maxScratch = DEFAULT_MAX_SCRATCH } = {}) 
 
 /**
  * @param {import("./vars-queue.mjs").VarsQueue} vq
- * @param {{ sinceMs?: number, maxChanges?: number, includePrivateVars?: boolean, now?: number, maxFacts?: number }} [opts]
+ * @param {{ sinceMs?: number, maxChanges?: number, includePrivateVars?: boolean, now?: number, maxFacts?: number, convId?: string }} [opts]
+ *        convId: id conversazione → session_start per lo shift [+Xs] della lane VOLATILE <scratch> (AS1). Assente → nessun prefisso.
  *        sinceMs: epoch ms da cui mostrare i change recenti (default: ultimi 15 min relativi a `now`).
  *        now: epoch ms "adesso" (iniettato per test deterministici; default Date.now()).
  * @returns {string} blocco <context> ...</context>
@@ -207,6 +255,7 @@ export function assembleContext(vq, opts = {}) {
   const sinceMs = opts.sinceMs ?? (now - RECENT_WINDOW_MS);
   const maxChanges = opts.maxChanges ?? DEFAULT_MAX_CHANGES;
   const abs = opts.absoluteTimestamps ?? false; // cache-stable-prefix: età assolute @ISO invece di "Ns fa"
+  const sessionStartMs = parseSessionStartMs(opts.convId); // AS1: per lo shift [+Xs] della lane VOLATILE <scratch> (NaN senza convId → nessun prefisso)
 
   const lines = ["<context>"];
 
@@ -238,7 +287,7 @@ export function assembleContext(vq, opts = {}) {
   const currId = vq.getCurr();
   const curr = currId ? vq.getTask(currId) : null;
   lines.push(curr
-    ? `  <current_aim id="${esc(curr.id)}" status="${esc(curr.status)}">${esc(curr.title)}</current_aim>`
+    ? `  <current_aim id="${escAttr(curr.id)}" status="${escAttr(curr.status)}">${esc(curr.title)}</current_aim>`
     : `  <current_aim>(none)</current_aim>`);
 
   // --- task_list (open-loop: pending + in_progress) — ORDINE DI ESECUZIONE + cap + SEGNALE anti-cecità ---
@@ -281,6 +330,15 @@ export function assembleContext(vq, opts = {}) {
     lines.push("  </verify_queue>");
   }
 
+  // --- open_file_view (porzioni di FILE tenute inline finché il modello le chiude) — in coda al PREFISSO STABILE:
+  //     cambia SOLO su open/close (evento semantico esplicito del modello), quindi resta byte-identica nei turni
+  //     intermedi = cacheabile, nonostante sia la lane più GROSSA. Metterla nella zona volatile la escluderebbe dal
+  //     prefisso cacheato a ogni turno = lo spreco peggiore proprio sulla lane più pesante.
+  //     Design utente msg 376 (wiki/concepts/wrapper-context-assembly-example.md:154), costruito 2026-07-16 (msg 1708). ---
+  //     `maxOpenFileViews` passa da opts (SSOT harness-config, iniettata dall'extension come messagesWindowN & co.):
+  //     il `count="N/M"` della lane e il RIFIUTO del tool devono mostrare lo STESSO M, o la lane mentirebbe sul budget.
+  for (const l of fileViewLaneLines(vq, { esc, ...(opts.maxOpenFileViews ? { maxOpen: opts.maxOpenFileViews } : {}) })) lines.push(l);
+
   // --- vars (shared + opzionalmente private dell'agente) — WINDOWED: cap alle più recenti (lane bounded
   //     anche su sessioni lunghe; le più vecchie restano nel datastore, richiamabili con get_shared_view) ---
   const maxVars = opts.maxVars ?? DEFAULT_MAX_VARS;
@@ -291,9 +349,14 @@ export function assembleContext(vq, opts = {}) {
   const vars = allVars.slice(0, maxVars);
   if (vars.length) {
     lines.push("  <vars>");
+    let varsTrunc = false;
     for (const v of vars) {
-      lines.push(`    - ${esc(v.id)}=${esc(JSON.stringify(v.value))} (scope=${v.scope}, ${fmtAge(v.last_modified, now, abs)}${v.decision_ref ? `, for ${esc(v.decision_ref)}` : ""})`);
+      // F38: idem <recent_changes>. Handle = l'id della var (già in riga) → get_var(id) ridà il valore pieno.
+      const s = summarizeValue(JSON.stringify(v.value));
+      varsTrunc ||= s.truncated;
+      lines.push(`    - ${esc(v.id)}=${esc(s.text)} (scope=${v.scope}, ${fmtAge(v.last_modified, now, abs)}${v.decision_ref ? `, for ${esc(v.decision_ref)}` : ""})`);
     }
+    if (varsTrunc) lines.push(`    - (long values are SUMMARIZED here — get_var(id) returns the full value)`);
     if (allVars.length > vars.length) {
       lines.push(`    - (+${allVars.length - vars.length} older ones hidden — use get_shared_view for the full list)`);
     }
@@ -330,17 +393,27 @@ export function assembleContext(vq, opts = {}) {
   const changes = changesPlus.slice(0, maxChanges);
   if (changes.length) {
     lines.push("  <recent_changes>");
+    let anyTrunc = false;
     for (const c of changes) {
-      const what = c.old_value != null ? `${esc(c.old_value)}→${esc(c.new_value)}` : `=${esc(c.new_value)}`;
-      lines.push(`    - ${fmtAge(c.ts, now, abs)}, ${esc(c.who)}: ${esc(c.entity)}/${esc(c.entity_id)}.${esc(c.field)} ${what}${c.decision_ref ? ` (${esc(c.decision_ref)})` : ""}`);
+      // F38: MAI il dump integrale di old→new (era 2× il valore, ad ogni turno). Esito + forma; il valore pieno si
+      // recupera con l'handle #seq. `new_value == null` = rimozione → l'ESITO è "cleared" e il vecchio valore NON si
+      // ri-stampa (altrimenti una remove COSTA più di un set: era esattamente il caso di close_file_view).
+      const nv = summarizeValue(c.new_value);
+      let what;
+      if (c.new_value == null) what = "cleared";
+      else if (c.old_value != null) { const ov = summarizeValue(c.old_value); anyTrunc ||= ov.truncated; what = `changed→${esc(nv.text)}`; }
+      else what = `=${esc(nv.text)}`;
+      anyTrunc ||= nv.truncated;
+      lines.push(`    - #${c.seq} ${fmtAge(c.ts, now, abs)}, ${esc(c.who)}: ${esc(c.entity)}/${esc(c.entity_id)}.${esc(c.field)} ${what}${c.decision_ref ? ` (${esc(c.decision_ref)})` : ""}`);
     }
+    if (anyTrunc) lines.push(`    - (values are SUMMARIZED here — get_changelog{seq:N} returns the full before/after of change #N)`);
     if (changesPlus.length > changes.length) lines.push(`    - (+other older changes or beyond the window — use get_changelog for the full history)`);
     lines.push("  </recent_changes>");
   }
 
   // --- scratch (note VOLATILI rolling, namespace 'scratch', tool `jot`) — zona VOLATILE in coda (churn per-turno,
   //     fuori dal prefisso cacheato). Rolling: le più recenti visibili, le vecchie rollano via. Distinta da <facts>. ---
-  for (const l of scratchLaneLines(vq, { maxScratch: opts.maxScratch })) lines.push(l);
+  for (const l of scratchLaneLines(vq, { maxScratch: opts.maxScratch, sessionStartMs })) lines.push(l);
 
   // --- notes/memo: ESCLUSE dal flusso (silent) per non inquinare → ma SEGNALA che esistono, altrimenti
   //     il modello non sa di poterle richiamare. (memo namespace = convenzione condivisa con error-memo.) ---

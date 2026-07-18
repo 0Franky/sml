@@ -25,8 +25,21 @@ export const DEFAULT_RUNG_CFG = { rung1: 3, rung2: 5, rung3: 7 };
 export function classifyTurnSignal(toolResultTexts) {
   const blob = (Array.isArray(toolResultTexts) ? toolResultTexts : []).join("\n").toLowerCase();
   if (!blob.trim()) return "neutral";
-  const failed = /assertionerror|traceback|\bfailed\b|\bexception\b|\berror:|\d+\s+failed|exit\s*(code\s*)?[1-9]/.test(blob);
-  const passed = /\bpassed\b|\ball tests? pass|\bok\b\s*$|\d+\s+passed|exit\s*(code\s*)?0\b|\bsuccess\b/.test(blob);
+  // fix UD7 — CONTEGGI espliciti ("N failed"/"N passed": cargo/jest/go/pytest). Un conteggio ZERO ("0 failed") NON è un
+  // fallimento, un "0 passed" NON è un successo → ancoro al MAGNITUDO del numero, non alla PAROLA (che compare anche in
+  // "0 failed" → prima un green "5 passed; 0 failed" cadeva in "neutral" e la stagnazione escalava DOPO un successo).
+  const failNums = [...blob.matchAll(/(\d+)\s+failed/g)].map((m) => Number(m[1]));
+  const passNums = [...blob.matchAll(/(\d+)\s+passed/g)].map((m) => Number(m[1]));
+  const anyFailCount = failNums.some((n) => n > 0);
+  const anyPassCount = passNums.some((n) => n > 0);
+  const zeroFailExplicit = failNums.length > 0 && !anyFailCount; // c'è "N failed" ma tutti 0 → NON è un fail
+  const zeroPassExplicit = passNums.length > 0 && !anyPassCount; // c'è "N passed" ma tutti 0 → NON è un pass
+  // marker SENZA-conteggio, guardati dal conteggio-zero esplicito (così "5 passed; 0 failed" green non triggera fail via
+  // la parola nuda). fix UD8: `^ok\b` con flag /m riconosce il pass di go-test ("ok  pkg 0.3s" a inizio-riga in mezzo al blob).
+  const failWord = !zeroFailExplicit && /assertionerror|traceback|\bexception\b|\berror:|\bfailed\b|exit\s*(code\s*)?[1-9]/.test(blob);
+  const passWord = !zeroPassExplicit && /\bpassed\b|\ball tests? pass|^ok\b|\bok\b\s*$|exit\s*(code\s*)?0\b|\bsuccess\b/m.test(blob);
+  const failed = anyFailCount || failWord;
+  const passed = anyPassCount || passWord;
   if (failed && !passed) return "fail";
   if (passed && !failed) return "pass";
   return "neutral"; // ambiguo o misto → non muove il contatore

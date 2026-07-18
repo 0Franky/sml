@@ -16,6 +16,8 @@ import { windowNativeMessages } from "../../src/conversation-store.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
 import { getVarsQueue } from "../../src/state-db.mjs";
 import { getEffectiveKeepTurns, adaptiveKeepTurns } from "../../src/keepturns.mjs";
+import { convIdFor } from "../../src/session-context.mjs";
+import { EFFECTIVE_KEEP_META } from "../../src/meta-keys.mjs"; // pubblica il keep effettivo per context-assembly+eviction (AS4/AS5)
 
 // keepTurns dalla config (SSOT: harness-config.mjs — default reale 6, raise ATTIVO msg 863; env HARNESS_NATIVE_KEEP_TURNS
 // per l'A/B). loadHarnessConfig GARANTISCE già un intero ≥1 (clamp file/env) → si legge il campo diretto, niente
@@ -55,6 +57,10 @@ export default function (pi: ExtensionAPI) {
     } catch {
       /* fail-safe: se lo store/usage non è disponibile, resta il default config */
     }
+    // pubblica il keep EFFETTIVO del turno (SSOT condivisa, AS4/AS5): context-assembly (confine lane) ed
+    // eviction-checkpoint (ordinale eviction) lo leggono via effectiveKeepForTurn → confini allineati al keep davvero
+    // applicato QUI (override set_keepturns / adaptive), invece del nativeKeepTurns statico che divergeva.
+    try { getVarsQueue().setMeta(EFFECTIVE_KEEP_META + convIdFor(ctx), String(keep)); } catch { /* best-effort */ }
     const windowed = windowNativeMessages(event.messages as any[], { keepTurns: keep });
     if (windowed !== (event.messages as any[])) return { messages: windowed };
   });

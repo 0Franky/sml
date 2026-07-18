@@ -14,4 +14,14 @@ export const DEFAULT_MESSAGES_WINDOW_N = 8;
 /** Cap in CHAR della lane <messages_with_user> — VINCOLO reale sulla dimensione (~3 char/token → ~1300 token). */
 export const DEFAULT_MESSAGES_CHAR_CAP = 4000;
 
-export default { DEFAULT_MESSAGES_WINDOW_N, DEFAULT_MESSAGES_CHAR_CAP };
+/**
+ * Quante view possono restare aperte insieme nella lane <open_file_view>. Superato → RIFIUTO esplicito
+ * (mai sfratto silenzioso: la scelta di cosa chiudere deve restare un atto deliberato del modello = il
+ * segnale di training; cfr. file-view.mjs §ANTI-PROLIFERAZIONE, vincolo utente I23).
+ * Esposto a config (`maxOpenFileViews` / `HARNESS_MAX_OPEN_FILE_VIEWS`) su richiesta utente 2026-07-16.
+ * ⚠ Il default resta **3** — l'utente lo ricordava come 4: il rifiuto scatta ALLA 4ª apertura, quindi
+ * il numero di view contemporanee è 3. Cambiarlo è una scelta di tuning, non un fix.
+ */
+export const DEFAULT_MAX_OPEN_FILE_VIEWS = 3;
+
+export default { DEFAULT_MESSAGES_WINDOW_N, DEFAULT_MESSAGES_CHAR_CAP, DEFAULT_MAX_OPEN_FILE_VIEWS };

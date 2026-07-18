@@ -18,6 +18,11 @@ export interface AssembleOpts {
   /** ANCHOR EPISTEMICO: se true, emette `<current_date>YYYY-MM-DD</current_date>` (granularità giorno, cache-stable)
    *  come prima riga del prefisso. È il FATTO-data (F, CLAUDE.md #11); il ragionamento di recency è la skill di training. */
   currentDate?: boolean;
+  /** Cap di view <open_file_view> contemporanee (SSOT `cfg.maxOpenFileViews`, iniettato da context-assembly.ts):
+   *  la lane stampa `count="N/M"` e M dev'essere lo stesso che il tool applica nel rifiuto. Assente → default SSOT. */
+  maxOpenFileViews?: number;
+  /** id conversazione → session_start per lo shift [+Xs] della lane VOLATILE <scratch> (AS1). Assente → nessun prefisso. */
+  convId?: string;
 }
 
 export function assembleContext(vq: VarsQueue, opts?: AssembleOpts): string;

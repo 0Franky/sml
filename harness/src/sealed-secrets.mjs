@@ -394,7 +394,12 @@ export function hasHostPinning(opText) {
 export function hasFileOrPipeExfil(opText) {
   const t = String(opText ?? "");
   // redirezione a file (> >>), tee, pipe verso netcat/sendmail/mail — shape esfiltranti comuni.
-  return /(^|\s)(>>?|\|\s*tee\b|\btee\b)\s*\S/.test(t) || /\|\s*(nc|ncat|netcat|sendmail|mail)\b/.test(t);
+  // NB (fix sicurezza 2026-07-11, audit-bug B): il redirect `>`/`>>` NON richiede whitespace prima — `{{secret}}>file`
+  //   (preceduto da `}` o dal valore) e `x>file` sono redirect validi di shell che l'ancora `(^|\s)` lasciava passare
+  //   (secret scritto RAW su disco, bypass del gate). Escludiamo SOLO la fd-duplication `>&` (es. `2>&1`, `>&2`) che
+  //   non scrive su file. Trade-off ACCETTATO (sicurezza-first sui sealed-secret): un `2>/dev/null` in un comando che
+  //   USA un secret viene bloccato → il modello richiede il sink o riformula (caso raro, alto-scrutinio).
+  return /(>>?)\s*(?!&)\S/.test(t) || /(^|\s)(\|\s*tee\b|\btee\b)\s*\S/.test(t) || /\|\s*(nc|ncat|netcat|sendmail|mail)\b/.test(t);
 }
 
 /** L'operazione invia verso un URL `http://` in CHIARO (non-TLS)? Un sealed-secret non deve transitare in plaintext. */

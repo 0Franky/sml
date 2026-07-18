@@ -65,8 +65,10 @@ export function contradicts(p1, p2) {
   if (a.op === "nin" && b.op === "eq") return asSet(a).includes(b.value);
   if (b.op === "nin" && a.op === "eq") return asSet(b).includes(a.value);
   if (a.op === "nin" || b.op === "nin") return false;
-  // numerico (range-intersection)
-  if (isNum(a.value) || isNum(b.value)) {
+  // numerico (range-intersection) — fix audit-B AS11: solo se ENTRAMBI i valori sono numerici. Con `||`, eq/eq
+  // cross-tipo (es. eq:'postgres' vs eq:5) entrava qui, rangesDisjoint confrontava 'postgres' con 5 (NaN → mai
+  // disgiunto) → false, saltando la contraddizione categorica reale di riga 74. Con `&&` cade correttamente lì.
+  if (isNum(a.value) && isNum(b.value)) {
     const ra = numRange(a.op, a.value), rb = numRange(b.op, b.value);
     if (ra && rb) return rangesDisjoint(ra, rb);
   }

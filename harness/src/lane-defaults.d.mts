@@ -7,3 +7,4 @@ declare const _default: {
   DEFAULT_MESSAGES_CHAR_CAP: number;
 };
 export default _default;
+export const DEFAULT_MAX_OPEN_FILE_VIEWS: number;

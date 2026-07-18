@@ -100,6 +100,14 @@ function basename(p) {
   return parts[parts.length - 1] || String(p);
 }
 
+// ultime ≤2 componenti del path (dir/file) → identificatore self-contained E anti-collisione: app/models.py ≠ api/models.py
+// (fix AS6/S2: basename-only sovrascriveva a vicenda i digest di file omonimi in dir diverse e non era self-contained).
+function lastTwo(p) {
+  if (!p) return "";
+  const parts = String(p).split(/[\\/]+/).filter(Boolean);
+  return parts.slice(-2).join("/") || String(p);
+}
+
 /**
  * buildTaskDigest — dalla traccia-tool osservata → righe di digest compatte "file → def NAME[, …] (esito)".
  * @param {Array<{name?:string,args?:object,status?:string,result?:string,ts?:number}>} toolCalls
@@ -125,7 +133,8 @@ export function buildTaskDigest(toolCalls, { maxLines = 40, maxDefsPerFile = 6 }
     const defs = extractDefs(c).slice(0, maxDefsPerFile);
     const defPart = defs.length ? ` → ${defs.map((d) => "def " + d).join(", ")}` : "";
     const errPart = tc.status === "error" ? " (error)" : "";
-    byFile.set(basename(p), { line: `${basename(p)}${defPart}${errPart}`, order: order++ });
+    const label = lastTwo(p);
+    byFile.set(label, { line: `${label}${defPart}${errPart}`, order: order++ });
   }
   const rows = [...byFile.values()].sort((a, b) => a.order - b.order).map((x) => x.line);
   return rows.slice(-maxLines);
@@ -153,11 +162,11 @@ export function digestFactFromCall({ name, args, status } = {}) {
     if (!sw) return null;
     p = sw.path; c = sw.content;            // c può essere "" → nessun def, ma il file resta registrato
   }
-  const base = basename(p);
+  const label = lastTwo(p);                 // ultime ≤2 componenti del path → key univoca + text self-contained (AS6/S2)
   const defs = extractDefs(c).slice(0, 6);
   const defPart = defs.length ? ` → ${defs.map((d) => "def " + d).join(", ")}` : "";
   const errPart = status === "error" ? " (error)" : "";
-  return { key: TASK_FACT_PREFIX + base, text: `${base}${defPart}${errPart}`, importance: TASK_FACT_IMPORTANCE };
+  return { key: TASK_FACT_PREFIX + label, text: `${label}${defPart}${errPart}`, importance: TASK_FACT_IMPORTANCE };
 }
 
 export default { buildTaskDigest, digestFactFromCall, extractDefs, pathOf, contentOf, cmdOf, shellWriteFromCommand, MEMORY_TOOLS, READONLY_TOOLS, CMD_KEYS, TASK_FACT_PREFIX, TASK_FACT_IMPORTANCE };

@@ -61,6 +61,17 @@ const K = (i) => `k${String(i).padStart(2, "0")}`; // chiavi stabili per il tieb
   vq.close();
 }
 
+// 4b) scratchLaneLines: shift [+Xs] con sessionStartMs (AS1 — ancoraggio temporale #13 esteso alla zona VOLATILE) -----
+{
+  const vq = new VarsQueue(":memory:", { agent: "orchestrator" });
+  jotScratch(vq, "investigare timeout", { key: K(0), now: 5000, storeCap: 100 });
+  const withShift = scratchLaneLines(vq, { sessionStartMs: 1000 }); // 5000 - 1000 = 4s
+  ok(withShift.some((l) => l.includes("[+4s] investigare timeout")), "AS1: sessionStartMs → shift [+4s] sulla nota scratch");
+  const noShift = scratchLaneLines(vq, {}); // senza sessionStartMs → degrada, nessun prefisso
+  ok(noShift.some((l) => l.includes("- investigare timeout") && !/\[\+/.test(l)), "AS1: senza sessionStartMs → nessun prefisso (retro-compat callers/test)");
+  vq.close();
+}
+
 // 5) scratchLaneLines vuoto → [] -------------------------------------------------------------------
 {
   const vq = new VarsQueue(":memory:", { agent: "orchestrator" });

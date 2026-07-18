@@ -46,6 +46,8 @@ export interface HarnessConfig {
   messagesWindowN: number;
   messagesCharCap: number;
   nativeKeepTurns: number;
+  /** Quante view <open_file_view> restano aperte insieme; superato → rifiuto esplicito. Intero >=1 garantito. */
+  maxOpenFileViews: number;
   adaptiveContext: AdaptiveContextConfig;
   laneMemoryHint: boolean;
   laneMemoryHintLevel: "full" | "lean";

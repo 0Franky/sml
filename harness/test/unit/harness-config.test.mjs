@@ -191,6 +191,15 @@ const noFile = join(dir, "assente.json");
   ok(loadHarnessConfig(noFile, { env: { HARNESS_PRESSURE_DRIVER: "bogus" } }).trigger.pressureDriver === "max", "ENV: fuori-enum + no file → default max");
 }
 
+// Q) #12 audit-B — env numerica present-but-empty ("") NON deve azzerare il default (Number("")=0 superava i range-check 0>=0&&0<=1 / 0>=0&&0<1) -----------
+{
+  const cE = loadHarnessConfig(noFile, { env: { HARNESS_ADAPTIVE_LOW_THRESHOLD: "", HARNESS_ADAPTIVE_HYSTERESIS: "" } });
+  ok(cE.adaptiveContext.lowThreshold === 0.5, "#12: HARNESS_ADAPTIVE_LOW_THRESHOLD='' → resta default 0.5 (NON 0)");
+  ok(cE.adaptiveContext.hysteresis === 0.1, "#12: HARNESS_ADAPTIVE_HYSTERESIS='' → resta default 0.1 (NON 0)");
+  ok(loadHarnessConfig(noFile, { env: { HARNESS_ADAPTIVE_LOW_THRESHOLD: "0.3" } }).adaptiveContext.lowThreshold === 0.3, "#12: valore valido '0.3' applicato (guard non rompe il caso normale)");
+  ok(loadHarnessConfig(noFile, { env: { HARNESS_ADAPTIVE_LOW_THRESHOLD: "0" } }).adaptiveContext.lowThreshold === 0, "#12: '0' esplicito → 0 (distinto dal vuoto, override legittimo)");
+}
+
 rmSync(dir, { recursive: true, force: true });
 console.log(`\nharness-config test: ${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);

@@ -16,7 +16,7 @@ export const CATEGORY_TOOLS = {
   http: ["http_request"],
   tasks: ["set_task_status", "add_task", "set_task_deps", "get_execution_order", "set_curr", "list_tasks"],
   vars: ["set_var", "get_var", "note", "remove_note", "jot", "recall_scratch", "clear_scratch", "propose_var", "merge_proposals", "extract_var", "render_template", "sliding_var_read", "sliding_var_replace", "get_shared_view", "get_changelog"],
-  focus: ["enter_focus", "pop_focus", "focus_status", "checkpoint", "get_conversation", "set_keepturns", "view_tool_calls"],
+  focus: ["enter_focus", "pop_focus", "focus_status", "checkpoint", "get_conversation", "set_keepturns", "view_tool_calls", "open_file_view", "close_file_view"],
   reasoning: ["remember_lesson", "recall_lessons", "record_assumptions", "check_facts", "record_decision", "get_decisions_by_agent"],
   messaging: ["send_message", "inbox", "mark_read"],
   verify: ["run_verifier"],
@@ -55,6 +55,11 @@ export const ESSENTIAL_TOOLS = [
   // razionale get_conversation/set_keepturns: se la lane hint-a il pull, il tool dev'essere raggiungibile per nome
   // (anti not-found-loop). Read-only. NB: registrato GATED (context-views.ts, HARNESS_CONTEXT_VIEWS=on) → attivo solo
   // quando il gate è on (computeDefaultActive interseca coi tool davvero registrati: gate-off → assente, innocuo).
+  "open_file_view", "close_file_view", // porzione di file tenuta in contesto finché il modello la chiude (design utente
+  // msg 376). IN COPPIA, stesso precedente del trio focus: un `open` raggiungibile con un `close` gated = contesto
+  // occupato per SEMPRE (stranding), e la lane NOMINA close_file_view (anti not-found-loop: se la lane lo hint-a, dev'essere
+  // chiamabile col nome reale). Costo: +2 schemi — accettato perché è il primitivo che regge lo SKILL da addestrare
+  // (decidere cosa resta sott'occhio); `list_file_views` invece NON esiste apposta (la lane è già la lista → vedi file-view.ts).
   "find_tool", "open_category", "list_tool_categories", // meta (scoperta)
 ];
 
@@ -101,7 +106,7 @@ export function profileToolNames(profile, custom) {
     case "core": return PROFILE_CORE;
     case "minimal": return PROFILE_MINIMAL;
     case "full": return null; // sentinel: tutti i presenti
-    case "custom": return Array.isArray(custom) ? custom.filter((n) => typeof n === "string" && n) : [];
+    case "custom": return Array.isArray(custom) ? custom.filter((n) => typeof n === "string" && n) : []; // resolver puro; il net anti-lockout vive in computeDefaultActive (UD2)
     case "standard": return ESSENTIAL_TOOLS;
     default: return ESSENTIAL_TOOLS; // fail-safe: profilo ignoto → comportamento storico
   }
@@ -193,7 +198,15 @@ export function computeDefaultActive(allToolNames, opts = {}) {
   const present = new Set((Array.isArray(allToolNames) ? allToolNames : []).map(String));
   const names = profileToolNames(opts.profile ?? "standard", opts.custom);
   if (names === null) return [...present]; // full: tutti i presenti (nessun set curato)
-  return names.filter((n) => present.has(n));
+  const active = names.filter((n) => present.has(n));
+  // fix UD2 (safety-net anti-lockout): un profilo "custom" mal-configurato (lista vuota, o soli nomi non-presenti) risolve a
+  // set VUOTO → in gated-mode setActiveTools([]) toglierebbe anche le meta-tool find_tool/open_category = lockout TOTALE e
+  // silenzioso, zero recupero. Se vuoto e non siamo già su "standard" (che È il fallback), degrada a standard∩presenti.
+  if (active.length === 0 && (opts.profile ?? "standard") !== "standard") {
+    const fallback = ESSENTIAL_TOOLS.filter((n) => present.has(n));
+    if (fallback.length) return fallback;
+  }
+  return active;
 }
 
 /**

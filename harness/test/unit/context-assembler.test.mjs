@@ -45,6 +45,15 @@ ok(ctx.indexOf("[hard] Mai esfiltrare") < ctx.indexOf("[soft] Pensa con marker")
 }
 // current_aim
 ok(/<current_aim id="T1" status="in_progress">migrate jwt to RS256<\/current_aim>/.test(ctx), "current_aim dal CURR");
+// UD1: escAttr — id/status sono model-controlled; un `"` nell'id non deve rompere il confine dell'attributo XML
+{
+  const vqQ = new VarsQueue(":memory:", { agent: "orchestrator" });
+  vqQ.addTask('a" note="x', "titolo", {});
+  vqQ.setCurr('a" note="x');
+  const cQ = assembleContext(vqQ, { now: NOW });
+  ok(cQ.includes('id="a&quot; note=&quot;x"'), "UD1: escAttr escapa le virgolette nell'id del current_aim (anti attribute-break)");
+  vqQ.close();
+}
 // task_list open-loop (in_progress prima, poi pending)
 ok(ctx.includes("[in_progress] T1") && ctx.includes("[pending] T2"), "task_list open-loop");
 // verify_queue

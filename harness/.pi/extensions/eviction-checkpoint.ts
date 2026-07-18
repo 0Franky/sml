@@ -33,6 +33,7 @@ import {
   injectDirectiveMessages,
 } from "../../src/eviction-checkpoint.mjs";
 import { loadHarnessConfig } from "../../src/harness-config.mjs";
+import { effectiveKeepForTurn } from "../../src/keepturns.mjs"; // AS5: keep EFFETTIVO del turno (override/adaptive), non lo statico
 import { getVarsQueue, getConversationStore, closeAll } from "../../src/state-db.mjs";
 import { convIdFor } from "../../src/session-context.mjs";
 import { EVICTION_ORDINAL_META } from "../../src/meta-keys.mjs"; // SSOT prefisso ordinale evicted (tool drive-qwen)
@@ -41,7 +42,7 @@ export default function (pi: ExtensionAPI) {
   const { rung, enabled } = loadEvictionConfig();
   if (!enabled) return; // DEFAULT off → no-op TOTALE (nessun hook, nessun DB): push sicuro, zero cambio live.
 
-  const keepTurns = loadHarnessConfig().nativeKeepTurns; // SSOT harness-config: intero ≥1 garantito (no `?? 1`/as any)
+  const CONFIG_KEEP = loadHarnessConfig().nativeKeepTurns; // default config (≥1 garantito); il keep EFFETTIVO del turno si legge IN-HOOK (AS5)
   const injectMode = loadEvictionInjectMode(); // FORMA d'iniezione (F26 forma-vs-richiesta): default trailing (invariato)
   const vq = getVarsQueue(); // vars.db dell'orchestratore (path+mkdir+agent nel singleton state-db)
   const store = getConversationStore(); // FONTE AUTORITATIVA del conteggio turni (condivisa con conversation-capture)
@@ -58,6 +59,9 @@ export default function (pi: ExtensionAPI) {
   pi.on("context", (event, ctx) => {
     const messages = ((event as any).messages as any[]) || [];
     const convId = convIdFor(ctx);
+    // AS5: keep EFFETTIVO del turno (override set_keepturns / adaptive pubblicato da native-window), NON lo statico —
+    // altrimenti su override/adaptive l'ordinale eviction diverge dal confine reale → miss (caso Lupo) o false-fire avvelenante.
+    const keepTurns = effectiveKeepForTurn(vq, convId, CONFIG_KEEP);
 
     // CONTEGGIO DALLO STORE, non da event.messages: native-window gira nello stesso hook `context` e finestra
     // l'array PRIMA (contarlo da lì darebbe ≤ keepTurns → eviction MAI rilevata, bug sessione 019f2ab9). (fix 2026-07-04)
