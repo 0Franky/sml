@@ -329,3 +329,35 @@ Da `harness/` (key in `.env`, gitignored):
 
 ## Links
 [[architecture/ab-eval-harness]] · [[concepts/adaptive-context-injection]] · [[concepts/anti-fixation-metacognition-rung]] · [[architecture/context-pressure-mechanism]] · [[project_test_model_vs_target]]
+
+---
+
+## [2026-07-18] E-COMP — «se spezziamo una skill in due classi, il modello ricompone?» → **INCONCLUSIVO per confronto, DECISO per livello assoluto**
+
+**Domanda utente** (2026-07-18): *"se spezziamo questo concetto in due, il modello sarà in grado di fare queste connessioni… oppure potrebbe allucinare e fare altro… altrimenti devo fare una terza classe che si pone come bridge"*.
+
+**Disegno**: 5 arm su `gemma-4-31b-it` (31B, classe target, free tier). Le due mezze-skill date **in contesto**: (A) estrarre il requisito load-bearing · (B) dimensionare la risposta dato il requisito. 8 item compositi + **4 negativi dove la risposta giusta è FERMARSI** (senza i negativi, *"incatena sempre"* sembra bravura). 3 repliche. **Costo ZERO**, chiavi mai lette.
+
+### Il risultato in una riga
+**Il controllo nudo (arm-2, zero istruzioni) compone già**: `17/24` sui compositi e **`12/12` sui negativi — il punteggio più alto in assoluto**. Non c'è headroom per nessun effetto-ponte. → **nessuna classe-bridge**, e il ramo era **pre-registrato prima di guardare i dati**.
+
+### ⚠️ Il finding metodologico, più importante del risultato
+**Il proxy è fallito PROPRIO COME PROXY.** Dare le skill nel prompt sostituisce *"il modello ha la competenza dal training"* **solo se, togliendo il prompt, il modello NON ce l'ha**. L'arm-2 dimostra che ce l'ha → **l'intero impianto in-contesto non può rispondere alla domanda sul training**, per questi item. Non è un difetto di esecuzione: è il controllo che invalida il metodo, ed è esattamente ciò per cui il controllo esiste.
+
+### Onestà statistica (applicata contro sé stessi)
+- **Il denominatore vero è 8, non 24**: le 3 repliche girano sugli **stessi** item → correlate. *"Le frazioni /24 sono precisione apparente su 8 osservazioni"* (#35b).
+- **Potenza**: con p≈0,75 e n=8, servirebbe un divario di **3-4 item su 8** per essere credibile. Massimo osservato: **1-2**. Sotto-potenziato per costruzione.
+- **Lo strumento è più rumoroso dell'effetto**: accordo inter-giudice `57/80`, `44/61`, `31/39`, e il disaccordo si concentra **proprio sulla voce che conta**.
+- **Nessun confronto supera la soglia pre-registrata** (≥3/8 compositi o ≥2/4 negativi, verso coerente). Tutti **INCONCLUSIVI**, dichiarati tali.
+
+### Il segnale sotto-soglia da non trattare come fatto
+Dare le mezze-skill sembra **peggiorare** il sapersi fermare: incatenamento-per-rito `3/12` (arm-1) e `3/12` (arm-4) contro **`0/12`** del controllo nudo. **Sotto la soglia pre-registrata (6/12)** → ipotesi meccanicistica coerente, **non** risultato dimostrato. Da ri-testare con più negativi prima di usarla.
+
+### Errore trovato e corretto DAL DISEGNATORE (prima di eseguire)
+Arm-1 e arm-5 erano **334 vs 458 parole (+37%)**: avremmo misurato **la lunghezza del prompt**, non la composizione. Corretto con un paragrafo-placebo neutro → 440 vs 436. *(Arm-3/4 non sono length-matched e non possono esserlo: dichiarati diagnostici sul TIPO di fallimento, non sul livello.)*
+
+### Cosa NON dice (residui dichiarati)
+Un solo modello — **F34: model-specific, non size-monotona, non estendere senza rimisurare** · item scelti da noi in domini di vita quotidiana · 2 item su 8 saturi (`3/3` ovunque) e quindi non informativi · **assenza di misura ≠ prova di assenza**.
+
+### Conseguenza operativa
+La domanda vera (*"spezzare NEL TRAINING preserva la composizione?"*) **non è rispondibile in-contesto** finché il modello nudo ci arriva. Servono item **dove il modello nudo fallisce** — solo lì l'in-contesto torna un proxy valido. → il gradiente di difficoltà (profondità 3+, distanza fra le due metà, requisiti in conflitto, distrattori) diventa **la precondizione dell'esperimento**, non un miglioramento.
