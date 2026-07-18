@@ -1,0 +1,41 @@
+Copyright (c) 2026 0Franky. All rights reserved.
+
+STATUS: PRE-RELEASE — NO LICENSE GRANTED YET
+
+This repository is public so the work can be read, discussed and critiqued while
+it is being built. It is **not** open source (yet), and this file exists to remove
+the ambiguity that comes from having no license file at all.
+
+WHAT THIS MEANS TODAY
+
+  You MAY: read the code, read the documentation, quote it with attribution,
+           open issues, and send feedback or suggestions.
+
+  You MAY NOT: use, copy, modify, redistribute, or create derivative works,
+               in whole or in part, for any purpose, without prior written
+               permission from the copyright holder.
+
+WHY IT IS NOT OPEN SOURCE YET
+
+An open-source license is effectively irreversible: anything published under a
+permissive license stays available under that license for that version, forever.
+Choosing one is easy later; un-choosing one is impossible. Since the design is
+still moving, the license decision is deliberately deferred rather than guessed.
+
+The intent is to release under an open license once the project stabilises. The
+code and the model weights will be licensed separately — they are different kinds
+of artifact with different conventions.
+
+FEEDBACK AND COLLABORATION ARE WELCOME
+
+If you want to use any part of this, build on it, or collaborate: ask. The default
+answer to a reasonable request is yes. Open an issue on
+https://github.com/0Franky/sml and describe what you have in mind.
+
+NO WARRANTY
+
+This software is provided "as is", without warranty of any kind, express or
+implied, including but not limited to the warranties of merchantability, fitness
+for a particular purpose and noninfringement. In no event shall the copyright
+holder be liable for any claim, damages or other liability arising from, out of
+or in connection with the software or its use.
