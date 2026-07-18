@@ -14,7 +14,8 @@
     "test:unit": "node run-tests.mjs unit",
     "test:integration": "node run-tests.mjs integration",
     "test:e2e": "node -e \"console.log('e2e behavioral (API-gated): lancia a mano, es. node test/e2e/dogfood-test.mjs <model> — richiede harness/.env')\"",
-    "check:anchors": "node tools/check-anchors.mjs"
+    "check:anchors": "node tools/check-anchors.mjs",
+    "check:hierarchy": "node tools/check-hierarchy.mjs"
   },
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "^0.80.2",
