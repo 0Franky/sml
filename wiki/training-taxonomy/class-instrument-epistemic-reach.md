@@ -64,7 +64,7 @@ livello X, resta Y"*) — mai spacciare l'uno per l'altro.
 > #0 (*"cio' che ho controllato DISCRIMINA la domanda che devo chiudere?"*) **e' letteralmente la skill-radice
 > di questo nodo**. ⚠️ **Non dichiaro che questo nodo "copre la regola #0"**: #0 e' piu' larga (include la
 > proporzionalita' posta↔profondita' e il rifiuto delle claim altrui), e la roadmap la registra come
-> **ancora senza classe** (`wiki/roadmap-2026-07-16.md:130`, *"Regola #0 senza classe"*). Questo nodo ne copre
+> **ancora senza classe** (`wiki/roadmap-2026-07-16.md`, *"Regola #0 senza classe"*). Questo nodo ne copre
 > **una faccia**, e va detto cosi' (#26).
 
 ---
@@ -204,7 +204,7 @@ anti-forza-bruta**, e non e' negoziabile:
   **dichiarare il residuo** → **cambiare** strumento. Le fasi *scegliere/interpretare/cambiare* sono nelle due
   figlie. La fase **DICHIARARE IL RESIDUO** (*"verificato solo a livello X, resta Y"*, #0(b)) **non ha casa in
   nessuna delle due** e attraversa entrambe. 🟡 **Candidato-gap segnalato**, non filato — ed e' plausibilmente
-  la stessa lacuna che la roadmap registra come *"Regola #0 senza classe"* (`wiki/roadmap-2026-07-16.md:130`).
+  la stessa lacuna che la roadmap registra come *"Regola #0 senza classe"* (`wiki/roadmap-2026-07-16.md`).
 - **(c) COMPLEMENTO / INVERSO** — l'inverso della skill-radice e' **la paranoia strumentale**: *"non fidarti mai
   di nessuno strumento"* → paralisi / regressione infinita (ogni strumento di verifica ha a sua volta una
   portata). ✅ **Coperto in entrambe le figlie** come polo negativo obbligatorio — (a) N1/N2/N6-N7

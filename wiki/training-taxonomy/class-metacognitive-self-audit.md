@@ -42,7 +42,7 @@ last_updated: 2026-07-18
 
 ## ⚠️ Reciprocità della tabella-figlie — ROTTA, quantificata, NON peggiorata
 
-> **Stato al 2026-07-18** (verificato eseguendo `grep` sui `class-*.md` di `wiki/training-taxonomy/`, non a memoria). La roadmap la registrava come *"il padre più rotto è la radice del centro"* (`wiki/roadmap-2026-07-16.md:113`) — il fix meccanico **non è ancora stato fatto**, e questo passo **non lo fa** (fuori mandato, #28): lo **rende visibile e contabile**, che è la precondizione perché qualcuno lo chiuda.
+> **Stato al 2026-07-18** (verificato eseguendo `grep` sui `class-*.md` di `wiki/training-taxonomy/`, non a memoria). La roadmap la registrava come *"il padre più rotto è la radice del centro"* (`wiki/roadmap-2026-07-16.md`) — il fix meccanico **non è ancora stato fatto**, e questo passo **non lo fa** (fuori mandato, #28): lo **rende visibile e contabile**, che è la precondizione perché qualcuno lo chiuda.
 
 **Elencate in tabella**: **10** (9 preesistenti + `instrument-epistemic-reach`).
 **Classi che dichiarano questo padre e NON sono in tabella**: **6** — reciprocità in **entrata sì, uscita no**.

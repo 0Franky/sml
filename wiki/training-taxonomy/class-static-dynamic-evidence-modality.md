@@ -53,7 +53,7 @@ silenzio** — prendere il risultato di una modalita' come risposta alla domanda
 - **D3 — il polo POSITIVO pro-statica** (*quando dimostrare CHIUDE e eseguire no*). 🔴 **VUOTO.** E non e' un
   completamento cosmetico: **senza D3, `"esegui sempre"` e' l'hack che passa** — una policy fissa a
   intelligenza zero che prende D1 e D2 in pieno e non richiede alcun giudizio. La roadmap lo dice esattamente
-  cosi': `wiki/roadmap-2026-07-16.md:133` («classe nuova confermata (48 classi, zero la nominano)»).
+  cosi': `wiki/roadmap-2026-07-16.md` («classe nuova confermata (48 classi, zero la nominano)»).
 
 **Logica astratta condivisa dalle tre**: *ogni modalita' di evidenza risponde a un quantificatore. Prima di
 concludere, chiedi quale quantificatore ti serve — e non farti dare un `∃` quando ti serve un `∀`, ne'
