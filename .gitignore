@@ -125,3 +125,7 @@ harness/dist/
 harness/sandbox/_run/
 harness/.pi/harness.config.json
 harness/.pi/secrets.config.json
+
+
+#Ignore vscode AI rules
+.github\instructions\codacy.instructions.md

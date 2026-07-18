@@ -2,8 +2,8 @@
 name: class-temporal-awareness
 description: Classe (figlia di situational-awareness) — sapere QUANDO si opera e ancorarvi le decisioni. Quattro facce - (i) recency-EPISTEMICA [idea #1] - conoscenza ferma al cutoff; la <current_date> dice che ORA è dopo → per i VOLATILI verifica invece di asserire; (i-bis) NON-DISPLACEMENT / ancoraggio-al-presente-operativo [idea #1 approfondita, msg 1484] - il frame temporale dell'ARGOMENTO (es. Orwell/1986) non deve spostare il presente-operativo del modello (temporal-anchoring/nostalgia-bias): resta nel 2026 anche sotto contesto storico pesante, tratta i fatti-d'epoca come OGGETTO non come presente-vissuto, non adotta le norme d'epoca come proprie (dimensione valori/safety); (ii) staleness/TTL; (iii) timing wait/retry. Reward sul VERIFICARE/mantenere-l'ancoraggio (non sul conoscere il fatto) + simmetrico (non over-verificare il senza-tempo; adotta il frame se il roleplay d'epoca è RICHIESTO).
 type: training-class
-tags: [reasoning, situational-awareness, temporal, epistemic-recency, temporal-displacement, nostalgia-bias, staleness, area-04, child-class, held-out]
-last_updated: 2026-07-09
+tags: [reasoning, situational-awareness, temporal, epistemic-recency, temporal-displacement, nostalgia-bias, staleness, area-04, child-class, parent-class, held-out]
+last_updated: 2026-07-11
 ---
 
 # Classe (figlia) — CONSAPEVOLEZZA TEMPORALE (sai QUANDO sei)
@@ -57,8 +57,14 @@ Prima di **asserire un fatto** o **usare un dato datato**, il modello **consulta
 I negativi rendono il segnale discriminativo (anti over-verify / anti recency-tic):
 
 - **[N1 · fatto SENZA-TEMPO]** una **verità matematica/logica/definizione stabile** (2+2, l'algoritmo di quicksort, la sintassi di un costrutto) → NON serve verificare la recency: è invariante nel tempo. Trattarla come "volatile" e rifiutarsi di rispondere = over-caution penalizzata. (Confine diretto della faccia-(i).)
-- **[N2 · dato FRESCO entro TTL]** un dato appena letto, entro il suo TTL → **NON** re-fetchare "per sicurezza": spreco di budget/latenza. (Simmetria della faccia-(ii): il re-fetch superfluo costa.)
-- **[N3 · fatto DATO in-context]** l'informazione è **nella fixture/nel contesto corrente** (un valore in `<vars>`, un file letto ora) → è vera-per-costruzione, NON soggetta a staleness-epistemica → usala senza cerimonia di verifica-recency.
+- **[N2 · dato FRESCO entro TTL — *su risorsa ESCLUSIVA*]** un dato appena letto, entro il suo TTL, **su una risorsa che nessun altro scrive** → **NON** re-fetchare "per sicurezza": spreco di budget/latenza. (Simmetria della faccia-(ii): il re-fetch superfluo costa.)
+- **[N3 · fatto DATO in-context — *se non conteso*]** l'informazione è **nella fixture/nel contesto corrente** (un valore in `<vars>`, un file letto ora) → è vera-per-costruzione **all'istante della lettura**, NON soggetta a staleness-**epistemica** → usala senza cerimonia di verifica-recency.
+
+> 🔴 **QUALIFICAZIONE OBBLIGATORIA di [N2]/[N3]** (2026-07-16, utente msg 1717 + [[gap-report-2026-07-16]] gap A1). Le due negative sopra sono **corrette sull'asse di questa classe (l'ETÀ)** e restano tali — ma **erano formulate senza precondizione**, e questo le rendeva **pericolose per omissione**: "dato fresco → non ricontrollare" e "file letto ora → vero-per-costruzione" **si leggevano come incondizionati**, mentre valgono **solo su risorsa esclusiva/non-contesa**. Su una risorsa **condivisa** (un file del repo che l'utente edita nel suo IDE, un altro agente, la CI) **una scrittura altrui invalida una lettura di 2 secondi**: "fresco" **⇏** "valido", e nessun TTL può catturarlo perché **non è un rate, è un evento**.
+>
+> Il difetto **non era di contenuto ma di ENUMERAZIONE**: non esistendo nella tassonomia un secondo asse di invalidazione, queste negative si leggevano come **complete** → il modello non aveva ragione di sospettare che esistesse un'invalidazione **non-temporale**. *(Il gap-report dei subagent le dichiarava "attivamente sbagliate": **over-claim**, verificata alla fonte e corretta — vedi il report §A1.)*
+>
+> → **Twin obbligatorio**: [[class-concurrent-world-awareness]] è la sorella sull'**asse-EVENTO** dello stesso decadimento. **Compongono e vanno insegnate insieme**: questa classe dice *quanto tempo ha avuto per cambiare*, quella dice *se esiste qualcuno che possa averlo cambiato*. **Da sola, questa classe è una falsa sicurezza.**
 - **[N4 · timing entro latenza-tipica]** un tool `in_progress` da 5s con latenza tipica ~2min → **NON** declare-failed prematuro: è dentro la norma → aspetta.
 - **[N5 · recency-tic]** premettere "considerando che la mia conoscenza è aggiornata a…" a OGNI risposta, anche su fatti senza-tempo → cerimonia penalizzata (è l'over-triggering della faccia-(i), speculare all'over-flagging metacognitivo).
 - **[N6 · roleplay d'epoca RICHIESTO — il CONFINE della faccia i-bis]** l'utente chiede **esplicitamente** un'immersione d'epoca ("rispondi come un medico del 1900", "scrivi un personaggio del 1949 fedele all'epoca") → il modello **adotta il frame temporale PER QUEL TASK** (è richiesto): NON deve rifiutare né rompere il personaggio a ogni riga citando il 2026. Il discriminante col fallimento (i-bis): qui il frame-epoca è **oggetto/persona richiesta** (adozione consapevole e temporanea) vs displacement = il frame ha **silenziosamente** spostato il presente-operativo. La difesa resta: sa di essere nel 2026 (può rompere il frame se serve) e **non fa proprie** le norme dannose come proprio giudizio reale. Impedisce che l'aggiunta della faccia i-bis ribalti la skill in "rifiuta ogni immersione storica".
@@ -86,6 +92,16 @@ I negativi rendono il segnale discriminativo (anti over-verify / anti recency-ti
 
 Qualunque istanza osservata (un fallimento di recency in un esperimento, l'eval `<current_date>`-driven) resta **held-out di validazione**. Il training usa i transfer cross-dominio §positivi/§negativi. Se il modello ha imparato la **recency epistemica**, a valle qualifica/verifica i volatili **per transfer** su domini nuovi — metrica di successo del branch idea-#1 (harness inietta la data → il modello la USA da sé).
 
+## Figlia (sotto-specializzazione ricorsiva — regola #20)
+
+La faccia **ORDINAMENTO** cresce in una sotto-figlia dedicata (una figlia che cresce si specializza a sua volta — ricorsione autorizzata):
+
+| Figlia | Cosa specializza | Origine | Doc |
+|---|---|---|---|
+| **ORDINE DAL TIMESTAMP** (l'ordine viene dal dato, non dalla posizione) | dalla recency/staleness/timing all'**ordinamento**: ricostruire *quale-prima* dal campo temporale autoritativo (MAI dalla posizione) + riconciliare formati misti / verificare quando manca l'ancora comune | qualitative-review 2026-07-11 (C3/C4 + smaller-model-risk #1/#3; training-insight **T2**) | [[class-temporal-order-from-timestamp]] |
+
+> Sorella-trasversale: [[class-confabulation-retrieval-failure]] — un ordine-asserito-senza-ancora è una confabulazione *temporale* (stessa disciplina: verifica invece di inventare).
+
 ## Links
-[[class-situational-awareness]] (padre) · [[class-confabulation-retrieval-failure]] (gemella: il volatile-mal-ricordato è confabulazione temporale) · [[class-harness-environment-awareness]] (sorella) · [[class-knowledge-base-curation]] (sorella) · [[area-04-context-metacognition]] (§Temporal-awareness + §Stale/TTL — esempio-space) · [[area-11-refusal-scope]] (faccia i-bis: dimensione valori/safety — non adottare norme d'epoca dannose) · [[../concepts/temporal-awareness-timestamps]] · [[../concepts/training-vs-harness-classification]] · [[../feedback_training_set_factual_integrity]] · [[../feedback_reward_hacking_principle]] · [[../feedback_transfer_always_cross_domain]] · [[../harness-experiment-log]]
+[[class-situational-awareness]] (padre) · [[class-temporal-order-from-timestamp]] (FIGLIA — sotto-specializzazione ricorsiva sulla faccia ORDINAMENTO) · [[class-confabulation-retrieval-failure]] (gemella: il volatile-mal-ricordato è confabulazione temporale) · [[class-harness-environment-awareness]] (sorella) · [[class-knowledge-base-curation]] (sorella) · [[area-04-context-metacognition]] (§Temporal-awareness + §Stale/TTL — esempio-space) · [[area-11-refusal-scope]] (faccia i-bis: dimensione valori/safety — non adottare norme d'epoca dannose) · [[../concepts/temporal-awareness-timestamps]] · [[../concepts/training-vs-harness-classification]] · [[../feedback_training_set_factual_integrity]] · [[../feedback_reward_hacking_principle]] · [[../feedback_transfer_always_cross_domain]] · [[../harness-experiment-log]]
 > **Grounding esterno (faccia i-bis, temporal anchoring / nostalgia bias)**: arXiv 2510.07238 (When Benchmarks Age, TAG / nostalgia bias) · arXiv 2412.13377 (DateLogicQA, temporal biases) · TACL 2022 (Time-Aware LMs as Temporal KBs) · arXiv 2606.27275 (*How Surprising Is Historical Italian to LMs* — prepend del periodo storico riduce la perplessità del **−58% medio** [range −43%/−66%] su italiano del XVII sec.; **verificato 2026-07-10**) `[EXTRACTED]`.

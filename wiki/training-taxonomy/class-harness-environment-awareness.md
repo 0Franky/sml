@@ -2,8 +2,8 @@
 name: class-harness-environment-awareness
 description: Classe (figlia di situational-awareness) — mantenere un modello accurato del PROPRIO AMBIENTE OPERATIVO (quali tool/lane/meccanismi offre l'harness, cosa è GIÀ in context) e ancorarvi le azioni. Gap reale - FIND-7 (ri-chiama list_secrets il cui inventario è già in context), F23/F33 (ignora lo scaffold <how_memory_works> che descrive note/jot). È il FONDAMENTO dei gemelli-memoria (non puoi SALVARE se non sai che esiste note; non puoi RECUPERARE se non sai di get_conversation). Reward - usa l'affordance giusta già disponibile invece di ri-derivare/allucinare un tool; simmetrico (non ri-chiamare ciò che è già in context, non over-esplorare l'ambiente per un task banale).
 type: training-class
-tags: [reasoning, situational-awareness, harness-awareness, tool-use, affordances, area-04, child-class, held-out]
-last_updated: 2026-07-09
+tags: [reasoning, situational-awareness, harness-awareness, tool-use, affordances, area-04, child-class, parent-class, held-out]
+last_updated: 2026-07-11
 ---
 
 # Classe (figlia) — CONSAPEVOLEZZA DELL'AMBIENTE-HARNESS (sai DOVE / con-COSA operi)
@@ -65,5 +65,15 @@ Il concept-harness (lato-F) fornisce le affordance; questa classe (lato-S) inter
 
 Reward invariato (outcome + simmetrico): premia l'uso-corretto-dell'affordance (espande quando serve / chiama il tool giusto anche se non-listato / rispetta i confini), penalizza sia il sotto-uso (rinuncia/allucina) sia l'over-uso (espande l'ovvio, over-isola).
 
+## Figlia (sotto-specializzazione ricorsiva — regola #20)
+
+Da fondamento delle affordance, questa classe è ora a sua volta **padre** di una specializzazione sul sotto-dominio dei **canali di persistenza** (write-routing):
+
+| Figlia | Cosa specializza | Origine | Doc |
+|---|---|---|---|
+| **DISCIPLINA DEI CANALI DI MEMORIA** (metti il dato nel canale GIUSTO) | dall'affordance-awareness generale al **write-routing** semanticamente corretto: durevole→`note`/`<facts>` (self-contained) · di-lavoro→`jot`/`<scratch>` · strutturato→`set_var`/`<vars>` | qualitative-review 2026-07-11 (gap **più citato** dai 3 modelli capaci; training-insight **T1**) | [[class-memory-lane-tool-discipline]] |
+
+> Colloca un gradino **sopra** "sai che i canali esistono" (questo padre) e un gradino **sotto** "salvi il dato giusto" (gemelle-memoria [[class-prospective-memory]] SAVE / [[class-confabulation-retrieval-failure]] RECALL): il mis-routing in SCRITTURA qui **causa** a valle il retrieval-failure che le gemelle gestiscono.
+
 ## Links
-[[class-situational-awareness]] (padre) · [[../concepts/harness-tool-affordance-design]] (twin lato-F) · [[class-prospective-memory]] (SAVE — presuppone di sapere che esiste `note`) · [[class-confabulation-retrieval-failure]] (RECALL — presuppone di sapere gli store; astensione condivisa su affordance-assente) · [[class-temporal-awareness]] (sorella — freschezza vs presenza) · [[../concepts/runtime-symbol-randomization-training]] · [[../concepts/dynamic-context-training-regime]] · [[../concepts/training-vs-harness-classification]] · [[area-04-context-metacognition]] · [[../feedback_reward_hacking_principle]] · [[../feedback_transfer_always_cross_domain]] · [[../harness-experiment-log]] (FIND-7, F23, F33)
+[[class-situational-awareness]] (padre) · [[class-memory-lane-tool-discipline]] (FIGLIA — sotto-specializzazione write-routing dei canali di memoria) · [[../concepts/harness-tool-affordance-design]] (twin lato-F) · [[class-prospective-memory]] (SAVE — presuppone di sapere che esiste `note`) · [[class-confabulation-retrieval-failure]] (RECALL — presuppone di sapere gli store; astensione condivisa su affordance-assente) · [[class-temporal-awareness]] (sorella — freschezza vs presenza) · [[../concepts/runtime-symbol-randomization-training]] · [[../concepts/dynamic-context-training-regime]] · [[../concepts/training-vs-harness-classification]] · [[area-04-context-metacognition]] · [[../feedback_reward_hacking_principle]] · [[../feedback_transfer_always_cross_domain]] · [[../harness-experiment-log]] (FIND-7, F23, F33)

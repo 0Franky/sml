@@ -94,5 +94,9 @@ EVAL_TASKS_FILE=eval/data/humaneval-30.jsonl EVAL_ARMS=vanilla,ours EVAL_KEEPS=8
 2. **Io (non-gated ORA)**: generare `humaneval-30.jsonl` (+ eventuale scenario con dipendenze early→late esplicite) + definire la probe di **dipendenza** (non solo recall di nomi, ma un task che FALLISCE senza il fatto early).
 3. **Run** appena c'è compute → primo verdetto "harness vince/perde" su long-horizon.
 
+## Validazione sui modelli CAPACI (piano 2026-07-11)
+
+I 3 regimi qui sopra (A overflow / B iso-recall / C anti-deragliamento) sono il quadro concettuale; la loro **validazione operativa su modelli capaci** (target ≥27B via OpenRouter) è pianificata in [[lab-plan-capable-models-validation]] — con la correzione bloccante che "vanilla-perde-in-overflow" (Regime-A) **resta sul banco locale** (finestra saturabile), mentre sui capaci si misura `ours@keep1 vs ours@finestra-piena` + il discriminante F34. Il piano è **proposta** (attende scelta scope+budget, CAP $7.50).
+
 ## Link
-[[harness-benchmark-versions]] · [[harness-experiment-log]] · [[architecture/lane-persistence-redesign]] · [[concepts/context-window-sizing]] · [[todo]] · [[../harness/eval/run-session-ab.mjs]]
+[[harness-benchmark-versions]] · [[harness-experiment-log]] · [[lab-plan-capable-models-validation]] · [[architecture/lane-persistence-redesign]] · [[concepts/context-window-sizing]] · [[todo]] · [[../harness/eval/run-session-ab.mjs]]
