@@ -282,6 +282,16 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 - [`decisions/2026-06-29-headroom-evaluation.md`](decisions/2026-06-29-headroom-evaluation.md) 🆕🗜️ — **ADR: includere Headroom nell'harness?** (context-compression toolkit, Apache-2.0). Verdetto: integrare SÌ ma **NON blanket-default-on** — import SELETTIVO sulle lane content + opt-in in fase-ricerca (utente msg 395/396). Integrazione FUTURA low-priority (sopra i Gold)
 - [`decisions/2026-07-05-slm-scaffolding-extension.md`](decisions/2026-07-05-slm-scaffolding-extension.md) 🆕🧩⭐ — **ADR: estensione `slm`** — separare TUTTE le pezze-per-il-modello (hint/nudge/scaffolding) dal CORE (soli meccanismi) in un'extension pi DEDICATA. Modello grande → non la installa (contesto lean); SLM early-training → la installa; man mano che impara → si disinstalla (**scaffold che recede**, misurabile). Deciso utente msg 1069; motivato da H6 + fissazione #145
 
+## Regole-di-lavoro condivise — COPIE (`_core-mirror/`)
+
+Regole **di come lavoro io** (non del modello in progettazione), la cui **SSOT vive nel wiki-core
+condiviso, che è un repo PRIVATO** e quindi non è linkabile da qui (questo repo è pubblico). Si copiano
+come contenuto quando servono anche al progetto SLM. ⚠️ **Modifica sempre la SSOT, mai la copia** — poi
+ri-sincronizza (decisione utente 2026-07-24, dopo la rimozione del submodule privato dal repo pubblico).
+
+- [`_core-mirror/self-audit-on-every-signal.md`](_core-mirror/self-audit-on-every-signal.md) 🆕 — ogni **segnale**, problema **O apprezzamento**, apre un self-audit **nel momento** (non a fine sessione): cosa l'ha permesso · le mie verifiche potevano coglierlo · è sistemico · dove lo scrivo perché non dipenda dalla memoria · il sistema di conoscenza è allineato. *"Il complimento è un requisito travestito da cortesia"*
+- [`_core-mirror/decision-request-marker-and-recommendation.md`](_core-mirror/decision-request-marker-and-recommendation.md) 🆕 — ogni punto che richiede una **decisione dell'utente** porta il **marcatore riservato** (🗳️, esclusivo nelle due direzioni), è **auto-contenuto** (decidibile da telefono senza ricostruire il contesto) e arriva con la **reco**: quale opzione, quanto è solida, **cosa la ribalterebbe**
+
 ## Da popolare (placeholder)
 
 Aree note ma non ancora documentate. Ordina per priorità in `open-questions.md`.
