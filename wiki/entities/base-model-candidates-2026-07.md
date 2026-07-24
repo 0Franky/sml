@@ -35,6 +35,19 @@ last_updated: 2026-07-10
 
 **MoE giganti / fuori-scope** (taglia/licenza/arch): DeepSeek V3.2/V4, Mistral-4-119B, Llama-4-Scout 109B (Community lic.), GLM-4.5+, Command-A (CC-BY-NC). **Sub-target**: Mistral 24B/14B, Magistral, Phi-4, distill 8-14B, gpt-oss-20b. **Ibridi-Mamba**: Falcon-H1, Granite-4 (attrito CPT senza compenso). → coerente con la **preferenza DENSE** (msg 1326): i MoE non entrano nella rosa.
 
+## 🆕 [2026-07-24] Verifica specs Gemma 4 (utente msg 1798) + dato E-COMP `[EXTRACTED — web 2026-07-24]`
+
+Fonti: [HF google/gemma-4-31B-it](https://huggingface.co/google/gemma-4-31B-it) · [HF gemma-4-12B-it](https://huggingface.co/google/gemma-4-12B-it) · [Gemma 4 core docs](https://ai.google.dev/gemma/docs/core) · [Gemma 4 Technical Report arXiv:2607.02770](https://arxiv.org/html/2607.02770v1).
+
+- **Famiglia Gemma 4** (rilascio 2026-03-31; **12B Unified aggiunto 2026-06-03**): 5 tagli — E2B, E4B, **12B (Unified)**, **31B dense**, **26B A4B (MoE, ~4B attivi)**. Tutti: **256K ctx**, thinking-mode configurabile, **draft-model per speculative decoding** incluso.
+- **Gemma 4 31B dense** — *"bridges server-grade e local execution"*, esiste una **QAT-q4_0-GGUF ufficiale**. ⚠️ Ma 31B@4bit ≈ 15-16GB pesi → **NON entra nei 11GB della 2080Ti** ([[../../memory|project_local_hardware]]) senza offload-CPU (lento). In-target 27B-class. **Già candidato #5** sopra.
+- **Gemma 4 12B "Unified"** — **11.95B param, 48 layer, 262K vocab, 256K ctx**. ⚠️ **"Unified" = MULTIMODALE ENCODER-FREE** (testo + **immagine + audio**): niente encoder, proietta patch-immagine e waveform-audio direttamente nell'embedding space del decoder. **12B@4bit ≈ 6GB → entra comodo in locale.**
+  - 🔴 **Il punto che cambia la valutazione**: il nostro è un **SLM coding/reasoning TEXT-ONLY** ([[../../memory|project_base_model_intelligence]]). Un 12B **multimodale** spende parametri su vision/audio **che a noi non servono** → la sua **capacità testuale effettiva è < di un 12B text-only**, e il CPT/full-FT su un'architettura unified rischia di rompere le proiezioni multimodali o portare **peso morto**. **A meno che** la multimodalità sia voluta (wrapper con screenshot/audio?) → allora è un PRO. **È una domanda di INTENTO per l'utente, non un default** (#28).
+  - **Trade-off reale, non "31 vs 12 dimensione"**: 31B dense text-forte ma **fuori-locale** ↔ 12B gira-in-locale ma **multimodale-baggage + sotto-target**. Terza opzione ironica (cfr. idea utente M4 "terza via"): **26B A4B** = capacità ~26B ma ~4B attivi (più leggero) — **MA è MoE**, contro la preferenza-dense per CPT pulito (msg 1326).
+- **Dato comportamentale FRESCO**: l'esperimento **E-COMP 2026-07-18** ha girato su `gemma-4-31b-it` — il modello **compone due mezze-skill senza scaffolding** (17/24 compositi, 12/12 negativi). `[EXTRACTED, harness-experiment-log §E-COMP]`. Non è un benchmark di conoscenza, ma è un segnale positivo su reasoning/composizione a questa taglia.
+
+**Reco M1**: il 31B era già in rosa; il **12B Unified va valutato sapendo che è multimodale** — per un coding-SLM è un contro, non un pari. La domanda che decide: **serve la multimodalità?** Se no → il 12B non è "un Gemma più piccolo", è "un Gemma che spende metà di sé su cose che non useremo".
+
 ## Raccomandazione (metodo, non verdetto a priori)
 
 **NON blindare Qwen3.6-27B.** Fare un **BAKE-OFF a due teste** (prima sul 4B di test, poi sui finalisti 32B):
