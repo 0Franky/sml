@@ -48,6 +48,11 @@ Fonti: [HF google/gemma-4-31B-it](https://huggingface.co/google/gemma-4-31B-it) 
 
 **Reco M1**: il 31B era già in rosa; il **12B Unified va valutato sapendo che è multimodale** — per un coding-SLM è un contro, non un pari. La domanda che decide: **serve la multimodalità?** Se no → il 12B non è "un Gemma più piccolo", è "un Gemma che spende metà di sé su cose che non useremo".
 
+> **✅ DECISO 2026-07-24 (utente msg 1808): "non serve multimodale".** Conseguenze registrate (vincolo, non nuovo-pick):
+> - **`Gemma 4 12B Unified` → ARCHIVIATO** come base: la sua natura encoder-free multimodale spende parametri su vision/audio non richiesti → per un coding-SLM text-only è **peso morto strutturale**. Fuori dalla rosa.
+> - **`Gemma 4 31B dense` → resta candidato #5**, ma il vincolo "no-multimodale" **non lo promuove**: i suoi contro (agentic-debole, recall-enciclopedico-debole — i nostri assi #1 e #2) restano, e non è multimodale-heavy come il 12B ma la wiki già notava "multimodale = baggage" anche su di lui. Non è il leader.
+> - **Il pick-base NON cambia**: il bake-off resta **Seed-OSS-36B-woSyn (primario) / Qwen3-32B (default-sicuro)**, entrambi dense text-focused. Il vincolo "no-multimodale" è un **input che penalizza** i candidati multimodali/ibridi-nuovi (12B Unified fuori; cautela su Qwen3.6-27B multimodale), non una nuova scelta.
+
 ## Raccomandazione (metodo, non verdetto a priori)
 
 **NON blindare Qwen3.6-27B.** Fare un **BAKE-OFF a due teste** (prima sul 4B di test, poi sui finalisti 32B):
