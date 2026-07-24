@@ -53,6 +53,18 @@ Fonti: [HF google/gemma-4-31B-it](https://huggingface.co/google/gemma-4-31B-it) 
 > - **`Gemma 4 31B dense` → resta candidato #5**, ma il vincolo "no-multimodale" **non lo promuove**: i suoi contro (agentic-debole, recall-enciclopedico-debole — i nostri assi #1 e #2) restano, e non è multimodale-heavy come il 12B ma la wiki già notava "multimodale = baggage" anche su di lui. Non è il leader.
 > - **Il pick-base NON cambia**: il bake-off resta **Seed-OSS-36B-woSyn (primario) / Qwen3-32B (default-sicuro)**, entrambi dense text-focused. Il vincolo "no-multimodale" è un **input che penalizza** i candidati multimodali/ibridi-nuovi (12B Unified fuori; cautela su Qwen3.6-27B multimodale), non una nuova scelta.
 
+## 🆕 [2026-07-24] Verifica Laguna S 2.1 (utente msg 1820) `[EXTRACTED — web 2026-07-24, fonti secondarie]`
+
+Fonti: [HF poolside/Laguna-S-2.1-base](https://huggingface.co/poolside/Laguna-S-2.1-base) · [OpenRouter](https://openrouter.ai/poolside/laguna-s-2.1) · [review Geeky-Gadgets](https://www.geeky-gadgets.com/laguna-s-2-1-review/). ⚠️ Specs da card/review, **non** ri-verificate contro un technical-report primario — i numeri sono coerenti fra loro ma il livello-che-chiude sarebbe la model-card ufficiale.
+
+- **Laguna S 2.1** (Poolside AI) — **118B totali MoE, ~8B attivi/token** (256 routed experts + 1 shared), 48 layer, attention **ibrida** (full + sliding-window, 1 global ogni 3 SW), GQA 8 KV-heads. Licenza **OpenMDW-1.1** (open-weight, uso commerciale+non-commerciale). **Esiste la `-base`** (buono per CPT). **Dominio: software-engineering + agentic-coding** (text-only, no multimodale menzionato).
+- 🟢 **PRO forte sul nostro asse #1**: è nato **agentic-coding** — esattamente *operare-il-sistema*, che la nostra memoria eleva ad asse primario. Ha la **base** (non instruct-only → substrato CPT più pulito). Text-only (coerente col vincolo no-multimodale msg 1808). Licenza commercial-ok.
+- 🔴 **CONTRO che lo escludono come BASE, tre e strutturali**:
+  1. **È MoE** (118B/8B) → **viola la preferenza-DENSE** dell'utente (msg 1326: *"i MoE non entrano nella rosa"*, attrito CPT/full-FT/LoRA). È lo **stesso motivo** per cui **Nemotron-3-MoE fu scartato** (riga 9 tabella).
+  2. **118B totali = FUORI TARGET** (27B-class): anche se attiva 8B, i **118B devono stare in memoria** → non-locale, e ~4× sopra il target dichiarato. La 2080Ti non lo tocca; anche in cloud è un'altra classe di costo.
+  3. **MoE + attention ibrida sliding-window = massima fragilità CPT** (stesso profilo-rischio di Qwen3.6-27B ibrido, riga 6).
+- **VERDETTO**: dominio giusto, **architettura sbagliata per il nostro uso-come-BASE**. È il profilo OPPOSTO a ciò che cerchiamo (dense ~27B text-focused per CPT pulito). **→ NON entra nella rosa base** (stesso taglio di Nemotron/MoE-giganti). **Candidatura alternativa da valutare**: come **TEACHER di distillazione coding** (coding-strong + licenza commercial), accanto/vs [[../../memory|project_teacher_deepseek_v4]] — lì la taglia 118B e il MoE **non** sono un problema (il teacher non si CPT-a), e il dominio-coding è un fit. ⚠️ ToS/licenza OpenMDW-1.1 da leggere per l'**uso-in-distillazione** (#29: conta l'USO, non l'accesso).
+
 ## Raccomandazione (metodo, non verdetto a priori)
 
 **NON blindare Qwen3.6-27B.** Fare un **BAKE-OFF a due teste** (prima sul 4B di test, poi sui finalisti 32B):
