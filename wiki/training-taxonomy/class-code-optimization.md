@@ -24,7 +24,7 @@ Il modello "ottimizza" in modi fallati: (a) **rompe la correttezza VISIBILE** (t
 **Migliorare codice esistente verso un target DATO e MISURABILE**, quattro discipline:
 - **① correttezza BEHAVIOR-preserving** (cancello dominante) — NON "stessi test verdi" ma **stesso contratto osservabile** verificato su suite **nascosta** + **property-test** (ordine, tolleranza-float, no-overflow) **+ per le RACE stress-test ripetuto N volte / ThreadSanitizer** (una race NON si cattura col property-test a passata singola — eredita il trattamento-concorrenza di [[area-05-code-correctness]]);
 - **② target giusto** — **misura/ablaziona** il vero collo di bottiglia, non lo indovina;
-- **③ proporzionalità** — calibra l'entità a quanto il codice conta (caldo vs freddo, [[class-project-stakes-awareness]]) e al target (non barattare RAM per velocità se il target è la RAM);
+- **③ proporzionalità** — calibra l'entità a quanto il codice conta (caldo vs freddo, [[class-project-stakes-awareness]]) e al target (non barattare RAM per velocità se il target è la RAM); *(stessa lente hot/cold applicata alle dimensioni **Architecture/Maintainability** — non PERFORMANCE — in [[../concepts/quality-target-tiers]] §3.ter scale-floor)*;
 - **④ nessuna REGRESSIONE degli altri invarianti** — non peggiorare una metrica non-target né cambiare l'interfaccia pubblica.
 Il *mezzo* (algoritmo migliore, caching, meno allocazioni, batching I/O, vettorizzazione) è libero; conta l'**esito misurato con gli invarianti intatti**.
 

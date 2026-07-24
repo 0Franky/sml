@@ -3,8 +3,8 @@ name: quality-target-tiers
 description: Il modello deve capire il LIVELLO DI QUALITÀ target del deliverable (PoC / Prototype / MVP / Production / Hardened), calibrare lo sforzo di conseguenza, e — se ambiguo — CHIEDERE all'utente mostrando uno scorecard (dimensioni × 0-5 per tier). Idea utente 2026-06-23.
 type: concept
 tags: [quality, deliverable-tier, poc, mvp, production-ready, scorecard, effort-calibration, organization-first, ask-vs-proceed]
-last_updated: 2026-06-23
-status: draft — espanso da idea utente, da validare
+last_updated: 2026-07-24
+status: draft — espanso da idea utente, da validare (§3.ter scale-floor = PROPOSTA #26 msg 1799-1804, non ratificata)
 confidence: provisional
 ---
 
@@ -61,7 +61,38 @@ Il tier dà il **profilo base**, ma il **dominio alza il pavimento** di singole 
 | Real-time / gaming | Performance ≥4 |
 | Infra / libreria pubblica | Maintainability ≥4 · Docs ≥4 · Tests ≥4 |
 
-**Regola**: profilo finale = `max(tier_target, domain_floor)` per dimensione. Es. *MVP fintech* → Security **5/5** (non 4). Il modello deve riconoscere il dominio e applicare i floor. → skill: domain-aware quality calibration.
+**Regola**: profilo finale = `max(tier_target, domain_floor, scale_floor)` per dimensione (il terzo floor è definito in §3.ter). Es. *MVP fintech* → Security **5/5** (non 4). Il modello deve riconoscere il dominio e applicare i floor. → skill: domain-aware quality calibration.
+
+## 3.ter — Floor per SCALA × frequenza-d'uso della PARTE (intra-progetto) — `[PROPOSTA #26, non ratificata]`
+
+> **Origine**: idea utente msg 1799-1804 (triage 2026-07-24). **Estensione**, non classe nuova (#16): aggiunge un TERZO floor allo stesso framework di §3.bis.
+
+Tier (§2) e domain-floor (§3.bis) sono entrambi **project-level**: fissano UN profilo per l'intero deliverable. Ma un progetto **grosso benché throwaway** non è omogeneo: alcune parti sono **calde** (eseguite spesso, riusate da molti call-site, load-bearing per il resto della codebase) e altre **fredde** (usa-e-getta reali, un solo path, output effimero). Calibrare lo sforzo *sul tier di progetto* sbaglia in **entrambi** i versi dentro lo stesso repo.
+
+- **Discriminante = SCALA × frequenza-d'uso DELLA PARTE**, non "throwaway-vs-no" del progetto. Un helper chiamato da 40 punti dentro uno spike enorme è caldo; un blocco monouso dentro un servizio production è freddo.
+- **`scale_floor` alza SOLO due righe** dello scorecard — **Architecture/structure** e **Maintainability/readability** — e **solo sulle parti calde**. Razionale: su una parte calda uno spaghetti **si propaga** (ogni call-site eredita il difetto, il costo di manutenzione si moltiplica per la frequenza); su una parte fredda quelle due dimensioni non pagano il proprio costo. Le altre righe (Security, Correctness…) restano governate da tier+dominio: la scala della *parte* non abilita a saltare la security.
+- **Polo positivo (oggi MANCANTE altrove)**: *"throwaway MA grosso → ingegnerizza le parti calde/riusate, il resto resta brutale."* Non è "throwaway → minimo sforzo ovunque" (sarebbe l'hack ucciso) né "grosso → hardening ovunque".
+
+**Regola combinata**: `target(dimensione, parte) = max(tier_target, domain_floor, scale_floor(parte))`, dove `scale_floor` è non-nullo **solo** per {Architecture, Maintainability} e **solo** dove `scala(parte) × frequenza-d'uso(parte)` supera la soglia di caldo.
+
+**NEGATIVI simmetrici (#21)** — il floor è una **calibrazione**, non "più-rigore-è-meglio":
+- **N-under**: parte **calda** di un big-throwaway lasciata spaghetti → l'errore si **propaga** su tutti i call-site (è il caso che oggi nessuna classe copre: project-stakes N2 tratta il throwaway-banale→basso come *corretto*, ma non esiste il polo throwaway-**GROSSO**→basso = errore).
+- **N-over**: **hardening delle parti FREDDE** di un throwaway (circuit-breaker/astrazioni su un blocco monouso) → è la *"robustezza fuori scala"* già coperta da [[../training-taxonomy/area-06-code-quality-architecture|area-06]]:128, qui ri-vista dalla lente **scala-della-parte** invece che tier-di-progetto.
+- **Anti-hack ucciso**: "throwaway → minimo sforzo ovunque" (salta le parti calde) — battuto dai casi bilanciati che includono **sia** una parte calda **sia** una parte fredda nello *stesso* progetto (§Gate).
+
+**Cross-link (SSOT #16, non duplicazione)**:
+- [[../training-taxonomy/class-code-optimization]] disciplina ③ (proporzionalità caldo-vs-freddo) usa la **stessa lente hot/cold** ma sulla dimensione **PERFORMANCE**; qui la lente vale per **Architecture/Maintainability**. Assi ortogonali, stessa euristica.
+- Questo materiale è **contenuto-core riservato** per la figlia FUTURA `right-effort-for-stakes` di [[../training-taxonomy/class-constraint-fit-decision]] (`class-constraint-fit-decision.md:27`, placeholder non ancora costruito): quando verrà filata, **SCEGLIE** il tier-di-sforzo per-parte a partire dalla **POSTA letta** da [[../training-taxonomy/class-project-stakes-awareness]] (LEGGE la posta) — la stessa separazione legge-vs-sceglie già stabilita fra quelle due classi.
+
+**Transfer cross-dominio (#19)** — la STESSA logica "dimensiona lo sforzo sulla scala×uso della PARTE, non sull'etichetta del tutto":
+- **dimensionamento di un impianto "provvisorio" ma grande**: la dorsale idraulica/elettrica che regge tutto il cantiere va ingegnerizzata anche se l'impianto è temporaneo; la derivazione a un capannone che si smonta fra un mese resta minimale.
+- **staffing di un evento one-shot ma enorme**: i ruoli-collo (sicurezza, ingressi, coordinamento) vanno strutturati e ridondati anche se l'evento dura un giorno; le mansioni marginali restano ad-hoc.
+
+## Gate reward (quando si costruirà `right-effort-for-stakes`)
+
+- **OUTCOME (dominante)** = **floor-corretto-per-parte** su casi **bilanciati** che contengono, nello stesso progetto, **una parte calda** (dove {Architecture, Maintainability} DEVONO salire) **e una parte fredda** (dove NON devono) → premia la calibrazione, MAI la cerimonia ("valuto la scala…").
+- **#32 (reward-branch-field-trap)**: `scala × frequenza-d'uso` è un **INPUT misurabile** (fan-in/#call-site/frequenza-di-esecuzione), non il ramo-da-premiare → grondarlo come input è lecito; il **tier-di-sforzo scelto** (il ramo) va all'held-out bilanciato + ECE, non grondato per-esempio.
+- **Held-out**: le coppie caldo/freddo del gold restano escluse dal generatore; il transfer sui domini non-software (impianto, evento) è la metrica di successo.
 
 ## 4. Comportamento del modello (la skill)
 

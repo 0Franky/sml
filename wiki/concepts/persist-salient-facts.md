@@ -70,3 +70,4 @@ Probe soprannome: turno 1 "chiamami <nick>"; riempi la finestra oltre `nativeKee
 - [[concepts/training-vs-harness-classification]] (playbook regola #11) · [[feedback_reward_hacking_principle]] (reward sull'esito) · [[feedback_temporal_anchoring]] (shift `[+Xs]`, ordine autoritativo)
 - [[model-testbook]] TB-16 · [[decisions/2026-06-29-context-as-first-person-mind]] (context = mente in prima persona) · [[todo]]
 - Amnesia fix (raise `nativeKeepTurns` 1→6, 2026-07-03) — layered con questa skill.
+- [[decisions/2026-07-24-supermemory-not-in-rl-loop]] — perché la memoria resta MODEL-CONTROLLED e NON si delega a supermemory nel loop RL (delegare il recall = participation/branch-hack, invaliderebbe questo reward).
