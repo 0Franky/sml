@@ -9,6 +9,10 @@ last_updated: 2026-07-18
 
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
 
+## 🆕 2026-07-24 (sera) — M8 REGOLA-CORE calibrazione-output-allo-scopo (msg 1809) — messa in core + pushata
+
+- [x] **M8 · OUTPUT CALIBRATO ALLO SCOPO** (msg 1809): codice PRODUZIONE → ottimizzato/parallelo; DIDATTICO → basilare/lineare. Istruzione esplicita *"fai una regola, wiki core, pusha"* → ESEGUITA in `roadmap §CORE`. ⚠️ È la STESSA legge di #0 (profondità↔posta) e `right-effort-for-stakes`, applicata alla FORMA dell'output → **assorbe M2 + P4** (stesso asse: rigore/registro/stile-codice = tre facce di calibra-alla-situazione, da unificare al triage, SSOT #16). ⚠️ **Ambiguità NON risolta a caso**: *"tutto il codice deve essere utilizzato"* = (a) *appropriato-all'uso* [scritto] o (b) *no-dead-code* [principio diverso, DA CONFERMARE con l'utente].
+
 ## 🆕 2026-07-24 (pom) — MINING 7 idee utente (TG msg 1798-1804) — CATTURA verbatim, attendono triage
 
 > Cattura durevole SUBITO (#9 anti-loss). I flag "≈ esistente?" sono **SOSPETTI DA VERIFICARE**, non conclusioni (regola #0: non dire "già coperto" senza aver aperto il file). Stato: PROPOSTE, non ratificate (#26). Triage completo al prossimo ok.
