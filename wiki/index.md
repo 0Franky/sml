@@ -282,6 +282,10 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 - [`decisions/2026-06-29-headroom-evaluation.md`](decisions/2026-06-29-headroom-evaluation.md) 🆕🗜️ — **ADR: includere Headroom nell'harness?** (context-compression toolkit, Apache-2.0). Verdetto: integrare SÌ ma **NON blanket-default-on** — import SELETTIVO sulle lane content + opt-in in fase-ricerca (utente msg 395/396). Integrazione FUTURA low-priority (sopra i Gold)
 - [`decisions/2026-07-05-slm-scaffolding-extension.md`](decisions/2026-07-05-slm-scaffolding-extension.md) 🆕🧩⭐ — **ADR: estensione `slm`** — separare TUTTE le pezze-per-il-modello (hint/nudge/scaffolding) dal CORE (soli meccanismi) in un'extension pi DEDICATA. Modello grande → non la installa (contesto lean); SLM early-training → la installa; man mano che impara → si disinstalla (**scaffold che recede**, misurabile). Deciso utente msg 1069; motivato da H6 + fissazione #145
 
+## Processo — registro dei fix
+
+- [`fix-ledger.md`](fix-ledger.md) 🆕⚙️ — **cosa ho riparato e i rimedi VALUTATI E SCARTATI col motivo misurato**. Si consulta **PRIMA** di ogni fix. Blocca i due loop distinti: **A** *"fixo e rompo"* (§ANTI-FIX: 8 rimedi-reward + 8 di processo, ognuno con **cosa rompe**) e **B** *"sembra chiuso e torna"* (ogni voce dichiara i **gemelli** cercati/coperti). Richiesta utente 2026-07-25: *"se no iniziamo a fare loop inutili"*
+
 ## Regole-di-lavoro condivise — COPIE (`_core-mirror/`)
 
 Regole **di come lavoro io** (non del modello in progettazione), la cui **SSOT vive nel wiki-core

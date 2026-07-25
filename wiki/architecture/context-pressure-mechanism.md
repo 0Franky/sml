@@ -30,7 +30,7 @@ sources:
 - **`<reorganize_hint>`** (`context-assembly.ts`): su recommend=='reorder'; **A2**: stesso reporting onesto (reason + watch=N/soglia + ctx% condizionale).
 - **focus_status** tool (`nested-compact.ts`): on-demand; **A2**: pressure=recommend + reason + driver + work/occ + watch=N/soglia + ctx_pct (se occ≠none).
 - **turn-trace** (`turn-trace.ts:43-55`): consumatore PASSIVO/diagnostico; registra `contextFraction=tokens/contextWindow` + `systemLen` reale in `.pi/state/trace/`.
-- **session_before_compact** (`nested-compact.ts:116-119`): NON legge percent; annulla solo su reason=='threshold' (con compaction OFF non scatta mai).
+- **session_before_compact** (`nested-compact.ts:113-114`): NON legge percent; annulla solo su reason=='threshold' (con compaction OFF non scatta mai).
 
 ## Floor + growable [EXTRACTED/INFERRED]
 

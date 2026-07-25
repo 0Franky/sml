@@ -91,15 +91,33 @@ function resolveCited(cited, fromAbs) {
   return basenameIndex.get(base) ?? null;
 }
 
+// Default = TUTTA la wiki, ricorsiva.
+// Prima era la sola `wiki/training-taxonomy` (102 file su ~181): il check dava "0 ERROR"
+// perche' NON GUARDAVA il resto — un verde che non discriminava (⭐#0). Allargando il
+// perimetro sono usciti subito 4 ERROR reali, invisibili per mesi: 3 drift doc->codice
+// (il codice si era mosso sotto la citazione) e 1 nel registro dei fix scritto lo stesso
+// giorno. Escluso `_private/` (gitignored, cattura grezza non mantenuta).
+const DEFAULT_ROOTS = ["wiki"];
+const SKIP_DIRS = new Set(["_private", "node_modules", ".git"]);
+
+function walkMd(abs, out) {
+  for (const f of readdirSync(abs, { withFileTypes: true })) {
+    if (f.isDirectory()) {
+      if (SKIP_DIRS.has(f.name)) continue;
+      walkMd(join(abs, f.name), out);
+    } else if (extname(f.name) === ".md") out.push(join(abs, f.name));
+  }
+}
+
 function collectTargets(argv) {
   const paths = argv.filter((a) => !a.startsWith("--"));
-  const roots = paths.length ? paths : ["wiki/training-taxonomy"];
+  const roots = paths.length ? paths : DEFAULT_ROOTS;
   const out = [];
   for (const r of roots) {
     const abs = resolve(ROOT, r);
     if (!existsSync(abs)) { console.error(`⚠ assente: ${r}`); continue; }
     if (statSync(abs).isFile()) { out.push(abs); continue; }
-    for (const f of readdirSync(abs)) if (extname(f) === ".md") out.push(join(abs, f));
+    walkMd(abs, out);
   }
   return out;
 }
