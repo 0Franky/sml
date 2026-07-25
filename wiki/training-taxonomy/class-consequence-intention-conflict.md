@@ -76,5 +76,8 @@ Ogni task presenta un obiettivo + un'azione *plausibile* con una conseguenza-aut
 - **Falso-positivo di coerenza** (bocciare azioni SANE gridando "auto-sconfiggente" per lucrare il segnale) → neutralizzato: l'oracolo premia il *raggiungimento dell'obiettivo*, quindi rifiutare un'azione coerente fa mancare l'obiettivo → niente reward. Serve la terza-via che *raggiunge* il fine, non solo il "no".
 - **Over-fitting all'istanza** (riconoscere solo "pre-flight/ping") → mitigato: pre-flight è held-out; il training è su 5 domini disgiunti.
 
+
+**FIGLIA (2026-07-25)**: [[class-accidental-property-removal]] — **riparare un difetto puo' aprirne un altro**. La torsione rispetto a questa classe: li' la conseguenza **non contraddice l'intenzione del fix** (il fix riesce, il difetto e' davvero riparato) — contraddice **un'altra proprieta' del sistema che nessuno aveva dichiarato**, perche' reggeva per **accidente** e non per progetto. Ed e' per questo che sfugge: il lavoro e' corretto, quindi nessuno sospetta, e la verifica fatta dopo guarda **il ramo riparato** invece di **cio' che il difetto teneva chiuso**.
+
 ## Links
 [[class-metacognitive-self-audit]] (padre) · [[class-subgoal-hijacks-task]] (figlia — il MEZZO si sostituisce al FINE, da F24) · [[class-anticipation-and-irreversibility]] (figlia — anticipo-su-scelta-aperta / irreversibilità, mining #16) · [[class-stagnation-recovery]] · [[gold-example-transfer-assumption-audit]] · [[area-03-reasoning-scientific-method]] · [[area-04-context-metacognition]] · [[../feedback_reward_hacking_principle]] · [[../feedback_intelligence_gap_to_training_class]] · [[../harness-experiment-log]]
