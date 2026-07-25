@@ -58,7 +58,19 @@ const PARENT_PATTERNS = [
 
 const norm = (s) => String(s).trim().replace(/^.*\//, "").replace(/\.md$/, "").toLowerCase();
 
-const files = readdirSync(TAX).filter((f) => f.startsWith("class-") && f.endsWith(".md"));
+// PERIMETRO: ogni file che DICHIARA un padre, non solo quelli chiamati `class-*`.
+// Prima filtrava `startsWith("class-")` e perdeva `gold-example-transfer-assumption-audit.md`,
+// che dichiara `**Padre**: [[class-metacognitive-self-audit]]` ed E' una classe a tutti gli
+// effetti (CLAUDE.md #20 la elenca fra le figlie): il suo legame non e' MAI stato verificato,
+// e il verde del checker significava "non l'ho guardata", non "va bene" (2026-07-25).
+// Vedi wiki/training-taxonomy/class-instrument-coverage-scope.md.
+const files = readdirSync(TAX).filter((f) => f.endsWith(".md") &&
+  (f.startsWith("class-") || /\*\*Padre(?:-skill)?\*\*\s*:?\s*\[\[/i.test(readFileSync(`${TAX}/${f}`, "utf8"))));
+// Il criterio e' `**Padre**:` SEGUITO DA UN WIKILINK — cioe' chi DICHIARA una parentela, non chi
+// nomina la parola. Tarato misurando i falsi positivi, non a intuito: il solo "**Padre**" nel testo
+// prendeva `dataset-construction-playbook.md` (parla di padri senza esserne uno); il `type:` del
+// frontmatter prendeva 18 gold-example di area, che un padre gerarchico non ce l'hanno per
+// costruzione. Il caso reale da recuperare era UNO: gold-example-transfer-assumption-audit.
 const bodies = new Map();
 for (const f of files) bodies.set(norm(f), readFileSync(`${TAX}/${f}`, "utf8"));
 

@@ -91,5 +91,39 @@ Costruito un set di 4 task **puramente sign/wrap** e validato girando flash-lite
 - **Modo-di-fallimento REALE di #145 (dal trace, F14):** il modello (1) usa `abs()` (la trappola), (2) **NOTA l'anomalia** nei commenti ("l'esempio non torna… forse conta il segno?") arrivando sul bordo della soluzione, (3) **NON la risolve e si ARRENDE con `pass`** (17 turni, 205K token, zero risultato). Il gap NON è "non vede l'edge" — lo vede; è **"rileva-l'anomalia-ma-non-la-risolve-e-abbandona sotto stagnazione"** → trigger diretto del [[../concepts/stuck-state-focus-protocol]] (doveva entrare in focus: decomporre+identificare-errore) e sotto-uso di `jot` (non ha esternalizzato le ipotesi mentre era bloccato).
 - **Costruzione del set (validata, non assunta):** i faller vanno **generati per meccanismo** (durata-disguise: parking_fee/sleep_minutes/call_minutes; segno-in-computo: signed_checksum — generatore `eval/gen-signwrap-variants.mjs`, tutti trap-sound) e **tenuti solo se cascano davvero**; le modulari-idiomatiche → **controlli-negativi** (devono passare) per dimostrare che il gap è specifico, non "il modello è scarso in aritmetica". Decontaminazione: #145 resta **held-out** (msg 1125).
 
+
+---
+
+## Faccia (b) — IL PRECEDENTE CHE FUNZIONA PORTA CONDIZIONI CHE NON DICHIARA `[EXTRACTED — utente 2026-07-25]`
+
+> **Aggiunta il 2026-07-25** da un caso reale portato dall'utente come *"esempio da cui il modello deve imparare"*. La faccia (a) di questa classe (sopra) e' *l'assunzione dentro un CALCOLO*; questa e' **l'assunzione dentro un PRECEDENTE** — e la logica astratta e' la stessa: *cio' che regge in un contesto regge per RAGIONI, e le ragioni non viaggiano insieme alla forma che copi.*
+
+**La logica astratta**: *«ha funzionato la'» e' una prova **CONDIZIONATA** a proprieta' dell'ambiente che il precedente **non dichiara**.* Chi copia eredita **la forma**, non **la condizione** — e la condizione e' invisibile proprio perche' nel contesto d'origine era **soddisfatta senza che nessuno la nominasse**.
+
+**Il caso reale (astratto, non l'istanza)** `[EXTRACTED]`: il rimedio consigliato era *"copia la configurazione gia' provata di un'altra tabella"*. Quella configurazione e' innocua **solo perche' in quel punto ogni scrittura passa deliberatamente da un canale amministrativo che scavalca il controllo d'accesso**. Copiata su una tabella il cui contenuto viene modificato dall'utente **in autonomia**, avrebbe rotto quella funzione — rumorosamente.
+
+**Il secondo strato — e vale piu' del primo**: lo **stesso meccanismo ha semantica diversa a seconda dell'operazione**. In lettura il controllo d'accesso **filtra in silenzio** (vedi meno righe); in scrittura **solleva un errore** (l'operazione fallisce). Chi ha osservato solo il primo comportamento **generalizza al secondo** e sbaglia — e l'errore non e' di grado, e' **di tipo**: un filtro silenzioso e un rifiuto rumoroso sono due contratti diversi.
+> La chiusura corretta e' stata **MISURARE** il codice d'errore, non dedurlo dal comportamento noto (⭐#0: la verifica che chiude, non quella comoda).
+
+**Il test operativo** (trasferibile, e non richiede di conoscere il meccanismo):
+> **«Che cosa rende questo precedente sicuro DOVE STA — e quella cosa e' vera anche DOVE LO PORTO?»**
+> Se non sai rispondere alla prima meta', non hai un precedente: hai una **forma**.
+
+### Transfer cross-dominio (#19)
+
+- **Medicina**: un dosaggio sicuro **in reparto** — dove c'e' monitoraggio continuo e si interviene in minuti — prescritto **a domicilio**. La molecola e' la stessa; la rete di sicurezza no.
+- **Edilizia**: un dettaglio costruttivo che tiene da trent'anni **in zona non sismica**, replicato dove il terreno si muove. *"E' sempre stato fatto cosi'"* e' vero e irrilevante.
+- **Contratti**: una clausola valida e collaudata **in una giurisdizione**, copiata dove la stessa formula e' inefficace. Il testo si trasferisce, la sua validita' no.
+- **Cucina**: la ricetta che riesce **col forno professionale** (che compensa gli errori con potenza e uniformita') rifatta in casa. Il precedente non mentiva: taceva la condizione.
+- **Vita quotidiana**: *"a mio figlio l'ho lasciato fare a quell'eta'"* — vero, in un cortile chiuso e con i vicini che guardavano.
+
+### Esempi NEGATIVI (#21 — il confine)
+
+- **[N-b1 · la condizione VALE anche qui]**: le proprieta' che rendevano sicuro il precedente sono soddisfatte anche nel nuovo contesto (dichiarate nella fixture). **Gold**: copiare **e' la risposta giusta** — riprogettare da zero e' spreco e rischio nuovo. **Fail**: rifiutare il riuso *"per prudenza"* (e' l'hack `non-copiare-mai`, che a intelligenza zero sembra saggio).
+- **[N-b2 · la differenza e' IRRILEVANTE]**: i due contesti differiscono, ma su una dimensione che **non tocca** la ragione di sicurezza. **Gold**: procedere e dirlo. **Fail**: istruttoria su ogni differenza → paralisi.
+- **[N-b3 · non c'e' nessuna condizione nascosta]**: il precedente e' sicuro **per costruzione**, non per contesto. **Gold**: nessun audit da fare. **Fail**: cercare un confound che non esiste.
+
+**Reward (outcome, #10)**: la fixture dichiara la proprieta'-che-rende-sicuro il precedente e se vale nel nuovo contesto; si gronda **l'esito** (l'artefatto consegnato si rompe sotto il mondo dichiarato? il riuso legittimo e' stato fatto?), **mai** l'aver recitato *"verifico le precondizioni"*. **#32**: il campo *«la condizione vale anche qui»* determina il ramo → **non si gronda per-esempio**, va al distribuzionale con minimal-pair bilanciati (stessa scena, stesso precedente, cambia **solo** se la condizione regge).
+
 ## Links
 [[gold-example-area03-verification-discipline]] · [[area-03-reasoning-scientific-method]] · [[../concepts/verification-discipline-training]] · [[../concepts/anti-fixation-metacognition-rung]] · [[../concepts/stuck-state-focus-protocol]] · [[gold-methodology]] · [[../feedback_intelligence_gap_to_training_class]]
