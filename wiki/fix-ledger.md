@@ -84,6 +84,21 @@ Formato: `[data · ID]` **cosa** · *perché* · **verificato con** · **gemelli
 
 ---
 
+## ⭐ Il vero deliverable non è questo file
+
+> **Correzione dell'utente, 2026-07-25 (msg 1855)**: *"non dovevi fare il registro, dovevi usare questa parte di conversazione come esempio per **sviluppare meglio il nostro modello**"*.
+
+Questo registro è un'**impalcatura per me** (`F`). Il punto del progetto è il **modello** (`S`). Ogni voce qui dentro va quindi letta due volte:
+
+1. *"come evito di rifare questo errore io?"* → resta in questo file;
+2. **⭐ *"qual è la SKILL che un modello intelligente avrebbe usato per non farlo?"*** → diventa una **classe di training**, che è il deliverable che conta.
+
+Il secondo passo **non è opzionale** ed è la regola **#11** (classificare `F-harness` vs `S-training` **prima** di costruire) + **#33** (preferire il training allo scaffolding). Averlo saltato è precisamente l'errore che ha prodotto questo paragrafo.
+
+**Istanza riuscita**: la voce `[F7]` (il controllo verde che guardava 102 file su 296) non è finita solo qui — è diventata [[training-taxonomy/class-instrument-coverage-scope]] *(⛔ proposta, attende ratifica)*, con la lezione astratta in forma trasferibile: **un risultato che NON CAMBIA dopo che hai cambiato l'input prova che il perimetro non copre ciò che hai toccato**. Un difetto mio, tracciato e con la catena causale intera sotto gli occhi, è materiale di training di **prima qualità** — più di un caso ipotizzato a tavolino.
+
+**Perciò, chiudendo una voce qui, chiediti sempre**: *ne è uscita una classe? se no, perché no?* (una risposta legittima esiste — *"è un'impalcatura pura, nessuna skill sotto"* — ma va **detta**, non saltata).
+
 ## Cosa NON va in questo file
 
 - **Le regole di costruzione** del dataset → `training-taxonomy/dataset-construction-playbook.md` (SSOT, #25). Qui ci sono i **fix e i non-fix**, non i requisiti.
