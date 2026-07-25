@@ -67,6 +67,13 @@ Formato: `[data · ID]` **cosa** · *perché* · **verificato con** · **gemelli
 
 ### 2026-07-25
 
+- **[F10]** **SESTO gate eseguito** (`retroactive-propagation-lab`) — e si è dichiarato **rotto al primo giro**, per **la stessa causa già misurata nel terzo**. *Perché*: avevo lasciato un **contatore di errori totali** dentro il criterio di successo, accanto ai tre assi. Quel contatore è la **somma** degli altri, quindi li **inquina tutti**: nessuna ablazione riusciva più a isolare un termine, e tutte dicevano *"nessun segnale"* mentre il segnale c'era.
+  > ⚠️ **È la seconda ricaduta della giornata sullo stesso difetto — assi del reward NON ortogonali** — dopo `reachability-lab` (dove un link verso un privato contava anche come costo). E la lezione era già scritta nel ledger quando l'ho ripetuta.
+  > **Cosa cambia la scrittura della regola**: la prima versione diceva *"tieni gli assi ortogonali"*. **Troppo astratta per essere eseguita.** La forma che funziona è un **test meccanico**: *«esiste un termine che è funzione degli altri (una somma, un conteggio totale, un "tutto ok")? Se sì, NON è un asse: è un riassunto, e va fuori dal criterio.»*
+  **Il fix**: un asse **per relazione** invece di tre assi + un totale — `superata→ritira` · `da-riformulare→riformula` · `confermata→conferma` · `indipendente→lascia`. Ortogonali **per costruzione**, e ognuno isolabile.
+  **Risultato**: gold 3/3 · tutte le policy a intelligenza zero **0/3** · tre ablazioni che portano segnale (0/3 → 3/3 ciascuna). E la lettura **binaria** (*superata / non superata*) fa **0/3**: sbaglia sistematicamente le **due posizioni intermedie**, che è esattamente ciò che la classe insegna a non fare.
+
+
 - **[F9]** ⭐ **CINQUE gate ESEGUITI** (`harness/verifiers/`: `linkage-lab` · `exposure-remedy-lab` · `reachability-lab` · `right-effort-lab` · `situation-classification-lab`). *Perché*: era il difetto sistemico — 7 lab costruiti e 7 rotti, e in 7/7 il buco era visibile **solo eseguendo**. **Verificato**: tutti e cinque exit 0, girati insieme prima di ogni commit.
   **Cosa hanno dimostrato, che a parole era solo un argomento**:
   - `linkage`: **senza il mutation-replay, "copia a mano" PAREGGIA il gold** (2/4 → 4/4) → la classe *era* rotta prima del fix di stanotte;
