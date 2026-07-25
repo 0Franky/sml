@@ -11,6 +11,12 @@
  *    non trova mai la figlia → la gerarchia esiste solo meta' (viola #20: il padre insegna la radice UNA volta).
  *  - **padre FANTASMA**: la figlia dichiara un padre che non e' un file (es. "famiglia safety/protection").
  *  - **padre inesistente**: il file dichiarato non c'e'.
+ *  - **padre AMBIGUO** *(2026-07-26)*: due marcatori nello stesso file indicano padri **diversi** e il tool
+ *    sceglie in silenzio → **falso verde**. Ne aveva prodotto uno lungo 8 giorni, vedi §AMBIGUO sotto.
+ *  - **conteggio-figlie a parole ≠ misurato** *(2026-07-26, INFO)*: il padre dice *"le due figlie"* e le
+ *    figlie sono tre. Nasce da un evento che **non innesca nessuna revisione** — la nascita di una figlia
+ *    rende stantio il padre, **sempre**. Non fallisce: distinguere una nota storica da una claim sullo
+ *    stato corrente e' semantica (#24), e il tool si limita a **contare e affiancare**.
  *
  * ⚠️ TRE STATI, NON DUE — e la differenza decide l'exit code:
  *   1. **ROTTO** (senso-unico / padre fantasma / padre inesistente) → **errore**: e' un difetto reale.
@@ -48,12 +54,21 @@ import { resolve, dirname } from "node:path";
 const ROOT = resolve(dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")), "..", "..");
 const TAX = `${ROOT}/wiki/training-taxonomy`;
 
-/** Marcatori con cui una figlia dichiara il proprio padre. */
+/**
+ * Marcatori con cui una figlia dichiara il proprio padre, **in ordine di autorita'**.
+ * Il primo che matcha vince — ed e' proprio li' che si nascondeva un falso verde di 8 giorni.
+ */
 const PARENT_PATTERNS = [
-  /\*\*Padre(?:-skill)?\*\*\s*[:(]?\s*\[\[([^\]|]+)/i,
-  /\*\*Padre(?:-skill)?\*\*\s*[:(]?\s*`?(class-[a-z0-9-]+)/i,
-  /figlia\s+(?:diretta\s+)?di\s+\[\[([^\]|]+)/i,
-  /\d+[ªa]\s+figlia\s+di\s+\[\[([^\]|]+)/i,
+  ["Padre-marker",   /\*\*Padre(?:-skill)?\*\*\s*[:(]?\s*\[\[([^\]|]+)/i],
+  ["Padre-backtick", /\*\*Padre(?:-skill)?\*\*\s*[:(]?\s*`?(class-[a-z0-9-]+)/i],
+  ["prosa-figlia",   /figlia\s+(?:diretta\s+)?di\s+\[\[([^\]|]+)/i],
+  // "figlia (a) di [[...]]" — la forma usata dopo il re-home 2026-07-18, che NESSUN pattern vedeva.
+  // Aggiunta il 2026-07-26: la sua assenza e' meta' della causa del falso verde (vedi §AMBIGUO sotto).
+  // `\*{0,2}` dopo ogni pezzo perche' nel testo reale la forma e' in grassetto: "**figlia (a)** di [[...]]"
+  // e "**figlia (a)** del nodo intermedio **[[...]]**". Senza, il pattern non aggancia proprio il file
+  // che ha causato il falso verde — verificato eseguendo, non assunto.
+  ["prosa-figlia-lettera", /figlia\s*\([a-z]\)\*{0,2}\s*(?:del\s+nodo\s+intermedio\s+)?(?:di\s+)?\*{0,2}\[\[([^\]|]+)/i],
+  ["prosa-ordinale", /\d+[ªa]\s+figlia\s+di\s+\[\[([^\]|]+)/i],
 ];
 
 const norm = (s) => String(s).trim().replace(/^.*\//, "").replace(/\.md$/, "").toLowerCase();
@@ -78,6 +93,33 @@ const declared = [];   // { child, parent, raw }
 const unparsed = [];   // nessun marcatore → "non lo so": ERRORE, lavoro di forma non fatto
 const undecided = [];  // `**Padre**: DA-DECIDERE` → stato DETERMINATO in attesa dell'utente: elencato, non fallisce
 const roots = [];
+/**
+ * AMBIGUO — due marcatori nello stesso file indicano padri DIVERSI (aggiunto 2026-07-26).
+ *
+ * IL FALSO VERDE CHE HA PRODOTTO, ed e' durato 8 giorni.
+ * `class-tool-perception-fidelity` ha subito un re-home il 2026-07-18: da figlia di
+ * `metacognitive-self-audit` a figlia di `instrument-epistemic-reach`. Il banner che documenta lo
+ * spostamento contiene, in ordine, **«Prima**: figlia diretta di [[class-metacognitive-self-audit]]»
+ * e «**Ora**: figlia (a) del nodo intermedio [[class-instrument-epistemic-reach]]». Il vecchio parser
+ * matchava **la prima** — una frase **storica**, esplicitamente marcata come passata — e non aveva
+ * **nessun** pattern per la forma «figlia (a) di», cioe' per quella **corrente**. Risultato: da 8 giorni
+ * il tool registrava la classe sotto il **nonno**, e usciva **verde**, perche' il nonno la elenca
+ * ancora (per ragioni storiche). Il check rispondeva perfettamente a *"esiste un legame dichiarato e
+ * reciproco?"* — che **non e'** la domanda che conta, cioe' *"il padre CORRENTE e' quello giusto?"*.
+ *
+ * ⚠️ PERCHE' E' ERRORE E NON NOTA: quando due marcatori discordano, il tool **non lo sa** — sceglie per
+ * ordine di autorita', che e' una convenzione, non una prova. E' esattamente il caso 2 del §TRE STATI
+ * gia' codificato qui sopra (*"non lo so" ≠ "va bene"*), e l'unico fix vero e' **dichiarare `**Padre**:`
+ * esplicitamente**, che risolve l'ambiguita' alla fonte invece di farla arbitrare a una regex.
+ *
+ * ⚠️ NON risolvibile per via semantica (#24): capire che «Prima:» introduce uno stato passato e «Ora:»
+ * quello presente **e' comprensione del linguaggio**, non pattern-matching — e infilare "Prima" in una
+ * lista di parole-da-ignorare sarebbe la pezza che #24 vieta (funzionerebbe per i casi previsti, e per
+ * nessun altro). Il tool fa la cosa strutturale: **si accorge di non sapere, e lo dice**.
+ */
+const ambigui = [];
+/** Dipende SOLO dalla prosa: leggibile ma fragile — la prosa cambia, il marcatore no. Informativo. */
+const prosaOnly = [];
 
 for (const f of files) {
   const child = norm(f);
@@ -89,13 +131,31 @@ for (const f of files) {
   // non un'assenza di dichiarazione.
   if (/\*\*Padre(?:-skill)?\*\*\s*[:(]?\s*DA-DECIDERE/i.test(src)) { undecided.push(child); continue; }
 
-  let parent = null, raw = null;
-  for (const re of PARENT_PATTERNS) {
+  // Si raccolgono TUTTI i candidati, non solo il primo: se due marcatori indicano padri DIVERSI,
+  // il tool sta **tirando a indovinare** e deve dirlo (vedi §AMBIGUO).
+  const hits = [];
+  for (const [nome, re] of PARENT_PATTERNS) {
     const m = src.match(re);
-    if (m) { parent = norm(m[1]); raw = m[0].replace(/\s+/g, " ").slice(0, 90); break; }
+    if (m) hits.push({ nome, parent: norm(m[1]), raw: m[0].replace(/\s+/g, " ").slice(0, 90) });
   }
-  if (!parent) { unparsed.push(child); continue; }
-  declared.push({ child, parent, raw });
+  if (!hits.length) { unparsed.push(child); continue; }
+
+  const distinti = [...new Set(hits.map((h) => h.parent))];
+  const autorevole = hits[0];                       // l'ordine di PARENT_PATTERNS e' l'autorita'
+  // ⚠️ L'ambiguita' e' un difetto SOLO in assenza di un `**Padre**:` esplicito. Con il marcatore la
+  //    questione e' CHIUSA — quello E' il contratto — e la prosa che nomina il nonno ("figlia della
+  //    2a figlia di X") e' narrativa legittima, non una dichiarazione concorrente. Segnalarla comunque
+  //    terrebbe il check rosso in permanenza su file corretti → il rosso perde significato e viene
+  //    ignorato: stesso argomento gia' usato qui per il bucket DA-DECIDERE. Misurato: senza questa
+  //    clausola i flag sono 4, di cui 1 (temporal-order-from-timestamp) gia' risolto dal marcatore.
+  const haMarcatore = hits.some((h) => h.nome.startsWith("Padre"));
+  if (distinti.length > 1 && !haMarcatore) {
+    ambigui.push({ child, scelto: autorevole.parent, via: autorevole.nome,
+                   alternative: hits.filter((h) => h.parent !== autorevole.parent)
+                                    .map((h) => `${h.nome}=${h.parent}`) });
+  }
+  declared.push({ child, parent: autorevole.parent, raw: autorevole.raw });
+  if (!hits.some((h) => h.nome.startsWith("Padre"))) prosaOnly.push(child);
 }
 
 /**
@@ -122,11 +182,56 @@ for (const d of declared) {
   }
 }
 
+/**
+ * CONTEGGIO-FIGLIE dichiarato a PAROLE vs MISURATO (aggiunto 2026-07-26, #17).
+ *
+ * PERCHE': trasferendo F2 ho trovato a mano **3 affermazioni stantie** nel padre
+ * `instrument-epistemic-reach`, tutte prodotte dallo stesso evento — la nascita di una terza figlia —
+ * e nessuna intercettata da niente: il §GAP-SCAN diceva ancora *"posizione 3 SCOPERTA"* mentre la
+ * tabella dodici righe sopra la dava coperta, e *"le DUE figlie"* compariva in tre punti. Erano tutte
+ * **vere il giorno in cui furono scritte**: e' decadenza-senza-innesco, e **creare o spostare un nodo
+ * rende stantio il padre, SEMPRE**.
+ *
+ * COSA FA: cerca nel file-padre le affermazioni **numeriche** sulle proprie figlie e le mette accanto
+ * al numero **misurato** dai legami. Un `2` dove le figlie sono `3` salta all'occhio in un secondo.
+ *
+ * ⚠️ PERCHE' E' INFO E NON ERRORE — e non e' timidezza, e' il confine di #24.
+ * Distinguere *"il padre HA due figlie"* (claim sullo stato corrente, da correggere) da *"l'utente
+ * approvo' il nodo con quelle due figlie"* (registrazione storica, **corretta cosi'**) e' **semantica**,
+ * e la semantica non si fa con una regex — sarebbe la pezza che la regola #24 vieta. Il tool fa la sola
+ * cosa che sa fare in modo affidabile: **conta e affianca**. Adjudica l'umano, in due secondi.
+ * Farlo fallire produrrebbe rossi permanenti sulle note storiche → il rosso perde significato e viene
+ * ignorato, esattamente l'argomento gia' usato qui sopra per il bucket DA-DECIDERE.
+ */
+const NUM = { due: 2, tre: 3, quattro: 4, cinque: 5, sei: 6 };
+const kids = new Map();
+for (const d of declared) {
+  if (!bodies.has(d.parent)) continue;
+  if (!kids.has(d.parent)) kids.set(d.parent, new Set());
+  kids.get(d.parent).add(d.child);
+}
+const countClaims = [];
+for (const [parent, set] of kids) {
+  const real = set.size;
+  const src = bodies.get(parent) ?? "";
+  const re = /(?:\b(due|tre|quattro|cinque|sei|\d+)\s+figli[ea]\b|\bpadre\s+di\s+(due|tre|quattro|cinque|sei|\d+)\b|\b(entrambe)\s+le\s+figlie\b)/gi;
+  const seen = new Set();
+  for (const m of src.matchAll(re)) {
+    const tok = (m[1] ?? m[2] ?? m[3] ?? "").toLowerCase();
+    const said = tok === "entrambe" ? 2 : (NUM[tok] ?? Number(tok));
+    if (!Number.isFinite(said) || said === real) continue;      // silenzioso quando combacia
+    const frase = m[0].replace(/\s+/g, " ");
+    if (seen.has(frase)) continue;
+    seen.add(frase);
+    countClaims.push({ parent, said, real, frase });
+  }
+}
+
 const byKind = (k) => problems.filter((p) => p.kind === k);
 const asJson = process.argv.includes("--json");
 
 if (asJson) {
-  console.log(JSON.stringify({ stats: { classes: files.length, roots: roots.length, links: declared.length, broken: problems.length, unparsed: unparsed.length, undecided: undecided.length }, problems, unparsed, undecided, roots }, null, 2));
+  console.log(JSON.stringify({ stats: { classes: files.length, roots: roots.length, links: declared.length, broken: problems.length, unparsed: unparsed.length, undecided: undecided.length, ambigui: ambigui.length, prosaOnly: prosaOnly.length, countClaims: countClaims.length }, problems, unparsed, undecided, ambigui, prosaOnly, countClaims, roots }, null, 2));
 } else {
   for (const k of ["padre-FANTASMA", "padre-inesistente", "senso-unico"]) {
     const g = byKind(k);
@@ -135,6 +240,14 @@ if (asJson) {
     for (const p of g) {
       console.log(`   ${p.child}`);
       console.log(`      dichiara padre: ${p.parent}${k === "senso-unico" ? "  → ma il padre NON la elenca" : "  → non e' un file di classe"}`);
+    }
+  }
+  if (ambigui.length) {
+    console.log(`\n🔴 PADRE AMBIGUO — ${ambigui.length} (due marcatori, padri DIVERSI: il tool sta indovinando)`);
+    console.log(`   Fix: aggiungi un **Padre**: [[class-nome]] esplicito → risolve alla fonte.`);
+    for (const a of ambigui) {
+      console.log(`   ${a.child}`);
+      console.log(`      scelto ${a.scelto} (via ${a.via}) · ma il file dice anche: ${a.alternative.join(" · ")}`);
     }
   }
   if (unparsed.length) {
@@ -148,14 +261,23 @@ if (asJson) {
     console.log(`\n🟡 PADRE DA-DECIDERE — ${undecided.length} (in attesa dell'utente: NON un difetto, elencati per non dimenticarli)`);
     console.log("   " + undecided.join(" · "));
   }
-  const total = problems.length + unparsed.length;
+  if (countClaims.length) {
+    console.log(`\nℹ️  CONTEGGIO-FIGLIE a parole ≠ misurato — ${countClaims.length} (NON un errore: adjudica tu, in due secondi)`);
+    console.log(`   Una nota STORICA ("l'utente approvo' il nodo con quelle due figlie") e' corretta cosi' e va lasciata.`);
+    console.log(`   Una claim sullo STATO CORRENTE ("le due figlie lo istanziano") e' stantia e va corretta.`);
+    for (const c of countClaims) console.log(`   ${c.parent}: dice "${c.frase}" ma le figlie misurate sono ${c.real}`);
+  }
+  const total = problems.length + unparsed.length + ambigui.length;
   console.log(`\n${files.length} classi · ${roots.length} radici · ${declared.length} legami verificati · ` +
     `${problems.length} rotti (${byKind("senso-unico").length} senso-unico, ${byKind("padre-FANTASMA").length} fantasma) · ` +
-    `${unparsed.length} illeggibili · ${undecided.length} in attesa di decisione`);
+    `${ambigui.length} ambigui · ${unparsed.length} illeggibili · ${undecided.length} in attesa di decisione` +
+    (prosaOnly.length ? ` · ${prosaOnly.length} dichiarati solo in prosa (leggibili ma fragili)` : ""));
   console.log(total
-    ? `❌ ${total} DA SISTEMARE (${problems.length} rotti + ${unparsed.length} illeggibili)` + (undecided.length ? `  —  ${undecided.length} parcheggiati, non contano` : "")
+    ? `❌ ${total} DA SISTEMARE (${problems.length} rotti + ${unparsed.length} illeggibili + ${ambigui.length} ambigui)` + (undecided.length ? `  —  ${undecided.length} parcheggiati, non contano` : "")
     : `✅ ogni legame verificato e reciproco` + (undecided.length ? `  —  restano ${undecided.length} in attesa di una tua decisione` : ""));
 }
 
-// Rotti E illeggibili falliscono: un legame che non so leggere non e' un legame verificato (#0).
-process.exit(problems.length + unparsed.length ? 1 : 0);
+// Rotti, illeggibili E ambigui falliscono: un legame che non so leggere — o che leggo in DUE modi
+// diversi — non e' un legame verificato (#0). L'ambiguo e' il piu' insidioso dei tre, perche' passava
+// per verde: il tool sceglieva in silenzio e rispondeva a una domanda diversa da quella che contava.
+process.exit(problems.length + unparsed.length + ambigui.length ? 1 : 0);

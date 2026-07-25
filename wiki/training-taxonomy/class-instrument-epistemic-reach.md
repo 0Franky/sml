@@ -252,9 +252,18 @@ anti-forza-bruta**, e non e' negoziabile:
   la stessa lacuna che la roadmap registra come *"Regola #0 senza classe"* (`wiki/roadmap-2026-07-16.md`).
 - **(c) COMPLEMENTO / INVERSO** — l'inverso della skill-radice e' **la paranoia strumentale**: *"non fidarti mai
   di nessuno strumento"* → paralisi / regressione infinita (ogni strumento di verifica ha a sua volta una
-  portata). ✅ **Coperto in entrambe le figlie** come polo negativo obbligatorio — (a) N1/N2/N6-N7
-  (byte-tic, archeologia-tic), (b) il **polo positivo pro-statica** e i negativi di over-esecuzione. La
-  simmetria *paranoia e cecita' costano uguale* e' ereditata da qui.
+  portata). ✅ **Coperto in tutte e TRE le figlie** come polo negativo obbligatorio — **(a)** N1-N4
+  (il byte-tic: nominare l'encoding senza scendere, e scendere dove non c'e' contraddizione); **(b)** il
+  **polo positivo pro-statica** e i negativi di over-esecuzione; **(c)** N1/N3/N5 sul perimetro
+  (gia'-dichiarato-e-adeguato, la-cosa-non-esiste, posta-nulla) e **N8/N9** sulla provenienza
+  (propagazione infinita dell'archeologia, e il guardare-la-storia dove non c'e' posta). La simmetria
+  *paranoia e cecita' costano uguale* e' ereditata da qui.
+  > ⚠️ **CORREZIONE 2026-07-26** — questa riga diceva *"in **entrambe** le figlie"* ed elencava per (a) i
+  > negativi **`N6-N7` (archeologia-tic)**, che il 2026-07-26 sono **migrati nella figlia (c)** insieme a F2
+  > e li' si chiamano **N8/N9**. Era stantia su **due** fronti contemporaneamente, entrambi prodotti dallo
+  > stesso trasferimento. **Non l'ho trovata io**: l'ha trovata il controllo `check-hierarchy` che ho
+  > aggiunto **lo stesso giorno** per questa esatta classe di difetto, affiancando il conteggio-figlie
+  > dichiarato a parole a quello misurato dai legami. Si e' ripagato in meno di un'ora.
 - **(d) COERENZA DI RADICE** — ⚠️ **il passo per cui #36 esiste, ed e' il motivo di questa ristrutturazione.**
   Prima di oggi le due facce **erano gia' entrambe presenti nel corpus** — (a) come classe scritta, (b) come
   fixture `FX-dynamic` dentro un gold di area-02 — **sotto due radici che non si parlavano** (una sotto
