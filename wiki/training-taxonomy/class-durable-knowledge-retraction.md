@@ -33,7 +33,7 @@ last_updated: 2026-07-16
 
 # Classe (figlia) — RITIRARE (un fatto salvato che diventa falso ha l'AUTORITÀ della memoria)
 
-> ⚠️ **STATO: PROPOSTA** — attende ratifica (#26 · #18: l'utente approva **prima** dell'aggiunta). Nulla qui è approvato. **Nessun modello è stato osservato fallire su questa skill**: è un gap di **copertura** dedotto dalla lettura, non misurato (→ **§Decontaminazione**, *Onestà preliminare*) — filabile per la regola [INCLUSIONE ≠ PRIORITÀ] del playbook (`dataset-construction-playbook.md:151`), che **impone comunque** di dichiarare il non-misurato.
+> ⚠️ **STATO: PROPOSTA** — attende ratifica (#26 · #18: l'utente approva **prima** dell'aggiunta). Nulla qui è approvato. **Nessun modello è stato osservato fallire su questa skill**: è un gap di **copertura** dedotto dalla lettura, non misurato (→ **§Decontaminazione**, *Onestà preliminare*) — filabile per la regola [INCLUSIONE ≠ PRIORITÀ] del playbook (`dataset-construction-playbook.md:152`), che **impone comunque** di dichiarare il non-misurato.
 
 > **Ruolo** (#20): **figlia di [[class-metacognitive-self-audit]]** (radice INWARD, *audita il tuo ragionamento/stato-cognitivo contro il ground-truth*), come le altre due gemelle. È la **TERZA GEMELLA** della famiglia-memoria — l'oggetto dell'audit è *lo stato che ho scritto io e di cui ora mi fido*.
 > **Le gemelle si auto-dichiarano tali** `[EXTRACTED — letto alla fonte, non riportato]`:

@@ -18,7 +18,7 @@ last_updated: 2026-07-16
 
 # Classe (figlia) — A QUALE GIUNTO PIAZZARE LA VERIFICA (il metro giusto attaccato nel punto sbagliato)
 
-> ⚠️ **STATO: PROPOSTA** — non ratificata (#26). Il gap viene dal [[gap-report-2026-07-16]] (cluster E), che è **tutto** in attesa di ok (`gap-report-2026-07-16.md:14`). Nessuno dei 18 gap è stato **osservato fallire su un modello** (`:147`) → si fila per **copertura**, non per urgenza misurata (playbook §4 ⭐*[INCLUSIONE ≠ PRIORITÀ]*, `dataset-construction-playbook.md:151`: *"il criterio di inclusione NON è «un modello esistente fallisce qui» — quello è il criterio di priorità"*). L'incertezza è dichiarata, non taciuta (#35b).
+> ⚠️ **STATO: PROPOSTA** — non ratificata (#26). Il gap viene dal [[gap-report-2026-07-16]] (cluster E), che è **tutto** in attesa di ok (`gap-report-2026-07-16.md:14`). Nessuno dei 18 gap è stato **osservato fallire su un modello** (`:147`) → si fila per **copertura**, non per urgenza misurata (playbook §4 ⭐*[INCLUSIONE ≠ PRIORITÀ]*, `dataset-construction-playbook.md:152`: *"il criterio di inclusione NON è «un modello esistente fallisce qui» — quello è il criterio di priorità"*). L'incertezza è dichiarata, non taciuta (#35b).
 
 > **Scope (dopo la review)**: questa classe copre **E1 — la scelta del GIUNTO**. Il gap **E2** (*defect-liveness / raggiungibilità nel triage*, `gap-report-2026-07-16.md:126`) era fuso qui; la review ha mostrato che **non ha uno slot** nell'enumerazione del padre e che ha trigger/reward/oracoli/negativi **separati** → è stato **scorporato in §Appendice-E2 (quarantena)** in attesa di ratifica. **Finché il P1 è aperto, l'Appendice-E2 NON fa parte della classe** e non va usata per il training.
 

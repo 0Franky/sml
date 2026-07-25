@@ -54,4 +54,5 @@ regexes = [
   '''sarah\.chen@acmecorp\.com''',                             # email FINTA dell'esempio-confabulazione (acmecorp = azienda-placeholder) nei doc wiki
   '''[a-z.]+@evil\.[a-z]{2,}''',                               # email d'attacco sintetiche (@evil.com/@evil.tld) nei payload injection = mai reali
   '''frhaexin@gmail\.com''',                                   # email-AUTORE: già nella metadata git di tutti i commit + accettata dall'utente (msg 1195, no-rewrite); redatta dal CONTENUTO corrente, allowlistata qui solo per le occorrenze STORICHE (la guardia resta attiva su OGNI ALTRA email)
+  '''^git@(github|gitlab)\.com$''',                            # URL SSH dei remote (`git@host:owner/repo.git`) — NON è un'email: è la sintassi OBBLIGATORIA di git per i submodule (.gitmodules) e i remote, e l'host è pubblico. `pii-email` la matcha per la forma `user@host`. ⚠️ ANCORATO `^…$` sul SEGRETO CATTURATO (che è esattamente `git@gitlab.com`, senza i due punti: gitleaks confronta l'allowlist col match della regola, non con la riga) → il pattern accetta SOLO quei due literal esatti, ogni altra email resta bloccata
 ]
