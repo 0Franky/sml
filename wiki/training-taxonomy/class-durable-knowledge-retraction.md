@@ -215,6 +215,9 @@ Il training usa i **transfer cross-dominio** §positivi (rubrica · terapia sosp
 
 ## Facet / sub-specializzazione ricorsiva (#20)
 
+**FIGLIA (assegnata 2026-07-25, approvata utente msg 1868/1872)**: [[class-retroactive-decision-propagation]] — **la scelta di oggi cambia quella di ieri**. Stesso movimento di questa classe (propagare **all'indietro**), **innesco opposto**: qui qualcosa si rivela **FALSO** e si ritira; li' **niente e' sbagliato** — la decisione vecchia era corretta quando fu presa, ed e' quella **nuova** a renderla incoerente o superata. Per questo e' piu' insidiosa: **non si rompe niente**, nessun controllo fallisce, e le due convivono contraddicendosi in silenzio finche' qualcuno costruisce sopra quella morta.
+
+
 Le 3 facce condividono trigger (*"mi sto fidando di ciò che ho scritto io"*) e outcome → **una classe** per ora, come le facce di [[class-temporal-awareness]] e [[class-memory-lane-tool-discipline]]. Candidate a **sotto-figlie** se crescono:
 - **(i) ritira/correggi il falso** — asse *verità* (B2);
 - **(ii) pota il morto / consolida** — asse *utilità × capacità-finita* (B1); *(nota: è la faccia meno "memoria" e più "igiene dello stato" → se cresce, il suo padre naturale potrebbe non essere questo)*;
