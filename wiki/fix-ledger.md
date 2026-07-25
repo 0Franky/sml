@@ -67,6 +67,20 @@ Formato: `[data · ID]` **cosa** · *perché* · **verificato con** · **gemelli
 
 ### 2026-07-25
 
+- **[F12]** ⭐ **DIECI gate eseguiti** — e il decimo è **il primo che regge al primo colpo**, perché le lezioni sono state applicate **prima** invece che scoperte sbattendoci. Questa voce esiste per la **terza** lezione, che finora viveva solo nei messaggi di commit.
+
+  > ### ⭐⭐ TEST (c) — *«il criterio penalizza il METODO o l'ERRORE?»*
+  > **Il sintomo è inequivocabile e gratuito: IL GOLD STESSO NON PASSA.**
+  > Quando il comportamento che consideri corretto non supera il tuo criterio, **non è il gold a sbagliare** — stai misurando un'altra cosa. È il segnale più forte dei tre, perché non richiede analisi: **si vede nel primo output**.
+  > **L'istanza** (nono gate, `accidental-property`): il criterio penalizzava chi va a **controllare a valle** dove poi non c'era nulla da trovare. Sembra ragionevole — *"non sprecare verifiche"* — ed è **sbagliato alla radice**: per sapere se qualcosa dipendeva dal difetto **bisogna guardare**. Penalizzarlo premia **la preveggenza**, non il metodo. Il gold faceva **2/4**.
+  > **Il fix generale, riusabile**: **separare lo SGUARDO dall'AZIONE.** Guardare è sempre lecito, perché *sapere richiede di guardare*; è **agire dove non serve** che costa. La paranoia si manifesta nell'**agire**, non nel controllare — e i due vanno su assi diversi.
+  > **Il corollario** (decimo gate, `assumption-audit`, applicato in partenza): **un termine di costo è onesto solo se punisce ciò che il risolutore PUÒ sapere in anticipo.** Lì non punisce *"verificare"* ma *"verificare **fuori scopo**"* — cioè cose che il compito non nomina nemmeno, e che quindi si possono escludere **senza indovinare il futuro**. La distinzione fra *«non puoi saperlo prima»* e *«questo lo sai già»* è ciò che rende un costo misurabile invece che punitivo.
+
+  **I due gate nuovi, in breve**: `accidental-property` — *"ripara e verifica solo il fix"* fa **0/4**, ed è il cuore della classe (si verifica il proprio lavoro, mentre il buco sta nel suo **perimetro d'ombra**); ha richiesto **tre giri** e i tre difetti erano tutti miei e tutti diversi (metodo penalizzato · un termine funzione di un altro · una diagnostica che ne falliva due). `assumption-audit` — cinque termini (tre facce + consegna + costo), **zero giri di correzione**, e il negativo che preferisco è **N3**: se la diagnosi ereditata è **già misurata**, ri-misurarla è **spreco** e il gold la salta — *la sfiducia sistematica è un difetto quanto la fiducia cieca*.
+
+  > **La forma dei miei stessi errori sui gate** (applicando [[training-taxonomy/class-defect-shape-reading]] a me): su 10 lab, **5 si sono dichiarati rotti al primo giro** e in **5 casi su 5** il difetto era **nel criterio, non nella classe**. Non ho mai dovuto correggere una classe: ho sempre dovuto correggere **il modo in cui la misuravo**. È un dato sulla nostra pratica, non sulle classi — e dice dove sta il rischio vero quando passeremo a misurare un modello.
+
+
 - **[F11]** ⭐ **OTTO gate eseguiti** (`harness/verifiers/`) — e i tre più recenti (`retroactive-propagation`, `defect-shape`, `silent-decay`) hanno prodotto **due test meccanici** che valgono più dei verdi, perché ognuno ha trovato **due volte** un difetto che il ragionamento non vedeva.
 
   > ### ⭐ TEST (a) — *«questo termine è un ASSE o un RIASSUNTO?»*
