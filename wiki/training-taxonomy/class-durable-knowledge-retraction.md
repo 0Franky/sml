@@ -60,7 +60,7 @@ Tre facce dello stesso buco, che il gap-report separa e che qui si ricompongono 
 
 - **`area-04:216-234` §Self-detect contradiction** rileva la contraddizione **dentro il contesto corrente** e la risolve (merge · scegli · chiedi). Si ferma **al momento**: risolve il conflitto *adesso*. **Il perdente resta nello store durevole** e tornerà a galla a *t+K* con la stessa autorità del vincitore. Nessuna riga sul ritirarlo.
 - **`class-prospective-memory.md:43` [N1]** conosce già la meccanica del crowding — *"La lane ha capacità finita: over-salvare **spinge fuori** i fatti veri"* — ma la governa **in ingresso** (*non aggiungere spazzatura*). Non esiste il lato **in uscita**: *potare ciò che è già dentro ed è morto*.
-- **`class-memory-lane-tool-discipline.md:13`** si dichiara esplicitamente sul lato **WRITE-ROUTING**: *"presuppone la decisione-di-salvare già presa (prospective) e precede il recupero (confabulation)"* → *quale canale*, mai *per quanto ancora*.
+- **`class-memory-lane-tool-discipline.md:14`** si dichiara esplicitamente sul lato **WRITE-ROUTING**: *"presuppone la decisione-di-salvare già presa (prospective) e precede il recupero (confabulation)"* → *quale canale*, mai *per quanto ancora*.
 - **`class-knowledge-base-curation`**: grep di `prun|potat|obsolet|stale|ritir|rimuov|superat|elimin|retract|dismett` → **zero match**. Cura *dove collocare* e *cosa non duplicare*, non *cosa dismettere*.
 - **`class-temporal-awareness` / `area-04:167-175` §Stale/TTL**: la staleness è del **dato-in-context** → la cura è **re-fetchare**. Qui il dato è nel **mio store durevole**, non ha un TTL e nessun re-fetch lo tocca: va **ritirato da me**.
 

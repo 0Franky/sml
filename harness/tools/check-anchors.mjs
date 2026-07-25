@@ -39,9 +39,15 @@
  *   node harness/tools/check-anchors.mjs                 # default: TUTTA wiki/ (ricorsiva, esclusa _private)
  *   node harness/tools/check-anchors.mjs wiki/concepts   # una dir o file specifici
  *   node harness/tools/check-anchors.mjs --json          # output machine-readable
+ *   node harness/tools/check-anchors.mjs --fix           # riallinea i drift LOCALIZZATI IN MODO UNIVOCO
  *   exit 0 = nessun drift · exit 1 = drift trovato (usabile in CI / pre-commit)
+ *
+ * ⚠️ `--fix` NON indovina: riscrive solo dove la stringa-ancora compare su UNA sola riga del file citato.
+ *    Ambiguous-quote, quote-not-found e le bare `:NNN` restano all'umano — li' il tool **non sa**, e
+ *    scegliere sostituirebbe un numero sbagliato con un altro numero sbagliato (gia' successo 3 volte).
+ *    Ri-esegui **senza** `--fix` per confermare.
  */
-import { readFileSync, existsSync, statSync, readdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, statSync, readdirSync } from "node:fs";
 import { join, dirname, resolve, relative, extname } from "node:path";
 
 const ROOT = resolve(dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")), "..", "..");
@@ -224,7 +230,10 @@ for (const abs of collectTargets(process.argv.slice(2))) {
           const real = hits[0];
           const drift = real - start;
           const sev = Math.abs(drift) <= FUZZ ? "WARN" : "ERROR";
-          findings.push({ sev, kind: "anchor-drift", at, cite: `${trel}:${startS}`, detail: `la stringa citata sta a :${real} (drift di ${drift > 0 ? "+" : ""}${drift})`, quote: q.slice(0, 90), suggest: real });
+          // `fix` porta tutto il necessario per riscrivere la citazione SENZA rileggere nulla:
+          // il drift e' gia' stato localizzato in modo UNIVOCO (hits.length === 1) — vedi --fix.
+          findings.push({ sev, kind: "anchor-drift", at, cite: `${trel}:${startS}`, detail: `la stringa citata sta a :${real} (drift di ${drift > 0 ? "+" : ""}${drift})`, quote: q.slice(0, 90), suggest: real,
+                          fix: { abs, lineNo, from: `${cited}:${startS}`, to: `${cited}:${real}`, endS } });
         }
         continue;
       }
@@ -256,6 +265,55 @@ if (asJson) {
   }
   console.log(`
 ${stats.files} file · ${stats.citations} citazioni · ${stats.ok} ok · ${errs.length} ERROR · ${warns.length} WARN · ${infos.length} INFO${verbose ? "" : " (--verbose per vederle)"} · ${stats.fixture} fixture-ref (attese) · ${stats.bare} bare `+"`:NNN`"+` (verifica manuale)`);
+}
+
+/**
+ * --fix — riscrive SOLO i numeri di riga dei drift localizzati in modo UNIVOCO (aggiunto 2026-07-26).
+ *
+ * PERCHE': in una sola giornata ho corretto **quattro** drift a mano, tutti causati dalle mie stesse
+ * modifiche — perche' **ogni edit strutturale a un file fa driftare le citazioni in ENTRATA**, e il
+ * numero di riga e' *"una misura con una data di scadenza"*. Il tool sapeva gia' la risposta esatta e
+ * la stampava (`✎ correggi in :NNN`); ricopiarla a mano era l'unico passo rimasto manuale, e quindi
+ * l'unico che si dimentica. #17: la lezione diventa meccanismo.
+ *
+ * ⚠️ COSA NON TOCCA MAI, e la ragione e' la stessa in tutti e tre i casi — **il tool non SA**:
+ *  - `ambiguous-quote`: la stringa compare su piu' righe → scegliere sarebbe una **congettura con
+ *    l'autorita' di un fatto**. E' esattamente cio' che gia' fa fallire i tre giri di correzione
+ *    registrati in `class-tool-perception-fidelity` (*"si e' corretto un numero sbagliato con un altro
+ *    numero sbagliato, due volte di fila"*).
+ *  - `quote-not-found`: puo' essere una parafrasi legittima **o** una citazione inventata.
+ *  - le citazioni **bare** `:NNN` senza file: irrisolvibili senza il contesto della prosa (#24).
+ * Riscrive solo dove `hits.length === 1`, cioe' dove **una sola riga** contiene la stringa: li' non
+ * c'e' scelta da fare, c'e' solo un numero da aggiornare.
+ */
+if (process.argv.includes("--fix")) {
+  const perFile = new Map();
+  for (const f of findings) {
+    if (f.kind !== "anchor-drift" || !f.fix) continue;
+    if (!perFile.has(f.fix.abs)) perFile.set(f.fix.abs, []);
+    perFile.get(f.fix.abs).push(f.fix);
+  }
+  let applied = 0, skipped = 0;
+  for (const [abs, fixes] of perFile) {
+    const raw = readFileSync(abs, "utf8");
+    const nlSeq = /\r\n/.test(raw) ? "\r\n" : "\n";     // il repo e' misto: si preserva quello del file
+    const lines = raw.replace(/\r\n/g, "\n").split("\n");
+    for (const fx of fixes) {
+      const i = fx.lineNo - 1;
+      // `from` deve comparire ESATTAMENTE UNA volta nella riga: due citazioni identiche sulla stessa
+      // riga renderebbero la sostituzione ambigua → si salta e si lascia all'umano.
+      const occorrenze = lines[i].split(fx.from).length - 1;
+      if (occorrenze !== 1) { skipped++; continue; }
+      lines[i] = lines[i].replace(fx.from, fx.to);
+      applied++;
+    }
+    writeFileSync(abs, lines.join("\n").replace(/\n/g, nlSeq === "\r\n" ? "\r\n" : "\n"));
+  }
+  console.log(`\n🔧 --fix: ${applied} citazioni riallineate` +
+    (skipped ? ` · ${skipped} saltate (la citazione compare piu' volte sulla stessa riga: sceglie l'umano)` : "") +
+    `\n   Non tocca ambiguous-quote, quote-not-found, ne' le bare \`:NNN\`: li' il tool NON SA, e indovinare` +
+    `\n   sostituirebbe un numero sbagliato con un altro numero sbagliato.` +
+    `\n   ⚠️ Ri-esegui SENZA --fix per confermare.`);
 }
 
 process.exit(findings.some((f) => f.sev === "ERROR") ? 1 : 0);

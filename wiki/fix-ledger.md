@@ -3,7 +3,7 @@ name: fix-ledger
 description: "Registro dei fix — cosa ho riparato, e soprattutto i rimedi VALUTATI E SCARTATI col motivo misurato. Si consulta PRIMA di ogni fix per non rifare un giro già fatto e non rompere ciò che un altro fix aveva chiuso"
 type: playbook
 tags: [processo, fix, anti-fix, regressioni, ledger, append-only]
-last_updated: 2026-07-25
+last_updated: 2026-07-26
 ---
 
 # Registro dei fix — e dei fix da NON fare
@@ -67,6 +67,10 @@ Formato: `[data · ID]` **cosa** · *perché* · **verificato con** · **gemelli
 
 ### 2026-07-26
 
+- **[F16]** 🔧 **`check-anchors --fix`** — l'ultimo passo manuale rimasto, e quindi l'unico che si dimenticava. **In una sola giornata ho corretto QUATTRO drift a mano**, tutti causati dalle mie stesse modifiche: **ogni edit strutturale a un file fa driftare le citazioni in ENTRATA**, e *«un numero di riga non è un fatto, è una misura con una data di scadenza»*. Il tool **sapeva già la risposta esatta** e la stampava (`✎ correggi in :NNN`); ricopiarla a mano era l'unico attrito rimasto — e l'attrito è dove si smette.
+  **Cosa NON tocca, e la ragione è identica nei tre casi — il tool NON SA**: `ambiguous-quote` (la stringa è su più righe → scegliere sarebbe una **congettura con l'autorità di un fatto**, ed è **letteralmente** ciò che ha prodotto i tre giri di *«si è corretto un numero sbagliato con un altro numero sbagliato»* registrati in `class-tool-perception-fidelity`) · `quote-not-found` (parafrasi legittima **o** citazione inventata: indistinguibili) · le **bare** `:NNN` (irrisolvibili senza il contesto della prosa, #24). Riscrive **solo** dove la stringa compare su **una sola riga**: lì non c'è una scelta da fare, c'è un numero da aggiornare.
+  **Verificato con**: 4 riallineate → ri-esecuzione **senza** `--fix` → **0 drift residui**, e il diff tocca **solo** i numeri.
+  ⚠️ **Il salvagente resta l'àncora, non il flag**: `--fix` sposta il numero dove la **stringa** dice, quindi è affidabile esattamente quanto l'àncora testuale che gli sta accanto. Su una citazione **senza** àncora non fa — e non può fare — nulla.
 - **[F15]** ⭐ **La lezione di F14 diventa MECCANISMO — e trova subito un FALSO VERDE lungo 8 giorni.** F14 finiva con *"il gap-scan va fatto anche verso l'alto"*: una **regola**, cioè la forma che #17 dice di non fermarsi a produrre. Due controlli aggiunti a `check-hierarchy`, e **entrambi hanno pescato al primo colpo**.
   **1) PADRE AMBIGUO → ERRORE.** `class-tool-perception-fidelity` ha subìto un re-home il 2026-07-18. Il banner che lo documenta contiene, in quest'ordine, *«**Prima**: figlia diretta di [[class-metacognitive-self-audit]]»* e *«**Ora**: figlia (a) del nodo intermedio [[class-instrument-epistemic-reach]]»*. Il parser matchava **la prima** — una frase **esplicitamente marcata come passata** — e **non aveva alcun pattern** per la forma *«figlia (a) di»*, cioè per quella corrente. → **da 8 giorni la classe risultava figlia del NONNO, e il check usciva VERDE**, perché il nonno la elenca ancora per ragioni storiche.
   > **È la forma pura del livello-2 di #0**: il controllo **girava davvero** e rispondeva perfettamente a *«esiste un legame dichiarato e reciproco?»* — che **non è** la domanda che conta, cioè *«il padre CORRENTE è quello giusto?»*. Una verifica reale che risponde a un'altra domanda, e produce **fiducia**.

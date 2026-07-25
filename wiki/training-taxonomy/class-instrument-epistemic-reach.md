@@ -177,7 +177,7 @@ Ognuna di queste e' **vera dello strumento** e **non ancora vera del mondo**.
   ed e' piena: l'harness ha l'esecuzione di shell → `python`, `pytest`, `trace`, un dispatch da eseguire. Per
   la figlia (a) l'affordance e' la stessa shell (`od -c`, `cat -A`), e la figlia (a) ha **gia' verificato**
   che non esiste alcun tool dedicato di byte-inspection nell'harness (grep con scope dichiarato → 0 hit;
-  `class-tool-perception-fidelity.md:91`, «Nessun meccanismo fa scattare il riflesso» — era `:87` ed e'
+  `class-tool-perception-fidelity.md:93`, «Nessun meccanismo fa scattare il riflesso» — era `:87` ed e'
   driftato il 2026-07-26 quando F2 e' uscito da quel file, cioe' **per effetto del nostro stesso lavoro**.
   ⚠️ **Il numero resta, accanto all'ancora testuale, e la ragione e' misurata**: e' la **coppia** a funzionare —
   l'ancora rende il drift **RILEVABILE da `check-anchors`**, il numero e' cio' che il tool verifica. Togliere il

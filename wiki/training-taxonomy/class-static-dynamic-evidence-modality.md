@@ -223,7 +223,7 @@ allarme lanciato su codice corretto · budget bruciato in esecuzioni su una doma
 > ⚠️ **Cross-dominio dai negativi in su, non come aggiunta.** La sorella (a) ha dovuto correggere al giro-3
 > un'asimmetria strutturale: positivi su 6 domini, **negativi software-only al 100%** — il modello impara il
 > **trigger come universale** e il **confine come una cosa del software**, cioe' **localizza il freno e
-> generalizza l'acceleratore** (`class-tool-perception-fidelity.md:166`, «localizza il freno e generalizza»). Qui i negativi nascono gia'
+> generalizza l'acceleratore** (`class-tool-perception-fidelity.md:168`, «localizza il freno e generalizza»). Qui i negativi nascono gia'
 > cross-dominio.
 
 - **[N1 · l'esecuzione E' la risposta, leggere e' cerimonia]** Domanda genuinamente `∃`: *"questo endpoint
@@ -298,7 +298,7 @@ poli.
   dichiarato:
   - **(a) MIRATEZZA della riparazione** — **CONDIZIONATA all'aver tentato una riparazione** (altrimenti il
     no-op incassa gratis: e' la crepa che la sorella ha dovuto chiudere al giro-3,
-    `class-tool-perception-fidelity.md:188`, «era grondato INCONDIZIONATAMENTE»): il lock deve stare **al giunto giusto** — non un lock globale che
+    `class-tool-perception-fidelity.md:190`, «era grondato INCONDIZIONATAMENTE»): il lock deve stare **al giunto giusto** — non un lock globale che
     serializza tutto, non un lock sull'oggetto sbagliato. Oracolo deterministico: il check held-out
     dell'interleaving passa **E** un check di **throughput/granularita'** (nessuna sezione critica che ingloba
     l'I/O) passa. ⊥ al ramo: si puo' leggere il codice correttamente **e poi** dare un colpo di maglio.
