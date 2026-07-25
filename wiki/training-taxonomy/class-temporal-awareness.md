@@ -46,7 +46,33 @@ Il rimedio non è *"ricontrolla tutto periodicamente"* (che è costo puro e non 
 
 **Simmetria obbligatoria (#21)**: ri-valutare ciò che **non è cambiato** è spreco, e la revisione periodica di tutto è la forma più costosa di questo errore. La skill è **nominare la condizione**, non aumentare la frequenza dei controlli.
 
-⚠️ **Stato**: questa faccia **non ha ancora** esempi, negativi e reward propri come le altre tre — è **il passaggio riconosciuto e nominato**, non ancora costruito. **Dichiarato, non nascosto** (#22): va completata prima di qualunque uso per il training.
+### Esempi POSITIVI (cross-dominio #19 — fixture self-contained #22)
+
+- **[iv-A1 · tecnico]** Un controllo automatico osserva una cartella. In fixture: il materiale nuovo **è nato altrove**, e il controllo resta verde. **Gold**: il verde va letto come *"nessun problema **in ciò che guardo**"*, e la condizione di validità (*«vale finché tutto sta lì»*) è **falsa adesso**. **Fail**: fidarsi del verde — che è il caso reale da cui questa faccia è nata.
+- **[iv-A2 · denaro]** Una soglia fissata in cifra assoluta (un'esenzione, un limite di spesa) **non indicizzata**: nessuno la cambia, e **il suo significato cambia da solo** con i prezzi. **Gold**: riconoscere che *"la regola non è stata toccata"* **non implica** *"la regola fa ancora la stessa cosa"*. **Fail**: difendere il testo invariato come prova che nulla è cambiato.
+- **[iv-B1 · vita quotidiana]** Una polizza scelta quando si aveva un'auto piccola e si guidava poco. **Gold**: la scelta era giusta **allora**; la condizione che la reggeva non c'è più. **Fail**: rinnovarla per anni perché *"l'avevo già valutata"*.
+- **[iv-B2 · salute]** Un dosaggio calcolato su parametri di anni prima, mai ricontrollati perché **nessuna visita lo richiede**. **Gold**: legare il ricontrollo a un evento osservabile (una variazione di peso, un esame periodico), non al ricordo.
+- **[iv-C1 · organizzazione]** Una delega data a una persona che nel frattempo **ha cambiato ruolo**. Formalmente valida, di fatto senza titolare. **Gold**: la delega è legata **alla funzione**, non al nome. **Fail**: scoprirlo quando serve una firma.
+- **[iv-C2 · sicurezza urbana]** Un limite di velocità messo quando lì non c'era nulla; ora c'è una scuola. **Gold**: la strada è la stessa, **il contesto no**. **Fail**: *"il limite è quello da sempre"*.
+
+### Esempi NEGATIVI (#21 — senza questi si insegna la revisione perpetua)
+
+- **[iv-N1 · niente è cambiato]** La fixture dichiara che la condizione di validità **regge ancora**. **Gold**: **non toccare nulla**, e non spendere la verifica. **Fail**: ri-valutare per rito — è l'hack `ricontrolla-tutto-periodicamente`, e a intelligenza zero **sembra diligenza**.
+- **[iv-N2 · la revisione periodica di TUTTO]** Si propone di ri-esaminare l'intero insieme a scadenza fissa. **Fail**: è il **polo più costoso** di questo errore, e paradossalmente **non protegge**: ciò che decade lo fa quando gli pare, non al giorno del riesame. **Gold**: legare **poche** cose a **condizioni osservabili**, invece di rileggerle tutte a calendario.
+- **[iv-N3 · la validità è GIÀ legata a un osservabile]** La condizione è espressa in modo verificabile (*"vale finché il conteggio resta sotto N"*) e qualcosa **la controlla già**. **Gold**: nessun lavoro da fare — il meccanismo funziona. **Fail**: aggiungere una seconda verifica che diverge dalla prima.
+- **[iv-N4 · è senza tempo per costruzione]** Una proprietà che **non dipende dal contesto** (un'identità matematica, un vincolo fisico). **Gold**: non ha scadenza, non gliene si inventa una. **Fail**: trattare l'invariante come se decadesse.
+- **[iv-N5 · il costo del riesame supera il rischio]** Riesaminare è caro, l'oggetto è marginale e l'errore reversibile. **Gold**: **dichiarare** la scadenza non verificata e andare avanti ([[class-right-effort-for-stakes]]). **Fail (nei due versi)**: il riesame costoso, **oppure** il silenzio.
+
+### Reward (outcome-anchored #10 + simmetrico)
+
+- **① OUTCOME — la fixture FA AVANZARE IL MONDO.** Dopo la consegna, la fixture applica il cambiamento che era latente (il materiale nasce altrove, i prezzi si muovono, la persona cambia ruolo) e verifica se ciò che era stato stabilito **regge ancora** o è stato **legato a una condizione che se ne accorge**. Predicato **eseguibile**: non si gronda l'aver detto *"potrebbe scadere"*.
+- **② COSTO DEL RIESAME** — misurato: quante cose sono state ri-valutate rispetto a quelle **effettivamente toccate** dal cambiamento. Senza questo termine, `ricontrolla-tutto` (N1/N2) vince — ed è l'hack che **sembra diligenza**.
+- **③ LA CONDIZIONE È OSSERVABILE** — se il modello nomina una condizione di validità, dev'essere **verificabile da qualcuno che non sia lui**: *«vale finché il materiale sta in questa cartella»* si può controllare, *«vale finché serve»* no. Asserzione **strutturale** sulla fixture, ⊥ al ramo (si può nominare una condizione osservabile **e** sbagliare a valutare se è decaduta, e viceversa).
+- ⚠️ **Check #32**: il campo `il-contesto-è-cambiato` **determina il ramo** → **non si gronda per-esempio**; va al **distribuzionale** (held-out bilanciato cambiato↔invariato, con N1/N3/N4 in numero pari ai positivi, + **ECE**). Per-esempio restano ①②③, che sono esiti.
+
+**Hack-check**: `ricontrolla-tutto-periodicamente` → ② + N1/N2 · `non-guardare-mai` → ① · `dichiara-una-scadenza-generica` (*"da rivedere ogni tanto"*) → ③: non è osservabile, quindi nessuno se ne accorgerà mai · `lega-tutto-a-una-condizione` → ② (il costo di mantenerle) + **N4**.
+
+> ⚠️ **Residuo onesto**: questa faccia ha ora **contenuto**, ma il suo gate è **RAGIONATO, non ESEGUITO** — nessun lab la mette alla prova. Vale come le altre tre della classe: ⛔ per il training finché non c'è la misura.
 
 ## Le tre facce (dimensione temporale)
 
