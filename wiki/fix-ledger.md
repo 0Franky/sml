@@ -67,6 +67,16 @@ Formato: `[data · ID]` **cosa** · *perché* · **verificato con** · **gemelli
 
 ### 2026-07-25
 
+- **[F9]** ⭐ **CINQUE gate ESEGUITI** (`harness/verifiers/`: `linkage-lab` · `exposure-remedy-lab` · `reachability-lab` · `right-effort-lab` · `situation-classification-lab`). *Perché*: era il difetto sistemico — 7 lab costruiti e 7 rotti, e in 7/7 il buco era visibile **solo eseguendo**. **Verificato**: tutti e cinque exit 0, girati insieme prima di ogni commit.
+  **Cosa hanno dimostrato, che a parole era solo un argomento**:
+  - `linkage`: **senza il mutation-replay, "copia a mano" PAREGGIA il gold** (2/4 → 4/4) → la classe *era* rotta prima del fix di stanotte;
+  - `right-effort`: la policy *"guarda solo quanto un pezzo è attraversato"* fa **4/5** — quasi giusta, cade su **una sola fixture** (posta alta per **irreversibilità**, non per centralità) → la posta ha **due** determinanti indipendenti, **e quella fixture è load-bearing**: toglierla renderebbe il gate cieco **restando verde**;
+  - `situation-classification`: **"classifica bene e poi si ferma" fa 0/6 col gate completo e 6/6 senza il termine ②** → **pareggia il gold**. È la prova eseguita che ② (*compito completato*) deve avere peso pieno: senza, premieremmo una policy che insegna la **fase 2** (lo stop) con una regola che l'utente **non ha ancora deciso**;
+  - stesso lab: *"reagisci alle parole d'allarme"* fa **3/6** — cade esattamente dove **linguaggio e statuto divergono** (*"sistemami questo foglio"* con dati sanitari · *"cancella subito tutto!"* su file di prova). Il **proxy lessicale è battuto per costruzione** (#24).
+  > **Lezione di metodo, pagata due volte**: un'ablazione prova il contributo di un termine **solo se esiste una policy che fallisce QUEL termine e non gli altri** — e gli **assi del reward devono essere ortogonali**, altrimenti un difetto ne inquina un altro e l'ablazione non isola più nulla (misurato in `reachability-lab`, dove Q3 risultava "senza segnale" pur avendolo).
+  **Resta aperto**: sono fixture **sintetiche** e il "gold" è una policy scritta da me — questi gate provano che **il criterio discrimina**, **non** misurano alcun modello. Il passo successivo è generare i bucket e far girare un modello vero.
+
+
 - **[F8]** **Scan del codice morto nell'harness — esito: ZERO.** *Perché*: l'utente ha portato come esempio *"stai aggiungendo codice che resta morto"* → **verificato invece di assumere** (in un verso o nell'altro). **Metodo**: 46 moduli, **253 export**, incrociati con ogni `.mjs`/`.ts` del progetto. **21 candidati** — e qui sta il punto: *"mai importato"* **non significa** *"morto"*.
   **Triage che discrimina** (il numero grezzo non decideva nulla):
   - **20 = `export` SUPERFLUO, simbolo VIVO** — usato dentro il proprio file (2-4 usi interni ciascuno). Il difetto, se c'è, è una parola in più; il codice non è morto.
