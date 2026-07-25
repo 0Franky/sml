@@ -1,6 +1,6 @@
 ---
 name: class-instrument-epistemic-reach
-description: Nodo INTERMEDIO (figlio di metacognitive-self-audit, padre di 2) — la PORTATA EPISTEMICA dello strumento: che domanda questo strumento puo' IN LINEA DI PRINCIPIO rispondere, e quale no. La radice condivisa e' che un risultato NEGATIVO ("non lo vedo", "0 match", "non si riproduce") e' una proprieta' dello STRUMENTO finche' non dimostri che e' una proprieta' del MONDO. Due figlie sull'unico asse che le separa - (a) tool-perception-fidelity = lo strumento perde RISOLUZIONE sullo stesso oggetto (rimedio- guarda MEGLIO); (b) static-dynamic-evidence-modality = lo strumento osserva un OGGETTO DIVERSO, modalita' (rimedio- guarda ALTROVE). Origine - ristrutturazione ratificata utente 2026-07-16 ("sono d'accordo", opzione 2).
+description: Nodo INTERMEDIO (figlio di metacognitive-self-audit, padre di 3) — la PORTATA EPISTEMICA dello strumento: che domanda questo strumento puo' IN LINEA DI PRINCIPIO rispondere, e quale no. La radice condivisa e' che un risultato NEGATIVO ("non lo vedo", "0 match", "non si riproduce") e' una proprieta' dello STRUMENTO finche' non dimostri che e' una proprieta' del MONDO. TRE figlie sull'asse che le separa - (a) tool-perception-fidelity = lo strumento perde RISOLUZIONE sullo stesso oggetto (rimedio- guarda MEGLIO); (c) instrument-coverage-scope = lo strumento e' giusto ma PUNTATO su un'altra porzione, inclusa quella che non si guarda mai, il passato (rimedio- guarda PIU' LARGO); (b) static-dynamic-evidence-modality = lo strumento osserva un TIPO DIVERSO di oggetto, modalita' (rimedio- cambia il TIPO di sguardo). Origine - ristrutturazione ratificata utente 2026-07-16 ("sono d'accordo", opzione 2).
 type: training-class
 tags: [reasoning, metacognition, self-audit, epistemics, instrument-reach, negative-result, area-03, area-04, intermediate-class, parent-class, proposta]
 last_updated: 2026-07-18
@@ -11,13 +11,17 @@ last_updated: 2026-07-18
 > dall'utente il 2026-07-16 (*"sono d'accordo"* sull'**opzione 2**) — la **ratifica copre la STRUTTURA**
 > (creare il nodo intermedio con quelle due figlie), **non il contenuto di questo file**, che nessuno ha
 > ancora letto ne' revisionato (#26). Un difetto qui **si stampa nei pesi** (#22).
-> **Nessuna delle due figlie e' validata**: (a) ha 2 findings aperti al giro-3, (b) e' nata oggi.
+> **Nessuna delle TRE figlie e' validata**: (a) ha 2 findings aperti al giro-3, (b) e' nata il 2026-07-18,
+> **(c)** [[class-instrument-coverage-scope]] e' nata il **2026-07-25** con **struttura ratificata**
+> (utente msg 1860) ma **contenuto mai revisionato**. *(La posizione 3 dell'asse era dichiarata **scoperta**
+> in questo stesso file fino a quel giorno: la figlia (c) la chiude — e con la sua faccia **provenienza**
+> accoglie **F2/Chesterton**, che `tool-perception-fidelity` dichiarava fuori-asse dal 2026-07-18.)*
 
 # Nodo INTERMEDIO — LA PORTATA DEL MIO STRUMENTO
 
 > **Ruolo** (#20): **Padre**: [[class-metacognitive-self-audit]] — radice INWARD (*"sospendere la fiducia nel
 > proprio output/stato intermedio e verificarlo contro un riferimento oggettivo"*,
-> `class-metacognitive-self-audit.md:19`). Questo nodo ne e' **figlio** ed e' a sua volta **padre di 2**.
+> `class-metacognitive-self-audit.md:19`). Questo nodo ne e' **figlio** ed e' a sua volta **padre di 3**.
 > **La torsione, dichiarata**: nel padre l'oggetto sospeso e' un **ragionamento**; qui e' **il risultato di uno
 > strumento** — e il "riferimento oggettivo" del padre e' precisamente cio' che questo nodo problematizza,
 > perche' *un riferimento e' oggettivo solo dentro la portata dello strumento che lo produce*. Questo nodo e'
@@ -81,11 +85,20 @@ livello X, resta Y"*) — mai spacciare l'uno per l'altro.
 | Risposta | Figlia | Natura del difetto | Rimedio |
 |---|---|---|---|
 | **SI'** — l'informazione **e' dentro l'oggetto che sto gia' guardando**, ed e' il mio visore a scartarla | **(a)** [[class-tool-perception-fidelity]] | **RISOLUZIONE** — proiezione con perdita: il renderer scarta una coordinata dell'oggetto | **guarda MEGLIO** — stesso oggetto, strumento piu' fedele (`od -c`, `cat -A`) |
-| **NO** — nessun ingrandimento la produce, perche' **non e' in quell'oggetto** | **(b)** [[class-static-dynamic-evidence-modality]] | **MODALITA'** — sto osservando l'oggetto sbagliato: il testo del programma invece delle sue esecuzioni (o viceversa) | **guarda ALTROVE** — cambia modalita' di evidenza (esegui ⇄ dimostra) |
+| **NO, ma e' nello STESSO TIPO di oggetto — in una PORZIONE che non ho puntato** (un'altra cartella, un altro ambiente, **o il passato**) | **(c)** [[class-instrument-coverage-scope]] | **COPERTURA** — lo strumento e' giusto e abbastanza fine: e' **puntato altrove** | **guarda PIU' LARGO** — stesso strumento, **perimetro** esteso (incluso all'indietro: la provenienza) |
+| **NO, e nessun allargamento la produce, perche' non e' in quel TIPO di oggetto** | **(b)** [[class-static-dynamic-evidence-modality]] | **MODALITA'** — sto osservando l'oggetto sbagliato: il testo del programma invece delle sue esecuzioni (o viceversa) | **cambia il TIPO di sguardo** — modalita' di evidenza (esegui ⇄ dimostra) |
 
 ### La stessa cosa in forma operativa (per l'editor)
 
-> **«Il rimedio e' GUARDARE MEGLIO o GUARDARE ALTROVE?»** — Meglio → **(a)**. Altrove → **(b)**.
+> **«Il rimedio e' GUARDARE MEGLIO, PIU' LARGO, o CAMBIARE TIPO DI SGUARDO?»**
+> Meglio → **(a)** · Piu' largo → **(c)** · Altro tipo → **(b)**.
+
+> ⚠️ **Il passo che si sbaglia piu' spesso e' (c) vs (b)**, perche' entrambe rispondono *"guarda altrove"*. Il
+> test secco: **(c)** e' *piu' della STESSA cosa* (altre cartelle, altri ambienti, altri commit — l'operazione
+> e' un'**estensione** del perimetro e lo strumento resta identico); **(b)** e' *una cosa di NATURA DIVERSA*
+> (dal testo alle esecuzioni — nessuna quantita' della prima produce la seconda). Se allargando il puntamento
+> **senza cambiare strumento** il risultato cambia → **(c)**. Se allargare all'infinito non servirebbe a
+> nulla → **(b)**.
 
 ### La stessa cosa in forma formale (per chi progetta le fixture)
 
@@ -124,8 +137,13 @@ Asse: **in quanti modi la portata di uno strumento puo' non contenere la mia dom
 |---|---|---|---|
 | 1 | **RISOLUZIONE** | dettaglio dello **stesso** oggetto | ✅ figlia **(a)** [[class-tool-perception-fidelity]] |
 | 2 | **MODALITA'** | l'**oggetto giusto** (testo ⇄ esecuzioni; `∀`-approssimato ⇄ `∃`-esatto) | ✅ figlia **(b)** [[class-static-dynamic-evidence-modality]] |
-| 3 | **COPERTURA / SCOPE** | una **porzione** dell'oggetto giusto (dir sbagliata, un solo branch, `head` che tronca, un solo ambiente/OS) | 🔴 **SCOPERTA** — vedi §GAP-SCAN(e) |
+| 3 | **COPERTURA / SCOPE** | una **porzione** dell'oggetto giusto (dir sbagliata, un solo branch, `head` che tronca, un solo ambiente/OS) — **e la porzione che non si guarda MAI: il passato** | ✅ figlia **(c)** [[class-instrument-coverage-scope]] — **struttura ratificata 2026-07-25** (utente msg 1860), contenuto non ancora validato |
 | 4 | **VALIDITA' TEMPORALE** | l'oggetto giusto **a un istante scaduto** (cache, snapshot, il numero-di-riga verificato ieri) | 🟡 **parziale e altrove** — [[class-temporal-awareness]] (staleness) + il tool `check-anchors`; non sotto questa radice |
+
+> ⚠️ **3 e 4 sono temporalmente SPECULARI — da non confondere** (chiarito 2026-07-25, quando la figlia (c) ha acquisito la faccia *provenienza*):
+> - la **(4)** è *"ho in mano un dato **vecchio** e lo credo attuale"* → il perimetro copre l'oggetto giusto, ma **a un istante sbagliato**;
+> - la faccia temporale della **(3)** è l'**opposto esatto**: *"ho in mano il dato **attuale** e mi manca il passato che ne spiega la forma"* → la recinzione di Chesterton, dove la ragione **esiste ed è recuperabile** ma sta in una porzione (la storia) che il puntamento di default **non include mai**.
+> Il test che le separa: nella (4) **ri-leggere adesso** risolve; nella (3)-temporale ri-leggere adesso **non serve a niente**, bisogna **guardare altrove** (il registro delle modifiche, la discussione che l'ha prodotta).
 
 ---
 
@@ -149,7 +167,7 @@ Ognuna di queste e' **vera dello strumento** e **non ancora vera del mondo**.
   ed e' piena: l'harness ha l'esecuzione di shell → `python`, `pytest`, `trace`, un dispatch da eseguire. Per
   la figlia (a) l'affordance e' la stessa shell (`od -c`, `cat -A`), e la figlia (a) ha **gia' verificato**
   che non esiste alcun tool dedicato di byte-inspection nell'harness (grep con scope dichiarato → 0 hit;
-  `class-tool-perception-fidelity.md:86`, «Nessun meccanismo fa scattare il riflesso»).
+  `class-tool-perception-fidelity.md:87`, «Nessun meccanismo fa scattare il riflesso»).
 - **{riconoscere che il primo non discrimina} = `S` PURO.** Nessun meccanismo puo' produrlo: e' esattamente il
   giudizio che decide *quando* la seconda modalita' vale il suo costo. Un harness che eseguisse *sempre*
   entrambe le modalita' non insegnerebbe la skill — **la sostituirebbe con la forza bruta**, che e' il difetto
@@ -195,7 +213,7 @@ anti-forza-bruta**, e non e' negoziabile:
   porzione sbagliata dell'oggetto giusto"* (dir sbagliata, un solo branch/OS, output troncato). E' la posizione
   che raccoglie il **maggior numero di falsi-negativi reali** nel nostro stesso lavoro: la claim *"nessuna
   pagina copre F2"* della figlia (a) era **esattamente** questo (un regex tematico che non poteva matchare —
-  `class-tool-perception-fidelity.md:76`, «da un risultato-negativo di **una** query si è tratta una claim»). **Segnalato all'utente,
+  `class-tool-perception-fidelity.md:77`, «da un risultato-negativo di **una** query si è tratta una claim»). **Segnalato all'utente,
   non filato di slancio** (#28/#30: e' una terza figlia, non un dettaglio; serve una decisione).
   **Posizione 4 (VALIDITA' TEMPORALE)** e' coperta **parzialmente e sotto un'altra radice**
   ([[class-temporal-awareness]]) → cross-link, non re-home: li' l'oggetto e' la **staleness del fatto**, qui
@@ -220,7 +238,7 @@ anti-forza-bruta**, e non e' negoziabile:
   🟡 **Residuo onesto**: la figlia (a) porta **due** facce (F1 byte-vs-rendered e F2 Chesterton's-fence) e
   **solo F1 e' pulitamente "risoluzione"**. F2 (*il razionale non e' scritto da nessuna parte che io stia
   guardando*) e' **piu' vicino alla posizione 3 (COPERTURA)** che alla 1 — la figlia (a) lo dichiara gia' come
-  la sua parte debole (`class-tool-perception-fidelity.md:103`, «F2 fitta più debolmente di F1, e per una
+  la sua parte debole (`class-tool-perception-fidelity.md:104`, «F2 fitta più debolmente di F1, e per una
   ragione strutturale»). **Il re-home di oggi NON risolve F2 e non pretendo che lo faccia**: lo rende
   **visibile**, perche' ora c'e' un asse rispetto a cui F2 e' fuori posto. → **decisione rinviata all'utente**
   insieme alla posizione 3.

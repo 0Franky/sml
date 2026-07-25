@@ -26,9 +26,17 @@
  *     piena e plausibile ma concettualmente sbagliata passa: quello resta lavoro da revisore)
  *   - le citazioni con riga BARE (`:25` senza file davanti): le conta e le elenca come `manual`,
  *     perche' risolverle richiede il contesto della prosa (→ compito del modello, non della regex)
+ *   - ⚠️ le citazioni la cui STRINGA fra virgolette e' SPEZZATA SU DUE RIGHE del file CITANTE:
+ *     l'associazione citazione↔stringa lavora una riga alla volta, quindi una « » che va a capo
+ *     viene vista troncata (o non vista) e la citazione finisce fra le INFO invece che fra i WARN.
+ *     NON e' teorico: trovato il 2026-07-25 su `class-instrument-epistemic-reach.md:241`, che citava
+ *     `:103` mentre la stringa stava a `:104` — sbagliata, e MUTA per questo strumento.
+ *     → e' un limite di COPERTURA del perimetro d'analisi (una riga vs due), non di correttezza:
+ *     l'assenza di segnalazione su una citazione multi-riga NON e' una conferma che sia giusta.
+ *     Vedi la classe che generalizza il difetto: wiki/training-taxonomy/class-instrument-coverage-scope.md
  *
  * USO
- *   node harness/tools/check-anchors.mjs                 # default: wiki/training-taxonomy/*.md
+ *   node harness/tools/check-anchors.mjs                 # default: TUTTA wiki/ (ricorsiva, esclusa _private)
  *   node harness/tools/check-anchors.mjs wiki/concepts   # una dir o file specifici
  *   node harness/tools/check-anchors.mjs --json          # output machine-readable
  *   exit 0 = nessun drift · exit 1 = drift trovato (usabile in CI / pre-commit)

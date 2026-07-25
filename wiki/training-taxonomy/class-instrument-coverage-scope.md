@@ -6,12 +6,14 @@ tags: [reasoning, metacognition, self-audit, epistemics, instrument-reach, cover
 last_updated: 2026-07-25
 ---
 
-> # ⛔ NON VALIDATA — **PROPOSTA**, attende ratifica (#26)
-> **NON usare per il training.** Nessuna approvazione dell'utente su *questa* classe: la domanda
-> *"terza figlia sì/no?"* era **aperta** in `todo.md:84` e questo file è la **proposta motivata**, non la
-> risposta. Un difetto qui **si stampa nei pesi** (#22).
-> **Padre**: [[class-instrument-epistemic-reach]] — **proposto**, a sua volta ⛔ NON VALIDATA (giro-0).
-> *(Il padre **non deve elencarla** finché la ratifica non arriva — è la convenzione che `check-hierarchy` applica.)*
+> # ⚠️ STRUTTURA RATIFICATA (2026-07-25) — ma CONTENUTO **NON VALIDATO**
+> **Ancora NON usare per il training.** Distinguo che non va sfumato (#26):
+> - ✅ **RATIFICATA la STRUTTURA** — *"procedi con le tue reco"* (utente, msg 1860, in risposta alla proposta
+>   esplicita *"ratifichi la terza figlia?"*): questa classe **esiste** come terza figlia dell'asse.
+> - ⛔ **NON validato il CONTENUTO** — nessuno ha revisionato questo file, e il suo reward **non è mai stato
+>   attaccato eseguendo**. La ratifica copre *dove sta*, non *se è giusto*. Un difetto qui **si stampa nei pesi** (#22).
+> **Prima dell'uso**: giro di review avversariale + fixture/scorer + attacco **eseguito**.
+> **Padre**: [[class-instrument-epistemic-reach]] — a sua volta ⛔ NON VALIDATA (giro-0).
 
 # Classe (figlia) — IL PERIMETRO DELLO STRUMENTO: *su cosa ha davvero guardato?*
 
@@ -45,6 +47,21 @@ Il fallimento non è fidarsi degli strumenti: è **leggere il loro silenzio come
 È un test **attivo, economico e universale**: non richiede di conoscere l'implementazione dello strumento, solo di **muovere qualcosa e guardare se il numero si muove**. Vale per un contatore, un tempo di esecuzione, un elenco di file, una dimensione di output. Ed è il complemento operativo del padre: dove il padre insegna a **sospendere** la fiducia in un risultato negativo, questa figlia dà **l'atto che la risolve**.
 
 ---
+
+## Le DUE facce del perimetro: lo SPAZIO e il TEMPO
+
+Il perimetro ha **due dimensioni**, e la seconda è quella che si dimentica sempre:
+
+- **(a) COPERTURA NELLO SPAZIO** — *quale porzione del mondo presente è finita sotto l'obiettivo*: una cartella su tre, un solo ambiente, un solo ramo, un campionamento a monte dello scarico. È la faccia degli esempi A/B/C sopra.
+- **(b) COPERTURA NEL TEMPO — la provenienza** — *esiste una porzione che di default non guardo **mai**: il passato*. Guardando **lo stato presente** di una cosa non si vede **perché** è così; la ragione non è sparita, è in un canale che il presente non mostra (la storia, il registro delle modifiche, la discussione che l'ha prodotta).
+
+**È lo stesso identico difetto**, e il test di attribuzione lo conferma: *allargando il **puntamento** — dallo stato-presente alla sua storia — senza cambiare strumento né soglia, il risultato **cambia** e la ragione appare*. Cambia solo l'**asse** lungo cui il perimetro era stretto.
+
+> ### La faccia (b) accoglie **F2 — la recinzione di Chesterton** *(spostata qui il 2026-07-25, ratifica utente msg 1860)*
+> **Cos'è**: un artefatto che non ho scritto io — un controllo apparentemente ridondante, un'attesa, una dipendenza, un campo mai usato — porta una **decisione passata invisibile nel presente ma RECUPERABILE** dalla provenienza. Rimuoverlo perché *"non serve a niente"* è leggere il silenzio del presente come *"non c'era motivo"*: **esattamente** il difetto di questa classe (*"non lo vedo"* → *"non c'è"*).
+> **Da dove viene**: era in [[class-tool-perception-fidelity]], che lo dichiarava **fuori-asse** già dal 2026-07-18 (*"il placement di F2 resta la parte debole; il re-home non lo cura, lo rende visibile"*). Il pezzo mancante era **questa** classe: senza la posizione COPERTURA non esisteva una casa giusta, e lo si teneva accanto alla RISOLUZIONE per mancanza di alternative.
+> ⚠️ **Cosa NON si è spostato, e va detto** (#34): il materiale di sviluppo di F2 (lo split-a-tre, l'held-out, e un **finding P1 di *branch-leak* ancora APERTO**) **resta fisicamente** nella classe di origine finché quel P1 non è risolto — spostare un difetto aperto insieme al contenuto significherebbe farlo sparire dal radar di chi lo sta seguendo. Qui è dichiarata la **sede corretta**; il trasferimento del materiale è **tracciato, non ancora eseguito**.
+> **Il polo opposto, che resta valido**: `area-06:161` e `area-16:80` premiano *"rimuovi il superfluo / niente codice morto"*. Non sono in contraddizione — **il confine è la provenienza**: si rimuove ciò di cui si è **accertato** che non ha ragione, non ciò di cui **non si vede** la ragione. È la differenza fra *"ho guardato la storia e non c'è motivo"* e *"non vedo il motivo"*, cioè la differenza che questa intera classe insegna.
 
 ## Confine con le sorelle (SSOT #16 — non duplicazione)
 
@@ -125,6 +142,6 @@ Il fallimento non è fidarsi degli strumenti: è **leggere il loro silenzio come
 ## Gap-scan (#36) — eseguito
 
 - **(a) Asse completo**: l'asse *portata dello strumento* ha ora **tre** posizioni enumerate (risoluzione · modalità · copertura) e la tabella-confine sopra le rende distinguibili con un test operativo. **Nessuna quarta posizione identificata** — se emergesse, va nominata, non appesa come sorella qualsiasi.
-- **(b) Ciclo-di-vita**: *scegliere lo strumento → puntarlo → leggerne l'esito → **ri-valutarne il perimetro quando il mondo cambia***. ⚠️ **L'ultima fase resta SCOPERTA**: il perimetro di uno strumento **invecchia** (il codice cresce fuori dalla cartella osservata; le telecamere restano dov'erano mentre l'edificio si amplia). Qui si insegna a **stabilirlo**, non a **ri-visitarlo nel tempo**. → **gap dichiarato**, non chiuso.
+- **(b) Ciclo-di-vita**: *scegliere lo strumento → puntarlo → leggerne l'esito → **ri-valutarne il perimetro quando il mondo cambia***. ⚠️ **Fase finale COPERTA A METÀ** *(aggiornato 2026-07-25, con l'arrivo della faccia (b))*: la dimensione **tempo** ora c'è — guardare **all'indietro**, nella provenienza, è precisamente ciò che F2 insegna. **Resta scoperto il verso opposto: il perimetro che invecchia in avanti** — il codice cresce fuori dalla cartella osservata, le telecamere restano dov'erano mentre l'edificio si amplia, il controllo che ieri copriva tutto oggi copre metà. **Nessuno lo ri-verifica perché ieri andava bene.** *(Ironia utile: è **esattamente** come è nato il difetto `[F7]` — quel perimetro fu adeguato il giorno in cui venne scritto.)* → **gap dichiarato**, non chiuso.
 - **(c) Complemento/inverso**: l'inverso è *"il perimetro è più largo di quanto credo"* → **falsi positivi** da porzioni che non volevo osservare. Coperto solo indirettamente da **N4**. **Gap minore dichiarato.**
 - **(d) Coerenza di radice**: tutte e tre le figlie stanno sotto [[class-instrument-epistemic-reach]] → **coerente**, nessuna faccia della stessa skill appesa altrove.
