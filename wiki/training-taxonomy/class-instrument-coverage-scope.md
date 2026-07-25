@@ -36,7 +36,7 @@ Il fallimento non è fidarsi degli strumenti: è **leggere il loro silenzio come
 
 ### Le due istanze reali (documentate, e indipendenti)
 
-1. **`[EXTRACTED]` Il regex tematico che non poteva matchare** (2026-07-16, `todo.md:85`): la ricerca era corretta e ha risposto *"nessuna pagina copre F2"*. **Falso**: il pattern era tematico e non poteva agganciare quel contenuto. Lo strumento ha risposto **bene** a una domanda **diversa** da quella che contava.
+1. **`[EXTRACTED]` Il regex tematico che non poteva matchare** (2026-07-16, `todo.md:90`): la ricerca era corretta e ha risposto *"nessuna pagina copre F2"*. **Falso**: il pattern era tematico e non poteva agganciare quel contenuto. Lo strumento ha risposto **bene** a una domanda **diversa** da quella che contava.
 2. **`[EXTRACTED]` Il controllo verde che guardava un terzo del materiale** (2026-07-25, `fix-ledger.md` §F7): un verificatore di citazioni dava **`0 ERROR`** su tutta la wiki. Esaminava **102 file su 296** — il resto non era nel suo `default`. Il verde non diceva *"le citazioni sono giuste"*, diceva **"non le ho guardate"**. Allargando il perimetro sono usciti **4 errori reali invisibili da mesi**, uno dei quali nascondeva una pagina che dichiarava aperto un problema **già risolto nel codice**.
    > **È l'istanza più istruttiva per tre motivi**: (a) lo strumento era **scritto da noi** — non un limite subìto, ma una scelta dimenticata; (b) il verde era **atteso e gradito** → nessuno lo interroga (il bias di conferma colpisce più forte quando il risultato piace, #35b); (c) **non è stato lo strumento a segnalare**: è emerso da un dettaglio numerico — *il conteggio non si era mosso dopo una modifica*.
 
