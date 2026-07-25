@@ -12,6 +12,42 @@ last_updated: 2026-07-11
 > **Origine**: idea utente **msg 1473 #1** (*"voglio mostrare la data corrente o quantomeno anno-mese"*) → la parte **F** è FATTA nell'harness (l'anchor `<current_date>` iniettato in `<context>`, granularità giorno, cache-stable — [[../architecture/context-pressure-mechanism]], `harness/src/context-assembler.mjs`); questa classe è la parte **S** (cosa il modello DEVE farci). Le facce (ii)/(iii) formalizzano le leaf esistenti [[area-04-context-metacognition]] §Temporal-awareness + §Stale/TTL sotto il nuovo padre.
 > **Approfondimento (utente msg 1484, 2026-07-09) — il senso PROFONDO dell'idea #1**: l'utente ha spiegato il vero motivo della data-corrente. Fenomeno REALE e documentato = **temporal anchoring by context / nostalgia bias**: se il contesto è pieno di un argomento con forte identità-temporale (es. George Orwell / *1984* / il 1986), il modello **si sposta** in quell'epoca — alla domanda "che anno è?" risponde con l'anno dell'argomento, e i ragionamenti *a valle* si adeguano a quell'epoca (inclusi valori/norme oggi inappropriati). Grounding: «gli LLM tendono a fidarsi del contesto anche datato invece della conoscenza interna → *temporal anchoring by context*» + *nostalgia bias* (When Benchmarks Age, arXiv 2510.07238); DateLogicQA (arXiv 2412.13377); la difesa efficace = *temporal conditioning esplicito* (dare la data) (Time-Aware LMs, TACL 2022; testi storici arXiv 2606.27275, −58% perplessità col segnale d'epoca). → la `<current_date>` non è solo recency: è l'**anchor del presente-operativo** (faccia i-bis sotto).
 
+
+## ⭐ Faccia (iv) — DECADENZA SENZA INNESCO: era giusto quando l'hai stabilito, e il mondo si è mosso sotto
+
+> **Aggiunta il 2026-07-25** dopo che **cinque** gap-scan indipendenti, su cinque classi diverse, avevano dichiarato scoperto **lo stesso buco** senza riconoscersi fra loro. Per [[class-defect-shape-reading]] cinque istanze con la stessa forma **non sono cinque buchi: sono un passaggio mancante** — e questa faccia è quel passaggio. *(La classe applicata a sé stessa, ed è il motivo per cui non ho scritto cinque toppe.)*
+
+### Che cosa la distingue dalla faccia (ii) *staleness/TTL* — e non è una sfumatura
+
+| | **(ii) staleness** | **(iv) decadenza senza innesco** |
+|---|---|---|
+| l'oggetto | un **dato** che può essere vecchio | una **decisione, calibrazione o perimetro** stabiliti correttamente |
+| cos'è cambiato | **il dato** (il valore di allora non è più il valore di adesso) | **il mondo intorno** — il dato è ancora *esattamente quello che volevi* |
+| l'innesco | c'è: *sto per usare questo dato* → controllo se è fresco | ⚠️ **NON C'È**: nessuno sta per usare niente, il tempo passa e basta |
+| il rimedio | **ri-leggere** | **ri-valutare la validità**, che nessuno chiederà mai |
+
+**È l'assenza di innesco a renderla insidiosa.** Tutti gli altri nostri meccanismi scattano su un **evento** — prendo una decisione, ricevo una diagnosi, riparo un difetto, sto per usare un dato. Qui **non accade nulla**: la validità decade **in silenzio**, e l'unica cosa che potrebbe rilevarla è una domanda che nessuno ha motivo di porsi.
+
+### Le cinque istanze che l'hanno rivelata `[EXTRACTED — dichiarate indipendentemente]`
+
+1. **il perimetro di uno strumento** ([[class-instrument-coverage-scope]]) — *era adeguato il giorno in cui fu scritto*; poi il materiale è cresciuto **fuori** da esso. Le telecamere restano dov'erano mentre l'edificio si amplia;
+2. **la calibrazione dello sforzo** ([[class-right-effort-for-stakes]]) — il prototipo diventa produzione e **nessuno rialza il livello**;
+3. **una decisione** ([[class-retroactive-decision-propagation]]) — a cambiare è **il mondo** (una norma esterna, un prezzo, una dipendenza abbandonata), non un'altra decisione: **non c'è nessun evento interno** che lo inneschi;
+4. **un presupposto** ([[class-assumption-audit-both-directions]]) — verificato all'inizio, **decade durante un lavoro lungo**;
+5. **un accesso o un legame concesso** ([[class-least-privilege-information-boundary]]) — il bisogno che lo giustificava **è finito**, e nessuno lo chiude: *un canale che nessuno chiude governa per sempre*.
+
+> **Il fatto che siano state trovate cinque volte separatamente, senza riconoscersi**, è esso stesso la prova della tesi: un difetto **senza innesco** non si presenta mai come sé stesso — si presenta come il caso particolare che stai guardando in quel momento.
+
+### La skill
+
+> **Ciò che stabilisci porta con sé una data di scadenza che nessuno scriverà.** Quando fissi un perimetro, una soglia, un accesso, una calibrazione: **nomina la condizione che lo rende valido** — perché è l'unica cosa che, cambiando, potrà segnalarne la scadenza.
+
+Il rimedio non è *"ricontrolla tutto periodicamente"* (che è costo puro e non regge): è **legare la validità a una condizione osservabile** invece che al tempo. *"Vale finché la wiki sta in questa cartella"* è verificabile; *"vale"* no.
+
+**Simmetria obbligatoria (#21)**: ri-valutare ciò che **non è cambiato** è spreco, e la revisione periodica di tutto è la forma più costosa di questo errore. La skill è **nominare la condizione**, non aumentare la frequenza dei controlli.
+
+⚠️ **Stato**: questa faccia **non ha ancora** esempi, negativi e reward propri come le altre tre — è **il passaggio riconosciuto e nominato**, non ancora costruito. **Dichiarato, non nascosto** (#22): va completata prima di qualunque uso per il training.
+
 ## Le tre facce (dimensione temporale)
 
 ### (i) Recency EPISTEMICA — la faccia NUOVA (idea #1)
