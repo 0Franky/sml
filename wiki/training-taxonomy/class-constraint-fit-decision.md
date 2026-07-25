@@ -25,6 +25,7 @@ last_updated: 2026-07-10
 | **percorso-alternativo sotto-blocco** *(a sua volta padre di 2 sotto-classi)* | come SBLOCCARSI quando la default è bloccata + **quale "equivalente" secondo il REGIME** (misura→parità / uso→best-fit) | modelli bloccati→parità (misura) · Yahoo deprecato→Gmail (uso) | [[class-alternative-path-under-block]] (msg 1229+1233; discriminatore misura-vs-goal) |
 | *(futura)* right-tool-for-job | quale STRUMENTO | grep vs parser AST vs LLM | — |
 | *(futura)* right-effort-for-stakes | quanto SFORZO/rigore | one-liner vs design-doc | — (**riceve la POSTA da** [[class-project-stakes-awareness]]: quella LEGGE stadio×blast-radius, questa SCEGLIE il tier conseguente). **Contenuto-core riservato**: [[../concepts/quality-target-tiers]] §3.ter (scale-floor per-parte su Architecture/Maintainability, PROPOSTA #26) |
+| **riconoscimento dell'ASSENZA di vincolo** *(assegnata 2026-07-25)* | **SE un vincolo esiste davvero** — la dimensione a monte di tutte le altre: prima di far combaciare qualcosa con un vincolo, accertare che il vincolo **ci sia**, e dirlo quando non c'e' invece di fabbricarne uno plausibile | *"quale formato richiede?"* → nessuno lo richiede: dirlo, non inventarlo | [[class-constraint-absence-recognition]] |
 
 > Le figlie "future" sono placeholder estensibili (regola #20 — la gerarchia cresce quando emerge un gap reale, non a priori).
 

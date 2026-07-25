@@ -26,6 +26,8 @@ last_updated: 2026-07-11
 |---|---|---|---|
 | **integrità come CONTROLLORE** | IO verifico altri | non ereditare il frame/expected/fixture del produttore; ri-derivo un ground-truth PROPRIO dalle fonti primarie (la verifica deve poter FALLIRE) | [[class-independent-verification-integrity]] (RE-HOMED da metacognitive-self-audit; cross-link ↩ per la faccetta "provenienza-dell'audit") |
 | **integrità come CONTROLLATO** | IO sono verificato | non manomettere il verificatore/harness/test CONGELATO (non allentare-test/gonfiare-baseline/patchare-benchmark/hardcodare/auto-strumentare); persegui l'obiettivo reale, dichiara l'irraggiungibile | [[class-evaluation-integrity]] (anti-manomissione; home-d'area = area-07, skill-parent qui — parent-skill ≠ home-area, come code-optimization) |
+| **integrita' verso la SOLUZIONE DISPONIBILE** *(assegnata 2026-07-25)* | la risposta e' **a portata** | non guardarla senza titolo, e non costruire la propria attorno a quella che qualcuno **afferma** essere corretta (answer-anchoring) | [[class-solution-availability-integrity]] |
+| **dove si mette la CUCITURA della verifica** *(assegnata 2026-07-25)* | IO scelgo **dove** si verifica | il punto in cui il controllo tocca il sistema decide cosa puo' essere colto: una cucitura messa comoda produce un verde che non discrimina | [[class-verification-seam-placement]] |
 
 > Le due figlie sono **speculari**: stessa radice, direzione opposta (verifico ⟷ sono-verificato). Insieme coprono il canale di verifica su entrambi i lati.
 
