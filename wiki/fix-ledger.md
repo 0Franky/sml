@@ -65,6 +65,26 @@ Ogni riga: il rimedio che **sembra** giusto · perché sembra giusto · **cosa r
 
 Formato: `[data · ID]` **cosa** · *perché* · **verificato con** · **gemelli**: cercati/coperti · **resta aperto**.
 
+### 2026-07-26
+
+- **[F14]** ✅ **F2 TRASFERITO** da `class-tool-perception-fidelity` a `class-instrument-coverage-scope` §faccia-(b) — il debito sbloccato da F13, eseguito lo stesso giorno. *Perché non prima*: spostare un difetto aperto insieme al contenuto lo fa **sparire dal radar** di chi lo segue; prima si chiude, poi si sposta.
+  **Forma scelta — spostamento + LAPIDE, non copia marcata «superseded»**: due sorgenti della stessa cosa **divergono in silenzio** (#16), e un *"non modificare, la versione buona è altrove"* è un **divieto testuale** — cioè la forma debole che F13 aveva appena scartato in favore di un fatto controllabile. La storia dello sviluppo **resta in git**, che è esattamente il canale di provenienza che F2 insegna a interrogare: rimuovere il testo **non distrugge** la provenienza.
+  **Non è stato un travaso**: il materiale è entrato **dentro i termini** della classe ospite, non accanto. Il reward è ora a **due facce** — ①a *conclusione* (spazio) e ①b *azione, held-out su entrambi i poli* (tempo) — perché il testo dichiarava due facce e **il criterio ne vedeva una sola**: sarebbe stato il test (b) di F11 commesso di nuovo, in fase di trasloco.
+  **Verificato con**: `check-anchors` 0 ERROR · `check-hierarchy` 0 rotti · **10/10 lab verdi** · grep di residui su entrambi i file.
+
+  > ### ⭐ La lezione vera: **il GAP-SCAN ORIZZONTALE va fatto anche VERSO L'ALTO**
+  > La regola #36 dice *"cerca il PADRE e agganciati"*, e io l'avevo sempre letta come un obbligo **della figlia verso il padre**. Eseguendola **nella direzione opposta** — *cosa, nel padre, è diventato falso perché questa figlia è nata?* — ho trovato **3 affermazioni stantie** in `class-instrument-epistemic-reach`:
+  > 1. il §GAP-SCAN dichiarava la posizione 3 **«🔴 SCOPERTA»** mentre la tabella §L'asse-completo, **nello stesso file poche righe sopra**, la dava già coperta → **due sorgenti divergenti dentro un solo documento** (#16);
+  > 2. *«non è coperta da nessuna delle due figlie»* — **attivamente falsa**, e la riga serviva proprio a impedire di mettere un esempio nel posto sbagliato: avrebbe **insegnato il confine opposto**;
+  > 3. *«le **due** figlie»* in tre punti, dove sono tre.
+  > **Nessuna era un refuso**: erano tutte vere **il giorno in cui furono scritte**, e falsificate da un evento — la nascita della figlia (c) — che **non fa scattare nessuna revisione**. È *decadenza-senza-innesco* nella sua forma pura, trovata applicando alla nostra base di conoscenza **la classe che stavo trasferendo**.
+  > **Cosa cambia operativamente**: creare o spostare un nodo **rende stantio il padre**, sempre. Il gap-scan #36 va eseguito **in entrambe le direzioni**, e il momento è **la nascita della figlia**, non "prima o poi".
+
+  > ### 🔻 Difetto minore, ma è il fenomeno che il file insegna
+  > Gli script di splice hanno inserito righe **LF** in un file **CRLF** → **terminatori misti**. È **letteralmente F1** — divergenza di byte sotto una superficie che si legge identica — capitata **dentro la classe che la insegna**, e invisibile a occhio. Trovata solo perché una sostituzione è **fallita**: il `\r` finale non combaciava. **Rimedio**: normalizzazione esplicita a fine script, verificata contando (`CRLF:255 · LF-soli:0`). *Il fallimento della sostituzione è stato l'unico segnale — senza quello sarebbe passato.*
+
+  ⚠️ **Residui dichiarati**: (a) il generatore di fixture **non esiste** → le 5 condizioni valgono come vincolo di costruzione, non come verifica; (b) **nessuna delle due classi è stata ri-revisionata** dopo l'operazione — l'amputazione può aver lasciato argomenti che poggiavano su F2 *(grep fatto, revisore terzo no)*; (c) la **reciprocità lato-sorella** con `class-prospective-obligation-discharge` è ancora a metà, e ora punterebbe **al file sbagliato** se qualcuno l'avesse chiusa ieri. Tutti e tre in `wiki/todo.md`.
+
 ### 2026-07-25
 
 - **[F13]** ✅ **Chiuso il P1 di branch-leak** su `class-tool-perception-fidelity` — il **debito più vecchio** rimasto aperto, e il finding **era reale**. *Il difetto*: le 4 condizioni di trap-soundness dello split-a-tre erano tutte eseguibili, e **nessuna vietava al modulo VISIBILE di rivelare la liveness della recinzione** → una fixture poteva soddisfarle tutte e restare **hackabile a skill zero**, perché il polo si leggeva dal **contenuto** invece che dalla **provenienza**.
