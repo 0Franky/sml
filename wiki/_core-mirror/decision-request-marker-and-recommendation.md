@@ -1,6 +1,6 @@
 ---
 name: decision-request-marker-and-recommendation
-description: "COPIA della regola-di-lavoro (SSOT nel wiki-core condiviso PRIVATO) — ogni richiesta di decisione porta il marcatore riservato, e' auto-contenuta e arriva con la reco"
+description: "COPIA della regola-di-lavoro (SSOT nel wiki-core condiviso PRIVATO) — ogni richiesta di decisione porta il marcatore riservato COME PRIMO CARATTERE del messaggio e accanto al punto, e' auto-contenuta e arriva con la reco"
 type: rule-mirror
 tags: [workflow, communication, decisions, mirror, async]
 last_updated: 2026-07-25
@@ -10,9 +10,8 @@ last_updated: 2026-07-25
 > Questo repo e' **PUBBLICO**: non puo' contenere un submodule ne' l'URL del repo privato (decisione utente
 > 2026-07-24). Le regole-di-lavoro condivise si **COPIANO** come contenuto quando servono anche al progetto SLM.
 > ⚠️ **Se modifichi la regola, modificala nella SSOT** (wiki-core, `content/memory/rules/workflow/`) e poi
-> ri-sincronizza questa copia — **mai il contrario**: due sorgenti che divergono in silenzio sono il difetto
-> che questa disciplina esiste per evitare.
-> _(Origine: richiesta utente 2026-07-25. SSOT commit `009c873`.)_
+> ri-sincronizza questa copia — **mai il contrario**.
+> _(Origine: richiesta utente 2026-07-25; aggiornata lo stesso giorno con la posizione del marcatore in apertura.)_
 
 
 # Ogni richiesta di decisione porta il marcatore 🗳️, è auto-contenuta e arriva con la tua reco
@@ -29,6 +28,21 @@ L'esclusiva vale nelle **due direzioni**:
 - **Nessun altro** messaggio lo porta → la presenza è un segnale, non rumore.
 
 Se il messaggio contiene più decisioni, ognuna apre con il proprio 🗳️ e ha un numero (`🗳️ 1`, `🗳️ 2`), così si può rispondere per riferimento senza ricopiare.
+
+### ⭐ Dove va il marcatore: **PRIMO CARATTERE del messaggio** — non solo accanto alla domanda
+
+> *"Metti il segnale sempre come **primo carattere del messaggio**, così so che richiedi [una decisione], e poi mi vado a ritrovare **lo stesso simbolo** nella parte del messaggio in cui me la chiedi."* (utente, 2026-07-25)
+
+**Serve in due posti, e fanno due lavori diversi**:
+
+| Dove | A cosa serve |
+|---|---|
+| **primo carattere del messaggio** | si vede **nella lista** delle notifiche, **senza aprire** — è l'unico punto che decide se il messaggio viene letto adesso o dopo |
+| **accanto a ogni punto**, dentro | fa **ritrovare** il passaggio esatto una volta aperto, saltando il resto |
+
+**Perché il solo secondo non basta**: un marcatore a metà messaggio **non esiste** finché qualcuno non apre e scorre. Chi lavora in asincrono decide **dalla lista** cosa aprire — e un aggiornamento di avanzamento e una richiesta bloccante, lì, si assomigliano.
+
+**Conseguenza sull'esclusiva** (già dichiarata sopra, qui diventa operativa): l'apertura del messaggio è **una promessa**. Se il messaggio si apre con 🗳️ e dentro non c'è nulla da decidere, il simbolo si svaluta esattamente come si svaluta usandolo per enfasi. Quindi: **in apertura solo se dentro c'è almeno un punto marcato**.
 
 ## 2. Auto-contenuto — decidibile senza ricostruire il contesto
 
