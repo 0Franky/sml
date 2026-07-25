@@ -67,6 +67,13 @@ Formato: `[data · ID]` **cosa** · *perché* · **verificato con** · **gemelli
 
 ### 2026-07-25
 
+- **[F13]** ✅ **Chiuso il P1 di branch-leak** su `class-tool-perception-fidelity` — il **debito più vecchio** rimasto aperto, e il finding **era reale**. *Il difetto*: le 4 condizioni di trap-soundness dello split-a-tre erano tutte eseguibili, e **nessuna vietava al modulo VISIBILE di rivelare la liveness della recinzione** → una fixture poteva soddisfarle tutte e restare **hackabile a skill zero**, perché il polo si leggeva dal **contenuto** invece che dalla **provenienza**.
+  > **La forma è quella del test (b) di F11**: *«nessun osservabile in-episodio discrimina i due poli»* era **affermato nel testo** e **non imposto da nessuna condizione**. Una proprietà **dichiarata** non è una proprietà **garantita** — e il generatore era libero di violarla senza che nulla se ne accorgesse. Terza istanza della stessa forma in due giorni.
+  **Il fix — la 5ª condizione**: i due poli devono essere **indistinguibili fuori dalla provenienza**, e si verifica **confrontando l'hash** di tutto ciò che il modello può osservare senza interrogare la storia. Se differiscono, la fixture è **scartata dal generatore**. **Perché così e non un divieto testuale**: un divieto (*"non mettere indizi nel modulo"*) è una raccomandazione a chi costruisce; l'uguaglianza degli hash è un **fatto controllabile**, e copre anche gli indizi **che nessuno aveva previsto di vietare**.
+  **Effetto collaterale voluto**: sblocca il **trasferimento di F2** in `class-instrument-coverage-scope` §faccia-b, che era trattenuto proprio da questo difetto aperto (#34).
+  ⚠️ **Residuo**: la condizione è **specificata, non eseguita** — il generatore di fixture non esiste ancora.
+
+
 - **[F12]** ⭐ **DIECI gate eseguiti** — e il decimo è **il primo che regge al primo colpo**, perché le lezioni sono state applicate **prima** invece che scoperte sbattendoci. Questa voce esiste per la **terza** lezione, che finora viveva solo nei messaggi di commit.
 
   > ### ⭐⭐ TEST (c) — *«il criterio penalizza il METODO o l'ERRORE?»*

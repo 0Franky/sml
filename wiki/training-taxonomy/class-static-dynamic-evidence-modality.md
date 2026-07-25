@@ -289,7 +289,7 @@ poli.
     entrambi**: in-episodio **nessun osservabile discrimina** i poli — l'unico canale che risponde e' la
     **lettura del codice**. *(Lezione presa dalla sorella, che ha dovuto scoprirla come P0 al giro-2: se il
     determinante del ramo finisce nel prompt o nella suite visibile, una policy fissa vince a skill zero —
-    `class-tool-perception-fidelity.md:191`, «il determinante del ramo è finito nel prompt».)*
+    `class-tool-perception-fidelity.md:199`, «il determinante del ramo è finito nel prompt».)*
   - **Residuo dichiarato (#32)**: su un task di **decisione**, outcome e campo-determinante **coincidono per
     costruzione** (`ripara ⟺ racy`). E' **irriducibile** — un reward ancorato all'outcome non ha altra forma —
     ed e' reso non-hackabile **dal minimal-pair, non da un'asserzione**. E' il *"limite onesto"* che #32
@@ -298,14 +298,14 @@ poli.
   dichiarato:
   - **(a) MIRATEZZA della riparazione** — **CONDIZIONATA all'aver tentato una riparazione** (altrimenti il
     no-op incassa gratis: e' la crepa che la sorella ha dovuto chiudere al giro-3,
-    `class-tool-perception-fidelity.md:198`, «era grondato INCONDIZIONATAMENTE»): il lock deve stare **al giunto giusto** — non un lock globale che
+    `class-tool-perception-fidelity.md:206`, «era grondato INCONDIZIONATAMENTE»): il lock deve stare **al giunto giusto** — non un lock globale che
     serializza tutto, non un lock sull'oggetto sbagliato. Oracolo deterministico: il check held-out
     dell'interleaving passa **E** un check di **throughput/granularita'** (nessuna sezione critica che ingloba
     l'I/O) passa. ⊥ al ramo: si puo' leggere il codice correttamente **e poi** dare un colpo di maglio.
   - **(b) FEDELTA' DEL MECCANISMO enunciato** — **CONDIZIONATO ai diagnosticanti e CENTRATO dentro quel
     sotto-insieme** (baseline **pooled** su finestra, **non** media-di-batch — degenera a `k` piccolo, e **non**
     baseline fissa, che re-introduce il branch-reward: entrambe le prove sono gia' state fatte dalla sorella,
-    `class-tool-perception-fidelity.md:202`, «centrare contro un riferimento FISSO», e **non si rifanno**): il meccanismo che il modello **enuncia**
+    `class-tool-perception-fidelity.md:210`, «centrare contro un riferimento FISSO», e **non si rifanno**): il meccanismo che il modello **enuncia**
     (*"read-modify-write non atomico su `box[0]`"*) combacia con quello **registrato nella fixture**. ⊥ al ramo
     **solo fra i diagnosticanti**: si puo' leggere e comunque **confabulare** il meccanismo.
   - **(c) MCQ-controfattuale** — validatore anti-cerimonia, minoranza del mix (§Label-gen).
