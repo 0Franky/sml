@@ -56,6 +56,7 @@ Ogni riga: il rimedio che **sembra** giusto · perché sembra giusto · **cosa r
 | **P6** | Sbloccare un push bloccato dalla guardia segreti **disattivandola** | il blocco era un falso positivo | disattiva la difesa **per tutto**, non per quel caso. Va aggiunta un'eccezione **ancorata** (`^…$`) + un **test negativo** che provi che le email vere restano bloccate | `.gitleaks.toml:57` |
 | **P7** | Togliere un collegamento privato da un repo pubblico con una **semplice rimozione** | lo stato finale è pulito | **l'indirizzo resta nella storia** e un clone fresco preso *dopo* lo contiene ancora → serve **riscrivere i commit**. Verificato eseguendolo | 2026-07-24, ancora di `Q2b` |
 | **P8** | Descrivere l'attacco invece di **eseguirlo** | il ragionamento sembra completo | **7 su 7**: il difetto stava dove il ragionamento non guardava. Un attacco descritto è un'ipotesi | l'intero batch lab |
+| **P9** | Incatenare un controllo a un'azione con `check \| tail && commit` | sembra *"committa solo se il check passa"* | **la pipe restituisce l'uscita di `tail`, non del controllo** → il `&&` passa **sempre**, e si committa con l'errore attivo. Non è un dettaglio di shell: è **un gate che sembra esistere e non esiste**, cioè la forma più pericolosa (⭐#0). **Uso `check; echo EXIT=$?` — oppure niente pipe** quando l'uscita deve *decidere* qualcosa | commesso il 2026-07-25 (e già due volte prima) |
 
 ---
 
