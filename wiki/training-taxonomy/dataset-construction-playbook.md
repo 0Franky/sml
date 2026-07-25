@@ -174,6 +174,70 @@ Principio comune: l'oracolo è **deterministico** e premia l'**esito**; i distra
 
 ---
 
+## §4-bis — ⭐ COPERTURA A MATRICE (non a campione) — e i CATALOGHI da copiare
+
+> **Mandato utente 2026-07-25** (msg 1885/1886/1899): *"completa il dataset per ogni **matrice di possibilità** … tutte le possibilità. **Non fare il compitino**"* + *"test che vengono correttamente **accettati**, test errati che **non dovrebbero** venire accettati, **tutte le casistiche per categoria** … altrimenti non controlliamo l'intera superficie **neanche a campione**"* + *"applica i **loop di completezza e correttezza** sia sull'**ingest** sia su **quello che produci**"*.
+
+### Il principio
+
+Per ogni cosa che **decide** — un reward, un gate, una fixture, un criterio — non basta un esempio del caso tipico. Serve la **matrice**: si enumerano le **categorie** che determinano l'esito, e per **ognuna** si copre sia **ciò che deve passare** sia **ciò che deve essere respinto**.
+
+### Perché il campione non basta — e non è una questione di quantità `[EXTRACTED — misurato]`
+
+Sullo **stesso oggetto, lo stesso giorno**: il controllo a campione ha trovato **2 difetti e ne ha mancati 5**; la matrice ne ha trovati **5**.
+> Il campione non li ha mancati per sbadataggine: **una intera categoria non era fra i campioni** — e *niente, in un controllo a campione, ti dice **quale categoria hai dimenticato***. È il buco che non si vede guardando i risultati, solo guardando l'enumerazione.
+
+### ⭐ La ragione tecnica per cui servono ENTRAMBE le direzioni `[EXTRACTED — fire-test eseguito]`
+
+> **Una batteria di soli casi-negativi passa per intero anche con il meccanismo COMPLETAMENTE DISARMATO.**
+
+Prova misurata: disattivando il meccanismo sotto test, **tutte** le righe *"deve essere respinto"* restano verdi e **tutte** quelle *"deve passare"* cadono. Un meccanismo che **nega tutto** supera qualunque verifica costruita solo sui rifiuti.
+→ **Ogni riga negativa va affiancata dalla sua positiva.** Non per simmetria estetica: senza la positiva, *"rifiuta sempre"* è indistinguibile dal comportamento corretto — ed è **esattamente** l'hack che i nostri gate devono uccidere (`class-linkage…` e `exposure-remedy-lab` lo misurano già: `rifiuta-sempre` deve fare **0**).
+
+### I CATALOGHI — al passo di enumerazione si COPIANO, non si inventano
+
+> **Perché esistono** (utente msg 1888: *"non dovrei insegnarti io come si testano le cose… **fatti un playbook e seguilo ogni volta**"*): una **regola** dice *"fai la matrice"* e lascia enumerare le categorie **a memoria, nel momento peggiore** — con il contesto pieno e il lavoro appena fatto. Un **playbook** contiene le categorie **già scritte**. La differenza fra i due è il difetto stesso.
+
+| Dominio | Categorie da enumerare (accept **e** reject per ognuna) |
+|---|---|
+| **identificatori / riferimenti** | ben formato · malformato · forma **alternativa dello stesso valore** (codifiche, alias, forme annidate o incapsulate) · vuoto · limite di lunghezza · caratteri fuori alfabeto |
+| **appartenenza a un insieme** | dentro · fuori · **sul confine, da entrambi i lati** · insieme vuoto · elemento duplicato |
+| **stati e transizioni** | matrice **N×N**, non il percorso felice: da ogni stato, ogni transizione — quelle lecite **e** quelle vietate · transizione verso sé stesso · ripetizione della stessa transizione |
+| **permessi / visibilità** | ha titolo → **deve** passare · non ha titolo → **deve** essere respinto · titolo per una parte sola · titolo scaduto · titolo per un'altra risorsa |
+| **soglie (numeriche o temporali)** | sotto · sopra · **esattamente al limite** · appena sotto e appena sopra (**coppia di confine**) · zero · negativo · assente |
+| **contenuto strutturato** | valido · malformato in **ogni punto della struttura** (non "malformato" come categoria unica: un caso reale ne ha rivelate **5 su 12**) · campo mancante · campo in più · tipo sbagliato |
+| **sempre, trasversale** | il caso in cui **la risposta giusta è non agire** · il caso in cui **agire è obbligatorio** · il caso **indistinguibile in superficie** dal suo opposto (minimal-pair) |
+
+### Tre regole che vengono da errori misurati, non da teoria
+
+1. **Asserisci il MOTIVO, non solo l'esito.** Un caso respinto **per la ragione sbagliata** è un difetto travestito da verde — passa la verifica e non protegge da niente. *(È così che è emerso un secondo difetto reale, invisibile al solo esito.)*
+2. **Coppie di confine su OGNI soglia.** Provano la **larghezza** del limite, non la sua **presenza**: un limite mal dimensionato supera senza problemi il controllo *"il limite esiste"*.
+3. **Dichiara che cosa NON è coperto.** Un limite **scritto** è un lavoro futuro; un limite **taciuto** è falsa sicurezza.
+
+### Ordine di applicazione — per SUPERFICIE CHE DECIDE
+
+Rifare tutto col metodo completo non è un piano, è un anno; e molte cose **non hanno categorie da mancare** (una trasformazione di dati, un formattatore). Si ordina per **dove il campionamento costa**: ciò che **decide** (gate, criteri, predicati di accesso, soglie) prima di ciò che **trasforma**.
+
+### La matrice vale anche per le DECISIONI, non solo per le verifiche
+
+L'esempio dell'utente (msg 1885), *"valutiamo se riscrivere l'intero codice"*, non è una domanda a due risposte: dipende da **almeno due variabili**, e la matrice mostra che una delle celle è **controintuitiva**.
+
+| | **costo del cambio BASSO** (pezzo piccolo/isolato) | **costo del cambio ALTO** (molte dipendenze) |
+|---|---|---|
+| **il codice è sano** | **non riscrivere** — non c'è niente da guadagnare | **non riscrivere** — il caso più facile da sbagliare per zelo |
+| **il codice è pessimo** | **riscrivere** — costa poco, il beneficio è immediato | ⭐ **riscrivere COMUNQUE** — *"però comunque fa schifo"*: il costo alto **non è una scusa**, è solo il prezzo. Rimandare lo aumenta |
+
+> **La cella che insegna è l'ultima**, ed è la ragione per cui la matrice serve: un dataset che copre solo *"sano→lascia"* e *"pessimo e piccolo→riscrivi"* insegna la regola comoda **«se costa tanto, non toccarlo»** — che è precisamente il difetto. E la cella in alto a destra insegna il suo simmetrico: **non riscrivere ciò che funziona**, per quanto brutto sembri.
+> **Terza variabile, quando serve**: *chi paga il costo del rinvio*. Se il pezzo pessimo è **attraversato da tutto il resto**, il costo del non-fare cresce nel tempo → si sposta la soglia. È lo stesso asse di [[class-right-effort-for-stakes]] §faccia-4 (la cura si concentra sui punti di passaggio).
+
+### ⭐ Il loop va fatto DUE VOLTE — sull'ingest e sull'output (utente msg 1899)
+
+- **Completezza dell'INGEST**: dopo aver estratto da una fonte, **ri-leggerla** chiedendosi *cosa non ho estratto?* — la prima passata prende ciò che conferma quello che già cercavi.
+- **Completezza dell'OUTPUT**: dopo aver prodotto, verificare che copra **la matrice**, non gli esempi che è venuto naturale scrivere.
+- **Correttezza, in entrambe le direzioni**: ciò che ho estratto **dice davvero** quello che dice la fonte? ciò che ho prodotto **regge** se attaccato? *(Per i gate: eseguendo, non ragionando.)*
+
+---
+
 ## §5 — Coerenza del dataset + COHERENCE-AUDIT
 
 Il dataset resta **coerente con scelte e impostazioni** (regola #25). Convenzioni condivise che OGNI classe rispetta:
