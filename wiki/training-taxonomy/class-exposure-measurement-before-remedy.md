@@ -6,7 +6,7 @@ tags: [reasoning, metacognition, criticality-safety, incident-response, blast-ra
 last_updated: 2026-07-25
 ---
 
-> **Padre**: DA-DECIDERE — candidati: `class-anticipation-and-irreversibility` (il rimedio e esso stesso un'azione da pesare; i poli panico<->minimizzazione mappano sui suoi negativi) **oppure** la radice-AUDIT `class-metacognitive-self-audit` se si considera portante il passo *"vai a MISURARE l'ignoto"* (nel primo padre i campi sono DATI in fixture). **Decisione utente** (#26).
+> **Padre**: [[class-metacognitive-self-audit]] *(assegnato 2026-07-25, mandato utente msg 1860/1866 — copre l'ASSEGNAZIONE, non la ratifica del contenuto)*. **Perche' questo dei due candidati**: il passo portante non e' *pesare un'azione* (sarebbe `anticipation-and-irreversibility`) ma **sospendere la fiducia nella propria STIMA dell'estensione e andare a MISURARLA** — che e' letteralmente la radice INWARD del padre (*"sospendere la fiducia nel proprio output/stato intermedio e verificarlo contro un riferimento oggettivo"*). Il rimedio-come-azione-da-pesare **resta un cross-link** verso `anticipation-and-irreversibility`, non il padre: li' l'oggetto e' *quando agire*, qui e' **cosa so davvero prima di agire**. Cugina stretta: [[class-instrument-coverage-scope]] — entrambe dicono *vai a guardare invece di assumere*, ma quella misura **il perimetro dello strumento** e questa **l'estensione del danno**. — **storia**: era DA-DECIDERE
 
 > # ⛔ NON VALIDATA — PROPOSTA (#26)
 > Nulla qui e' ratificato: skill, reward, gerarchia, padre attendono l'ok esplicito e citabile dell'utente. Il **padre e' DA-DECIDERE** (§Gerarchia) — la scelta fra i due candidati e' una decisione di design che **non invento**. Un difetto qui **si stampa nei pesi** (#22).
