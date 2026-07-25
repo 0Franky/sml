@@ -67,6 +67,25 @@ Formato: `[data · ID]` **cosa** · *perché* · **verificato con** · **gemelli
 
 ### 2026-07-25
 
+- **[F11]** ⭐ **OTTO gate eseguiti** (`harness/verifiers/`) — e i tre più recenti (`retroactive-propagation`, `defect-shape`, `silent-decay`) hanno prodotto **due test meccanici** che valgono più dei verdi, perché ognuno ha trovato **due volte** un difetto che il ragionamento non vedeva.
+
+  > ### ⭐ TEST (a) — *«questo termine è un ASSE o un RIASSUNTO?»*
+  > **Formulazione operativa**: *esiste un termine del criterio che è **funzione degli altri** — una somma, un conteggio totale, un «tutto ok»? Se sì **non è un asse: è un riassunto**, e va fuori dal criterio.*
+  > **Perché serve in questa forma**: la prima versione della lezione diceva *"tieni gli assi ortogonali"* — vera, e **inutile nel momento in cui scrivi il codice**. Ci sono ricascato con quella scritta nel ledger.
+  > **Trovato due volte**: `reachability` (un collegamento verso un privato contava **anche** come costo → l'ablazione leggeva *"nessun segnale"* mentre il segnale c'era) · `retroactive` (un contatore di errori totali accanto ai tre assi → **tutte** le ablazioni mute).
+  > **Il sintomo da riconoscere**: le ablazioni dicono *"nessun termine porta segnale"*. Non è quasi mai vero — è che i termini si coprono a vicenda.
+
+  > ### ⭐ TEST (b) — *«la distinzione che ho SCRITTO, il predicato la VEDE?»*
+  > **Formulazione operativa**: *per ogni distinzione dichiarata nel **testo** della classe, esiste un predicato del gate che la **distingue**? Altrimenti il verde **su quel caso** vale zero.*
+  > **Trovato due volte**: `defect-shape` — le azioni *creare un punto di passaggio* e *adottare quello esistente* finivano nello **stesso insieme**, quindi la policy *"costruisci un doppione"* era **indistinguibile dal gold** benché la classe la dichiari come negativo esplicito · `silent-decay` — **un mio commento** affermava che una fixture dimostrava *"la revisione periodica non protegge"*, ma nel modello il riesame **rilevava sempre**: la policy perdeva solo per **costo**, e il punto della classe restava un'affermazione.
+  > **Perché è il più insidioso dei due**: il documento **sembra completo**, e lo è. È il **gate** a non vedere la distinzione — e il verde **sembra confermare proprio il caso che non viene guardato**. Un lab può essere verde e cieco esattamente dove la classe ha il suo contenuto.
+  > **Il fix di `silent-decay` in una riga**: dare al riesame un **istante**. Chi ricontrolla lo fa *adesso*; se il cambiamento arriva dopo, non lo vede — mentre la condizione osservabile se ne accorge **quando accade**. Il negativo passa da dichiarato a **misurato**.
+
+  **Cosa hanno dimostrato i tre gate** (oltre a reggere): `retroactive` — la lettura **binaria** (*superata / non superata*) fa **0/3**, perché sbaglia le **due posizioni intermedie** (quella che regge ma va riformulata, e quella che la nuova **conferma**) · `defect-shape` — il reward ① fa **generare alla fixture un'istanza nuova** della forma dominante: è la differenza fra *"i dieci sono chiusi"* e ***"l'undicesimo non può nascere"*** · `silent-decay` — una condizione di validità vale **solo se verificabile da altri**: *"vale finché il materiale sta in questa cartella"* si controlla, *"da rivedere ogni tanto"* no, e infatti non avvisa nessuno.
+
+  ⚠️ **Limite invariato su tutti e otto**: fixture **sintetiche**, gold scritto da me. Provano che **il criterio discrimina**; **non misurano alcun modello**.
+
+
 - **[F10]** **SESTO gate eseguito** (`retroactive-propagation-lab`) — e si è dichiarato **rotto al primo giro**, per **la stessa causa già misurata nel terzo**. *Perché*: avevo lasciato un **contatore di errori totali** dentro il criterio di successo, accanto ai tre assi. Quel contatore è la **somma** degli altri, quindi li **inquina tutti**: nessuna ablazione riusciva più a isolare un termine, e tutte dicevano *"nessun segnale"* mentre il segnale c'era.
   > ⚠️ **È la seconda ricaduta della giornata sullo stesso difetto — assi del reward NON ortogonali** — dopo `reachability-lab` (dove un link verso un privato contava anche come costo). E la lezione era già scritta nel ledger quando l'ho ripetuta.
   > **Cosa cambia la scrittura della regola**: la prima versione diceva *"tieni gli assi ortogonali"*. **Troppo astratta per essere eseguita.** La forma che funziona è un **test meccanico**: *«esiste un termine che è funzione degli altri (una somma, un conteggio totale, un "tutto ok")? Se sì, NON è un asse: è un riassunto, e va fuori dal criterio.»*
