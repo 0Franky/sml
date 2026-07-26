@@ -90,7 +90,13 @@ Il discriminante C4 memoria, con la correzione del pacing (sotto). Non prima: co
 | **Gemma 4 31B** | 🟡 `GEMINI_API_KEYS` presente e l'esperimento E-COMP ha girato su `gemma-4-31b-it` → **la via esiste**, ma **quale endpoint** non l'ho ri-verificato oggi | presumibilmente zero (free tier) — **da confermare** |
 | **Seed-OSS-36B** | **solo SiliconFlow** (`SILICONFLOW_KEYS` presente, ~$0.21/$0.57 per M) | 🟡 **a pagamento** — $9.997 residui |
 
-⚠️ **Asimmetria strutturale, non aggirabile**: due candidati girano gratis, uno no. Va detto prima, non scoperto a metà.
+> ⛔ **CORREZIONE 2026-07-26 — la tabella sopra è SUPERATA, e la mia riga *«asimmetria strutturale, non aggirabile»* era FALSA.** Interrogati i provider (`/models`, non la wiki): **SiliconFlow serve TUTTI E TRE i candidati** — `Qwen/Qwen3-32B` · `ByteDance-Seed/Seed-OSS-36B-Instruct` · `google/gemma-4-31B-it`. *(OpenRouter ne serve due dei tre, con `gemma-4-31b-it:free` e `qwen3-32b`; Seed-OSS lì non c'è.)*
+>
+> ⭐ **Perché è meglio di una comodità**: un solo provider = **stesse condizioni su tutti i bracci**, che è il vincolo **§R** che avevamo scritto e che finora non riuscivamo a rispettare **proprio perché i modelli stavano su servizi diversi**. È anche la ragione per cui il confronto C4 sui due Qwen resta **sporco**: bracci su infrastrutture diverse.
+> **Il trade-off, esplicito**: stesso-provider (a pagamento, **confrontabile**) ↔ misto (in parte gratis, **non confrontabile**). Su 12 probe corte il costo è trascurabile → **vince il confrontabile**. La riga *«due gratis, uno no»* nasceva dall'aver guardato **un provider alla volta** invece di chiedere a ciascuno cosa avesse: il perimetro sbagliato, di nuovo.
+> ⚠️ **Nota operativa**: **Seed-OSS-36B è LENTO** (ragiona a lungo) — i run vanno messi in background con tempo adeguato, non con timeout da smoke-test.
+
+~~⚠️ **Asimmetria strutturale, non aggirabile**: due candidati girano gratis, uno no.~~
 
 ---
 
