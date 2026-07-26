@@ -1,9 +1,3 @@
-**Dichiarazione MACCHINA-LEGGIBILE della superficie tenuta fuori** — verificata da
-[`harness/tools/check-decontamination.mjs`](../../harness/tools/check-decontamination.mjs), che fallisce se uno di questi token compare in una sezione che **prescrive il training** (§Label-generation · §Hack-check · §Esempi NEGATIVI). ⚠️ Si dichiara la **SUPERFICIE** (gli identificatori dell'istanza osservata), **mai il MECCANISMO**: tenere fuori il meccanismo renderebbe la classe non insegnabile.
-```held-out
-# identificatore dell'istanza osservata (il bug dell'eviction-checkpoint)
-019f2ab9
-```
 ---
 name: class-verification-seam-placement
 description: Classe (figlia di ground-truth-integrity — la 3ª posizione della relazione di verifica, il GIUNTO fra controllore e controllato) — scegliere il LIVELLO a cui verificare. Un metro onesto e non-manomesso, attaccato al giunto sbagliato, dà un verde che non significa niente: testare l'implementazione contro se stessa, verificare a valle di dove il difetto vive, unit-test su funzioni pure mentre il bug è nel wiring. Simmetrico: over-verificare a ogni livello (costo) e forzare un giunto che non esiste (over-decomposizione) pesano quanto il miss. ⚠️ Contiene in APPENDICE il materiale E2 (defect-liveness/raggiungibilità) il cui placement è CONTESTATO — split proposto, non ratificato.
@@ -136,6 +130,14 @@ Senza, *"testa a tutti i livelli"* diventa l'hack che passa.
 - **Demo SFT**: traiettorie che (i) enumerano gli strati, (ii) chiedono *"quale check può fallire se il difetto è QUI"*, (iii) scrivono il check al giunto e **lo eseguono**. RL sull'**outcome** (mutante ucciso) sopra le demo.
 
 ## Decontaminazione (#18)
+
+**Dichiarazione MACCHINA-LEGGIBILE della superficie tenuta fuori** — verificata da
+[`harness/tools/check-decontamination.mjs`](../../harness/tools/check-decontamination.mjs), che fallisce se uno di questi token compare in una sezione che **prescrive il training** (§Label-generation · §Hack-check · §Esempi NEGATIVI). ⚠️ Si dichiara la **SUPERFICIE** (gli identificatori dell'istanza osservata), **mai il MECCANISMO**: tenere fuori il meccanismo renderebbe la classe non insegnabile.
+```held-out
+# identificatore dell'istanza osservata (il bug dell'eviction-checkpoint)
+019f2ab9
+```
+
 
 - **HELD-OUT di validazione, MAI nel training**: il bug **`019f2ab9`** dell'eviction-checkpoint ([[../concepts/eviction-checkpoint]]`:54` — unit-verdi/bug-nel-wiring). È l'**istanza osservata** → nel training sarebbe train-on-test.
 - Il training vive sui **transfer cross-dominio** §positivi (lavello · lievito · lampadina · ponte a due squadre · handoff ospedaliero · prelievo d'acqua) con **nomi randomizzati**; il generatore **non deve emettere** l'istanza osservata.
