@@ -227,6 +227,79 @@ for (const [parent, set] of kids) {
   }
 }
 
+/**
+ * PARENTELA DICHIARATA A PAROLE vs MISURATA (aggiunto 2026-07-26, #17).
+ *
+ * PERCHE': `class-prospective-obligation-discharge` chiamava `class-durable-knowledge-retraction`
+ * *"gemella della famiglia-memoria"* — ma il grafo dice che quella e' sorella del **padre**, cioe' la
+ * **ZIA**. E' la **seconda** istanza dello stesso errore (la prima era gia' stata corretta su un altro
+ * call-site dello stesso file), e il grafo che la smentisce **lo abbiamo gia' calcolato qui sopra**.
+ * Un testo che sbaglia la parentela **insegna la gerarchia sbagliata** — che e' precisamente cio' che
+ * la regola #20 esiste per evitare.
+ *
+ * ⚠️ INFO E NON ERRORE — e' il confine di #24. *"sorella"* nel corpus e' **anche** una metafora
+ * legittima (*"sorella di metodo"*, *"sorella-speculare"*, *"la sorella che tiene il confine"*):
+ * distinguere la **claim di parentela** dall'**analogia** e' comprensione del linguaggio, non
+ * pattern-matching. Il tool fa la cosa che sa fare: **affianca la parola alla parentela misurata**
+ * quando le due divergono. Adjudica l'umano.
+ *
+ * ⚠️ RESIDUO DICHIARATO, e non e' un dettaglio: **almeno una delle segnalazioni correnti non so
+ * ancora spiegarla** (`static-dynamic-evidence-modality` → `instrument-epistemic-reach`, dove la
+ * dichiarazione `**Padre**:` e' corretta e il tool segnala comunque). Il conteggio e' sceso
+ * **116 → 125 → 32 → 9** correggendo, in ordine: la **direzione** della relazione (era invertita in
+ * entrambe le forme — e il rumore che *saliva* e' stato la spia), il filtro sulle **metafore**
+ * (nessuna parentela nel grafo ⇒ e' un'analogia) e la finestra di match. Resta un tasso di artefatti
+ * **non nullo**: per questo e' INFO e non gate. **Non e' "validato": e' utile e dichiarato tale.**
+ * Chi lo tocca: prima di stringerlo ancora, **misura** — ogni giro qui ha dato un numero, mai un'opinione.
+ */
+const padreDi = new Map(declared.map((d) => [d.child, d.parent]));
+const parentele = [];
+const KIN = [
+  ["sorella", (a, b) => padreDi.get(a) && padreDi.get(a) === padreDi.get(b)],
+  ["zia",     (a, b) => padreDi.get(padreDi.get(a)) && padreDi.get(padreDi.get(a)) === padreDi.get(b)],
+  ["nonno",   (a, b) => padreDi.get(padreDi.get(a)) === b],
+  ["padre",   (a, b) => padreDi.get(a) === b],
+  ["figlia",  (a, b) => padreDi.get(b) === a],
+];
+// ⚠️ LA DIREZIONE E' NELLA PREPOSIZIONE, e la prima versione la ignorava: `figlia DI [[X]]` significa
+//    *"IO sono figlia di X"*, non *"X e' mia figlia"*. Leggendole tutte nello stesso verso il tool ha
+//    prodotto **116** segnalazioni quasi tutte false — e un controllo cosi' rumoroso e' **peggio di
+//    nessun controllo**, perche' produce l'apparenza della copertura e insegna a saltarlo (stesso
+//    argomento gia' usato qui per il bucket DA-DECIDERE). Due forme, due versi:
+const FORME = [
+  // "<parola> di [[X]]"  →  IO sono <parola> DI X
+  [/\b(sorella|zia|nonno|padre|figlia)\b[^\n\[]{0,25}?\bd(?:i|el|ella|elle)\b\s*\*{0,2}\[\[([^\]|#]+)/gi, false],
+  // "[[X]] (<parola>"    →  X e' <parola> DI ME  → verso invertito
+  [/\[\[([^\]|#]+)\]\]\s*[(（]\s*\*{0,2}(sorella|zia|nonno|padre|figlia)\b/gi, true],
+];
+for (const [self, src] of bodies) {
+  for (const [re, invertito] of FORME) {
+    for (const m of src.matchAll(re)) {
+      const parola = (invertito ? m[2] : m[1]).toLowerCase();
+      const altro = norm(invertito ? m[1] : m[2]);
+      if (!bodies.has(altro) || altro === self) continue;
+      const regola = KIN.find(([k]) => k === parola);
+      if (!regola) continue;
+      // ⚠️ CONVENZIONE UNICA delle regole KIN: `k(a, b)` si legge **«b e' il k di a»**.
+      //    - forma "k **di** [[X]]"  = *io sono k di X*      → b = IO,    a = X
+      //    - forma "[[X]] (**k**)"   = *X e' il k di me*     → b = X,     a = IO
+      //    Le avevo scritte **entrambe al contrario** e il rumore e' salito da 116 a 125 — cioe' il
+      //    segnale si muoveva nella direzione sbagliata, che e' la stessa spia gia' vista oggi.
+      const [a, b] = invertito ? [self, altro] : [altro, self];
+      if (regola[1](a, b)) continue;                               // silenzioso quando combacia
+      const vera = KIN.find(([, f]) => f(a, b));
+      // ⚠️ Si segnala SOLO quando il grafo dice **un'ALTRA parentela nota**. Se non ce n'e' NESSUNA,
+      //    la parola e' quasi certamente una **metafora** — nel corpus abbondano *"sorella di metodo"*,
+      //    *"sorella-speculare"*, *"la sorella che tiene il confine"* fra classi senza legame di grafo.
+      //    Segnalarle per sempre affogherebbe i casi veri, ed e' l'argomento gia' usato qui per il
+      //    bucket DA-DECIDERE: un segnale rumoroso viene ignorato, e allora non protegge piu' nulla.
+      if (!vera) continue;
+      parentele.push({ self, altro, parola, invertito, vera: vera[0] });
+    }
+  }
+}
+const parenteleUniche = [...new Map(parentele.map((x) => [`${x.self}|${x.altro}|${x.parola}`, x])).values()];
+
 const byKind = (k) => problems.filter((p) => p.kind === k);
 const asJson = process.argv.includes("--json");
 
@@ -260,6 +333,12 @@ if (asJson) {
   if (undecided.length) {
     console.log(`\n🟡 PADRE DA-DECIDERE — ${undecided.length} (in attesa dell'utente: NON un difetto, elencati per non dimenticarli)`);
     console.log("   " + undecided.join(" · "));
+  }
+  if (parenteleUniche.length) {
+    console.log(`\nℹ️  PARENTELA a parole ≠ misurata — ${parenteleUniche.length} (NON un errore: "sorella di metodo" è metafora legittima)`);
+    console.log(`   Una CLAIM di parentela sbagliata insegna la gerarchia sbagliata (#20); un'ANALOGIA no. Adjudica tu.`);
+    for (const p of parenteleUniche)
+      console.log(`   ${p.self}: chiama ${p.altro} «${p.parola}» — misurata: ${p.vera}`);
   }
   if (countClaims.length) {
     console.log(`\nℹ️  CONTEGGIO-FIGLIE a parole ≠ misurato — ${countClaims.length} (NON un errore: adjudica tu, in due secondi)`);
