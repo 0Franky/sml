@@ -26,6 +26,21 @@ last_updated: 2026-07-26
 
 ---
 
+## 🔴 ESITO 2026-07-26 — anche il set DIFFICILE non discrimina, e la diagnosi cambia il piano
+
+**Misurato**, non previsto: sul set esteso a 17 probe, `Qwen3-32B` fa **15/15 valide** e `Qwen3.5-27B` **16/16**, entrambi con **zero trappole** — nemmeno le esche progettate catturano qualcosa. *(Seed-OSS e Gemma 4 in corso al momento della scrittura; i due Qwen bastano a stabilire il punto.)*
+
+⭐ **Il criterio era scritto e va applicato a me**: *«il valore di questo set non è che i modelli passino, è che li SEPARI»*. **Non separa.** Siamo dove eravamo col floor, un gradino più in alto.
+
+**Ma la diagnosi NON è «le domande sono troppo facili», ed è la parte utile.** Tutte e 17 le probe sono **turno singolo, forma chiusa, un intero**: chiedono un numero che **presuppone** la decomposizione fatta in testa, non chiedono mai di **produrla**. Su quel formato un 30B ben addestrato è semplicemente **arrivato** — non è che io abbia scelto domande facili: **quel GENERE di domanda ha smesso di discriminare a questa taglia**. *(Previsto dalla review avversariale prima della misura, e la misura l'ha confermato.)*
+
+→ **Conseguenza sul piano**: alzare ancora la difficoltà dello stesso tipo di prova sarebbe **il terzo giro dello stesso errore** (floor → hard → hard+5). Ciò che serve è **cambiare TIPO di misura**: un compito **a più passi** in cui la qualità sta nel **percorso**, e un oracolo che valuti quello.
+⭐ **E qui i due filoni del progetto si incontrano**: quel meccanismo **è** la giunzione `turns` di [[decisions/2026-07-26-fixture-runner-proposta]] — il mondo che cambia fra un turno e l'altro, e si misura se il modello **se ne accorge**. Il metro standard che serve non è un questionario più difficile: **è quel meccanismo lì.** Il che rende la lane del fixture-runner **prerequisito del bake-off**, non un lavoro parallelo.
+
+⚠️ **Cosa NON conclude questo esito**: che i quattro siano equivalenti *(non misurato: il set non discrimina, che è diverso dal dire che non ci sia differenza)*; né che le 17 probe siano da buttare — restano un **floor più alto** utile come controllo di regressione, e le 5 aggiunte al giro-2 non sono mai state provate su un modello debole.
+
+---
+
 ## ⚠️ IL PROBLEMA CENTRALE — il metro che abbiamo NON discrimina
 
 **Non è un dettaglio da mettere in fondo: è ciò che il piano deve risolvere.**
