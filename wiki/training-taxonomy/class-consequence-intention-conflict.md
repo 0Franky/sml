@@ -12,6 +12,14 @@ last_updated: 2026-07-05
 > **Origine**: modo-di-fallimento REALE **mio, in questa sessione** (non del modello-sotto-test — ma è la STESSA classe di gap): ho costruito un **pre-flight** che pinga le chiavi per *risparmiare* quota, ma i ping SONO richieste extra che *bruciano* quota/RPM → la conseguenza dell'azione contraddice la sua intenzione. Auto-sconfiggente.
 > **Padre**: [[class-metacognitive-self-audit]] (regola #20 — gerarchia obbligatoria). **Sorelle**: [[class-stagnation-recovery]] (audit del *progresso*), [[gold-example-transfer-assumption-audit]] / #145 (audit delle *assunzioni*); questa è l'audit della *coerenza mezzi-fini*. Vedi [[../feedback_intelligence_gap_to_training_class]].
 
+> ### 🆕 Figlia aggiunta il 2026-07-26 — **[[class-self-sealing-decision]]** *(la decisione che spegne il proprio revisore)*
+> **Sorella di [[class-accidental-property-removal]]**, stesso asse — *togliere qualcosa ha un secondo effetto che non guardi* — ma altra posizione:
+> la sorella riguarda una proprieta tenuta **per accidente**; questa riguarda il caso in cui cio che togli e **l osservatore della premessa su cui stai decidendo**.
+> Dopo, per costruzione, **non arriva piu nessun segnale**: non si puo stare attenti a un silenzio. Il momento correggibile e **uno solo**, prima di spegnere.
+> **Origine**: istanza mia del 2026-07-26 (ciclo di lavoro autonomo fermato su una premessa scaduta in pochi minuti) → **held-out**, mai nel training.
+
+---
+
 ## Il gap
 
 Il ragionatore sceglie un'azione che serve un'intenzione dichiarata, ma **non traccia le conseguenze a valle** dell'azione → adotta una soluzione il cui **side-effect annulla lo scopo** (o lo peggiora). Non è un buco percettivo (l'intenzione è chiara) né di conoscenza (il dominio è noto): è **mancata analisi causale della propria azione** — forward (che effetti produce?) e backward (qual è la vera intenzione che sto servendo?).

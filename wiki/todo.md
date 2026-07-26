@@ -9,6 +9,21 @@ last_updated: 2026-07-18
 
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
 
+## 🆕 2026-07-26 — CLASSE NUOVA `class-self-sealing-decision` (⛔ NON VALIDATA, giro-0)
+
+**Origine**: utente TG msg 1968 — *«Prendi questo come esempio e sistema il dataset … deve capire quando attaccare il loop, quando disattivarlo, per non fermarsi»*, dopo che ho fermato il mio ciclo autonomo su una premessa (*«backlog chiuso»*) scaduta in pochi minuti. **La ratifica copre l'ESECUZIONE, non il contenuto** (#26).
+
+- **Dove**: `wiki/training-taxonomy/class-self-sealing-decision.md` — figlia di [[class-consequence-intention-conflict]], **sorella** di [[class-accidental-property-removal]] (wiring reciproco fatto, gerarchia verde).
+- **Discriminante** con la sorella: là la proprietà reggeva **per accidente**; qui ciò che si toglie è **l'osservatore della premessa su cui si sta decidendo**.
+- ⏳ **RESIDUO 1 — la fixture NON esiste**: il reward ① richiede scene **multi-turno che fanno avanzare il mondo dopo la decisione**. Ricade sul collo di bottiglia già tracciato *«F DA COSTRUIRE (#11) — fixture-builder + reward-runner»*: senza avanzamento, ① collassa sulla **dichiarazione**, cioè esattamente il difetto che la classe insegue.
+- ⏳ **RESIDUO 2 — terza posizione dell'asse SEGNALATA e non filata** (#28): ciò che si rimuove reggeva **un'aspettativa altrui** (qualcuno contava su quel segnale). Segnalata nel §GAP-SCAN, non filata di slancio.
+- ⏳ **RESIDUO 3 — la fase DISMETTERE non ha radice** nell'albero (dipendenza già dichiarata in [[class-instrument-coverage-scope]]). Se la radice nascerà, questa classe va **ri-valutata lì**.
+- ⏳ **RESIDUO 4 — mai revisionata**: giro-0. L'aspettativa corretta non è *«è pulita»*, è *«nessuno l'ha ancora guardata»*.
+- 🔒 **Held-out**: l'istanza osservata (il mio ciclo fermato) resta **fuori dal training**, dichiarata macchina-leggibile e verificata da `check-decontamination`.
+- **Lato HARNESS (#11)**: la metà `F` — *il ciclo si ri-arma* — è già coperta dall'istruzione esplicita nel prompt del loop (ri-verificare il backlog **prima** di fermarsi). **Nessun sottosistema nuovo** (#33).
+
+---
+
 ## 🆕 2026-07-25 — 2 CLASSI NUOVE dall'incidente submodule (⛔ NON VALIDATE, attendono RATIFICA)
 
 > Dall'incidente del 2026-07-24 (contenitore condiviso **privato** montato dentro il monorepo **pubblico**; tutte le altre verifiche verdi). Le due skill sono **distinte**: (A) verificare la **classificazione** prima di creare il **legame**; (B) **misurare l'estensione** prima di **rimediare**. L'istanza osservata resta **HELD-OUT** (#18). Tutto **PROPOSTA** (#26).
