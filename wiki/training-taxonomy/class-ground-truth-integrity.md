@@ -35,7 +35,8 @@ Nessuna delle due sbaglia **rispetto a sé**: sbagliano **rispetto all'asse, che
 
 L'asse *«chi sta ai due capi»* è **completo a due** e non ammette una terza direzione: un canale ha due estremi. Le altre due figlie non sono estremi, e non sono fuori-asse: stanno su un asse **più largo**, che la skill-radice di questo file **già nomina senza accorgersene** — *«trattare il canale come inviolabile **E** ancorare al ground-truth reale»* sono **due** cose, non una.
 
-> ### 🗳️ **PROPOSTA (#26 — decide l'utente, non io): rinominare l'asse in *«in quanti modi il ground-truth smette di essere ground-truth?»***
+> ### ✅ **ASSE RATIFICATO — utente 2026-07-26, *«1 ok procedi»* (TG msg 1957), in risposta alla proposta esplicita di TG msg 1943**
+> **L'asse è: *«in quanti modi il ground-truth smette di essere ground-truth?»***
 >
 > | # | Posizione | Come il ground-truth si corrompe | Figlia |
 > |---|---|---|---|
@@ -46,9 +47,10 @@ L'asse *«chi sta ai due capi»* è **completo a due** e non ammette una terza d
 >
 > **Perché sembra reggere**: le quattro sono **mutuamente esclusive** ed enumerano modi **distinti** di rompere lo stesso legame claim↔realtà; le prime due restano speculari **fra loro** (è un sotto-asse, non l'asse); e la formulazione **contiene** la vecchia senza contraddirla.
 > **Cosa la ribalterebbe**: se si trovasse un quinto modo che non è nessuno dei quattro — allora l'enumerazione non è esaustiva e va ripensata, non estesa. *(Il candidato più ovvio da provare: **il ground-truth c'è, è sano, ed è puntato bene, ma è VECCHIO** — cioè la staleness. Oggi vive sotto un'altra radice, e se fosse una quinta posizione qui, sarebbe un conflitto di radice da risolvere, non un'aggiunta.)*
-> ⚠️ **NON eseguita**: rinominare l'asse di una radice è un **cambio strutturale** (#26/#34). Qui è **argomentata e tracciata**; la decisione è dell'utente. Nel frattempo **nessuna figlia è stata spostata** e la tabella sotto resta valida.
+> ✅ **ESEGUITA il 2026-07-26** dopo la ratifica. **Nessuna figlia spostata** — cambia il **nome dell'asse**, non la gerarchia: le quattro erano già coerenti, mancava il criterio che le teneva insieme.
+> ⚠️ **La ratifica copre l'ASSE**, non il resto del file (#26): il contenuto delle quattro classi non è stato revisionato da nessuno.
 
-**Residuo dichiarato**: le due auto-numerazioni in conflitto (*«3ª direzione»* ↔ *«3ª posizione»*) **non sono state riscritte** — riscriverle significherebbe **assumere** l'asse proposto prima che sia ratificato. Restano com'erano, **con il conflitto ora visibile qui** invece che sparso in due file che non si parlano.
+**✅ Conflitto RISOLTO dalla ratifica**: le due figlie che si dichiaravano entrambe *«la terza»* hanno ora una **posizione nominata** sull'asse — `solution-availability-integrity` è la **SOSTITUZIONE** (④), `verification-seam-placement` è la **POSIZIONE inerte** (③). Le rispettive auto-descrizioni sono state corrette nei due file. ⭐ **Nessuna delle due sbagliava rispetto a sé**: sbagliavano rispetto a un asse che nessuno aveva nominato — ed è la ragione per cui la cura era **nominare**, non spostare.
 
 **Perché padre + figlie** (regola #20): le due skill condividono il muscolo *"non lasciar corrompere la verifica; àncora al ground-truth"* — impararlo UNA volta e poi specializzare la **direzione** (i) evita segnale ridondante, (ii) riflette la relazione reale (sono le due facce dello stesso canale), (iii) è composizionale ([[../concepts/compositional-curriculum-thinking-optimization]]). **NON è l'ombrello-vuoto vietato da #20**: la radice porta una skill-radice *apprendibile e con reward proprio* (àncora-al-ground-truth), a differenza di un ipotetico super-padre "metacognizione" che sarebbe solo un'etichetta senza skill al livello padre.
 
