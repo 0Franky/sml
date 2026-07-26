@@ -67,6 +67,20 @@ Formato: `[data · ID]` **cosa** · *perché* · **verificato con** · **gemelli
 
 ### 2026-07-26
 
+- **[F24]** ⛔ **QUARTA misura sbagliata di fila — e la conclusione è che questo audit NON è meccanizzabile per pattern.**
+  Aprendo i 18 candidati uno per uno, il numero è crollato di nuovo. Cosa c'era davvero dentro:
+  - `class-artifact-reachability-completion` → origine = *«esempio portato dall'utente»*: una **tua osservazione**, non un fallimento misurato su un modello. **Niente da tenere fuori** — escludere un caso che il modello non ha mai affrontato non misura nulla.
+  - `class-consequence-intention-conflict` → origine = un errore **mio, in sessione** (un pre-flight che pingava le chiavi per *risparmiare* quota, mentre i ping **sono** richieste che la consumano). Difetto vero, ma **mio**: vale il caveat già scritto altrove — *«il difetto esiste in me» non prova che esista nel modello-target* (#35a).
+  - `class-metacognitive-self-audit` → è una **RADICE**: le istanze vivono nelle **figlie**, non in lei.
+  - `independent-verification-integrity`, `prompt-injection-resistance`, `instrument-*`, `linkage-*` → **nessuna dichiarazione d'origine**: il flag veniva dal **tag `held-out` nel frontmatter** o da una stringa esadecimale incidentale.
+
+  > ### ⭐ QUATTRO volte, quattro proxy diversi, **la stessa forma** — e la quarta commessa *mentre scrivevo della terza*
+  > **111** assenze lette come bisogni · **2** parole-chiave sotto soglia · **48** titoli di sezione invece del contenuto · **18** tag di frontmatter e sigle incidentali invece di istanze.
+  > Ogni volta ho cambiato lo strumento e **ogni volta il nuovo strumento aveva un punto cieco diverso**. Non è un problema di regex da affinare: **la domanda *«questa classe ha un'istanza osservata da tenere fuori?»* è SEMANTICA**, e la semantica non si fa con un pattern (#24). La differenza fra *un fallimento misurato su un modello*, *un'idea dell'utente*, *un errore mio*, *un tag* e *una radice le cui istanze stanno nelle figlie* **non è visibile in nessuna superficie testuale stabile**.
+  > **Conclusione operativa, e sostituisce il TODO precedente**: questo audit **non va meccanizzato**. Il tool `check-decontamination` resta prezioso per ciò che sa fare — *verificare che una dichiarazione ESISTENTE non sia contraddetta dal §Label-generation* — e **non deve** essere esteso a *scoprire* chi una dichiarazione dovrebbe averla. **Sono due domande diverse**: la prima è meccanica, la seconda è lettura.
+
+  **Cosa resta, ridimensionato e onesto**: le classi che hanno **un'istanza misurata su un modello** e non la dichiarano sono **poche unità**, non 18 — e si trovano **leggendo**, una alla volta, quando si tocca la classe per altri motivi. **Il lavoro è reale ma NON è un progetto: è manutenzione ordinaria.** Trattarlo come un progetto ha già prodotto quattro stime sbagliate in un giorno.
+  ⚠️ **Il valore della giornata su questo fronte resta**: **13 classi** hanno ora la dichiarazione macchina-leggibile, **0 contaminazioni**, **mutation-test superato** — e **un train-on-test reale trovato e chiuso**, invisibile a tre giri di review.
 - **[F23]** 🔬 **Tre restringimenti di perimetro nella stessa ora — e la terza volta misuravo il CONTENITORE invece del CONTENUTO.**
   Obiettivo: capire se l'assenza di §Decontaminazione nelle **48** classi restanti sia **legittima** (molte nascono da un'analisi di copertura, non da un fallimento misurato: per loro la sezione sarebbe un **rito vuoto**, cioè l'errore opposto).
 
