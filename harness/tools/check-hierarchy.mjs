@@ -225,7 +225,22 @@ const countClaims = [];
 for (const [parent, set] of kids) {
   const real = set.size;
   const src = bodies.get(parent) ?? "";
-  const re = /(?:\b(due|tre|quattro|cinque|sei|\d+)\s+figli[ea]\b|\bpadre\s+di\s+(due|tre|quattro|cinque|sei|\d+)\b|\b(entrambe)\s+le\s+figlie\b)/gi;
+  // ⚠️ PERIMETRO — il corpus non dice solo "figlie": dice anche **direzioni · posizioni · facce · poli**
+  //    quando enumera i rami di un padre. La prima versione cercava la sola parola "figlie" e cosi' non
+  //    vedeva la frase-radice di `ground-truth-integrity` (*"le figlie sono le DUE DIREZIONI in cui si
+  //    applica"*), rimasta stantia con **quattro** figlie. Trovata a mano, non dal tool: e' la stessa
+  //    forma di difetto che il corpus chiama *copertura dello strumento* — il controllo rispondeva a
+  //    *"si dice «due figlie»?"* invece che a *"si enumera male la famiglia?"*.
+  //
+  // ⚠️ MA ALLARGARE NON E' GRATIS — e la misura lo ha detto subito. Il primo tentativo includeva anche
+  //    **facce · posizioni · poli** e il conteggio e' passato **7 → 24**, quasi tutti FALSI: in questo
+  //    corpus *"facce"* sono gli **aspetti INTERNI** di una classe, non le sue figlie (`right-effort`
+  //    ha **4 facce e 1 figlia**, ed e' corretto), e *"posizioni"* sono le caselle di un **asse**, che
+  //    puo' averne piu' delle figlie che lo coprono (`instrument-epistemic-reach`: **4 posizioni, 3
+  //    figlie**, e la quarta e' dichiarata coperta altrove). **Si era allargato dentro un altro
+  //    SIGNIFICATO**, non dentro piu' copertura. Restano `figlie` e `direzioni`, che nel corpus
+  //    enumerano davvero i rami di un padre.
+  const re = /(?:\b(due|tre|quattro|cinque|sei|\d+)\s+(?:figli[ea]|direzioni)\b|\bpadre\s+di\s+(due|tre|quattro|cinque|sei|\d+)\b|\b(entrambe)\s+le\s+(?:figlie|direzioni)\b)/gi;
   const seen = new Set();
   // ⚠️ MENZIONE ≠ USO — e la distinzione e' PUNTEGGIATURA, non semantica (quindi lecita per #24).
   //    Un conteggio dentro le virgolette e' **citato**, non **asserito**: e' cosi' che si scrivono le

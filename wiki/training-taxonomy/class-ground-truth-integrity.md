@@ -16,7 +16,39 @@ last_updated: 2026-07-11
 
 **Gap comune**: quando c'è un **metro** che collega una claim alla realtà (una verifica, un test, un audit, una misura), il ragionatore **corrompe il metro** invece di rispettare la realtà — o **ereditando** la conclusione di chi produce l'artefatto (verifica-che-si-auto-conferma), o **manomettendo** il valutatore che lo grada (reward non guadagnato). Radice comune: *la claim e la sua verifica divergono, e si "vince" corrompendo il canale invece di soddisfare la realtà* (Goodhart: il metro diventa il bersaglio).
 
-**Skill radice** (imparata una volta, condivisa dalle figlie): **trattare il canale di verifica come inviolabile e ancorare al ground-truth reale** — ricostruire/rispettare la verità dalle **fonti primarie / dal lavoro reale**, con strumenti capaci di produrre (o confermare) una conclusione **non-precotta**. Le figlie sono le **due direzioni** in cui si applica (chi verifica ⟷ chi è verificato).
+**Skill radice** (imparata una volta, condivisa dalle figlie): **trattare il canale di verifica come inviolabile e ancorare al ground-truth reale** — ricostruire/rispettare la verità dalle **fonti primarie / dal lavoro reale**, con strumenti capaci di produrre (o confermare) una conclusione **non-precotta**. ⚠️ **Questa frase diceva *«le figlie sono le due direzioni in cui si applica (chi verifica ⟷ chi è verificato)»* ed era STANTIA**: le figlie sono **quattro** dal 2026-07-25, e due di esse non sono *direzioni* affatto. Corretta il 2026-07-26 — vedi il §GAP-SCAN qui sotto.
+
+---
+
+## GAP-SCAN #36a — **eseguito il 2026-07-26**, ed è il caso che questa radice aveva dichiarato aperto
+
+**La domanda**: con **quattro** figlie invece di due, formano ancora un **asse**? *(Dichiarata aperta il 2026-07-25 correggendo il conteggio: «due speculari» sistemava la cifra ma non la **relazione**, e sistemare solo la cifra sarebbe stato fermarsi al livello comodo.)*
+
+### Il sintomo, oggettivo: **DUE figlie rivendicano entrambe di essere la TERZA**
+
+- [[class-solution-availability-integrity]] si dichiara **«3ª direzione del canale»** *(frontmatter e §Ruolo)*;
+- [[class-verification-seam-placement]] si dichiara **«3ª posizione della relazione»** *(frontmatter, §Ruolo, §Links)*.
+
+Nessuna delle due sbaglia **rispetto a sé**: sbagliano **rispetto all'asse, che nessuno aveva nominato**. Quando l'asse è implicito, ogni nuova figlia si numera da sola — e **collide**. È lo stesso difetto già visto in [[class-instrument-epistemic-reach]], dove la cura è stata **nominare l'asse**, non spostare le figlie.
+
+### Esito: le quattro **SONO** coerenti — ma **non sull'asse che il padre nomina**
+
+L'asse *«chi sta ai due capi»* è **completo a due** e non ammette una terza direzione: un canale ha due estremi. Le altre due figlie non sono estremi, e non sono fuori-asse: stanno su un asse **più largo**, che la skill-radice di questo file **già nomina senza accorgersene** — *«trattare il canale come inviolabile **E** ancorare al ground-truth reale»* sono **due** cose, non una.
+
+> ### 🗳️ **PROPOSTA (#26 — decide l'utente, non io): rinominare l'asse in *«in quanti modi il ground-truth smette di essere ground-truth?»***
+>
+> | # | Posizione | Come il ground-truth si corrompe | Figlia |
+> |---|---|---|---|
+> | 1 | **PROVENIENZA** contaminata | l'atteso me l'ha passato **chi produce** l'artefatto | [[class-independent-verification-integrity]] |
+> | 2 | **METRO** manomesso | il verificatore viene **allentato** da chi è verificato | [[class-evaluation-integrity]] |
+> | 3 | **POSIZIONE** inerte | il metro è sano ma **agganciato dove il difetto non si manifesta** | [[class-verification-seam-placement]] |
+> | 4 | **SOSTITUZIONE** | non si usa un metro: si adotta una risposta che qualcuno **afferma** corretta | [[class-solution-availability-integrity]] |
+>
+> **Perché sembra reggere**: le quattro sono **mutuamente esclusive** ed enumerano modi **distinti** di rompere lo stesso legame claim↔realtà; le prime due restano speculari **fra loro** (è un sotto-asse, non l'asse); e la formulazione **contiene** la vecchia senza contraddirla.
+> **Cosa la ribalterebbe**: se si trovasse un quinto modo che non è nessuno dei quattro — allora l'enumerazione non è esaustiva e va ripensata, non estesa. *(Il candidato più ovvio da provare: **il ground-truth c'è, è sano, ed è puntato bene, ma è VECCHIO** — cioè la staleness. Oggi vive sotto un'altra radice, e se fosse una quinta posizione qui, sarebbe un conflitto di radice da risolvere, non un'aggiunta.)*
+> ⚠️ **NON eseguita**: rinominare l'asse di una radice è un **cambio strutturale** (#26/#34). Qui è **argomentata e tracciata**; la decisione è dell'utente. Nel frattempo **nessuna figlia è stata spostata** e la tabella sotto resta valida.
+
+**Residuo dichiarato**: le due auto-numerazioni in conflitto (*«3ª direzione»* ↔ *«3ª posizione»*) **non sono state riscritte** — riscriverle significherebbe **assumere** l'asse proposto prima che sia ratificato. Restano com'erano, **con il conflitto ora visibile qui** invece che sparso in due file che non si parlano.
 
 **Perché padre + figlie** (regola #20): le due skill condividono il muscolo *"non lasciar corrompere la verifica; àncora al ground-truth"* — impararlo UNA volta e poi specializzare la **direzione** (i) evita segnale ridondante, (ii) riflette la relazione reale (sono le due facce dello stesso canale), (iii) è composizionale ([[../concepts/compositional-curriculum-thinking-optimization]]). **NON è l'ombrello-vuoto vietato da #20**: la radice porta una skill-radice *apprendibile e con reward proprio* (àncora-al-ground-truth), a differenza di un ipotetico super-padre "metacognizione" che sarebbe solo un'etichetta senza skill al livello padre.
 
