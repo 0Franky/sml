@@ -67,6 +67,17 @@ Formato: `[data · ID]` **cosa** · *perché* · **verificato con** · **gemelli
 
 ### 2026-07-26
 
+- **[F20]** 🧭 **Gli ultimi due P2: uno RESPINTO, uno chiuso — e la QUINTA istanza dello stesso pattern, nella sua forma più pulita.**
+  **Respinto con prova**: `class-tool-perception-fidelity` — il rilievo citava un banner con *«5 findings APERTI»*. `grep` → **nessun hit**: quel testo non c'è, superato dall'integrazione avvenuta nei dieci giorni fra la review e oggi.
+  **Chiuso**: `class-durable-knowledge-retraction` dichiarava come **corrente** un difetto di un'**altra** classe (*«le sue àncore verso questa pagina sono driftate»*) e rinviava al proprietario: *«non lo tocco io»*. **Il rinvio ha funzionato — la sorella ha riparato** — e la frase è rimasta a raccontare il contrario. Verificato: la sorella cita `:3` e `:41`, entrambe esistenti e non vuote, `check-anchors` **zero drift**.
+  > ⭐ **La lezione è il RUOLO della frase, non il suo contenuto**: era un'**asserzione sullo stato di un ALTRO file**, e **niente la legava a quello stato**. È la **quinta** istanza odierna di *decadenza-senza-innesco* e la più pulita: un'asserzione cross-file su uno stato altrui è **per costruzione** candidata a invecchiare in silenzio — e il deferral corretto (*«non lo tocco io»*, che rispetta il mandato altrui) è **proprio ciò che la produce**.
+  > ⚠️ **Il costo non era zero**: il TODO gemello era **APERTO** e avrebbe mandato un agente futuro a *«riparare»* un file già corretto — cioè a **rompere ciò che funziona**, seguendo un'istruzione **autorevole e falsa**.
+
+  **⭐ Il difetto di TOOL che ne è emerso — l'ORDINE dei controlli.** Allungando i banner, tre citazioni in entrata sono cadute su **righe vuote**. `check-anchors` riportava `blank-line` e **si fermava lì**, anche dove la citazione portava un'**àncora testuale** capace di dire esattamente dove la riga fosse finita: **la diagnosi meno informativa vinceva su quella riparabile**, e `--fix` non poteva intervenire.
+  **Fix**: se c'è un'àncora si tenta **prima** la ricollocazione; `blank-line` resta per le citazioni **nude**, dove davvero non c'è nulla da cui ripartire. **Misurato**: 3 `blank-line` → 3 `anchor-drift` → `--fix` le ripara → verde.
+  > **Il principio, generalizzabile**: quando due controlli possono descrivere lo stesso sintomo, **l'ordine non è un dettaglio d'implementazione** — decide se il difetto è *azionabile* o solo *segnalato*. Fra due diagnosi vere, va data **la più informativa**.
+
+  **Verificato con**: 11/11 lab · `check-anchors` 0 ERROR (dopo `--fix`) · `check-hierarchy` 0 rotti · `check-decontamination` 0.
 - **[F19]** ⭐ **L'incognita dichiarata era MIA — e scioglierla ha scoperto 7 errori veri di gerarchia.**
   Avevo spedito il check PARENTELA di `check-hierarchy` dichiarando *«almeno una segnalazione non so spiegarla»*. Riprenderla per prima era il debito piu' onesto: **uno strumento con un difetto noto ma non capito e' la cosa peggiore da avere in giro — sembra funzionare, e non sai su cosa**.
 

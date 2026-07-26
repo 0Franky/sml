@@ -27,7 +27,8 @@ last_updated: 2026-07-26
 > del nuovo padre e della nuova sorella non e' ratificato (#26).
 > **I findings aperti qui sotto NON sono toccati dal re-home e restano tutti validi.**
 
-> # ⛔ NON VALIDATA — giro-3: **1 finding aperto** (0 P0 · 0 P1 · 1 P2)
+> # ⛔ NON VALIDATA — giro-3: **0 findings aperti** — ma **NON dry**: l'integrazione del 2026-07-26 non è stata ri-revisionata
+> ⛔ **[P2 · fatto-falso] RESPINTO CON PROVA 2026-07-26** — sosteneva che il banner dicesse *«5 findings APERTI»* descrivendo al presente un P0 già integrato. **Quel testo non è nel file**: `grep -n "5 findings\|findings APERTI"` → **nessun hit**, e il banner riporta il conteggio del giro-3, non del giro-2. Il rilievo descriveva uno stato superato dall'integrazione avvenuta nei dieci giorni fra la review e oggi.
 > **NON usare per il training.** Review-loop in corso (playbook §PROCESSO: si integra fino a **dry**). Un difetto qui **si stampa nei pesi** (#22).
 >
 > **Traiettoria** (il loop CONVERGE, non gira a vuoto): giro-1 → P0 chiusi e ri-verificati alla fonte · giro-2 → 25 nuovi (1 P0 · 13 P1) · **giro-3 → 2 nuovi (0 P0 · 1 P1)**, di cui **il P1 è stato CHIUSO il 2026-07-26**.

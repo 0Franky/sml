@@ -203,12 +203,21 @@ for (const abs of collectTargets(process.argv.slice(2))) {
       }
 
       const body = tl.slice(start - 1, end);
-      if (body.every((l) => !l.trim())) {
-        findings.push({ sev: "ERROR", kind: "blank-line", at, cite: `${trel}:${startS}${endS ? "-" + endS : ""}`, detail: "la riga citata e' VUOTA — nessuno cita il nulla: drift certo" });
+      // ⚠️ ORDINE DEI CONTROLLI — riga-vuota NON deve corto-circuitare la ricollocazione per ancora
+      //    (corretto 2026-07-26). La prima versione riportava `blank-line` e si fermava **anche quando
+      //    la citazione portava un'ancora** capace di dire ESATTAMENTE dove fosse finita la riga: la
+      //    diagnosi meno informativa vinceva su quella riparabile, e `--fix` non poteva intervenire.
+      //    Trovato perche' tre citazioni sono cadute su righe vuote dopo che avevo allungato dei banner:
+      //    tutte e tre avevano l'ancora, tutte e tre erano riparabili, e il tool diceva solo *«e' vuota»*.
+      //    Ora: se c'e' un'ancora si prova a ricollocare; `blank-line` resta per le citazioni **nude**,
+      //    dove davvero non c'e' nulla da cui ripartire.
+      const qPre = quoteOwnedBy(line, m.index);
+      if (body.every((l) => !l.trim()) && !qPre) {
+        findings.push({ sev: "ERROR", kind: "blank-line", at, cite: `${trel}:${startS}${endS ? "-" + endS : ""}`, detail: "la riga citata e' VUOTA e la citazione e' NUDA (nessuna ancora): drift certo, ma irrisolvibile automaticamente" });
         continue;
       }
 
-      const q = quoteOwnedBy(line, m.index);
+      const q = qPre;
       if (q) {
         const nq = norm(q);
         if (body.some((l) => norm(l).includes(nq))) { stats.ok++; continue; }
