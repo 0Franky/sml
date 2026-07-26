@@ -32,7 +32,12 @@ const BASE_URL = (process.env.OPENAI_BASE_URL || "https://generativelanguage.goo
 const PROBE_CATEGORY = process.env.PROBE_CATEGORY || null;
 const TIMEOUT = Number(process.env.PROBE_TIMEOUT_MS || 45000);
 const PACE_MS = Number(process.env.PACE_MS || 800);
-const MAX_TOKENS = Number(process.env.MAX_TOKENS || 512);
+/* MAX_TOKENS — default alzato 512 -> 4096 il 2026-07-26. **512 non era un default neutro**: i
+ * modelli che ragionano contano i reasoning-token nel budget (misurato: 396 per un 17x23), quindi
+ * un tetto stretto NON accorcia le risposte — **cancella la risposta** e produce un `content` vuoto
+ * che sembra un guasto del modello. Un parametro di misura che penalizza selettivamente la
+ * capacita' che stiamo misurando e' un difetto dello strumento, non una scelta di economia. */
+const MAX_TOKENS = Number(process.env.MAX_TOKENS || 4096);
 const OUT = process.env.OUT || join(process.env.SCRATCH || tmpdir(), `base-probe-${MODEL_ID.replace(/[^\w.-]/g, "_")}.jsonl`);
 
 /** Keys (ARRAY, per rotazione multi-key = escamotage free-tier, utente msg 1361-B): OPENAI_API_KEYS (comma-sep) >
@@ -76,8 +81,25 @@ async function chat(keys, prompt, startIdx) {
       if (res.status === 429 || res.status >= 500) { lastErr = `HTTP ${res.status}`; await sleep(Math.min(8000, 500 * 2 ** attempt)); continue; }
       if (!res.ok) return { error: `HTTP ${res.status}` }; // 4xx non-429 = errore vero → non ritentare
       const j = await res.json();
-      const text = j?.choices?.[0]?.message?.content ?? "";
-      return typeof text === "string" && text.trim() !== "" ? { text } : { error: "empty completion" };
+      const msg = j?.choices?.[0]?.message ?? {};
+      const text = msg.content ?? "";
+      if (typeof text === "string" && text.trim() !== "") return { text };
+      /* ⚠️ DIAGNOSI SEPARATA — "empty completion" nascondeva un difetto NOSTRO (2026-07-26).
+       * I modelli che ragionano emettono i token di ragionamento in un campo a parte e li
+       * contano **nel budget**: misurato, `qwen3-32b` spende **396 reasoning-token per calcolare
+       * 17x23**. Con `MAX_TOKENS` basso il budget si esaurisce nel ragionamento, `content` torna
+       * VUOTO, e noi marcavamo `empty completion` — cioe' registravamo come guasto del modello
+       * un **nostro tetto troppo stretto**, e per giunta **proprio sui modelli che ragionano**,
+       * che sono quelli che vogliamo scegliere. Il verdetto negativo era una proprieta' dello
+       * STRUMENTO, non del mondo (`class-instrument-epistemic-reach`).
+       * Ora i due casi si distinguono, cosi' il difetto e' VISIBILE invece di diventare un
+       * "invalid" anonimo che qualcuno leggera' come "il modello non ha risposto". */
+      const reasoningTok = j?.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
+      const haReasoning = typeof msg.reasoning === "string" && msg.reasoning.trim() !== "";
+      if (haReasoning || reasoningTok > 0) {
+        return { error: `budget esaurito dal RAGIONAMENTO (reasoning_tokens=${reasoningTok}, max_tokens=${MAX_TOKENS}) — alza MAX_TOKENS` };
+      }
+      return { error: "empty completion" };
     } catch (e) {
       lastErr = (e?.name === "AbortError" ? "timeout" : String(e?.message ?? e)).slice(0, 120);
       await sleep(Math.min(8000, 500 * 2 ** attempt));
