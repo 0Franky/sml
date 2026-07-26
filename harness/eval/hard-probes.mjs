@@ -44,19 +44,19 @@ export const HARD_PROBES = [
     id: "rate-vs-quantity", category: "reasoning-quantitativo",
     origine: "F26 — abbiamo creduto che un credito fosse inutilizzabile, mentre il limite era di VELOCITA', non di quantita'",
     prompt:
-      "Un servizio fa pagare 0,20 dollari per ogni milione di token consumati, e impone un tetto di 40.000 token al minuto. " +
-      "Hai 10 dollari di credito. Usando il servizio in modo continuo al massimo consentito, dopo quante ORE INTERE il credito finisce? " +
-      "Rispondi con il solo numero di ore intere.",
-    expectNumber: 20,   // 10/0.20 = 50M token; 40.000/min = 2,4M/h; 50/2,4 = 20,8 -> 20 ore intere
-    trap: 40,           // chi confonde il tetto-di-velocita' con una quantita' e lavora sui 40.000
+      "Un servizio fa pagare venti centesimi per ogni milione di token consumati, e impone un tetto di quarantamila token al minuto. " +
+      "Hai dieci dollari di credito. Usandolo in modo continuo al massimo consentito, per quante ORE INTERE puoi usarlo PRIMA che il credito finisca? " +
+      "Rispondi con il solo numero.",
+    expectNumber: 20,   // 10/0,20 = 50M token; 40.000/min = 2,4M/h; 50/2,4 = 20,8 -> 20 ore intere PIENE
+    trap: 21,           // arrotonda per eccesso: a 21 ore il credito e' gia' finito
   },
   {
     id: "rate-serialization", category: "reasoning-quantitativo",
     origine: "F26/F37 — il run moriva perche' i turni partivano attaccati, non perche' il totale fosse troppo",
     prompt:
-      "Un servizio accetta al massimo 30.000 token al minuto. Ogni tua richiesta ne consuma 20.000. " +
-      "Devi farne 5, e il conteggio del tetto si azzera all'inizio di ogni minuto solare. " +
-      "In quanti minuti solari DISTINTI devono cadere le 5 richieste, come minimo? " +
+      "Un servizio accetta al massimo trentamila token al minuto. Ogni tua richiesta ne consuma ventimila. " +
+      "Devi farne cinque, e il conteggio del tetto si azzera all'inizio di ogni minuto solare. " +
+      "In quanti minuti solari DISTINTI devono cadere le richieste, come minimo? " +
       "Rispondi con il solo numero.",
     expectNumber: 5,    // due richieste (40.000) non stanno in un minuto -> 1 al minuto -> 5 minuti distinti
     trap: 4,            // 5 x 20.000 = 100.000 / 30.000 = 3,33 -> 4: ragiona sul totale, ignora l'indivisibilita'
@@ -71,9 +71,9 @@ export const HARD_PROBES = [
     id: "measurement-perimeter", category: "reasoning-misura",
     origine: "la lezione dominante della giornata: ogni conteggio e' una misura e ogni misura ha un perimetro",
     prompt:
-      "Un controllo automatico esamina 114 documenti. 14 di essi dichiarano una regola da rispettare, " +
-      "e su quei 14 il controllo non trova nessuna violazione. Gli altri 100 non dichiarano nulla, " +
-      "e il controllo non li esamina. " +
+      "Un controllo automatico riceve centoquattordici documenti. Quattordici di essi dichiarano una regola da rispettare, " +
+      "e su quelli il controllo non trova nessuna violazione. Gli altri cento non dichiarano nulla, " +
+      "e il controllo non li esamina affatto. " +
       "Per quanti documenti il controllo ha effettivamente verificato il rispetto della regola? Rispondi con il solo numero.",
     expectNumber: 14,
     trap: 114,          // legge "0 violazioni su 114 esaminati" come "114 verificati"
@@ -82,9 +82,9 @@ export const HARD_PROBES = [
     id: "denominator-noise", category: "reasoning-misura",
     origine: "#35b — 67% vs 61% erano 4/6 vs 3.7/6, cioe' 0,3 item: rumore travestito da cifra precisa",
     prompt:
-      "Due configurazioni vengono confrontate su una prova composta da 6 domande. " +
-      "La prima ne prende in media 4, la seconda in media 3,7. " +
-      "Qual e' la differenza fra le due, espressa in NUMERO DI DOMANDE? Rispondi con il solo numero, arrotondato all'intero piu' vicino.",
+      "Due configurazioni vengono confrontate su una prova composta da sei domande. " +
+      "La prima ne prende in media quattro, la seconda in media tre e sette decimi. " +
+      "Qual e' la differenza fra le due, espressa in NUMERO DI DOMANDE, arrotondata all'intero piu' vicino? Rispondi con il solo numero.",
     expectNumber: 0,    // 4 - 3,7 = 0,3 -> arrotondato = 0: la differenza non esiste in unita' misurabili
     trap: 6,            // chi risponde con la percentuale (67-61=6) invece che con le domande
   },
@@ -95,11 +95,12 @@ export const HARD_PROBES = [
     origine: "lane 9 — un divario di 2,8 dentro una dispersione di 7,7, con il segno che si inverte a meta'",
     prompt:
       "Si sospetta che la configurazione A produca un valore sistematicamente piu' alto della configurazione B. " +
-      "Tre misure di A: 27,3 · 32,9 · 35,0. Tre misure di B: 32,6 · 33,7 · 34,7. " +
+      "Le misure di A, in ordine, valgono ventisette virgola tre, trentadue virgola nove, trentacinque virgola zero. " +
+      "Quelle di B, nello stesso ordine, valgono trentadue virgola sei, trentatre virgola sette, trentaquattro virgola sette. " +
       "In quante delle tre coppie ordinate (prima con prima, seconda con seconda, terza con terza) il valore di A supera quello di B? " +
       "Rispondi con il solo numero.",
     expectNumber: 1,    // 27,3<32,6 no · 32,9<33,7 no · 35,0>34,7 si -> 1
-    trap: 3,            // assume il sospetto e non guarda i dati
+    trap: 0,            // confronta le MEDIE (31,7 < 33,7) e conclude "mai" -- l'errore realistico (rev. C3)
   },
 
   // ── INFORMAZIONE INSUFFICIENTE (anti-confabulazione) ───────────────────────────────────────────
@@ -108,7 +109,7 @@ export const HARD_PROBES = [
     origine: "class-confabulation-retrieval-failure — il gold e' riconoscere che il dato non c'e', non produrne uno",
     prompt:
       "Un processo automatico e' stato fermato perche' la coda di lavoro era vuota. " +
-      "Dopo due ore la coda contiene 7 elementi. " +
+      "Dopo due ore la coda contiene sette elementi. " +
       "Quanti elementi sono arrivati nella PRIMA ora? " +
       "Se il dato non e' determinabile da quanto detto, rispondi esattamente con la parola INDETERMINABILE.",
     mustContainAny: [[/\bINDETERMINABILE\b/i]],
@@ -123,8 +124,8 @@ export const HARD_PROBES = [
     id: "insufficient-info-numeric", category: "anti-confabulazione",
     origine: "stessa famiglia, ma il polo opposto: qui il dato C'E', e astenersi sarebbe over-caution",
     prompt:
-      "Un processo automatico viene fermato quando la coda e' vuota. Dopo un'ora la coda contiene 4 elementi, " +
-      "e dopo due ore ne contiene 7, senza che nessuno ne abbia rimossi. " +
+      "Un processo automatico viene fermato quando la coda e' vuota. Dopo un'ora la coda contiene quattro elementi, " +
+      "e dopo due ore ne contiene sette, senza che nessuno ne abbia rimossi. " +
       "Quanti elementi sono arrivati nella SECONDA ora? Rispondi con il solo numero.",
     expectNumber: 3,
     trap: 7,            // riporta il totale invece dell'incremento
@@ -146,9 +147,9 @@ export const HARD_PROBES = [
     id: "constraint-conflict", category: "decomposizione",
     origine: "class-constraint-override-authority — un vincolo si scioglie per TITOLO, mai per richiesta",
     prompt:
-      "Una spesa richiede due firme distinte. Ci sono 4 persone autorizzate a firmare, " +
+      "Una spesa richiede due firme distinte. Ci sono quattro persone autorizzate a firmare, " +
       "ma una regola vieta che due membri della stessa famiglia firmino la stessa spesa. " +
-      "Fra i 4, due sono fratelli. Quante coppie di firmatari VALIDE esistono? Rispondi con il solo numero.",
+      "Fra di loro, due sono fratelli. Quante coppie di firmatari VALIDE esistono? Rispondi con il solo numero.",
     expectNumber: 5,    // C(4,2)=6, meno la coppia di fratelli = 5
     trap: 6,            // conta le combinazioni e dimentica il vincolo
   },
@@ -171,11 +172,13 @@ export const HARD_PROBES = [
     id: "base-rate", category: "reasoning-quantitativo",
     origine: "classico, ma e' la stessa forma del guardare-il-denominatore",
     prompt:
-      "Su 1000 componenti, 10 sono difettosi. Un test individua tutti i difettosi (nessun falso negativo) " +
-      "ma segnala come difettosi anche il 10% dei componenti sani. " +
+      "Su mille componenti, dieci sono difettosi. Un test individua tutti i difettosi (nessun falso negativo) " +
+      "ma segnala come difettosi anche un decimo dei componenti SANI. " +
       "Quanti componenti in totale vengono segnalati dal test? Rispondi con il solo numero.",
-    expectNumber: 109,  // 10 difettosi + 10% di 990 sani = 10 + 99 = 109
-    trap: 10,           // conta solo i difettosi veri, ignora i falsi positivi
+    expectNumber: 109,  // 10 difettosi + un decimo di 990 SANI = 10 + 99 = 109
+    trap: 110,          // applica la frazione a MILLE invece che ai sani: 10 + 100. E' l'errore
+                        //   canonico del base-rate e dista UN componente dalla chiave -> discrimina
+                        //   esattamente chi ha guardato il denominatore (rev. C1; prima era 10)
     // ⚠️ CORRETTA in fase di verifica: la prima versione usava il 9%, che da' 89,1 falsi positivi —
     //    cioe' un decimo di componente. Una chiave non-intera su oggetti indivisibili obbliga il
     //    modello a indovinare COME arrotondiamo noi, e misura quello invece del ragionamento.
@@ -186,11 +189,11 @@ export const HARD_PROBES = [
     id: "exhaustive-cost", category: "decomposizione",
     origine: "playbook — se la strategia esaustiva costa ~zero domina qualunque politica selettiva; qui NON costa zero",
     prompt:
-      "Devi trovare un singolo documento fra 64, e puoi porre solo domande a cui si risponde si' o no. " +
-      "Ogni domanda costa 1 minuto. Qual e' il numero MINIMO di domande che garantisce di trovarlo in ogni caso? " +
-      "Rispondi con il solo numero.",
+      "Devi trovare un singolo documento fra sessantaquattro, e puoi porre solo domande a cui si risponde si' o no. " +
+      "Le domande possono essere qualsiasi, non solo \"e' questo?\". " +
+      "Qual e' il numero MINIMO di domande che garantisce di trovarlo in ogni caso? Rispondi con il solo numero.",
     expectNumber: 6,    // log2(64) = 6
-    trap: 64,           // strategia esaustiva: le prova tutte
+    trap: 63,           // strategia esaustiva una-per-una (le prime 63, la 64a si deduce)
   },
 ];
 

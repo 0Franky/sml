@@ -28,18 +28,18 @@ last_updated: 2026-07-26
 
 ---
 
-## ✅ PRIMO FALLIMENTO OSSERVATO SU UN MODELLO — 2026-07-26
+## 🪦 RITIRATO — «primo fallimento osservato su un modello» era un ARTEFATTO NOSTRO (2026-07-26)
 
-> Fino a oggi questa classe era giustificata dai **nostri** errori (i miei, ripetuti). Adesso c'è una **misura su un modello**, ed è il primo pezzo di evidenza empirica che il gap non è solo nostro.
+> ⛔ **Qui sopra, per circa un'ora, c'è stata una sezione FALSA che ho scritto io.** Affermava che `qwen3.6-27b` rispondeva **`114`** alla probe `measurement-perimeter` — *«esattamente la trappola progettata»* — e concludeva che **il modello candidato cade nel punto esatto in cui cadiamo noi**, promuovendo la classe da *«coperta»* a **«urgente»**.
 >
-> **Probe `measurement-perimeter`** (`harness/eval/hard-probes.mjs`, set discriminante):
-> *«Un controllo esamina 114 documenti. 14 dichiarano una regola, e su quei 14 non trova violazioni. Gli altri 100 non li esamina. Per quanti documenti ha verificato il rispetto della regola?»* — risposta: **14**.
-> **`qwen3.6-27b` risponde `114`** — cioè **esattamente la trappola progettata**, non un numero a caso: legge *«0 violazioni su 114 esaminati»* come *«114 verificati»*. `[EXTRACTED — run 2026-07-26 via Groq]`
+> **Ri-misurato: `qwen3.6-27b` fa 12/12. Il fallimento non esiste.**
 >
-> ⭐ **Perché conta più di un fallimento qualsiasi**: è **la stessa forma** dell'errore che ho commesso cinque volte nella stessa giornata (111 → 2 → 48 → 18 → il filename cercato nel log sbagliato), e che ha richiesto **tre correzioni successive** per essere tolto da un check. Non è una curiosità: **il modello candidato cade nel punto esatto in cui cadiamo noi**, il che rende questa classe **urgente** e non solo coperta.
-> → Sposta la classe da *«inclusa per copertura, fallimento non osservato»* a **«fallimento osservato»**: per [[../feedback_coverage_not_observed_failure]] questo pesa sull'**URGENZA**, non sull'inclusione (che era già decisa).
+> ⭐ **Il meccanismo, che è la parte da ricordare.** La misura originale girava con un **budget di token troppo stretto** (F29): i modelli che ragionano contano il ragionamento **dentro** quel budget, quindi il ragionamento veniva **troncato a metà**. E un ragionamento troncato non produce un errore a caso — produce **la risposta di SUPERFICIE**, che è *precisamente ciò che la trappola è costruita per catturare*.
+> → **Il nostro difetto non ha nascosto il risultato: lo ha FABBRICATO.** Ha prodotto proprio il finding che l'esperimento sembrava aver scoperto, e con la forma più convincente possibile — *«il modello sbaglia esattamente come sbagliamo noi»*, che è anche la conclusione che più mi gratificava.
+> ⚠️ **È una specie di errore diversa dal falso-negativo, e più pericolosa**: uno strumento rotto che *nasconde* qualcosa lascia un vuoto che prima o poi si nota. Uno strumento rotto che *produce* il risultato atteso non lascia niente da notare — anzi, **conferma**. L'unica difesa che ha funzionato è stata sospettare della misura **perché il difetto era stato trovato altrove**, e ri-misurare invece di tenere il risultato che mi piaceva.
 >
-> ⚠️ **Limiti, dichiarati**: **n=1 su un modello** al momento della scrittura — non autorizza a dire *«i modelli di questa taglia sbagliano»*, né a generalizzare ad altri modelli senza rimisurare (legge trasversale F34). E il grader è **meccanico**: registra che il numero era 114, non **perché**. La probe è **eval, mai training** — metterla nel training la renderebbe un esercizio di recall.
+> **Stato reale della classe, ripristinato**: resta **inclusa per COPERTURA**, con **nessun fallimento osservato su un modello** — che è ciò che era ieri. Per [[../feedback_coverage_not_observed_failure]] *«non osservato»* pesa sull'**urgenza**, non sull'inclusione: la classe si insegna comunque, perché si insegna **da zero** e non solo dove i modelli attuali falliscono.
+> ⚠️ **E non prova nemmeno il contrario**: `12/12` su probe con **grader meccanico** non dimostra che il modello *abbia* la skill — dimostra che ha dato il numero giusto. Il perché lo direbbe solo leggere le risposte.
 
 ---
 

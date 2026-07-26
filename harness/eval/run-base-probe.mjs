@@ -83,6 +83,18 @@ async function chat(keys, prompt, startIdx) {
       const j = await res.json();
       const msg = j?.choices?.[0]?.message ?? {};
       const text = msg.content ?? "";
+      /* ⚠️ TRONCAMENTO = INVALID, non FAIL (aggiunto 2026-07-26, review avversariale).
+       * Se il provider dice `finish_reason: "length"`, la risposta e' stata **tagliata a meta'**:
+       * l'ultimo intero e' un **calcolo intermedio**, non una risposta. Gradarlo come `fail`
+       * significa contare come errore-del-modello un limite nostro — e, ancora una volta, **solo
+       * sui modelli che ragionano di piu'**, cioe' selezionare al contrario (stessa famiglia di
+       * F29, che riguardava il caso in cui il content era del tutto vuoto). Qui il content c'e',
+       * il che rende il difetto **invisibile**: sembra una risposta sbagliata a tutti gli effetti. */
+      const finish = j?.choices?.[0]?.finish_reason;
+      if (finish === "length") {
+        const rt = j?.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
+        return { error: `TRONCATA a meta' (finish_reason=length, max_tokens=${MAX_TOKENS}${rt ? `, di cui ${rt} di ragionamento` : ""}) — alza MAX_TOKENS` };
+      }
       if (typeof text === "string" && text.trim() !== "") return { text };
       /* ⚠️ DIAGNOSI SEPARATA — "empty completion" nascondeva un difetto NOSTRO (2026-07-26).
        * I modelli che ragionano emettono i token di ragionamento in un campo a parte e li
@@ -131,6 +143,7 @@ async function main() {
   console.error(`[base-probe] model=${MODEL_ID} base=${BASE_URL} probes=${probes.length} cats=${probeCategories().length} keys=${keys.length} retries=${MAX_RETRIES} out=${OUT}`);
 
   const byCat = {};
+  let trapCount = 0; // quante volte il modello ha dato ESATTAMENTE la risposta-trappola progettata
   let valid = 0, invalid = 0, passed = 0;
   for (let i = 0; i < probes.length; i++) {
     const p = probes[i];
@@ -144,7 +157,25 @@ async function main() {
       const g = gradeProbe(p, r.text);
       valid++; byCat[p.category].valid++;
       if (g.pass) { passed++; byCat[p.category].passed++; }
-      appendFileSync(OUT, JSON.stringify({ id: p.id, category: p.category, valid: true, pass: g.pass, reasons: g.reasons }) + "\n");
+      /* ⚠️ COSA SI REGISTRA — tre aggiunte dalla review avversariale del 2026-07-26.
+       *  (a) `raw`: il TESTO della risposta. Prima non si salvava, e l'header del probe-set diceva
+       *      «per il perche' serve leggere le risposte» — ma l'artefatto non le conteneva, quindi
+       *      quella lettura era **impossibile a posteriori**. Un limite dichiarato e non
+       *      strumentato e' un limite che nessuno potra' mai chiudere. Troncato a 2000 char.
+       *  (b) `got`: l'intero estratto, **anche sui PASS** (prima compariva solo nei `reasons` dei
+       *      fail) -> senza, non si puo' verificare se un pass e' vero o un artefatto del grader.
+       *  (c) `fellInTrap`: il campo `trap` esisteva su 11 probe e **nessun ramo lo leggeva**. La
+       *      meta' piu' informativa del design (*«sapere COME sbagliano vale quanto sapere SE
+       *      sbagliano»*) era dichiarata e non implementata. */
+      const got = (String(r.text).match(/-?\d+/g) || []).slice(-1)[0];
+      const gotN = got === undefined ? null : Number(got);
+      appendFileSync(OUT, JSON.stringify({
+        id: p.id, category: p.category, valid: true, pass: g.pass, reasons: g.reasons,
+        got: gotN,
+        fellInTrap: p.trap !== undefined && gotN === p.trap,
+        raw: String(r.text).slice(0, 2000),
+      }) + "\n");
+      if (p.trap !== undefined && gotN === p.trap) trapCount++;
       console.error(`[${i + 1}/${probes.length}] ${p.id} → ${g.pass ? "PASS" : "fail (" + g.reasons.join("; ") + ")"}`);
     }
     if (i < probes.length - 1) await sleep(PACE_MS);
@@ -152,6 +183,10 @@ async function main() {
 
   const summary = { mode: "base-probe", model: MODEL_ID, base_url: BASE_URL, total: probes.length, valid, invalid,
     passed, failed: valid - passed, pass_rate: valid ? +(passed / valid).toFixed(3) : null,
+    // ⚠️ Leggere `fell_in_trap` INSIEME a `failed`: dice se i fallimenti sono la trappola progettata
+    //    (il modello legge la superficie) o numeri terzi (calcola male). Sono difetti diversi, e
+    //    distinguerli e' meta' del valore del set.
+    fell_in_trap: trapCount,
     by_category: Object.fromEntries(Object.entries(byCat).map(([c, s]) => [c, { pass: s.passed, of: s.valid, invalid: s.invalid }])), out: OUT };
   console.log(JSON.stringify(summary, null, 2));
   appendFileSync(OUT, JSON.stringify({ summary }) + "\n");
