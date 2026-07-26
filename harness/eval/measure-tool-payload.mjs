@@ -150,12 +150,17 @@ CAVEAT — da dichiarare a chi legge il numero, non da nascondere:
      chiamate". La riga "chiamate prima di saturare" eredita quell'incertezza.
  (3) Il body misurato e' quello del PRIMO turno. Nei turni successivi la conversazione cresce,
      quindi la quota-tool CALA in percentuale ma il totale SALE. Questo e' il caso migliore.
- (5) ⚠️ ANOMALIA NON SPIEGATA, segnalata invece che lisciata: \`core\` (8 tool, 5.9KB di schema) ha un
-     body TOTALE piu' GRANDE di \`minimal\` (12 tool, 8.1KB) — 33.4KB vs 30.6KB. Se i tool fossero
-     l'unica differenza dovrebbe essere il contrario. Vuol dire che la parte NON-tool cambia col
-     profilo (~27.5KB per core vs ~22.5KB per minimal): o l'harness inietta testo diverso a seconda
-     del profilo, o e' varianza fra i due processi. NON e' stato investigato -> non usare la
-     differenza core-vs-minimal per decidere finche' non si sa da dove vengono quei 5KB.
+ (5) ⚠️ ANOMALIA \`core\` > \`minimal\` — RIDIMENSIONATA a probabile RUMORE, e vale la pena dire come.
+     Prima osservazione: \`core\` (8 tool, 5.9KB di schema) dava un body TOTALE piu' GRANDE di
+     \`minimal\` (12 tool, 8.1KB) — 33.4 vs 30.6KB. Sembrava un segnale ("l'harness inietta testo
+     diverso per profilo"). Poi \`minimal\` e' stato rimisurato da solo: **32.6KB**, cioe' +2KB
+     rispetto a se stesso. C'e' quindi ~2KB di VARIANZA RUN-SU-RUN nella parte non-tool, e il
+     divario core-vs-minimal (2.8KB) e' dello stesso ordine.
+     -> **n=1 per profilo non discrimina segnale da rumore.** Per chiudere servirebbero >=3 run per
+     profilo e la dispersione riportata accanto alla media. Finche' non c'e', quel confronto NON
+     decide niente — ma la conclusione onesta e' "indistinguibile dal rumore", NON "e' un'anomalia".
+     (I numeri dei TOOL invece sono stabili e deterministici: 5.9 / 8.1 / 27.1 / 41.5KB. E' la
+     parte non-tool a ballare, ed e' per quello che il verdetto sul 21% regge lo stesso.)
  (4) \`core\` compare in tabella per completezza ma NON e' utilizzabile per il discriminante C4:
      non ha le meta-tool -> nessuna riscoperta -> \`tool-gating.mjs:72\` lo dichiara esplicitamente
      "test NON discriminante". Sceglierlo per stare sotto il TPM farebbe passare la misura

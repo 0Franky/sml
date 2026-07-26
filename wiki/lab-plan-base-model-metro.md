@@ -137,7 +137,8 @@ Sul payload che ha **davvero fallito** (92.9 KB, F37): i tool erano **27.1 KB = 
 
 ⚠️ **Due trappole da non prendere**:
 - **`core` NON è utilizzabile** per il livello 2: non ha le meta-tool → nessuna riscoperta → `src/tool-gating.mjs:72` lo dichiara *«test NON discriminante»*. Sceglierlo per stare sotto il TPM **farebbe passare la misura eliminando ciò che misura**.
-- **ANOMALIA non spiegata**: `core` (8 tool, 5.9 KB di schema) produce un body **più grande** di `minimal` (12 tool, 8.1 KB) — 33.4 vs 30.6 KB. La parte non-tool cambia col profilo (~27.5 vs ~22.5 KB) e **non so perché**. Segnalata invece che lisciata: finché non so da dove vengono quei 5 KB, quel confronto non decide niente.
+- ~~**ANOMALIA non spiegata**: `core` produce un body più grande di `minimal`~~ → **RIDIMENSIONATA a probabile RUMORE lo stesso giorno.** Sembrava un segnale (33.4 vs 30.6 KB, cioè *«l'harness inietta testo diverso per profilo»*). Poi `minimal` è stato rimisurato **da solo**: **32.6 KB**, cioè **+2 KB rispetto a sé stesso**. C'è ~2 KB di **varianza run-su-run** nella parte non-tool, e il divario core-vs-minimal (2.8 KB) è **dello stesso ordine**.
+  > ⭐ **n=1 per profilo non distingue segnale da rumore** (#35b). La conclusione onesta è **«indistinguibile dal rumore»**, non *«è un'anomalia»* — e nemmeno *«non c'è»*: per chiudere servono ≥3 run per profilo con la **dispersione** riportata accanto alla media. **I numeri dei TOOL invece sono stabili e deterministici** (5.9 / 8.1 / 27.1 / 41.5 KB) → il verdetto del 21% **regge**: è la parte non-tool a ballare, e quella conta nel denominatore osservato, non nella differenza fra profili.
 
 ---
 

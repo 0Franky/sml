@@ -23,6 +23,7 @@ import { readFileSync, existsSync, readdirSync, mkdtempSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
+import { makePacer } from "./pacer.mjs";
 import {
   AuthStorage, ModelRegistry, createAgentSession, DefaultResourceLoader, SessionManager,
 } from "@earendil-works/pi-coding-agent";
@@ -105,6 +106,29 @@ async function getRotKeys() {
 }
 const ROT_START = Number.parseInt(process.env.EVAL_KEY_INDEX ?? "0", 10) || 0; // stessa base di loadKey → coerenza
 const ROT_MAX = Number(process.env.EVAL_ROT_MAX_RETRIES || 6); // max retry (attempt 0..MAX, come run-base-probe)
+
+/* --- PACING FRA LE CHIAMATE (non fra i task) — F37/F26, 2026-07-26 -------------------------------
+ * `INTERTASK_DELAY` (:278) spaziava solo i TASK. Ma dentro un task il ciclo agentico fa piu' turni
+ * BACK-TO-BACK **senza alcuna pausa**: con ~25-27K prompt_tokens a chiamata contro il TPM di
+ * SiliconFlow L0 (**40.000 token/minuto**, letto dai loro doc) una sola chiamata consuma due terzi
+ * del minuto -> il run moriva dopo ~4 richieste. La manopola esisteva ma era nel posto sbagliato:
+ * qui la mettiamo dove passano DAVVERO tutte le chiamate al provider, cioe' in questo interceptor
+ * (una sola sede = SSOT #16; niente pacing duplicato in ogni runner).
+ *
+ * DEFAULT 0 = comportamento invariato: chi gira su free-tier veloci non paga nulla. Si alza SOLO
+ * per i provider a TPM stretto:  EVAL_INTERCALL_DELAY_MS=45000
+ *
+ * ⚠️ NON e' un backoff: il backoff reagisce DOPO il 429 (e il 429 ha gia' consumato quota). Questo
+ * previene, distanziando prima di chiedere. I due sono complementari, non alternativi.
+ * ⚠️ Serializza: le chiamate provider passano una alla volta attraverso questo gate. Con delay 0
+ * l'effetto e' nullo; con delay > 0 e' proprio cio' che si vuole (il TPM e' per-ACCOUNT, quindi
+ * parallelizzare non aiuterebbe comunque — e' anche il motivo per cui ruotare le chiavi non basto').
+ *
+ * La logica vive in `./pacer.mjs` (SSOT #16 — una sola implementazione, testata con orologio finto
+ * in `test/unit/pacer.test.mjs`); qui si legge solo la manopola d'ambiente.
+ */
+const pace = makePacer(Number(process.env.EVAL_INTERCALL_DELAY_MS || 0), { sleep });
+
 {
   const _f = globalThis.fetch;
   globalThis.fetch = async (url, opts) => {
@@ -127,6 +151,7 @@ const ROT_MAX = Number(process.env.EVAL_ROT_MAX_RETRIES || 6); // max retry (att
       }
     } catch { /* body non-JSON → ignora */ }
     if (process.env.EVAL_DUMP_REQ) { try { const fs = await import("node:fs"); fs.writeFileSync(process.env.EVAL_DUMP_REQ, opts?.body || ""); } catch {} }
+    await pace(); // distanzia le chiamate PRIMA di chiedere (no-op se EVAL_INTERCALL_DELAY_MS=0)
     // fetch CON rotazione on-429/5xx (modulo key-rotation, pattern run-base-probe): attempt 0 = chiave corrente, poi
     // chiave-successiva + backoff. onRotate incrementa il ground-truth __keyRotations (rule #15).
     return fetchWithRotation({
