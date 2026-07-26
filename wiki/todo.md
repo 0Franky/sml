@@ -9,6 +9,33 @@ last_updated: 2026-07-18
 
 > Regola (utente 2026-06-28): **tutto ciò che si rinvia va tracciato qui**, mai lasciato solo in chat. Companion di `log.md` (ledger storico) — questo è il *forward-looking* (cosa resta da fare). Vedi memory `feedback_track_everything`.
 
+---
+
+# 🎛️ LANE BOARD — la lista che vale (aggiornata 2026-07-26)
+
+> **Perché esiste** (utente TG msg 1976: *«stiamo seguendo troppe cose e non le stai riuscendo a gestire neanche tu»*): sotto questa riga il file ha **decine** di voci storiche — utile come archivio, **inutile come stato**. Questa board è la **SSOT di cosa è vivo adesso**, con un **owner** per riga. Se una lane non è qui, non è viva.
+>
+> **Le tre regole adottate** (memory `feedback_lane_board_and_teams`, delega esplicita dell'utente *«trova la tua strategia migliore però non ti perdere pezzi»*):
+> 1. **Questa lista è la verità.** Non le voci sparse sotto.
+> 2. **Nessuna lane nuova senza chiuderne o parcheggiarne una — e lo dico.** Se inciampo in qualcosa mentre lavoro → **parcheggio qui e continuo**, non devio. *(Asticella proposta: devio solo se è un **rischio**; il resto si parcheggia. ⏳ attende conferma utente.)*
+> 3. **Team solo su lane già in board**, uno per lane, tenuti vivi e richiamati — mai su un'idea appena venuta in mente.
+>
+> ⭐ **Il difetto che questa board esiste per fermare** non è il sovraccarico: è che **apro lane nuove invece di chiudere le vecchie**. Prova del 2026-07-26: richiesta = *«verifica quali test lato-modello sono in sospeso»*; consegnato = quello **+** audit PII **+** misura payload **+** classe nuova **+** smentita di F37. Tutto utile, **niente richiesto**, e l'analisi chiesta il giorno prima ferma.
+
+| # | Lane | Owner | Stato |
+|---|---|---|---|
+| 1 | **PII: username in `wiki/log.md:998`** — redigere in-place *(reco)* o nota di rettifica? | 🗳️ **UTENTE** | attende decisione |
+| 2 | **Spendere credito** per ri-eseguire il discriminante C4 — tutti e 3 i bracci *(reco)* o solo Seed (non confrontabile)? | 🗳️ **UTENTE** | attende decisione |
+| 3 | **Metro standard** [[lab-plan-base-model-metro]] — approvare il piano a 2 livelli | 🗳️ **UTENTE** | attende decisione |
+| 4 | **Analisi sistema memoria asincrona** (idea utente msg 1964, *«fai analisi fatta bene»*) | 🤖 team | **in corso** |
+| 5 | **Review giro-0** di `class-self-sealing-decision` + `class-norm-invariance-under-observation` | 🤖 team | **in corso** |
+| 6 | **Fixture-builder + reward-runner** (#11) — ⚠️ **collo di bottiglia**: blocca TB-18/TB-19, le ablazioni e il polo SANE | 🧑 io | **fermo** — è design, richiede il gate #26 prima del codice |
+| 7 | **Pacing fra le CHIAMATE** (non fra i task) in `eval/run-session.mjs:278` — piccolo, sblocca il livello 2 | 🧑 io | pronto da fare |
+| 8 | **Classe training «auto-gestione del lavoro»** (utente msg 1977: proprietà emergente del MODELLO) — *scomporre-e-delegare vs fare da soli* | 🗳️ **UTENTE** | proposta, attende ok #18 |
+| 9 | **Anomalia non spiegata**: `core` (8 tool) → body **più grande** di `minimal` (12 tool), 5KB non-tool che non tornano | 🧑 io | **parcheggiata** (esempio della regola 2) |
+
+---
+
 ## 🆕 2026-07-26 — CLASSE NUOVA `class-self-sealing-decision` (⛔ NON VALIDATA, giro-0)
 
 **Origine**: utente TG msg 1968 — *«Prendi questo come esempio e sistema il dataset … deve capire quando attaccare il loop, quando disattivarlo, per non fermarsi»*, dopo che ho fermato il mio ciclo autonomo su una premessa (*«backlog chiuso»*) scaduta in pochi minuti. **La ratifica copre l'ESECUZIONE, non il contenuto** (#26).
