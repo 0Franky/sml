@@ -86,9 +86,25 @@ async function chat(keys, prompt, startIdx) {
   return { error: `${lastErr} (dopo ${MAX_RETRIES} retry)` };
 }
 
+/* PROBE_SET (2026-07-26) — un solo runner per due set, non due runner (#16).
+ *   base (default) = `base-probes` : il FLOOR. Ha gia' dato 13/13 a tutti e quattro i candidati
+ *                    -> **non discrimina piu'**, tenerlo serve solo come controllo di regressione.
+ *   hard           = `hard-probes` : il set DISCRIMINANTE, dove ogni probe ha una risposta
+ *                    derivabile e una plausibile-ma-sbagliata.
+ * Il GRADER e' lo stesso (`gradeProbe`): le hard-probes usano solo campi gia' supportati
+ * (`expectNumber` / `mustContainAny` / `mustNotContain`) — nessuna logica duplicata. */
+async function loadProbes() {
+  if ((process.env.PROBE_SET || "base").toLowerCase() === "hard") {
+    const { HARD_PROBES } = await import("./hard-probes.mjs");
+    return HARD_PROBES;
+  }
+  return BASE_PROBES;
+}
+
 async function main() {
   const keys = await resolveKeys();
-  const probes = PROBE_CATEGORY ? BASE_PROBES.filter((p) => p.category === PROBE_CATEGORY) : BASE_PROBES;
+  const all = await loadProbes();
+  const probes = PROBE_CATEGORY ? all.filter((p) => p.category === PROBE_CATEGORY) : all;
   writeFileSync(OUT, "");
   console.error(`[base-probe] model=${MODEL_ID} base=${BASE_URL} probes=${probes.length} cats=${probeCategories().length} keys=${keys.length} retries=${MAX_RETRIES} out=${OUT}`);
 
