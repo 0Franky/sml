@@ -30,11 +30,38 @@ const CAP_USD = Number(process.env.QR_CAP_USD || 1.0);
 const BASE_URL = (process.env.OPENAI_BASE_URL || "https://openrouter.ai/api/v1").replace(/\/+$/, "");
 
 // --- SANITIZZAZIONE (no-PII verso servizio esterno): redige username reale + path assoluti Win/Unix ---
+/** Username da redigere — preso dall'AMBIENTE, non scritto qui (2026-07-26).
+ *  ⚠️ Prima il nome dell'utente era **letterale nel sorgente**, in tre punti. Funzionava, ma questo
+ *  file sta in un repo **PUBBLICO**: il codice scritto per nascondere l'username **lo pubblicava**.
+ *  Un sanitizzatore che nomina il proprio bersaglio annulla il proprio scopo.
+ *  Ordine di risoluzione: `QR_REDACT_USER` (esplicito) → utente di sistema → fallback **inerte**.
+ *  ⚠️ Il fallback DEVE essere `/(?!)/` e mai una regex vuota: `new RegExp("")` combacia **ovunque**
+ *  e trasformerebbe ogni carattere in `<user>` — un fallback che rompe più del problema che copre. */
+const USERNAME_RESOLVED = String(process.env.QR_REDACT_USER || process.env.USERNAME || process.env.USER || "").trim();
+const USERNAME_RE = (() => {
+  const esc = USERNAME_RESOLVED.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return esc ? new RegExp(`\\b${esc}\\b`, "gi") : /(?!)/g;
+})();
+/* ⚠️ AUTO-CRITICA del fix qui sopra, scoperta subito dopo averlo scritto e più importante del fix.
+ * Togliere il nome letterale dal sorgente lo rende **dipendente dall'ambiente**, e se la variabile
+ * non si risolve il fallback è INERTE: la redazione **non avviene, in silenzio**, e il controllo
+ * dry-run direbbe *«nessuna PII»*. Cioè si sostituisce una fuga PUBBLICA (il nome nel repo) con una
+ * fuga SILENZIOSA (il nome spedito a un servizio esterno) — che è **peggio**, perché la prima si
+ * vede leggendo il file e la seconda no.
+ * → un'assenza (variabile non impostata) non deve MAI essere letta come *«niente da redigere»*.
+ *   Qui si **grida**: chi lancia lo script senza username risolto lo scopre subito, non dopo. */
+if (!USERNAME_RESOLVED && !process.env.QR_ALLOW_NO_USER) {
+  console.error("[qualitative-review] ⛔ username da redigere NON risolto (QR_REDACT_USER / USERNAME / USER tutti vuoti).");
+  console.error("   La sanitizzazione dell'username sarebbe INERTE e il nome finirebbe al servizio esterno.");
+  console.error("   Imposta QR_REDACT_USER=<nome>, oppure QR_ALLOW_NO_USER=1 se sei certo che non ce ne sia uno.");
+  process.exit(2);
+}
+
 function sanitize(text) {
   return String(text)
-    .replace(/[A-Za-z]:\\Users\\[^\\/\s"']+/g, "<HOME>")        // D:\Users\frhae, C:\Users\frhae
+    .replace(/[A-Za-z]:\\Users\\[^\\/\s"']+/g, "<HOME>")        // es. X:\Users\<nome>
     .replace(/\/(?:home|Users)\/[^\/\s"']+/g, "<HOME>")          // /home/x, /Users/x
-    .replace(/\bfrhae\b/gi, "<user>")                             // username residuo
+    .replace(USERNAME_RE, "<user>")                              // username residuo (vedi USERNAME_RE)
     .replace(/[A-Za-z]:[\\/][^\s"'`]+/g, (m) => m.replace(/^[A-Za-z]:/, "<ABS>")) // altri path assoluti Win
     .replace(/\bsk-or-v1-[A-Za-z0-9]+/g, "<REDACTED_KEY>");      // eventuale key trapelata
 }
@@ -96,7 +123,11 @@ async function main() {
   // DRY-RUN (costo-zero): valida la sanitizzazione (no-PII) + mostra le lane estratte, SENZA chiamare l'API.
   if (process.env.QR_DRY) {
     const leaks = [];
-    if (/\bfrhae\b/i.test(userPrompt)) leaks.push("username frhae");
+    // ⚠️ `USERNAME_RE` ha il flag `g` ⇒ `.test()` è STATEFUL (`lastIndex` avanza fra chiamate e la
+    //    seconda invocazione può dare `false` su un testo che combacia). Si costruisce una copia
+    //    senza `g` per il test — un difetto che qui sarebbe silenzioso e nella direzione peggiore:
+    //    dichiarerebbe «nessuna PII» su un testo che ce l'ha.
+    if (new RegExp(USERNAME_RE.source, "i").test(userPrompt)) leaks.push("username dell'utente");
     if (/[A-Za-z]:\\/.test(userPrompt)) leaks.push("path assoluto Win (X:\\)");
     if (/\/(?:home|Users)\/[a-z]/i.test(userPrompt)) leaks.push("path assoluto Unix");
     if (/sk-or-v1-/.test(userPrompt)) leaks.push("openrouter key");
