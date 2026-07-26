@@ -312,8 +312,8 @@ anti-forza-bruta**, e non e' negoziabile:
 **[[class-instrument-coverage-scope]]** (**figlia (c)** — COPERTURA: guarda piu' largo, incluso all'indietro
 nella provenienza; ospita F2/Chesterton dal 2026-07-25, col materiale dal 2026-07-26) ·
 [[class-temporal-awareness]] (posizione 4 dell'asse, coperta parzialmente e sotto altra radice) ·
-[[class-stagnation-recovery]] (zia: quando lo strumento **ha gia' risposto**, insistere e' fissazione) ·
-[[class-confabulation-retrieval-failure]] (zia: il negativo di un recupero non autorizza a inventare il positivo) ·
+[[class-stagnation-recovery]] (**sorella** — stesso padre `metacognitive-self-audit`; parentela corretta il 2026-07-26 sul grafo misurato. Quando lo strumento **ha gia' risposto**, insistere e' fissazione) ·
+[[class-confabulation-retrieval-failure]] (**sorella** — stesso padre; parentela corretta il 2026-07-26 sul grafo misurato. Il negativo di un recupero non autorizza a inventare il positivo) ·
 [[class-situational-awareness]] · [[class-ground-truth-integrity]] (radici-sorelle del nonno) ·
 [[gap-report-2026-07-16]] · [[dataset-construction-playbook]] ·
 [[../feedback_scientific_skepticism_verification_depth]] (**#0 — la regola di cui questo nodo e' una faccia**) ·

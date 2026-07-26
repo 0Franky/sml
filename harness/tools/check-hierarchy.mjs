@@ -243,14 +243,29 @@ for (const [parent, set] of kids) {
  * pattern-matching. Il tool fa la cosa che sa fare: **affianca la parola alla parentela misurata**
  * quando le due divergono. Adjudica l'umano.
  *
- * ⚠️ RESIDUO DICHIARATO, e non e' un dettaglio: **almeno una delle segnalazioni correnti non so
- * ancora spiegarla** (`static-dynamic-evidence-modality` → `instrument-epistemic-reach`, dove la
- * dichiarazione `**Padre**:` e' corretta e il tool segnala comunque). Il conteggio e' sceso
- * **116 → 125 → 32 → 9** correggendo, in ordine: la **direzione** della relazione (era invertita in
- * entrambe le forme — e il rumore che *saliva* e' stato la spia), il filtro sulle **metafore**
- * (nessuna parentela nel grafo ⇒ e' un'analogia) e la finestra di match. Resta un tasso di artefatti
- * **non nullo**: per questo e' INFO e non gate. **Non e' "validato": e' utile e dichiarato tale.**
- * Chi lo tocca: prima di stringerlo ancora, **misura** — ogni giro qui ha dato un numero, mai un'opinione.
+ * TARATURA — ogni passo e' un numero MISURATO, mai un'opinione: **116 → 125 → 32 → 9 → 7 → 1**.
+ *  - **116 → 125**: la "correzione" della direzione ha fatto **SALIRE** il rumore. Non serviva piu'
+ *    filtro: avevo invertito **entrambe** le forme. *Un numero che si muove nel verso sbagliato dice
+ *    che stai misurando un'altra cosa* — e' la stessa spia gia' vista due volte oggi.
+ *  - **→ 32**: verso giusto. Convenzione unica: `k(a,b)` = «**b e' il k di a**»; "k **di** [[X]]" = io
+ *    sono k di X; "[[X]] (**k**)" = X e' k di me.
+ *  - **→ 9**: filtro METAFORE — si segnala solo se il grafo dice **un'altra parentela nota**. Nessuna
+ *    relazione ⇒ e' un'analogia legittima (*"sorella di metodo"*), e segnalarla affogherebbe i veri.
+ *  - **→ 7**: vietati i **segni di rottura di frase** fra la parola e il "di". Era l'artefatto che non
+ *    sapevo spiegare, e strumentando si e' rivelato **mio**: `"padre (§GAP-SCAN(b) di [[X]]"`, dove il
+ *    "di" lega **§GAP-SCAN(b)** a X, non "padre" a X. La finestra faceva da **ponte fra due sintagmi**.
+ *  - **→ 1**: le 7 segnalazioni superstiti erano **tutte VERE** (7/7) e sono state corrette nei testi.
+ *
+ * ⚠️ RESIDUO — ora **CARATTERIZZATO**, non piu' ignoto. Ne resta **1**, ed e' un limite di principio:
+ * il **soggetto** della frase puo' essere un **terzo nodo**, non il file ne' il link. Es. in
+ * `class-constraint-fit-decision` la riga *"…a sua volta **padre di** [[class-code-optimization]]"*
+ * parla di **right-effort-for-stakes**, ed e' **CORRETTA** — ma il tool attribuisce la claim al file.
+ * Capire chi sia il soggetto e' comprensione del linguaggio (#24), non pattern-matching → **si dichiara,
+ * non si aggiusta con una regex**. Per questo resta **INFO e non gate**.
+ *
+ * ⚠️ TRAPPOLA PER CHI CORREGGE (pagata due volte oggi, qui e in `check-decontamination`): **non
+ * ri-citare la forma sbagliata nella riga che stai correggendo** — il rilevatore flagghera' la tua
+ * stessa spiegazione. Scrivi *"parentela corretta il <data> sul grafo misurato"*, non *"era «sorella»"*.
  */
 const padreDi = new Map(declared.map((d) => [d.child, d.parent]));
 const parentele = [];
@@ -268,7 +283,12 @@ const KIN = [
 //    argomento gia' usato qui per il bucket DA-DECIDERE). Due forme, due versi:
 const FORME = [
   // "<parola> di [[X]]"  →  IO sono <parola> DI X
-  [/\b(sorella|zia|nonno|padre|figlia)\b[^\n\[]{0,25}?\bd(?:i|el|ella|elle)\b\s*\*{0,2}\[\[([^\]|#]+)/gi, false],
+  // ⚠️ Fra la parola e il "di" NON puo' esserci un segno di ROTTURA DI FRASE (`§ ; — , :` o una
+  //    parentesi APERTA che non sia il marcatore di figlia `(a)`). Senza questo vincolo la finestra
+  //    fa da PONTE fra due sintagmi diversi e il "di" lega la cosa sbagliata — artefatto reale,
+  //    trovato strumentando: `"padre (§GAP-SCAN(b) di [[X]]"`, dove il "di" lega **§GAP-SCAN(b)** a X,
+  //    non "padre" a X. Era l'unica segnalazione che non sapevo spiegare, ed era un mio falso positivo.
+  [/\b(sorella|zia|nonno|padre|figlia)\b(?:\s*\([a-z]\))?[^\n\[§;—,:()]{0,12}?\bd(?:i|el|ella|elle)\b\s*\*{0,2}\[\[([^\]|#]+)/gi, false],
   // "[[X]] (<parola>"    →  X e' <parola> DI ME  → verso invertito
   [/\[\[([^\]|#]+)\]\]\s*[(（]\s*\*{0,2}(sorella|zia|nonno|padre|figlia)\b/gi, true],
 ];
