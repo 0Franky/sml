@@ -244,6 +244,14 @@ Senza questi, *"dubita di tutto ciò che hai scritto"* diventa l'hack che passa 
 
 ## Decontaminazione (#18)
 
+**Dichiarazione MACCHINA-LEGGIBILE della superficie tenuta fuori** — verificata da
+[`harness/tools/check-decontamination.mjs`](../../harness/tools/check-decontamination.mjs): fallisce se uno di questi token compare in una sezione che **prescrive il training** (§Label-generation · §Hack-check · §Esempi NEGATIVI). ⚠️ Si dichiara la **SUPERFICIE** (gli identificatori dell'istanza osservata), **mai il MECCANISMO** — tenerlo fuori renderebbe la classe non insegnabile. I token vogliono una **specificità minima**: uno troppo corto combacia dentro parole qualsiasi.
+```held-out
+# istanze osservate: i due errori del 2026-07-16 (fidarsi della memoria invece del codice)
+sliding_var
+```
+
+
 L'**istanza osservata resta HELD-OUT di validazione, MAI nel training** — ed è **mia, non di un modello**: i **due errori che ho commesso il 2026-07-16** fidandomi della mia memoria invece di leggere il codice (**task-digest creduto "spento"**; **`sliding_var_read` scambiato per `open_file_view`**), registrati in [[gap-report-2026-07-16]]`:119` (*"D2 tocca me direttamente: è il difetto che mi ha fatto sbagliare 2 volte oggi … fidarmi della mia memoria invece di guardare il codice"*). Held-out anche l'**over-claim di un subagent dello stesso giorno**, **ancorato**: il report affermava che `class-temporal-awareness:60` [N2] è *"attivamente sbagliata"* — falso, verificato aprendo il file (`gap-report-2026-07-16:80`: *"L'ho letta: non è vero, ed è un'over-claim"*; il difetto reale era di **enumerazione**, non di contenuto). È la faccia (a) allo stato puro: un'asserzione attribuita a una **fonte mai consultata**. *(Corretto 2026-07-16: la bozza diceva *"i **due** over-claim di subagent"* **senza àncora**; grepando `over-claim` sul gap-report ne risulta **1**, non 2 — il conteggio era non-verificabile e ora è ridotto a ciò che la fonte sostiene. In un file la cui tesi è che le attribuzioni sono **claim verificabili**, un held-out non ricostruibile non è costruibile come probe.)*
 
 ⚠️ **Nota di onestà sul substrato** `[AMBIGUOUS]`: quelle istanze sono **mie** (Claude/Opus), non del modello-target. Per **#35a** un comportamento è **model-specific e non size-monotono**: *"il difetto esiste in me"* **non prova** che esista nel 27B → **da ri-testare** su un modello reale prima di trattare la severità come misurata. Restano ottimo materiale di **design** (la catena why→problema→soluzione è ancorata a un errore vero), **non** evidenza di gap del target.

@@ -178,6 +178,14 @@ Senza questi, *"esci-appena-puoi"* diventa l'hack che passa — ed è l'inverso 
 
 ## Decontaminazione (#18)
 
+**Dichiarazione MACCHINA-LEGGIBILE della superficie tenuta fuori** — verificata da
+[`harness/tools/check-decontamination.mjs`](../../harness/tools/check-decontamination.mjs): fallisce se uno di questi token compare in una sezione che **prescrive il training** (§Label-generation · §Hack-check · §Esempi NEGATIVI). ⚠️ Si dichiara la **SUPERFICIE** (gli identificatori dell'istanza osservata), **mai il MECCANISMO** — tenerlo fuori renderebbe la classe non insegnabile. I token vogliono una **specificità minima**: uno troppo corto combacia dentro parole qualsiasi.
+```held-out
+# istanza osservata: l'asimmetria UD3 dell'harness (entra in focus, non ne usciva)
+UD3
+```
+
+
 L'**istanza osservata** = **UD3**, l'asimmetria dell'harness trovata e fixata il 2026-07-16 (l'harness *"**ENTRA da solo in focus ma non ne USCIVA mai**"* — la frase è reale in `nested-compact.mjs:290-293`, **non** nel gap-report; [[gap-report-2026-07-16]]`:33` ne sostiene la sostanza: *"**UD3**, il bug che ho trovato e fixato nell'harness lo **stesso giorno**"*) + il caso `<task_list focus="0">` vuota col backlog invisibile → **held-out di validazione**, MAI nel training. Il training usa i **transfer cross-dominio** §positivi (salsa · esame · rubinetto · triage · task force · monitoraggio ecologico · indagine) con **nomi randomizzati**. Se il modello ha imparato la **logica**, risolve l'istanza osservata **per transfer** — ed è anche la metrica del doppio-scopo: lo scaffold (`maybeAutoPop` + `<pop_hint>`) può **recedere** quando la skill regge, restando come rete.
 > ⚠️ **Caveat di decontaminazione onesto**: qui l'held-out è un **bug dell'harness**, non una traccia di modello. Non essendoci una probe (§stato: NON MISURATO), *"risolve UD3 per transfer"* non è oggi verificabile su un trace reale — serve prima una probe che metta un modello in uno scope esaurito **con la F spenta**. → **tracciato in `wiki/todo.md`** (§B6, 2026-07-16); il *"→ §Wiring"* che stava qui puntava a una sezione **inesistente** in questo file (riferimento appeso, #12).
 

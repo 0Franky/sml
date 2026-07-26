@@ -78,6 +78,14 @@ Istanze *(blocco, regime, set-di-alternative, oracolo)*. **Mutazione-chiave del 
 
 ## Decontaminazione (regola #18)
 
+**Dichiarazione MACCHINA-LEGGIBILE della superficie tenuta fuori** — verificata da
+[`harness/tools/check-decontamination.mjs`](../../harness/tools/check-decontamination.mjs): fallisce se uno di questi token compare in una sezione che **prescrive il training** (§Label-generation · §Hack-check · §Esempi NEGATIVI). ⚠️ Si dichiara la **SUPERFICIE** (gli identificatori dell'istanza osservata), **mai il MECCANISMO** — tenerlo fuori renderebbe la classe non insegnabile. I token vogliono una **specificità minima**: uno troppo corto combacia dentro parole qualsiasi.
+```held-out
+# istanza osservata: il caso Yahoo→Gmail e il gradino v5/v6/v7 di M4
+Yahoo
+```
+
+
 Le **istanze osservate/dette** (modelli Gemma; Yahoo→Gmail; **v5≺v6≺v7 di M4**) sono **held-out di validazione**, NON nel training. Il training usa i transfer cross-dominio §A/§B/§B-grad (STESSA logica, domini diversi). Se il modello ha imparato il **discriminatore** (e, per B-grad, *rifiuta-il-falso-binario ∧ verifica-la-dominanza ∧ pesa-il-churn*), risolve i casi held-out per **transfer** (metrica di successo).
 
 ## GAP-SCAN facet B-grad (#36 — riportato, non taciuto)

@@ -61,6 +61,14 @@ Scenari multi-turno *lunghi* dove un'informazione al turno *t* è **necessaria**
 
 ## Decontaminazione (regola #18)
 
+**Dichiarazione MACCHINA-LEGGIBILE della superficie tenuta fuori** — verificata da
+[`harness/tools/check-decontamination.mjs`](../../harness/tools/check-decontamination.mjs): fallisce se uno di questi token compare in una sezione che **prescrive il training** (§Label-generation · §Hack-check · §Esempi NEGATIVI). ⚠️ Si dichiara la **SUPERFICIE** (gli identificatori dell'istanza osservata), **mai il MECCANISMO** — tenerlo fuori renderebbe la classe non insegnabile. I token vogliono una **specificità minima**: uno troppo corto combacia dentro parole qualsiasi.
+```held-out
+# istanze osservate: F23 (task-history) e F33 (la preferenza piantata)
+ALDO-QX
+```
+
+
 Le **istanze osservate** (F23: Gemma / task-history di coding · **F33: flash-lite / "ALDO-QX" in adaptive-ON**) sono **held-out di validazione**, NON nel training. Il training usa i transfer cross-dominio §positivi ([F-I] per il caso-duro) / §negativi ([N5-N6] per il confine). Se il modello ha imparato la **memoria prospettica**, a valle risolve F23 **e** F33 per **transfer** — l'eval `EVAL_PLANT_PREF` (fatto durevole arbitrario piantato + overflow + probe) è l'held-out diretto: se il training funziona, il modello persiste "ALDO-QX" **da sé**. È anche la **metrica di successo del branch harness→training** (nessuno scaffold di cattura deterministica per i fatti-da-chat — regola #24: è il modello a doverlo fare).
 
 ## Links

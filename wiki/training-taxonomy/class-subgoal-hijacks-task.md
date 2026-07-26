@@ -48,6 +48,14 @@ Coppie (richiesta-di-END, risposta) dove l'oracolo verifica se la risposta conti
 
 ## Decontaminazione (regola #18)
 
+**Dichiarazione MACCHINA-LEGGIBILE della superficie tenuta fuori** — verificata da
+[`harness/tools/check-decontamination.mjs`](../../harness/tools/check-decontamination.mjs): fallisce se uno di questi token compare in una sezione che **prescrive il training** (§Label-generation · §Hack-check · §Esempi NEGATIVI). ⚠️ Si dichiara la **SUPERFICIE** (gli identificatori dell'istanza osservata), **mai il MECCANISMO** — tenerlo fuori renderebbe la classe non insegnabile. I token vogliono una **specificità minima**: uno troppo corto combacia dentro parole qualsiasi.
+```held-out
+# istanza osservata: F24, elenca-funzioni con deflessione-salvataggio
+F24
+```
+
+
 L'**istanza F24** (elenca-funzioni → deflessione-salvataggio) è **held-out di validazione**, NON nel training. Il training usa i transfer §positivi/§negativi cross-dominio. Se il modello impara la coerenza mezzi-fini, a valle risolve F24 per **transfer**.
 
 ## Links

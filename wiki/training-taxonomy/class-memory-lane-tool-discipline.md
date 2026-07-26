@@ -87,6 +87,14 @@ I negativi rendono il segnale discriminativo e **simmetrico** (nessun default fi
 
 ## Decontaminazione (regola #18)
 
+**Dichiarazione MACCHINA-LEGGIBILE della superficie tenuta fuori** — verificata da
+[`harness/tools/check-decontamination.mjs`](../../harness/tools/check-decontamination.mjs): fallisce se uno di questi token compare in una sezione che **prescrive il training** (§Label-generation · §Hack-check · §Esempi NEGATIVI). ⚠️ Si dichiara la **SUPERFICIE** (gli identificatori dell'istanza osservata), **mai il MECCANISMO** — tenerlo fuori renderebbe la classe non insegnabile. I token vogliono una **specificità minima**: uno troppo corto combacia dentro parole qualsiasi.
+```held-out
+# istanza osservata: il dump del qualitative-review 2026-07-11
+qualitative-review
+```
+
+
 L'**istanza osservata** = il **dump harness rate-limited** del **qualitative-review 2026-07-11** (qwen3-32b confusione `<facts>`↔`<vars>`; deepseek-v4-pro note/jot/set_var "semanticamente sottile"; sonnet-5 rischio dati non self-contained) → **held-out di validazione**, MAI nel training (train-on-test contamina il validation). Il training usa i transfer cross-dominio §positivi/§negativi con **nomi-canale randomizzati**. Se il modello ha imparato la **disciplina-di-canale**, a valle instrada correttamente il durevole in `<facts>` self-contained, il lavoro in `<scratch>`, lo strutturato in `<vars>` — **per transfer**, risolvendo comunque l'istanza osservata. È anche la **metrica di successo** del *doppio scopo* harness→training (lo scaffold `<how_memory_works>` verboso recede quando la skill regge).
 
 ## Facet / possibile sub-specializzazione (regola #20)

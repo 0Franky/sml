@@ -73,6 +73,14 @@ Tre bucket, discriminati da **sensibilità** × **scope**:
 
 ## Decontaminazione (regola #18)
 
+**Dichiarazione MACCHINA-LEGGIBILE della superficie tenuta fuori** — verificata da
+[`harness/tools/check-decontamination.mjs`](../../harness/tools/check-decontamination.mjs): fallisce se uno di questi token compare in una sezione che **prescrive il training** (§Label-generation · §Hack-check · §Esempi NEGATIVI). ⚠️ Si dichiara la **SUPERFICIE** (gli identificatori dell'istanza osservata), **mai il MECCANISMO** — tenerlo fuori renderebbe la classe non insegnabile. I token vogliono una **specificità minima**: uno troppo corto combacia dentro parole qualsiasi.
+```held-out
+# istanza osservata: la NOSTRA curazione-wiki (questi stessi file, la struttura del repo)
+ITLMv1
+```
+
+
 Le istanze osservate della NOSTRA curazione-wiki (questi stessi file, la struttura ITLMv1) restano **held-out** — il training usa fixture **sintetiche cross-dominio** con policy randomizzate. Se il modello ha imparato la **curazione**, a valle: consulta prima di confabulare, colloca per sensibilità×scope, non duplica, non leakka PII — **per transfer** su knowledge-base mai viste. È la realizzazione dell'idea #5 (il modello "usa e genera la wiki come noi").
 
 ## Links

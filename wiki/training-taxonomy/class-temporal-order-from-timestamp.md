@@ -94,6 +94,15 @@ I negativi rendono il segnale discriminativo (anti "riordina-sempre" / anti "fla
 
 ## Decontaminazione (regola #18)
 
+**Dichiarazione MACCHINA-LEGGIBILE della superficie tenuta fuori** — verificata da
+[`harness/tools/check-decontamination.mjs`](../../harness/tools/check-decontamination.mjs): fallisce se uno di questi token compare in una sezione che **prescrive il training** (§Label-generation · §Hack-check · §Esempi NEGATIVI). ⚠️ Si dichiara la **SUPERFICIE** (gli identificatori dell'istanza osservata), **mai il MECCANISMO** — tenerlo fuori renderebbe la classe non insegnabile. I token vogliono una **specificità minima**: uno troppo corto combacia dentro parole qualsiasi.
+```held-out
+# istanza osservata: il dump harness del qualitative-review
+clean-dump.md
+last-turn-full.md
+```
+
+
 L'**istanza OSSERVATA** — il **dump harness** del qualitative-review (`harness/eval/data/clean-dump.md` / `last-turn-full.md`, scenario rate-limiting/injection-test, con `recent_changes`/`vars` in "Ns ago" e `messages`/`tool_calls`/`scratch` in "[+Xs]" **senza** now assoluto, C3/C4) — resta **held-out di validazione**, MAI nel training (train-on-test contamina il validation set). Il training usa **scenari DIVERSI** con la STESSA logica: lo **span di training** (log async, estratti conto/interessi, cartelle cliniche, post-mortem multi-timezone) + i **domini transfer DISGIUNTI** (giustizia, logistica event/scan, astronomia, git author/commit) restano **anch'essi held-out** dal generatore di training e servono a misurare il segnale-③. Se il modello ha imparato la disciplina, **per transfer** ricostruisce correttamente l'ordine anche sul dump-harness osservato e — dove l'harness **non** fornisce l'ancora comune — **segnala l'ambiguità** invece di inventare un ordine (è la metrica di successo). **Doppio scopo** (#18): parte del finding è ANCHE F-harness (fix A1b/C3: dare il "now" assoluto o unificare il formato) → l'harness fornisce l'ancora migliore ORA, il training internalizza la disciplina di lettura → lo scaffold recede.
 
 ## Placement (gerarchia — regola #20)

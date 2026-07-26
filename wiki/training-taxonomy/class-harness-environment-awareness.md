@@ -54,6 +54,15 @@ Prima di agire, il modello **consulta il modello del proprio ambiente** (la tool
 
 ## Decontaminazione (regola #18)
 
+**Dichiarazione MACCHINA-LEGGIBILE della superficie tenuta fuori** — verificata da
+[`harness/tools/check-decontamination.mjs`](../../harness/tools/check-decontamination.mjs): fallisce se uno di questi token compare in una sezione che **prescrive il training** (§Label-generation · §Hack-check · §Esempi NEGATIVI). ⚠️ Si dichiara la **SUPERFICIE** (gli identificatori dell'istanza osservata), **mai il MECCANISMO** — tenerlo fuori renderebbe la classe non insegnabile. I token vogliono una **specificità minima**: uno troppo corto combacia dentro parole qualsiasi.
+```held-out
+# istanze osservate: FIND-7 (list_secrets) e lo scaffold-memoria ignorato
+FIND-7
+list_secrets
+```
+
+
 Le istanze osservate (**FIND-7** list_secrets · **F23/F33** scaffold-memoria ignorato) sono **held-out di validazione**, NON nel training. Il training usa i transfer cross-dominio §positivi/§negativi con toolset randomizzato. Se il modello ha imparato il **grounding ambientale**, a valle: legge l'inventario invece di ri-chiamare, usa `note` quando serve, dichiara un tool-assente invece di allucinarlo — **per transfer**. È anche la metrica di successo del *doppio scopo* harness→training (lo scaffold-crutch recede quando la skill regge).
 
 ## Facet aggiuntivi (mining Stage-2, 2026-07-10) — lato-S del twin con [[../concepts/harness-tool-affordance-design]]

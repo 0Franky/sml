@@ -135,6 +135,14 @@ I negativi rendono il segnale discriminativo e **simmetrico** — senza, *"ri-co
 
 ## Decontaminazione (#18)
 
+**Dichiarazione MACCHINA-LEGGIBILE della superficie tenuta fuori** — verificata da
+[`harness/tools/check-decontamination.mjs`](../../harness/tools/check-decontamination.mjs): fallisce se uno di questi token compare in una sezione che **prescrive il training** (§Label-generation · §Hack-check · §Esempi NEGATIVI). ⚠️ Si dichiara la **SUPERFICIE** (gli identificatori dell'istanza osservata), **mai il MECCANISMO** — tenerlo fuori renderebbe la classe non insegnabile. I token vogliono una **specificità minima**: uno troppo corto combacia dentro parole qualsiasi.
+```held-out
+# istanza osservata: il flusso reale con un altro agent + il caso codebase_tree
+codebase_tree
+```
+
+
 L'**istanza osservata** = il flusso reale dell'utente descritto nel msg 1717 (*"con [un altro] agent banalmente modifico io i file"*) + il caso `codebase_tree: 1h` → **held-out di validazione**, MAI nel training. Il training usa i **transfer cross-dominio** §positivi (documento condiviso · lista della spesa · prenotazioni · conto cointestato · rota ospedaliera · listino derivato da report · policy ecologica) con **nomi randomizzati**. Se ha imparato la **logica**, risolve comunque l'istanza osservata **per transfer** — ed è anche la **metrica di successo** del doppio-scopo harness→training (lo scaffold `<recent_changes>` che mostra *chi-ha-cambiato-cosa* può **recedere** quando la skill regge).
 
 ## Facet / sub-specializzazione ricorsiva (#20)
