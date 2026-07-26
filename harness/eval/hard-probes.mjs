@@ -195,6 +195,83 @@ export const HARD_PROBES = [
     expectNumber: 6,    // log2(64) = 6
     trap: 63,           // strategia esaustiva una-per-una (le prime 63, la 64a si deduce)
   },
+
+  // ══════════════════════════════════════════════════════════════════════════════════════════════
+  // GIRO 2 della review — probe proposte dal revisore avversariale per COPRIRE I BUCHI (2026-07-26).
+  //
+  // La sua obiezione, che regge: **7 delle 12 probe sopra sono FORME D'ESERCIZIO RICONOSCIBILI**
+  // (sottrazione, C(4,2), cammino critico, log2). Un modello di questa taglia le prende quasi
+  // sempre — non perche' ragioni, ma perche' riconosce il tipo — quindi hanno **varianza attesa
+  // ~0**, cioe' zero informazione per la SCELTA. La separazione viveva su ~5 item, e su 12 item
+  // un divario di 1 vale 8 punti percentuali: indistinguibile dal rumore (#35b applicato allo
+  // strumento costruito per misurarlo).
+  //
+  // ⚠️ **HO RICALCOLATO OGNI CHIAVE DA ZERO prima di accettarla** — lui ha fatto lo stesso con le
+  // mie e ci ha trovato tre difetti; sarebbe stato incoerente fidarmi delle sue. Il calcolo
+  // indipendente e' scritto accanto a ciascuna. 5/5 confermate.
+  // ══════════════════════════════════════════════════════════════════════════════════════════════
+  {
+    id: "unsatisfiable-constraints", category: "anti-confabulazione",
+    origine: "review giro-2 — il polo mancante: c'era «il dato non c'e'», non «la richiesta NON SI PUO' soddisfare»",
+    prompt:
+      "Una riunione deve durare novanta minuti, non puo' iniziare prima delle quindici ne' finire dopo le sedici, " +
+      "e la sala si prenota solo a ore intere. A che ora deve iniziare? " +
+      "Se i vincoli non possono essere soddisfatti tutti insieme, rispondi esattamente con la parola IMPOSSIBILE.",
+    mustContainAny: [[/\bIMPOSSIBILE\b/i]],
+    trap: 15,
+    // VERIFICA MIA: l'unica ora intera ammissibile e' le 15; 15:00 + 90 min = 16:30 > 16:00. Nessuna
+    // altra ora intera >= 15 puo' finire prima delle 16. -> insoddisfacibile. CONFERMATO.
+  },
+  {
+    id: "bounded-parallelism", category: "decomposizione",
+    origine: "review giro-2 — il `dependency-ordering` esistente ha parallelismo ILLIMITATO = esercizio da manuale",
+    prompt:
+      "Sei operazioni: A, B, C, D, E, F. B, C e D richiedono che A sia gia' finita; E richiede che B e C siano gia' finite; " +
+      "F richiede che D sia gia' finita. Ogni operazione dura un'ora e non puoi eseguirne piu' di DUE contemporaneamente. " +
+      "Qual e' il numero MINIMO di ore per completarle tutte? Rispondi con il solo numero.",
+    expectNumber: 4,
+    trap: 3,
+    // VERIFICA MIA: h1 solo A (nessun'altra e' eleggibile) -> restano 5 operazioni a max 2/ora =
+    // almeno 3 ore -> limite di CAPACITA' = 1+3 = 4. Realizzabile: h1 A · h2 B,C · h3 D,E · h4 F.
+    // Il cammino critico (A->B->E = 3) e la capacita' darebbero 3, ma 3 e' IRRAGGIUNGIBILE: 1+2+2=5<6.
+    // ⭐ E' proprio questo che separa chi schedula davvero da chi applica la formula. CONFERMATO.
+  },
+  {
+    id: "rate-to-count", category: "reasoning-misura",
+    origine: "review giro-2 — il #35b VERO: da percentuale a NUMERO DI ITEM, con soglia stretta",
+    prompt:
+      "Il gruppo A ha superato tre prove su quattro. Il gruppo B ne ha superate quaranta su sessanta. " +
+      "Quante prove IN PIU', sulle stesse sessanta, dovrebbe superare B per avere una percentuale di successo " +
+      "STRETTAMENTE superiore a quella di A? Rispondi con il solo numero.",
+    expectNumber: 6,
+    trap: 5,
+    // VERIFICA MIA: A = 3/4 = 75%. Su 60, il 75% e' 45 -> per essere STRETTAMENTE sopra servono 46.
+    // 46 - 40 = 6. Chi si ferma a 45 (pareggio) risponde 5, ignorando «strettamente». CONFERMATO.
+  },
+  {
+    id: "report-reconciliation", category: "reasoning-misura",
+    origine: "review giro-2 — la quantita' CHIESTA non e' quella ottenibile per somma (sovrapposizioni)",
+    prompt:
+      "Tre revisori esaminano lo stesso documento. Il primo trova quattro errori, il secondo sei, il terzo cinque. " +
+      "Confrontando i verbali si scopre che tre errori sono stati trovati da tutti e tre, e che non ci sono altre sovrapposizioni. " +
+      "Quanti errori DISTINTI contiene il documento? Rispondi con il solo numero.",
+    expectNumber: 9,
+    trap: 15,
+    // VERIFICA MIA: 3 comuni + esclusivi (4-3=1) + (6-3=3) + (5-3=2) = 3+1+3+2 = 9. La somma nuda
+    // dei verbali (4+6+5) da' 15 e conta tre volte i comuni. CONFERMATO.
+  },
+  {
+    id: "irrelevant-datum", category: "decomposizione",
+    origine: "review giro-2 — l'errore «uso TUTTI i numeri che mi hanno dato» non era testato da nessuna probe",
+    prompt:
+      "Un archivio contiene sessanta cartelle. Dodici sono state create quest'anno e pesano in media quattro megabyte ciascuna. " +
+      "Una verifica va eseguita su ogni cartella creata quest'anno e richiede due minuti a cartella. " +
+      "Quanti minuti richiede in totale? Rispondi con il solo numero.",
+    expectNumber: 24,
+    trap: 48,
+    // VERIFICA MIA: 12 cartelle x 2 minuti = 24. I megabyte sono INERTI: 12 x 4 = 48 e' la trappola
+    // (usa il dato che non serve); 60 x 2 = 120 e' l'altro errore (verifica tutto l'archivio). CONFERMATO.
+  },
 ];
 
 /** Categorie presenti, per il report per-categoria. SSOT: derivata, non riscritta a mano. */
