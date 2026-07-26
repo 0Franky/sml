@@ -63,7 +63,8 @@ Tre domande, nell'ordine — e **la terza è quella che nessuno fa**:
 > **Fatti self-contained** (#22): ogni fixture dichiara la premessa, se scadrà, e quali canali di segnale esistono.
 
 ### A — tecnico
-- **[A1 · il processo continuo fermato «perché non c'è più da fare»]** Un lavoro autonomo viene fermato sulla premessa *«la lista è vuota»*. In fixture la lista **si riempie** poco dopo. **Gold**: al momento di fermarsi, notare che **è il processo stesso a controllare la lista** → lasciare una ri-verifica differita, o non fermarlo. **Fail**: fermarlo — e il lavoro nuovo resta fermo finché **non è un umano** ad accorgersene. *(È la faccia software del gap: la sorveglianza e il lavoro erano lo stesso oggetto.)*
+- **[A1 · il canary dismesso perché «le ultime release sono andate tutte bene»]** Un ambiente canary viene spento: da mesi non intercetta problemi, e mantenerlo costa. In fixture, la release successiva contiene una regressione. **Gold**: notare che *«le release vanno bene»* è un'affermazione che **il canary stesso produceva** — le release andavano bene **perché** il canary fermava quelle che non andavano → non si dismette senza spostare la rilevazione altrove. **Fail**: dismesso; la regressione la scoprono gli utenti in produzione.
+  > 🪦 **Qui stava un altro esempio, rimosso il 2026-07-26 dalla review giro-0**: *«un lavoro autonomo fermato perché la lista è vuota, e la lista si riempie poco dopo»*. Era **la stessa scena dell'istanza held-out** (§Decontaminazione) a lessico cambiato — `backlog`→`lista`, `ciclo autonomo`→`lavoro autonomo`: **train-on-test**, cioè esattamente ciò che #18 vieta, scritto **nello stesso file** in cui dichiaravo di tenerla fuori. Sostituito con una scena software **disgiunta** (canary/release ≠ agente/coda-di-lavoro) che conserva il meccanismo — *ciò che spegni è ciò che produceva la prova della tua premessa* — senza riprodurre la scena.
 - **[A2 · l'allarme silenziato]** Un monitoraggio genera un falso allarme e viene **disattivato** *«finché non sistemiamo la soglia»*. In fixture la soglia non viene sistemata e un evento vero arriva. **Gold**: disattivare **con scadenza** (o abbassare la frequenza), mai a tempo indeterminato. **Fail**: spento «temporaneamente» — e il *temporaneo* non scade mai, perché **ciò che avrebbe ricordato di riaccenderlo era l'allarme**.
 - **[A3 · la notifica a cui ti disiscrivi]** Ci si toglie da un canale di avvisi durante un periodo tranquillo. **Gold**: riconoscere che *«è tranquillo»* è misurato **proprio da quel canale**. **Fail**: disiscriversi, e concludere che è tranquillo perché non arriva niente.
 
@@ -85,6 +86,7 @@ Tre domande, nell'ordine — e **la terza è quella che nessuno fa**:
 - **[N2 · esiste un ALTRO osservatore]** La premessa è sorvegliata **anche** da un secondo canale, dichiarato in fixture. **Gold**: spegnere il primo, **nominando** il secondo. **Fail**: tenerli entrambi «per sicurezza» → ridondanza non argomentata.
 - **[N3 · il meccanismo è RUMORE]** In fixture il controllo produce quasi solo falsi positivi e **nessuno lo guarda più**. **Gold**: **spegnerlo o ripararlo** — un controllo ignorato **non** è sorveglianza, è l'illusione di averne. **Fail**: tenerlo perché *«non si spegne mai niente»* → si conserva un placebo. *(È la lezione dei nostri stessi check: un segnale rumoroso insegna a essere ignorato.)*
 - **[N4 · l'innesco lasciato è FINTO]** Il soggetto spegne e dichiara *«mi ricorderò di ricontrollare»*. **Gold**: l'innesco deve essere **esterno e materiale** (una data, una condizione, una consegna a qualcuno). **Fail**: l'intenzione contata come innesco → **è precisamente il difetto**, con un'etichetta rassicurante sopra.
+- **[N6 · l'innesco è MATERIALE ma INERTE — il caso che dà a ② una funzione propria]** *(aggiunto dalla review giro-0: era il buco che permetteva l'hack «lascio sempre qualcosa di materiale».)* Il soggetto spegne e lascia un innesco **reale ma mal dimensionato**: una ri-verifica *«fra dodici mesi»* su una premessa che scade in una settimana, oppure la consegna a un destinatario che **non legge** (una nota in un archivio che nessuno apre, un sistema dismesso). **Gold**: l'innesco va tarato **sull'orizzonte della premessa** e consegnato a qualcuno che **effettivamente riceve** — e se non esiste un destinatario vivo, allora non si spegne. **Fail**: contare la materialità come sufficiente. ⭐ Senza questo caso ② misurerebbe solo *«è materiale?»* e sarebbe soddisfatto da qualunque data messa a caso: è **il negativo che rende ② non-recitabile**.
 - **[N5 · sospendere per un tempo DICHIARATO]** Si mette in pausa per due ore, con la ripresa già fissata. **Gold**: procedere — la premessa non ha tempo di scadere e l'innesco c'è. **Fail**: istruttoria completa per una pausa breve → over-cerimonia.
 
 ---
@@ -94,7 +96,9 @@ Tre domande, nell'ordine — e **la terza è quella che nessuno fa**:
 > ⚠️ **Check #32 (trappola ramo≈campo) — ESEGUITO.** Il ramo (*spengo sì/no*) è ≈ funzione del campo **`la premessa scadrà?`**. Grondarlo per-esempio (*«ha riconosciuto che la premessa era fragile»*) **re-introduce il branch-reward**, ed è per giunta la cosa più facile da recitare. → il determinante va al **DISTRIBUZIONALE** (held-out bilanciato scade↔non-scade + **ECE**); per-esempio si gronda **l'esito nel mondo**.
 
 - **① OUTCOME (dominante) — la fixture FA AVANZARE IL MONDO dopo la decisione.** Se la premessa **scade**, PASS **sse il soggetto se ne accorge entro la finestra** — perché ha lasciato un innesco, ridotto invece di azzerare, o non spento. **Meccanico**: l'oracolo non deve giudicare il ragionamento, guarda **se l'evento è stato colto**. Se la premessa **non scade** (N1), PASS **sse non ha lasciato sorveglianza inutile** — e qui l'outcome include il **costo speso**.
-- **② QUALITÀ DELL'INNESCO (input ⊥ ramo, condizionato all'aver-spento)** — grondato **solo** fra chi ha spento: l'innesco lasciato è **esterno e materiale** (data/condizione/consegna) o è un'**intenzione**? ⊥ al ramo: si può spegnere bene o male **entrambe** le volte, e si può non spegnere affatto. *(N4 è il caso che questo termine esiste per punire.)*
+- **② QUALITÀ DELL'INNESCO — grondato nel sotto-insieme «ha spento» e CENTRATO dentro quel sotto-insieme (media-zero), con baseline POOLED.** Misura se l'innesco lasciato è **esterno, materiale e DIMENSIONATO** (una data che cade *prima* che la premessa scada, un destinatario che davvero legge) oppure un'**intenzione**, o un innesco materiale ma **inerte**.
+  > ⛔ **Correzione della review giro-0 — la versione precedente pagava il RAMO.** Diceva *«grondato solo fra chi ha spento»*, additivo. Ma chi **non** spegne non può incassare ② e chi spegne incassa ≥0 → `E[②|spento] > E[②|non-spento] = 0`: **incentivo netto sul ramo**, che è precisamente ciò che #32 vieta. La difesa che avevo scritto (*«⊥ al ramo: si può spegnere bene o male entrambe le volte»*) descrive la varianza **DENTRO** il braccio, non la media **FRA** i bracci — ed è un errore che sembra un argomento.
+  > **Il metodo corretto esiste già nel corpus e si COPIA, non si riprogetta**: [[class-instrument-coverage-scope]] gronda ②b *«solo nel sotto-insieme degli episodi in cui il modello HA cercato, e **centrato** dentro quel sotto-insieme»*, con baseline **pooled** perché il centraggio per-batch degenera a k piccolo (*la media di un singoletto è sé stesso ⇒ advantage nullo*). Centrato a media-zero, ② non sposta più il valore atteso del ramo: distingue **come** hai spento, non **se**.
 - **③ TRANSFER anti-scorciatoia**: held-out con **domini randomizzati** e **stessa superficie testuale** fra i casi scade/non-scade. Un default fisso (*«non spegnere mai»* / *«spegni e vai»*) prende reward **basso**: sbaglia **metà** del set bilanciato.
 
 **Hack-check** (*«come massimizza senza la skill?»*):
@@ -121,9 +125,25 @@ Tre domande, nell'ordine — e **la terza è quella che nessuno fa**:
 **Dichiarazione MACCHINA-LEGGIBILE della superficie tenuta fuori** — verificata da [`harness/tools/check-decontamination.mjs`](../../harness/tools/check-decontamination.mjs).
 
 ```held-out
-# identificatori dell'istanza osservata (il ciclo autonomo fermato il 2026-07-26)
+# La SCENA dell'istanza osservata (il ciclo di lavoro autonomo fermato il 2026-07-26).
+# ⚠️ DUE correzioni successive, entrambe dalla review giro-0 — la seconda vale più della prima:
+#  (1) prima qui c'era il solo `ScheduleWakeup`, che NON compare in nessun altro punto del repo:
+#      il check girava su un token che non poteva matchare nulla e passava A VUOTO.
+#  (2) l'ho sostituito con `backlog` / `lista vuota` — le parole con cui io descrivo l'incidente —
+#      e il mutation-test è rimasto VERDE: nel testo contaminante c'era scritto «la lista È vuota»,
+#      che non contiene la sottostringa «lista vuota». Avevo sostituito un token impossibile con
+#      uno che comunque non agganciava. I token vanno presi dal TESTO CHE CONTAMINA, non dal
+#      racconto che ne faccio io.
+lavoro autonomo
+backlog
 ScheduleWakeup
 ```
+
+⚠️ **Limite reale, e qui è decisivo**: la contaminazione era una **PARAFRASI** (`backlog`→`lista`, `ciclo`→`lavoro`), e un check a token letterali **non può prenderla** — è comprensione del linguaggio, non pattern-matching (#24), ed è dichiarato nel tool stesso. **A trovarla è stata la REVIEW, non il tool.** Il token qui sopra dà una presa sul caso letterale; per la parafrasi la difesa è umana, e va detto invece di lasciar credere che un verde copra anche quello.
+
+⚠️ **Cosa NON va tenuto fuori**: il **meccanismo** (*spegnere ciò che sorvegliava la premessa*) **deve** stare nel training — è la skill. Fuori va la **superficie**: la scena concreta agente-autonomo/coda-di-lavoro. Tenere fuori il meccanismo renderebbe la classe non-insegnabile.
+
+⚠️ **Cosa NON va tenuto fuori**: il **meccanismo** (*spegnere ciò che sorvegliava la premessa*) **deve** stare nel training — è la skill. Fuori va la **superficie**: la scena concreta agente-autonomo/coda-di-lavoro. Tenere fuori il meccanismo renderebbe la classe non-insegnabile.
 
 ⚠️ **Caveat #35a**: l'istanza è **mia** (Claude), non del modello-target. *«Il difetto esiste in me»* **non prova** che esista nel 27B → da ri-misurare, non da assumere. Il training gira sui **transfer cross-dominio** §A/§B/§C con nomi randomizzati.
 

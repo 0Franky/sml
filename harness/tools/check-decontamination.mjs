@@ -65,14 +65,32 @@ const SEZIONI_TRAINING = [
   /hack-?check/i,
   /esempi\s+negativi/i,
 ];
-/** Sezioni dove i token held-out DEVONO comparire (e' dove sono definiti): mai un difetto. */
+
+/** ⚠️ §Esempi POSITIVI — SEZIONE SOTTO DECISIONE, riportata come WARN e NON bloccante (2026-07-26).
+ *
+ *  La review giro-0 di `class-self-sealing-decision` ha trovato un **train-on-test vero** in questa
+ *  sezione mentre il tool era verde: il tool la esentava con la motivazione «è lì che gli scenari
+ *  held-out sono *definiti*». **Quella motivazione confonde due cose**: il posto legittimo per
+ *  NOMINARE la scena tenuta fuori è §Decontaminazione; i POSITIVI **sono training data**, quindi
+ *  una scena held-out lì dentro non è la sua definizione — è la contaminazione, nella forma più
+ *  dannosa. Esentare la sezione più pericolosa e chiamarlo verde è la #0 applicata allo strumento.
+ *
+ *  MA: quella esenzione è **la convenzione dichiarata nella prosa di 14 classi** (es.
+ *  `class-compositional-reversibility.md:206`), e ribaltarla cambia cosa significa «held-out» per
+ *  tutto il corpus. **È un cambio strutturale: lo propone il tool, lo decide l'utente** (#26/#34).
+ *  Finché non è deciso, gli hit qui sono **🟡 WARN visibili e non bloccanti**: sopprimerli
+ *  significherebbe nascondere il difetto, farli fallire significherebbe decidere per fiat. */
+const SEZIONI_SOTTO_DECISIONE = [/esempi\s+positivi/i];
+/** Sezione dove i token held-out DEVONO comparire (e' dove la scena tenuta fuori viene NOMINATA):
+ *  mai un difetto. Resta UNA sola — vedi la nota sopra sul perche' i POSITIVI non sono piu' qui. */
 const SEZIONI_ESENTI = [
-  /esempi\s+positivi/i,
   /decontaminazione/i,
 ];
 
 const files = readdirSync(TAX).filter((f) => f.endsWith(".md"));
 const problemi = [];
+/** Hit dentro §Esempi POSITIVI: VISIBILI ma non bloccanti finche' la convenzione non e' decisa (#26). */
+const avvisi = [];
 const senzaBlocco = [];
 let conBlocco = 0, tokenTotali = 0;
 
@@ -104,13 +122,33 @@ for (const f of files) {
   //    ogni bullet dentro §Label-generation azzerava il contesto. Un marcatore di sezione e' un
   //    heading, oppure una riga in grassetto **NON puntata** (`**Hack-check…**:` a inizio riga).
   const marcatoreSezione = (r) => /^#{1,6}\s/.test(r) || /^\*\*[^*]+\*\*\s*:/.test(r);
-  let inTraining = false;
+  /** Livello di un heading (`###` -> 3); 99 per i marcatori in grassetto, che non annidano. */
+  const livello = (r) => { const m = r.match(/^(#{1,6})\s/); return m ? m[1].length : 99; };
+  /** zona corrente: "training" (bloccante) · "sotto-decisione" (WARN) · null (fuori portata) */
+  let zona = null;
+  let livelloSezione = 0; // livello dell'heading che ha aperto la sezione corrente
   righe.forEach((riga, i) => {
-    if (/^\s*---\s*$/.test(riga)) { inTraining = false; return; }
+    if (/^\s*---\s*$/.test(riga)) { zona = null; livelloSezione = 0; return; }
     if (marcatoreSezione(riga)) {
-      if (SEZIONI_ESENTI.some((re) => re.test(riga))) inTraining = false;
-      else inTraining = SEZIONI_TRAINING.some((re) => re.test(riga));
+      // ⚠️ ANNIDAMENTO (2026-07-26) — il difetto che ha reso MUTO l'allargamento ai §Esempi POSITIVI.
+      //    §Esempi POSITIVI contiene i sotto-titoli `### A — tecnico` / `### B — vita quotidiana` /
+      //    `### C — sistemico`. Trattandoli come marcatori di pari grado, il PRIMO sotto-titolo
+      //    **usciva dalla sezione** (non combacia con nessun pattern) e tutto il contenuto dei
+      //    positivi non veniva piu' ispezionato. Risultato: ho esteso il perimetro, il tool e'
+      //    rimasto verde, e il mutation-test col testo contaminante REALE non si accendeva.
+      //    Un heading PIU' PROFONDO e' una sottosezione: NON chiude il padre. Solo un heading di
+      //    pari o minor profondita' cambia sezione.
+      const lv = livello(riga);
+      const eSottosezione = zona !== null && lv > livelloSezione && lv !== 99;
+      if (!eSottosezione) {
+        if (SEZIONI_ESENTI.some((re) => re.test(riga))) zona = null;
+        else if (SEZIONI_TRAINING.some((re) => re.test(riga))) zona = "training";
+        else if (SEZIONI_SOTTO_DECISIONE.some((re) => re.test(riga))) zona = "sotto-decisione";
+        else zona = null;
+        livelloSezione = lv;
+      }
     }
+    const inTraining = zona === "training";
     // ⚠️ Il caso `- **Hack-check (OBBLIGATORIO)**: …` esiste nel corpus come VOCE SINGOLA: li' il
     //    contenuto sta sulla riga stessa, quindi la riga si ispeziona comunque, senza aprire sezione.
     //    Deve pero' essere un MARCATORE puntato, non una riga che *nomina* una sezione: la prima
@@ -118,10 +156,25 @@ for (const f of files) {
     //    **la prosa che spiegava il difetto** — falso positivo prodotto dal tool su se' stesso.
     const m2 = riga.match(/^\s*[-*]\s+\*\*([^*]+)\*\*\s*:/);
     const rigaAutoPortante = !!m2 && SEZIONI_TRAINING.some((re) => re.test(m2[1]));
-    if (!inTraining && !rigaAutoPortante) return;
+    const inSottoDecisione = zona === "sotto-decisione";
+    if (!inTraining && !rigaAutoPortante && !inSottoDecisione) return;
+    // ⚠️ ETICHETTA-DI-PROVENIENZA ≠ CONTENUTO (aggiunto 2026-07-26, subito dopo aver esteso il
+    //    perimetro ai §Esempi POSITIVI). Estendendolo il tool ha gridato su **5** casi che sono
+    //    invece la CONVENZIONE del corpus: l'esempio dichiara di essere la *generalizzazione* del
+    //    caso tenuto fuori e lo nomina — `[I · lavoro/tech, il caso ALDO-QX **generalizzato
+    //    held-out**]`. Lì il token sta in un'etichetta che dice DA DOVE viene l'esempio, non nel
+    //    contenuto insegnato: è il pattern corretto (si insegna il meccanismo, si tiene fuori la
+    //    superficie). Aperto UNO a mano prima di trattarli come difetti — erano 5 falsi positivi.
+    //    → una riga che marca sé stessa `held-out` è provenienza dichiarata, non contaminazione.
+    //    ⚠️ LIMITE, dichiarato: un autore può scrivere `held-out` nell'etichetta di un esempio che
+    //    contamina davvero. Il tool verifica la COERENZA della dichiarazione, non l'onestà di chi
+    //    la scrive — coerente col limite già dichiarato sopra. Quel caso è compito della review.
+    if (/held-?out/i.test(riga)) return;
     for (const t of tokens) {
       if (riga.toLowerCase().includes(t.toLowerCase())) {
-        problemi.push({ file: f, riga: i + 1, token: t, testo: riga.trim().slice(0, 130) });
+        const voce = { file: f, riga: i + 1, token: t, testo: riga.trim().slice(0, 130) };
+        if (inTraining || rigaAutoPortante) problemi.push(voce);
+        else avvisi.push(voce); // §Esempi POSITIVI: visibile, non bloccante finche' non e' deciso
       }
     }
   });
@@ -139,8 +192,18 @@ if (asJson) {
       console.log(`      ${p.testo}`);
     }
   }
+  if (avvisi.length) {
+    console.log(`\n🟡 SOTTO DECISIONE — ${avvisi.length} occorrenze di token HELD-OUT dentro §Esempi POSITIVI (NON bloccante)`);
+    console.log(`   I positivi SONO training data, quindi in linea di principio è contaminazione. MA l'esenzione di`);
+    console.log(`   questa sezione è la CONVENZIONE dichiarata nella prosa di 14 classi: ribaltarla cambia cosa`);
+    console.log(`   significa "held-out" per tutto il corpus → cambio STRUTTURALE, lo decide l'utente (#26/#34).`);
+    for (const a of avvisi) {
+      console.log(`   ${a.file}:${a.riga}  token «${a.token}»`);
+      console.log(`      ${a.testo}`);
+    }
+  }
   console.log(`\n${files.length} file · ${conBlocco} con blocco \`held-out\` (${tokenTotali} token) · ` +
-    `${problemi.length} contaminazioni · ${senzaBlocco.length} senza blocco (non giudicate)`);
+    `${problemi.length} contaminazioni · ${avvisi.length} sotto-decisione · ${senzaBlocco.length} senza blocco (non giudicate)`);
   console.log(problemi.length
     ? `❌ ${problemi.length} DA SISTEMARE — o si toglie il token dal training, o non e' davvero held-out.`
     : `✅ nessun token held-out compare in una sezione di training` +
