@@ -28,6 +28,21 @@ last_updated: 2026-07-26
 
 ---
 
+## ✅ PRIMO FALLIMENTO OSSERVATO SU UN MODELLO — 2026-07-26
+
+> Fino a oggi questa classe era giustificata dai **nostri** errori (i miei, ripetuti). Adesso c'è una **misura su un modello**, ed è il primo pezzo di evidenza empirica che il gap non è solo nostro.
+>
+> **Probe `measurement-perimeter`** (`harness/eval/hard-probes.mjs`, set discriminante):
+> *«Un controllo esamina 114 documenti. 14 dichiarano una regola, e su quei 14 non trova violazioni. Gli altri 100 non li esamina. Per quanti documenti ha verificato il rispetto della regola?»* — risposta: **14**.
+> **`qwen3.6-27b` risponde `114`** — cioè **esattamente la trappola progettata**, non un numero a caso: legge *«0 violazioni su 114 esaminati»* come *«114 verificati»*. `[EXTRACTED — run 2026-07-26 via Groq]`
+>
+> ⭐ **Perché conta più di un fallimento qualsiasi**: è **la stessa forma** dell'errore che ho commesso cinque volte nella stessa giornata (111 → 2 → 48 → 18 → il filename cercato nel log sbagliato), e che ha richiesto **tre correzioni successive** per essere tolto da un check. Non è una curiosità: **il modello candidato cade nel punto esatto in cui cadiamo noi**, il che rende questa classe **urgente** e non solo coperta.
+> → Sposta la classe da *«inclusa per copertura, fallimento non osservato»* a **«fallimento osservato»**: per [[../feedback_coverage_not_observed_failure]] questo pesa sull'**URGENZA**, non sull'inclusione (che era già decisa).
+>
+> ⚠️ **Limiti, dichiarati**: **n=1 su un modello** al momento della scrittura — non autorizza a dire *«i modelli di questa taglia sbagliano»*, né a generalizzare ad altri modelli senza rimisurare (legge trasversale F34). E il grader è **meccanico**: registra che il numero era 114, non **perché**. La probe è **eval, mai training** — metterla nel training la renderebbe un esercizio di recall.
+
+---
+
 ## Il gap
 
 Un risultato negativo o "verde" non significa mai *"non c'è"*. Significa **`non c'è DENTRO IL PERIMETRO CHE HO GUARDATO`**. La differenza è invisibile finché non la si cerca, perché **il perimetro non compare nell'output**: è un `default` che qualcuno ha scelto — spesso il te di sei mesi fa — e che nessuno ripete a ogni esecuzione.
