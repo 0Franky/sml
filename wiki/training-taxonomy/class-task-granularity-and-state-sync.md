@@ -93,6 +93,15 @@ I negativi rendono il segnale discriminativo (anti over-tracking / anti micro-fr
 
 L'**istanza osservata** — il dump F35/C9 (`in_progress` con ultima-azione-READ + granularità grossa, qwen3-32b/sonnet/deepseek sulle lane reali) — resta **held-out di validazione**, MAI nel training (train-on-test contaminerebbe il validation set). Il training usa i transfer §positivi/§negativi su **domini disgiunti** (PM/sanità/finanza/quotidiano/relazioni). Se il modello impara la riconciliazione-stato, a valle risolve l'istanza-C9 **per transfer** (l'harness `task_list` scaffolda ORA lo stato → il modello lo tiene VERO da sé, doppio-scopo #18).
 
+**Dichiarazione MACCHINA-LEGGIBILE della superficie tenuta fuori** — verificata da
+[`harness/tools/check-decontamination.mjs`](../../harness/tools/check-decontamination.mjs), che fallisce se uno di questi token compare in una sezione che **prescrive il training** (§Label-generation · §Hack-check · §Esempi NEGATIVI). ⚠️ Si dichiara la **SUPERFICIE** (gli identificatori dell'istanza osservata), **mai il MECCANISMO**: tenere fuori il meccanismo renderebbe la classe non insegnabile.
+```held-out
+# identificatori dell'istanza osservata (dump F35/C9 sulle lane reali)
+# NB: i token devono avere una SPECIFICITA MINIMA — "C9" da solo combaciava dentro parole
+#     qualsiasi e produceva un falso positivo. Si usa la forma composta.
+F35/C9
+qwen3-32b
+```
 ## Coherence-audit (playbook §5)
 
 1. Struttura sezioni ✓ · 2. Reward outcome-anchored a **3 segnali** (①esito hard-trace + ②MCQ-controfattuale + ③transfer) + **#32-safe** (soft-boundary→distribuzionale) + hack-check + simmetria ✓ · 3. Home area-01/04 + **padre = radice-AUDIT [[class-metacognitive-self-audit]]** (proposto, attende ratifica #26) ✓ · 4. Fixture self-contained + istanza-C9 held-out/decontaminata ✓ · 5. Transfer A/B/C/D/E/F cross-dominio (software/PM/sanità/finanza/quotidiano/relazioni), banale→sistemico (#19) ✓ · 6. Negativi N1-N6 (under + planning-ahead + atomico + stato-giusto + azione-supporto + esplorazione) + reward simmetrico ✓ · 7. Integrità fattuale (fixture veri-per-costruzione, nessun fatto-del-mondo inventato) ✓ · 8. **Confini netti** (vedi §Confini): vs effort-honesty (incondizionato ≠ difficoltà→degrado) · vs subgoal-hijacks (bookkeeping-interno ≠ report-mezzo-a-response-time) · vs evaluation-integrity (audita il TUO stato ≠ non-corrompere un valutatore esterno) · vs stagnation-recovery (stato-vs-trace ≠ stuck→recover) ✓ · 9. Wiring: padre-tabella + registry §6 + index + todo(T3) + area-01/04 + log ⏳ (vedi wiring-notes) · 10. Caveat nuovo → playbook §4 (branch-field-trap sul confine soft di status) ⏳.

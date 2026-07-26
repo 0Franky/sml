@@ -1,3 +1,9 @@
+**Dichiarazione MACCHINA-LEGGIBILE della superficie tenuta fuori** — verificata da
+[`harness/tools/check-decontamination.mjs`](../../harness/tools/check-decontamination.mjs), che fallisce se uno di questi token compare in una sezione che **prescrive il training** (§Label-generation · §Hack-check · §Esempi NEGATIVI). ⚠️ Si dichiara la **SUPERFICIE** (gli identificatori dell'istanza osservata), **mai il MECCANISMO**: tenere fuori il meccanismo renderebbe la classe non insegnabile.
+```held-out
+# identificatore dell'istanza osservata (il bug dell'eviction-checkpoint)
+019f2ab9
+```
 ---
 name: class-verification-seam-placement
 description: Classe (figlia di ground-truth-integrity — la 3ª posizione della relazione di verifica, il GIUNTO fra controllore e controllato) — scegliere il LIVELLO a cui verificare. Un metro onesto e non-manomesso, attaccato al giunto sbagliato, dà un verde che non significa niente: testare l'implementazione contro se stessa, verificare a valle di dove il difetto vive, unit-test su funzioni pure mentre il bug è nel wiring. Simmetrico: over-verificare a ogni livello (costo) e forzare un giunto che non esiste (over-decomposizione) pesano quanto il miss. ⚠️ Contiene in APPENDICE il materiale E2 (defect-liveness/raggiungibilità) il cui placement è CONTESTATO — split proposto, non ratificato.
