@@ -47,6 +47,29 @@ Ogni classe si costruisce applicando TUTTE insieme (fonte autoritativa = CLAUDE.
 
 ---
 
+## §2-bis — ⭐ SEQUENZA DELLE FASI: **vincolo per-esempio PRIMA, aggregato DOPO** *(idea utente, TG msg 1991, 2026-07-26)*
+
+> **Ratificata come idea da integrare** (l'utente: *«questa potrebbe essere un'idea, comunque salvarla e metterla come workflow, insomma integrarla nel playbook di training»*). ⚠️ **È un principio di CURRICULUM, non un passo del §2**: cambia *quando* si misura, non *cosa*.
+
+**Il problema che scioglie.** Per molte skill l'oracolo **per-esempio** esiste solo dove il dominio è verificabile a macchina (software: il test passa, il diff regge). Sui domini **non-software** — che #19 rende **obbligatori** — resta solo il segnale **distribuzionale** (held-out + ECE). Sembrava un aut-aut: *o costruisci un simulatore per ogni dominio, o rinunci alla misura per-esempio dove non puoi*.
+
+⭐ **L'idea: non è un aut-aut, è una SEQUENZA.**
+
+1. **FASE 1 — insegnare col vincolo per-esempio, dove l'oracolo esiste.** Il modello viene **costretto a non violare** il pattern, con segnale denso e verificabile. Qui si paga il costo dell'oracolo solo dove è **economico** (software).
+2. **FASE 2 — valutare l'esito AGGREGATO.** E il punto è **perché adesso ci si può fidare**: l'aggregato non misura più *«ha indovinato»* — misura **ciò che la fase 1 ha depositato**. Se il modello ha imparato a evitare una classe di pattern, l'aggregato **eredita quell'apprendimento** e diventa un segnale informativo invece che rumore mediato.
+3. **FASE 3 — allineamento, e la misura COSTOSA va QUI.** *«La parte più costosa la mettiamo alla fine, che sarà già — si spera — molto ridotto il blast radius dei comportamenti avversariali del modello»*: valutare un modello già vincolato costa meno **e** rischia meno, perché lo spazio dei comportamenti da coprire si è ristretto.
+
+**Perché batte l'alternativa che avevo proposto io** (*«il polo non-software resta solo distribuzionale, e lo si dichiara»*): quella **rinunciava** e basta — l'aggregato restava debole per sempre, perché non c'era nulla a monte a renderlo interpretabile. Qui l'aggregato è debole **all'inizio** e diventa forte **per costruzione**, man mano che la fase precedente restringe lo spazio.
+
+**Conseguenze operative** *(da applicare quando si progetta il reward di una classe)*:
+- **Non serve un oracolo per-esempio in OGNI dominio.** Serve in **almeno uno** abbastanza denso da insegnare il pattern; gli altri possono essere aggregati **se vengono dopo**.
+- **L'ordine diventa parte del design del reward**, non un dettaglio di scheduling: dichiarare *«questo segnale è aggregato»* senza dichiarare *«e viene dopo la fase che lo rende leggibile»* è un'informazione incompleta.
+- **La misura costosa si sposta in fondo** — e questo va scritto nel piano, altrimenti si finisce a pagare la valutazione più cara sul modello più selvaggio, cioè nel momento peggiore.
+- ⚠️ **Il rischio da sorvegliare, e non è piccolo**: la fase 2 **assume** che la fase 1 abbia depositato qualcosa. Se non l'ha fatto, l'aggregato torna a essere rumore **e nessuno se ne accorge**, perché sembra la stessa misura. → **serve un controllo esplicito fra fase 1 e fase 2** (il pattern è stato appreso? si misura sull'held-out della fase 1) **prima** di fidarsi dell'aggregato. Senza quel controllo la sequenza è un atto di fede, non un metodo. *(Cugino di [[class-self-sealing-decision]]: una fase che si fida della precedente senza verificarla non ha nessuno che glielo dica.)*
+- 🗳️ **Non ancora deciso**: dove esattamente cade il confine fase-1/fase-2 per ciascuna area, e quale sia il criterio di passaggio. **Da progettare**, non da assumere.
+
+---
+
 ## §3 — Tecniche di label-generation
 
 | Tecnica | Cosa fa | Modulo |
