@@ -6,12 +6,13 @@ tags: [reasoning, metacognition, prospective-memory, obligation, tech-debt, tear
 last_updated: 2026-07-16
 ---
 
-> # ⛔ NON VALIDATA — giro-3: **2 findings aperti** (0 P0 · 0 P1 · 2 P2)
+> # ⛔ NON VALIDATA — giro-3: **0 findings aperti** — ma **NON dry**: l'integrazione del 2026-07-26 non è stata ri-revisionata
 > **NON usare per il training.** Review-loop in corso (playbook §PROCESSO: si integra fino a **dry**). Un difetto qui **si stampa nei pesi** (#22).
 >
 > **Traiettoria** (il loop CONVERGE, non gira a vuoto): giro-1 → P0 chiusi e ri-verificati alla fonte · giro-2 → 25 nuovi (1 P0 · 13 P1) · **giro-3 → 2 nuovi (0 P0 · 0 P1)**.
 > Questo giro: **5 fix** applicati · **3 respinti con prova** (finding o fix sbagliati del revisore) · **3 TODO scritti DAVVERO** in `wiki/todo.md` · ancore `check-anchors`: 0 ERROR ✅.
->   - (nessun P0/P1 — restano solo P2)
+>   - ✅ **[P2 · parentela] CHIUSO 2026-07-26** — chiamava [[class-durable-knowledge-retraction]] *«gemella della famiglia-memoria»* omettendo **rispetto a chi**: il grafo misurato dice che condivide il padre con `class-prospective-memory`, quindi sta **un livello sopra** questa classe. Corretto in due punti. *(Il file trattava già correttamente la classe nella posizione **identica** — la gemella-RECALL — quindi sapeva già farlo.)*
+>   - ⛔ **[P2 · banner] DECADUTO 2026-07-26** — sosteneva che il banner dicesse *«3 findings APERTI»* e *«i 7 negativi sono tutti software»*. Verificato: il banner riporta il conteggio del giro-3, e i negativi sono **12**, di cui **5 non-software**. Il rilievo descriveva uno stato superato dall'integrazione avvenuta fra la review e oggi.
 >
 > Findings completi + prove: `wiki/_private/gap-classes-round3-2026-07-16.json` `[gitignored]` → `.classes[] | select(.slug=="class-prospective-obligation-discharge")`.
 > Contesto: [[gap-report-2026-07-16]] · verifica ancore: `npm run check:anchors`.

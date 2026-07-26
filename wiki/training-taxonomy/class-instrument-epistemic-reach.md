@@ -11,8 +11,13 @@ last_updated: 2026-07-26
 > dall'utente il 2026-07-16 (*"sono d'accordo"* sull'**opzione 2**) — la **ratifica copre la STRUTTURA**
 > (creare il nodo intermedio con quelle due figlie), **non il contenuto di questo file**, che nessuno ha
 > ancora letto ne' revisionato (#26). Un difetto qui **si stampa nei pesi** (#22).
-> **Nessuna delle TRE figlie e' validata**: (a) ha **1 finding aperto** al giro-3 *(era 2; il P1 di branch-leak
-> e' stato chiuso il 2026-07-26)*, (b) e' nata il 2026-07-18, **(c)** [[class-instrument-coverage-scope]] e'
+> **Nessuna delle TRE figlie e' validata**: (a) — **stato dei suoi findings: vedi il banner della figlia**,
+> non ripetuto qui *(⚠️ **corretto il 2026-07-26**: questa riga **copiava** il conteggio della figlia, e lo
+> copiava **sbagliato** — diceva 1 mentre la figlia era gia' a 0. **L'avevo scritta io poche ore prima**,
+> dopo aver registrato **cinque volte** nello stesso giorno che *un'asserzione sullo stato di un ALTRO file
+> invecchia in silenzio*. ⭐ **Conoscere una regola non la esegue** — ed e' la ragione per cui la cura non e'
+> «staro' piu' attento» ma **togliere la copia**: un **PUNTATORE non puo' driftare**, un numero copiato si'.
+> E' SSOT #16 applicata allo stato, non ai valori)*, (b) e' nata il 2026-07-18, **(c)** [[class-instrument-coverage-scope]] e'
 > nata il **2026-07-25** con **struttura ratificata** (utente msg 1860) ma **contenuto mai revisionato**.
 > *(La posizione 3 dell'asse era dichiarata **scoperta** in questo stesso file fino a quel giorno: la figlia (c)
 > la chiude — e con la sua faccia **provenienza** accoglie **F2/Chesterton**, che `tool-perception-fidelity`
