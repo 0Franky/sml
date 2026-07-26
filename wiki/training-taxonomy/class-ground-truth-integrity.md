@@ -29,7 +29,8 @@ last_updated: 2026-07-11
 | **integrita' verso la SOLUZIONE DISPONIBILE** *(assegnata 2026-07-25)* | la risposta e' **a portata** | non guardarla senza titolo, e non costruire la propria attorno a quella che qualcuno **afferma** essere corretta (answer-anchoring) | [[class-solution-availability-integrity]] |
 | **dove si mette la CUCITURA della verifica** *(assegnata 2026-07-25)* | IO scelgo **dove** si verifica | il punto in cui il controllo tocca il sistema decide cosa puo' essere colto: una cucitura messa comoda produce un verde che non discrimina | [[class-verification-seam-placement]] |
 
-> Le due figlie sono **speculari**: stessa radice, direzione opposta (verifico ⟷ sono-verificato). Insieme coprono il canale di verifica su entrambi i lati.
+> ⚠️ **Conteggio aggiornato 2026-07-26 — erano DUE, sono QUATTRO** *(misurate sul grafo: `evaluation-integrity`, `independent-verification-integrity`, `solution-availability-integrity`, `verification-seam-placement`)*. La frase diceva ancora *«le due figlie»*: le altre due sono nate dopo e **nessun evento ha innescato la revisione di questa riga**.
+> **La coppia originaria resta speculare** — stessa radice, direzione opposta (verifico ⟷ sono-verificato) — e insieme copre il canale di verifica su entrambi i lati. ⚠️ **Ma «due speculari» non descrive più la famiglia**: se le quattro formano ancora un asse coerente (e quale) **non è stato argomentato**, ed è un gap-scan (#36a: *l'asse è completo?*) **da fare**, non da dare per scontato.
 
 ## Reward (condiviso, ANCORATO all'OUTCOME + SIMMETRICO)
 

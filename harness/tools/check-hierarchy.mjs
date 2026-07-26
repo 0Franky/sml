@@ -195,6 +195,17 @@ for (const d of declared) {
  * COSA FA: cerca nel file-padre le affermazioni **numeriche** sulle proprie figlie e le mette accanto
  * al numero **misurato** dai legami. Un `2` dove le figlie sono `3` salta all'occhio in un secondo.
  *
+ * ⚠️ TASSO DI SEGNALE **MISURATO**, non promesso (2026-07-26, prima applicazione su tutto il corpus):
+ * su **8** segnalazioni → **2 stantie vere** (`ground-truth-integrity` diceva *due* figlie e ne ha
+ * **quattro**; `situational-awareness` descriveva una famiglia di **cinque** e ne ha **nove**) · **1
+ * falso positivo** (soggetto = una terza classe) · **5 legittime**: storiche, ipotetiche, o descrizioni
+ * **parziali** (*"le prime 4 figlie…"* non e' un totale). **Circa 1 su 4 e' azionabile.**
+ * → **il valore e' stato reale ma in gran parte ONE-SHOT**: ha ripulito uno stantio accumulato che
+ * nessun altro controllo vedeva. A regime mostrera' per lo piu' righe gia' note e legittime. Si tiene
+ * perche' e' **silenzioso quando i conti tornano** e costa zero leggerlo — ma **chi lo consulta deve
+ * sapere che la maggioranza delle righe NON e' un difetto**, altrimenti si abitua a ignorarlo, ed e'
+ * il modo in cui un controllo muore.
+ *
  * ⚠️ PERCHE' E' INFO E NON ERRORE — e non e' timidezza, e' il confine di #24.
  * Distinguere *"il padre HA due figlie"* (claim sullo stato corrente, da correggere) da *"l'utente
  * approvo' il nodo con quelle due figlie"* (registrazione storica, **corretta cosi'**) e' **semantica**,
@@ -216,7 +227,17 @@ for (const [parent, set] of kids) {
   const src = bodies.get(parent) ?? "";
   const re = /(?:\b(due|tre|quattro|cinque|sei|\d+)\s+figli[ea]\b|\bpadre\s+di\s+(due|tre|quattro|cinque|sei|\d+)\b|\b(entrambe)\s+le\s+figlie\b)/gi;
   const seen = new Set();
-  for (const m of src.matchAll(re)) {
+  // ⚠️ MENZIONE ≠ USO — e la distinzione e' PUNTEGGIATURA, non semantica (quindi lecita per #24).
+  //    Un conteggio dentro le virgolette e' **citato**, non **asserito**: e' cosi' che si scrivono le
+  //    note di correzione (*«diceva «le due figlie»…»*) e le citazioni storiche. Senza questo filtro
+  //    il tool segnala **la prosa che spiega la correzione** — ci sono cascato TRE volte in un giorno,
+  //    e la regola *"non ri-citare la forma sbagliata"* non ha retto: se una regola si viola tre volte,
+  //    non serve ripeterla, serve renderla **non-necessaria** (#17). Qui lo diventa.
+  const srcVisibile = src
+    .replace(/«[^»]*»/g, " ")            // citazione a caporali
+    .replace(/\*"[^"]*"\*/g, " ")        // citazione in corsivo-virgolette
+    .replace(/~~[^~]*~~/g, " ");         // testo barrato = storico per convenzione
+  for (const m of srcVisibile.matchAll(re)) {
     const tok = (m[1] ?? m[2] ?? m[3] ?? "").toLowerCase();
     const said = tok === "entrambe" ? 2 : (NUM[tok] ?? Number(tok));
     if (!Number.isFinite(said) || said === real) continue;      // silenzioso quando combacia
