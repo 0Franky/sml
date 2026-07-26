@@ -110,7 +110,11 @@ Alla decisione finale: ADR in `wiki/decisions/` + aggiornare [[../../memory]] `p
 
 ## Bake-off — 1° giro FLOOR-CHECK (2026-07-08, via Groq, keys utente)
 
-Groq (key utente in `harness/.env` come `GROQ_KEYS`, loader provider-aware `env-keys.mjs`) serve: **`qwen/qwen3-32b`** ✓, **`qwen/qwen3.6-27b`** ✓ (= scelta protetta + target-class), `openai/gpt-oss-20b`/`gpt-oss-120b`, `llama-3.3-70b-versatile`. **Seed-OSS-36B NON presente su Groq** → serve OpenRouter/Together (key) o self-host Kaggle.
+Groq (key utente in `harness/.env` come `GROQ_KEYS`, loader provider-aware `env-keys.mjs`) serve: ~~**`qwen/qwen3-32b`** ✓~~, **`qwen/qwen3.6-27b`** ✓ (= scelta protetta + target-class), `openai/gpt-oss-20b`/`gpt-oss-120b`, `llama-3.3-70b-versatile`. **Seed-OSS-36B NON presente su Groq** → serve OpenRouter/Together (key) o self-host Kaggle.
+
+> 🔴 **STANTIO CORRETTO il 2026-07-26 — `qwen/qwen3-32b` NON È PIÙ SU GROQ.** Interrogato l'endpoint `/models` (HTTP 200, **15 modelli**): il solo Qwen rimasto è **`qwen3.6-27b`**. La riga sopra era **vera il 2026-07-08 e ha smesso di esserlo senza che nessun evento la rivedesse** — l'ho scoperto solo perché una probe è tornata **404**, non perché un controllo l'abbia segnalato.
+> ⚠️ **Conseguenza decision-relevant**: il bake-off assumeva `Qwen3-32B` raggiungibile **gratis**. Non lo è più → o si passa a un provider a pagamento per quel braccio, o il **default-sicuro** del bake-off va ri-considerato. **Non deciso qui** (#26).
+> ⭐ **Lezione**: la disponibilità di un provider è **un fatto del mondo, non una proprietà del nostro repo** — decade da sola e nessun nostro check la sorveglia. Prima di pianificare un run, **interroga `/models`**, non la wiki. *(Stessa forma di F26: verifica la risorsa dove VIVE.)*
 
 **Base-probes** (`base-probes.mjs`: shell bash/PS/cmd/posix + python + JS + reasoning, 13 probe): **TUTTI e 4 i candidati → 100% (13/13 validi)**. → **Floor superato da tutti** (adeguati a operare OS+harness, il requisito base — [[../../memory]] `project_from_scratch_slm_future`). **MA il floor NON DISCRIMINA** (tutti 100%): serve un metro più fine per SCEGLIERE. **[V]** confermato: qwen3.6-27b solido sui basics.
 
