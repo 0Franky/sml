@@ -64,9 +64,35 @@ const SEZIONI_TRAINING = [
   /label-?gen/i,
   /hack-?check/i,
   /esempi\s+negativi/i,
+  // ⬇️ RIBALTATO il 2026-07-26 (ratifica utente): i POSITIVI **sono** training data, quindi una
+  //    scena held-out li' dentro e' contaminazione. L'eccezione non e' la sezione ma l'ETICHETTA:
+  //    un esempio che dichiara `held-out` nel proprio titolo e' la slice di validazione designata,
+  //    e viene esentato piu' sotto (`/held-?out/i.test(riga)`).
+  /esempi\s+positivi/i,
 ];
 
-/** ⚠️ §Esempi POSITIVI — SEZIONE SOTTO DECISIONE, riportata come WARN e NON bloccante (2026-07-26).
+/** ✅ §Esempi POSITIVI — ORA BLOCCANTE (ratificato dall'utente TG msg 1991: *«ribaltare»*).
+ *
+ *  ⚠️ **Ma la ratifica poggiava su un mio numero SBAGLIATO, e va detto**: avevo riportato che la
+ *  vecchia esenzione era *«la convenzione dichiarata nella prosa di 14 classi»*, facendola sembrare
+ *  un cambio strutturale. **Aprendo i file: la dichiara UNA sola classe.** Le altre 14 avevano
+ *  soltanto un blocco ```held-out```, che e' una cosa diversa — **ho contato una cosa e riportato
+ *  l'altra**, l'ennesimo perimetro sbagliato della giornata, stavolta dentro una decisione che ho
+ *  chiesto all'utente di prendere.
+ *
+ *  ⭐ **E aprendo i 3 casi segnalati e' emersa una TERZA possibilita' che ne' io ne' l'utente
+ *  avevamo elencato**: non erano contaminazione, e non erano generalizzazioni-che-condividono-
+ *  parole. Erano **gli esempi DESIGNATI come slice di validazione**, che vivono nella sezione
+ *  positivi ed erano dichiarati tali **nella prosa**. Sotto la vecchia esenzione erano coerenti;
+ *  sotto il ribaltamento sarebbero diventati falsi positivi.
+ *
+ *  **La regola che ne esce, ed e' migliore del binario**: un positivo puo' contenere superficie
+ *  held-out **solo se DICHIARA di essere held-out**, e lo dichiara **nella propria etichetta** —
+ *  dove il tool puo' leggerlo — non nella prosa a due sezioni di distanza.
+ *  Non e' una convenzione inventata da me: **15 classi la usano gia'** (`[A · software/harness, il
+ *  caso nativo held-out]`). L'unica outlier e' stata allineata, non il contrario. */
+
+/** ⚠️ ex-nota SOTTO DECISIONE (2026-07-26, superata dalla ratifica dello stesso giorno):
  *
  *  La review giro-0 di `class-self-sealing-decision` ha trovato un **train-on-test vero** in questa
  *  sezione mentre il tool era verde: il tool la esentava con la motivazione «è lì che gli scenari
@@ -80,7 +106,7 @@ const SEZIONI_TRAINING = [
  *  tutto il corpus. **È un cambio strutturale: lo propone il tool, lo decide l'utente** (#26/#34).
  *  Finché non è deciso, gli hit qui sono **🟡 WARN visibili e non bloccanti**: sopprimerli
  *  significherebbe nascondere il difetto, farli fallire significherebbe decidere per fiat. */
-const SEZIONI_SOTTO_DECISIONE = [/esempi\s+positivi/i];
+const SEZIONI_SOTTO_DECISIONE = []; // vuoto: i POSITIVI sono passati a SEZIONI_TRAINING (bloccanti)
 /** Sezione dove i token held-out DEVONO comparire (e' dove la scena tenuta fuori viene NOMINATA):
  *  mai un difetto. Resta UNA sola — vedi la nota sopra sul perche' i POSITIVI non sono piu' qui. */
 const SEZIONI_ESENTI = [
