@@ -28,10 +28,13 @@ last_updated: 2026-07-18
 | 2 | **Spendere credito** per ri-eseguire il discriminante C4 — tutti e 3 i bracci *(reco)* o solo Seed (non confrontabile)? | 🗳️ **UTENTE** | attende decisione |
 | 3 | **Metro standard** [[lab-plan-base-model-metro]] — approvare il piano a 2 livelli | 🗳️ **UTENTE** | attende decisione |
 | 4 | **Analisi sistema memoria asincrona** (idea utente msg 1964, *«fai analisi fatta bene»*) | 🤖 team | **in corso** |
-| 5 | **Review giro-0** di `class-self-sealing-decision` + `class-norm-invariance-under-observation` | 🤖 team | **in corso** |
+| 5 | **Review giro-0** — RAPPORTO RICEVUTO e VERIFICATO. `self-sealing`: 3 difetti confermati e **chiusi** (train-on-test A1 · reward-2 che pagava il ramo · wiring-sorella dichiarato-falso) + N6 aggiunto. `norm-invariance`: **NON toccata**, ha un difetto piu grosso (policy stupida = 12/12) che richiede esempi nuovi | 🧑 io | **parzialmente chiusa** |
 | 6 | **Fixture-builder + reward-runner** (#11) — ⚠️ **collo di bottiglia**: blocca TB-18/TB-19, le ablazioni e il polo SANE | 🧑 io | **fermo** — è design, richiede il gate #26 prima del codice |
 | 7 | ~~Pacing fra le CHIAMATE~~ **FATTO** — `eval/pacer.mjs` + 6 test con orologio finto (mutation-test: 3 rossi togliendo l attesa) + smoke end-to-end. Default 0 = comportamento invariato | 🧑 io | **chiusa** |
 | 8 | **Classe training «auto-gestione del lavoro»** (utente msg 1977: proprietà emergente del MODELLO) — *scomporre-e-delegare vs fare da soli* | 🗳️ **UTENTE** | proposta, attende ok #18 |
+| 10 | 🗳️ **Convenzione held-out: i §Esempi POSITIVI sono esenti dal check?** La prosa di **14 classi** lo dichiara; ribaltarla cambia cosa significa held-out per tutto il corpus. 3 hit reali in `class-compositional-reversibility`, riportati come WARN non-bloccante. *Reco: ribaltare + sistemare i pochi veri; la ribalterebbe scoprire che sono solo generalizzazioni che condividono parole* | 🗳️ **UTENTE** | attende decisione |
+| 11 | **`class-norm-invariance-under-observation`**: policy a intelligenza zero (*«di sempre il vero, non rifiutare, niente cerimonia»*) prende **12/12**. Fix identificato: coppie a correttezza **sotto-determinata** — chiude anche la ridondanza fra i due termini del reward. Un intervento, tre chiusure | 🧑 io | **aperta** (design) |
+| 12 | **Gap di FORMA del corpus** (dal gap-scan del revisore): tre radici diverse hanno tutte il buco sulla **fase abilitante/positiva** — sappiamo insegnare a non-cedere/non-corrompere/non-rimuovere, non il **sì argomentato**. Non è un gap di una classe: è di tassonomia | 🗳️ **UTENTE** | segnalata |
 | 9 | **Anomalia `core` > `minimal`** → **RIDIMENSIONATA a probabile rumore**: rimisurando `minimal` da solo dà 32.6KB vs 30.6KB = ~2KB di varianza run-su-run, e il divario era 2.8KB. n=1 non discrimina. Serve n≥3 con dispersione | 🧑 io | ridimensionata, non chiusa |
 
 ---
