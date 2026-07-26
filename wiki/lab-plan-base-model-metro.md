@@ -137,8 +137,16 @@ Sul payload che ha **davvero fallito** (92.9 KB, F37): i tool erano **27.1 KB = 
 
 ⚠️ **Due trappole da non prendere**:
 - **`core` NON è utilizzabile** per il livello 2: non ha le meta-tool → nessuna riscoperta → `src/tool-gating.mjs:72` lo dichiara *«test NON discriminante»*. Sceglierlo per stare sotto il TPM **farebbe passare la misura eliminando ciò che misura**.
-- ~~**ANOMALIA non spiegata**: `core` produce un body più grande di `minimal`~~ → **RIDIMENSIONATA a probabile RUMORE lo stesso giorno.** Sembrava un segnale (33.4 vs 30.6 KB, cioè *«l'harness inietta testo diverso per profilo»*). Poi `minimal` è stato rimisurato **da solo**: **32.6 KB**, cioè **+2 KB rispetto a sé stesso**. C'è ~2 KB di **varianza run-su-run** nella parte non-tool, e il divario core-vs-minimal (2.8 KB) è **dello stesso ordine**.
-  > ⭐ **n=1 per profilo non distingue segnale da rumore** (#35b). La conclusione onesta è **«indistinguibile dal rumore»**, non *«è un'anomalia»* — e nemmeno *«non c'è»*: per chiudere servono ≥3 run per profilo con la **dispersione** riportata accanto alla media. **I numeri dei TOOL invece sono stabili e deterministici** (5.9 / 8.1 / 27.1 / 41.5 KB) → il verdetto del 21% **regge**: è la parte non-tool a ballare, e quella conta nel denominatore osservato, non nella differenza fra profili.
+- ~~**ANOMALIA non spiegata**: `core` produce un body più grande di `minimal`~~ → ✅ **CHIUSA lo stesso giorno: è RUMORE — misurata a n=3, non archiviata a n=1.**
+
+  | profilo | run 1 | run 2 | run 3 | **dispersione** |
+  |---|---|---|---|---|
+  | `core` (8 tool) | 27.3 KB | 32.9 KB | 35.0 KB | **7.7 KB** |
+  | `minimal` (12 tool) | 32.6 KB | 33.7 KB | 34.7 KB | **2.1 KB** |
+
+  Il divario che sembrava un'anomalia (**2.8 KB**) sta **dentro** la dispersione di `core`, che è quasi **3× più grande**. E il colpo che chiude: **al run 2 il segno si inverte** — `core` 27.3 < `minimal` 33.7. ⭐ **Un segnale non cambia segno.**
+  > ⛔ **Refutata anche l'ipotesi intermedia, e vale più del risultato.** Con **due** punti sembrava che entrambi i profili **crescessero nel tempo** (`minimal` 30.6→32.6, `core` 33.4→35.0) e l'ipotesi era attraente: *«la parte non-tool cresce mentre il repo cresce»* — cioè un costo che aumenta da solo senza che nessuno lo decida. **Il terzo punto l'ha uccisa**: `core` fa 35.0 → 27.3 → 32.9, nessuna monotonia. ⭐ **Due punti bastano sempre a raccontare una storia** — ed era stata *dichiarata come ipotesi da verificare*, non asserita: è l'unica ragione per cui la sua morte è costata zero.
+  ✅ **I byte dei TOOL sono deterministici**: 5.9 / 8.1 / 27.1 / 41.5 KB, **identici in tutti e tre i run** → il **verdetto del 21% regge**, perché poggia sui byte di schema, non sulla differenza fra profili.
 
 ---
 

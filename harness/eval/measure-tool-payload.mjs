@@ -150,17 +150,22 @@ CAVEAT — da dichiarare a chi legge il numero, non da nascondere:
      chiamate". La riga "chiamate prima di saturare" eredita quell'incertezza.
  (3) Il body misurato e' quello del PRIMO turno. Nei turni successivi la conversazione cresce,
      quindi la quota-tool CALA in percentuale ma il totale SALE. Questo e' il caso migliore.
- (5) ⚠️ ANOMALIA \`core\` > \`minimal\` — RIDIMENSIONATA a probabile RUMORE, e vale la pena dire come.
-     Prima osservazione: \`core\` (8 tool, 5.9KB di schema) dava un body TOTALE piu' GRANDE di
-     \`minimal\` (12 tool, 8.1KB) — 33.4 vs 30.6KB. Sembrava un segnale ("l'harness inietta testo
-     diverso per profilo"). Poi \`minimal\` e' stato rimisurato da solo: **32.6KB**, cioe' +2KB
-     rispetto a se stesso. C'e' quindi ~2KB di VARIANZA RUN-SU-RUN nella parte non-tool, e il
-     divario core-vs-minimal (2.8KB) e' dello stesso ordine.
-     -> **n=1 per profilo non discrimina segnale da rumore.** Per chiudere servirebbero >=3 run per
-     profilo e la dispersione riportata accanto alla media. Finche' non c'e', quel confronto NON
-     decide niente — ma la conclusione onesta e' "indistinguibile dal rumore", NON "e' un'anomalia".
-     (I numeri dei TOOL invece sono stabili e deterministici: 5.9 / 8.1 / 27.1 / 41.5KB. E' la
-     parte non-tool a ballare, ed e' per quello che il verdetto sul 21% regge lo stesso.)
+ (5) ✅ ANOMALIA \`core\` > \`minimal\` — **CHIUSA: e' RUMORE. Misurata a n=3, non archiviata a n=1.**
+     Sembrava un segnale ("l'harness inietta testo diverso per profilo"): \`core\` 33.4KB vs
+     \`minimal\` 30.6KB, divario 2.8KB nella direzione sbagliata rispetto ai byte di schema.
+     Tre run per profilo:
+         core     27.3 / 32.9 / 35.0 KB   -> dispersione **7.7 KB**
+         minimal  32.6 / 33.7 / 34.7 KB   -> dispersione **2.1 KB**
+     Il divario "anomalo" (2.8KB) sta **DENTRO** la dispersione di \`core\` (7.7KB), che e' quasi
+     **3 volte** piu' grande. E il colpo che chiude: **al run 2 il segno si INVERTE** (core 27.3 <
+     minimal 33.7). ⭐ **Un segnale non cambia segno.**
+     ⚠️ **Refutata anche l'ipotesi intermedia**: con 2 punti sembrava che entrambi i profili
+     CRESCESSERO nel tempo (minimal 30.6 -> 32.6; core 33.4 -> 35.0) e l'ipotesi era "la parte
+     non-tool cresce mentre il repo cresce". Il terzo punto l'ha uccisa: core fa 35.0 -> 27.3 ->
+     32.9, nessuna monotonia. **Due punti bastano sempre a raccontare una storia.**
+     ✅ **I byte dei TOOL sono deterministici**: 5.9 e 8.1 KB **identici in tutti e tre i run** (e
+     27.1 / 41.5 per standard/full). E' solo la parte non-tool a ballare -> **il verdetto del 21%
+     regge**, perche' poggia sui byte di schema, non sulla differenza fra profili.
  (4) \`core\` compare in tabella per completezza ma NON e' utilizzabile per il discriminante C4:
      non ha le meta-tool -> nessuna riscoperta -> \`tool-gating.mjs:72\` lo dichiara esplicitamente
      "test NON discriminante". Sceglierlo per stare sotto il TPM farebbe passare la misura
