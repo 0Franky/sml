@@ -67,6 +67,18 @@ Formato: `[data · ID]` **cosa** · *perché* · **verificato con** · **gemelli
 
 ### 2026-07-26
 
+- **[F23]** 🔬 **Tre restringimenti di perimetro nella stessa ora — e la terza volta misuravo il CONTENITORE invece del CONTENUTO.**
+  Obiettivo: capire se l'assenza di §Decontaminazione nelle **48** classi restanti sia **legittima** (molte nascono da un'analisi di copertura, non da un fallimento misurato: per loro la sezione sarebbe un **rito vuoto**, cioè l'errore opposto).
+
+  **Il restringimento, per numeri, con il perimetro DICHIARATO PRIMA di guardare i risultati** *(disciplina mancata la volta prima)*:
+  - **47/48** cercando marcatori d'origine *inclusa* la citazione `msg NNNN` → **numero gonfio**, e lo si vede solo aprendo: `class-code-optimization` cita *«idea utente msg 1600, approvata msg 1603»*, che è la **provenienza di una DECISIONE**, non un fallimento osservato da tenere fuori. ⭐ **Sono due cose diverse e il conteggio le fondeva**: *chi ha proposto la classe* ≠ *quale istanza va tenuta fuori dal training*.
+  - **18/48** togliendo `msg NNNN` e tenendo solo i marcatori di **fallimento osservato** (sigla d'esperimento · dump · id di commit). **Campione verificato a mano — 3/3 reali**: `sign-wrap-blindspot` (*«gap osservato su order_by_points»*), `stagnation-recovery` (*«modo-di-fallimento REALE … pass vuoto dopo 17 turni di thrashing»*), `secret-hygiene-under-distraction`.
+
+  > ### ⭐ La terza scoperta è la più istruttiva: **`secret-hygiene-under-distraction` DICHIARA GIÀ il suo held-out** — sotto un titolo **diverso** (`## Gold example (HELD-OUT di validazione — istanza F29 osservata, NON nel training)`), non sotto *«Decontaminazione»*.
+  > Quindi la classificazione di partenza — *«48 classi senza §Decontaminazione»* — **misurava i TITOLI DI SEZIONE, non il CONTENUTO**. È la **terza** volta in poche ore che lo stesso errore si ripresenta travestito: *111* (assenze lette come bisogni) → *2* (parole-chiave troppo strette) → *48* (contenitore invece di sostanza).
+  > **La forma è sempre quella**: **ho contato ciò che lo strumento sapeva vedere, e ho letto il risultato come se contasse la cosa che mi interessava.** Non è un errore di attenzione — è che *ogni* conteggio è una misura, e una misura ha un perimetro. **La sola difesa che ha funzionato tutte e tre le volte è aprire un campione a mano prima di riportare la cifra.**
+
+  **Non chiuso, tracciato**: i **18** candidati vanno esaminati uno per uno — alcuni dichiarano già l'held-out **altrove** (come F29), altri no. Farlo ora con poco contesto significherebbe farlo male: **→ TODO**, con il metodo e i tre perimetri già misurati, così chi riprende non ricomincia da capo.
 - **[F22]** ⭐⭐ **La MISURA con cui avevo corretto una sovrastima era a sua volta sbagliata — nell'altra direzione.**
   Stamattina il TODO diceva *«111 classi su 112 da sistemare»*; la ricognizione ha risposto **2**, e l'ho registrato (F-precedente) come *«prima di dimensionare un lavoro sulle assenze, misura quante siano DOVUTE»*. **Corretto nel metodo, sbagliato nel numero**: aprendo a mano le 11 classificate *«generiche»*, **tutte e 11 nominano un'istanza osservata tenuta fuori**. Le candidate reali erano **12**, non 2.
   **Perché la ricognizione le ha perse**: pretendeva **≥2 parole-chiave** fra *held-out · fuori dal training · non deve emettere · riservato · slice di validazione · decontaminato*. Quelle 11 scrivono la stessa cosa con **un vocabolario diverso** — *«l'**istanza osservata** = X → **held-out di validazione**, MAI nel training»* — e totalizzavano **1** segnale.
