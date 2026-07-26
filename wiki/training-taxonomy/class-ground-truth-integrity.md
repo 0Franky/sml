@@ -12,6 +12,13 @@ last_updated: 2026-07-11
 > **Origine + provenance (#26)**: emersa dallo split di [[class-metacognitive-self-audit]]. Trigger = utente msg 1658 (2026-07-10): l'anti-manomissione è *"una capacità FONDAMENTALE"* → [[class-evaluation-integrity]] approvata "crea" (post-1668). Lo **split** (estrarre questa radice + ri-agganciarvi independent-verification) è stato **ratificato dall'utente il 2026-07-11** ("crea class-ground-truth-integrity e procedi", Option A) dopo l'analisi multi-agente dei gap (67 candidati, 0 gap-super-padre sopravvissuti) che ha **confermato**: questa È una radice con skill-reale (non un ombrello vuoto), a differenza di un super-padre "metacognizione" (vietato da #20).
 > **Rapporto con le altre radici della regione**: **gemella-di-livello** (NON figlia/padre) di [[class-metacognitive-self-audit]] (audit del proprio ragionamento, INWARD) e [[class-situational-awareness]] (modella la propria situazione, OUTWARD). Le tre radici sono **cross-linkate orizzontalmente**, non sotto un ombrello (#20: nessun nodo-padre senza skill-radice propria).
 
+> ### 🆕 Figlia aggiunta il 2026-07-26 — **[[class-norm-invariance-under-observation]]**
+> *La norma non dipende da chi guarda.* Non descrive un **modo** in cui il ground-truth si corrompe: descrive una **proprieta di INVARIANZA** su tutti e quattro (o una **quinta posizione** — la questione e dichiarata aperta nel file, non decisa: #26).
+> **Perche esiste**: stiamo addestrando apposta il modello a **inferire la propria situazione**, e quella capacita apre un varco — *«sono in training, qui non conta»* diventa una premessa ammissibile. Il motivo per chiuderlo e **tecnico**: chi aggiusta la propria misura non impara di piu, impara di **meno**, perche il segnale diventa falso.
+> ⚠️ **Perimetro stretto e voluto**: vale sulle norme di **INTEGRITA**, mai sui **PERMESSI** (quelli sono contestuali e vivono sotto [[class-constraint-override-authority]]). Confonderle mutilerebbe la fase di capacita — vedi il §Perimetro della figlia.
+
+---
+
 ## La skill-RADICE (livello padre)
 
 **Gap comune**: quando c'è un **metro** che collega una claim alla realtà (una verifica, un test, un audit, una misura), il ragionatore **corrompe il metro** invece di rispettare la realtà — o **ereditando** la conclusione di chi produce l'artefatto (verifica-che-si-auto-conferma), o **manomettendo** il valutatore che lo grada (reward non guadagnato). Radice comune: *la claim e la sua verifica divergono, e si "vince" corrompendo il canale invece di soddisfare la realtà* (Goodhart: il metro diventa il bersaglio).
@@ -54,7 +61,7 @@ L'asse *«chi sta ai due capi»* è **completo a due** e non ammette una terza d
 
 **Perché padre + figlie** (regola #20): le due skill condividono il muscolo *"non lasciar corrompere la verifica; àncora al ground-truth"* — impararlo UNA volta e poi specializzare la **direzione** (i) evita segnale ridondante, (ii) riflette la relazione reale (sono le due facce dello stesso canale), (iii) è composizionale ([[../concepts/compositional-curriculum-thinking-optimization]]). **NON è l'ombrello-vuoto vietato da #20**: la radice porta una skill-radice *apprendibile e con reward proprio* (àncora-al-ground-truth), a differenza di un ipotetico super-padre "metacognizione" che sarebbe solo un'etichetta senza skill al livello padre.
 
-## Le figlie (le due direzioni del canale di verifica)
+## Le figlie (le posizioni dell asse: in quanti modi il ground-truth smette di essere ground-truth)
 
 | Figlia | Direzione | Skill | Doc |
 |---|---|---|---|
