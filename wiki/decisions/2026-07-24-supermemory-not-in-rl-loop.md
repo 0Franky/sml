@@ -13,7 +13,7 @@ last_updated: 2026-07-24
 
 # ADR 2026-07-24 — supermemory NON nel loop RL
 
-> **Status**: PROPOSTA (attende ratifica esplicita utente, #26). Nessun cambio di codice/ambiente eseguito.
+> **Status**: PROPOSTA — attende ratifica esplicita dell'utente **dal 2026-07-24** (#26). Nessun cambio di codice/ambiente eseguito.
 
 ## Contesto
 

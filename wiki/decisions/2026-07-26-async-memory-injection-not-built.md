@@ -6,7 +6,8 @@ tags: [memoria, harness, rag, context-injection, proposta, ssot, reward-hacking,
 last_updated: 2026-07-26
 ---
 
-> # ⛔ PROPOSTA — attende la ratifica dell'utente (#26)
+> # ⛔ PROPOSTA — attende la ratifica dell'utente **dal 2026-07-26**  *(età dichiarata: vedi nota)*
+> *(La data non è decorazione: fino al 2026-07-31 questa riga non ne aveva, e un'attesa senza data sembra fresca per sempre — è il difetto che ha tenuto un ADR «in attesa» per 71 giorni. Ora invecchia da sola e si vede.)*
 > **Origine**: idea utente TG msg 1964 + *«fai analisi fatta bene»* (msg 1965). Analisi eseguita da un team di ricerca il 2026-07-26; le quattro affermazioni portanti **ri-verificate a mano** prima di accettarle (vedi §Verifica).
 > **Nessun codice scritto, nessun meccanismo toccato.**
 

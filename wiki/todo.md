@@ -44,6 +44,45 @@ last_updated: 2026-07-18
 
 ---
 
+## 📥 2026-07-31 — BATCH APPUNTI UTENTE (TG 2014-2024) — instradamento
+
+> **Raw immutabile**: `wiki/_private/appunti-2026-07-31.md` (fuori dal pushato: contiene due share-link Gemini e un blocco incollato da un altro progetto dell'utente). **Istruzione dell'utente (msg 2026)**: il materiale grezzo resta privato; nella wiki pubblica vanno **solo le lezioni estratte** — potenzialità, **errori**, cose da sistemare — non l'esempio in sé.
+>
+> ⚠️ **Nessuno di questi è ancora una classe.** Sono appunti instradati, non ratificati (#26). Sotto: dove atterra ciascuno e cosa manca.
+
+| # | Appunto | Instradamento proposto | Stato |
+|---|---|---|---|
+| **N1** | **Long-horizon: il vincolo che sopravvive al cambio di argomento.** Dai un vincolo → intervalli lunghi di lavoro **irrilevante** che confonde → ripeschi l'argomento originale: se il vincolo non viene riapplicato, sbaglia. | ⚠️ **Non è (solo) una classe: è un FORMATO DI FIXTURE multi-turno** — e richiede esattamente la giunzione `turns` di [[decisions/2026-07-26-fixture-runner-proposta]] (R8). Prima di proporre la classe va deciso se è **skill** (S) o **misura** (il metro che il bake-off non ha). | da analizzare (2026-07-31) |
+| **N2** | **Come rispondere all'utente**: prima di rispondere controlla la chat; se l'argomento non è stato toccato, apri con situazione → problema → cosa hai fatto → problemi → esito. | Coincide con la regola **#31 GIVE-CONTEXT** già in CLAUDE.md e con `feedback_complete_state_and_caveats_handoff`. **Il pezzo NUOVO è il trigger condizionale** (*se l'argomento non è nel contesto condiviso*), che oggi non è insegnato da nessuna parte. | da analizzare (2026-07-31) |
+| **N3** | **Autocorrezione**: inietta un contesto in cui l'**ultimo messaggio dell'agente** contiene un errore (affermazione, definizione, codice) e forza l'auto-rilevamento + fix. | Asse **self-audit** su output **proprio e passato**. Da verificare contro [[training-taxonomy/class-metacognitive-self-audit]] e `class-durable-knowledge-retraction` — sospetto **facet mancante**: le classi esistenti guardano l'errore *altrui* o *presente*. | da verificare (2026-07-31) |
+| **N4** | **Waiting-list per classi a loss bassa**: chi ha imparato esce dal giro e rientra 1 per round. | 🗳️ **NON è un appunto di dataset: è una scelta di CURRICULUM/sampling.** L'utente chiede esplicitamente **`grill-me`** (*«è più complessa di così»*). **Non decidere da solo.** | attende sessione grill-me (dal 2026-07-31) |
+| **N5** | **Chiarimento delle idee**: obiettivo + requisiti → strade possibili → poi opera. Il modello deve **fare domande** per estrarre tutto, essere analitico, e avere la **roadmap progettata prima di partire**. | Si aggancia a `feedback_grill_me_before_code` (lato mio) ma come **skill del modello** è scoperta. Nota: chiede anche **ricerca web** come parte del capire (esempio marketing) → tocca il confine F/S (#11). | da analizzare (2026-07-31) |
+| **N6** | **Inquadramento del task / project-settings persistenti**: dall'obiettivo (*app commerciale*) discendono vincoli (sicurezza, GDPR, accessibilità) che vanno **riletti a ogni fase** per decidere quali gate applicare. | ⭐ **È N1 visto dall'altro lato**: un vincolo dichiarato una volta che deve restare attivo per tutto il progetto. Se sono la stessa radice, vanno sotto lo **stesso padre** (#36d), non in due posti. | da analizzare (2026-07-31) |
+| **N7** | **Decomposizione e loop ricorsivo**: decomponi → loop per item → ri-decomponi; per ogni item obiettivi/rischi/soluzioni/mezzi; poi ricomponi e decidi. Focus-mode per il contesto dedicato. | **L'utente dice: «Già definito. Verifica che sia così. O che convenga.»** → **compito di VERIFICA contro la tassonomia esistente**, non di creazione. | da verificare (2026-07-31) |
+| **N8** | **NVIDIA ModelExpress** (startup DeepSeek-V4 Pro 8min→2min, RDMA GPU-to-GPU, riuso kernel-cache, pesi aggiornati letti dai worker senza broadcast centrale). | Segnale **infra**, non training. Da valutare la rilevanza reale per noi: hardware locale 2080 Ti, RL rinviato a Wave 6, serving su vLLM. | da analizzare (2026-07-31) |
+
+**Due link Gemini (msg 2021/2022) non ancora letti** — URL in `wiki/_private/_links-2026-07-31.txt`, tenute fuori dal repo pubblico perché una share-URL pubblicata equivale a pubblicare la conversazione.
+
+---
+
+## 🧹 2026-07-31 — SWEEP «ATTESE STANTIE» + il controllo che la impedisce
+
+> **Origine**: utente TG msg 2015 — *«le decisioni che prendiamo salvale immediatamente e tieni aggiornata la documentazione … sennò non mi fa rifare ogni volta le stesse cose, poi impazzisco, perdo il filo e mi incazzo»*.
+
+**Corretti** (dicevano il falso, non erano semplicemente vecchi):
+- `lab-plan-base-model-metro.md` — diceva *«attende approvazione»* e *«niente qui è stato eseguito, nessun credito impegnato»* mentre era stato **approvato (msg 1991)**, **eseguito** e **reindirizzato (msg 2009)**. Contraddiceva il §ESITO **nello stesso file**.
+- `decisions/2026-05-21-training-from-scratch-clarification.md` — `awaiting-user` da **71 giorni** a scelta già presa (D+E).
+- `decisions/2026-06-28-compute-access.md` — `awaiting scelta utente` da **33 giorni** senza dire quale. Riletto: nessuna scelta bloccante. ⚠️ **Ma le cifre sono di un 4B mentre il target è 27B** → il preventivo va rifatto sulla taglia vera (sotto).
+- `decisions/2026-07-26-fixture-runner-proposta.md` — *«attende approvazione»* mentre la lane **R8** lo dà **ratificato**.
+- `index.md` — ripeteva l'`awaiting` del maggio.
+
+**Meccanismo** (#17 — non «me lo ricordo», un controllo che fallisce da solo): `harness/tools/check-stale-pending.mjs`, agganciato a `gate.mjs`. Una riga che dichiara un'attesa dell'utente **senza data** fallisce. **Ratchet**: le **46** attese preesistenti sono congelate in `stale-pending-baseline.json` — blocca solo il debito **nuovo**, così il controllo non viene disattivato al primo commit. Fire-test in entrambe le direzioni: riga nuova senza data → exit 1 con file:riga; con data → passa; rimossa → verde.
+
+- [ ] **Bonificare le 46 attese congelate** (baseline del 2026-07-31). Non urgente, ma finché sono lì il controllo protegge solo il futuro.
+- [ ] 🔴 **Rifare il preventivo compute sulla taglia VERA (27B, non 4B)** — un full-FT da 27B non entra in una singola A100-80GB: servono multi-GPU + sharding (ZeRO-3/FSDP) oppure si rinuncia al full-FT. Le cifre in `2026-06-28-compute-access.md` (~$10-55/run) sono di un'altra taglia e **sembrano ancora valide**. Da rifare **prima** di impegnare soldi.
+
+---
+
 ## 🆕 2026-07-26 — CLASSE NUOVA `class-self-sealing-decision` (⛔ NON VALIDATA, giro-0)
 
 **Origine**: utente TG msg 1968 — *«Prendi questo come esempio e sistema il dataset … deve capire quando attaccare il loop, quando disattivarlo, per non fermarsi»*, dopo che ho fermato il mio ciclo autonomo su una premessa (*«backlog chiuso»*) scaduta in pochi minuti. **La ratifica copre l'ESECUZIONE, non il contenuto** (#26).

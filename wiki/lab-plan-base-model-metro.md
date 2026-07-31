@@ -1,14 +1,22 @@
 ---
 name: lab-plan-base-model-metro
-description: PROPOSTA (#26 — attende approvazione) — il METRO STANDARD per confrontare i candidati base (Seed-OSS-36B vs Qwen3-32B vs Gemma 4 31B) a parità di condizioni. Separa LIVELLO 1 (il MODELLO, su pi liscio, payload piccolo, gira ovunque) da LIVELLO 2 (modello+HARNESS, i nostri tool, l'unico che satura i provider). Il problema centrale non è "quali test" ma "quali test DISCRIMINANO" — il floor attuale dà 100% a tutti e quindi non sceglie niente.
+description: APPROVATO (msg 1991) ed ESEGUITO (2026-07-26) — poi REINDIRIZZATO (msg 2009). Il METRO STANDARD per confrontare i candidati base (Seed-OSS-36B vs Qwen3-32B vs Gemma 4 31B) a parità di condizioni. Separa LIVELLO 1 (il MODELLO, su pi liscio, payload piccolo, gira ovunque) da LIVELLO 2 (modello+HARNESS, i nostri tool, l'unico che satura i provider). Il problema centrale non è "quali test" ma "quali test DISCRIMINANO" — il floor attuale dà 100% a tutti e quindi non sceglie niente.
 type: lab-plan
 tags: [base-model, bake-off, evaluation, metro-standard, proposta, pi-vanilla, rate-limit, area-eval]
 last_updated: 2026-07-26
 ---
 
-> # ⛔ PROPOSTA — attende approvazione dell'utente (#26)
+> # ✅ APPROVATO → ESEGUITO → REINDIRIZZATO — nessuna decisione pendente (aggiornato 2026-07-31)
 > **Origine**: utente TG msg 1973 (2026-07-26): *«non abbiamo un metodo standard per valutare tutti i prodotti … facciamo un metro standard, dobbiamo capire chi tra Seed-OSS vs Qwen vs Gemma 4 — stessi test, prima con pi normale che sappiamo funzionare a prescindere, e poi test secondari con il nostro harness con i nostri tool aggiuntivi»*.
-> **Niente qui è stato eseguito.** Nessun credito impegnato.
+>
+> **Storia della decisione, per non ri-aprirla**:
+> - **2026-07-26 msg 1991 — APPROVATO**: *«3 esatto, crea i laboratori corretti e con la giusta difficoltà. Fai review loop … Fai test su questi laboratori per dati REALMENTE concreti»*.
+> - **2026-07-26 — ESEGUITO**, credito impegnato: vedi §ESITO qui sotto (Qwen3-32B 15/15, Qwen3.5-27B 16/16, zero trappole). Seed-OSS e Gemma 4 **mai completati** — fermati su ordine dell'utente (msg 2010).
+> - **2026-07-26 msg 2009 — REINDIRIZZATO**: *«tu stai facendo dei test per valutare cosa? Qual è il nostro obiettivo?»* → l'intero programma di misura era **fuori bersaglio**: la scelta del base si decide su benchmark riconosciuti sui **pesi BASE** + viabilità CPT + licenza, non su probe di ragionamento fatte in casa girate sull'**instruct**. Vedi memory `feedback_measure_serves_a_decision`.
+>
+> ⚠️ **Questo file NON è più un piano da eseguire.** È il **verbale** di un metro che è stato costruito, misurato, e trovato non-discriminante — più la diagnosi che ne è uscita (§ESITO). Il piano vivo che lo sostituisce va costruito **a ritroso dalla decisione**, non da qui.
+>
+> *(Fino al 2026-07-31 questa testata diceva ancora «attende approvazione» e «niente qui è stato eseguito»: era falsa su entrambe le cose da 5 giorni, e contraddiceva il §ESITO nello stesso file.)*
 
 # Metro standard per la scelta del modello base
 

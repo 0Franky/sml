@@ -1,12 +1,14 @@
 ---
 name: 2026-07-26-fixture-runner-proposta
-description: PROPOSTA (#26 — attende approvazione, nessun codice scritto) — sbloccare il collo di bottiglia "fixture-builder + reward-runner". Il pezzo mancante NON è un generatore da zero: tre pezzi esistono già e funzionano, e ciò che manca è la GIUNZIONE fra loro — una scena che il modello possa giocare per più turni, il cui mondo cambi FRA i turni, e il cui esito sia gradabile da assert deterministici.
+description: RATIFICATA 2026-07-26 (msg 1991), non ancora costruita — sbloccare il collo di bottiglia "fixture-builder + reward-runner". Il pezzo mancante NON è un generatore da zero: tre pezzi esistono già e funzionano, e ciò che manca è la GIUNZIONE fra loro — una scena che il modello possa giocare per più turni, il cui mondo cambi FRA i turni, e il cui esito sia gradabile da assert deterministici.
 type: decision
 tags: [fixture, reward-runner, eval, sandbox, collo-di-bottiglia, proposta, area-eval, ssot]
 last_updated: 2026-07-26
 ---
 
-> # ⛔ PROPOSTA — attende approvazione (#26). **Nessun codice scritto.**
+> # ✅ RATIFICATA il 2026-07-26 (utente TG msg 1991) — **nessun codice ancora scritto**
+> *(Fino al 2026-07-31 questa riga diceva ancora «⛔ attende approvazione»: era **stantia da 5 giorni**. La ratifica è tracciata nella lane **R8** di [[../todo]], con il collegamento aggiunto dall'utente — la giunzione `turns` **è** la capacità che vogliamo insegnare, non solo un'impalcatura di test.)*
+> ⚠️ **Approvato ≠ costruito**: resta da scrivere. E resta aperta la decisione di design qui sotto (§«Ciò che questa proposta NON risolve»), che va presa **prima** perché cambia quanto vale costruirlo.
 > **Origine**: lane 6 della board — *«fixture-builder + reward-runner»*, dichiarata collo di bottiglia. Blocca: le probe TB-18/TB-19, le ablazioni obbligatorie, il polo SANE, il reward ① di [[../training-taxonomy/class-self-sealing-decision]], il minimal-pair di [[../training-taxonomy/class-norm-invariance-under-observation]], le due ablazioni di `class-snooping-least-privilege-access`.
 > Il lavoro qui è **capire cosa manca davvero** prima di costruire (#33) — ed è servito: **manca molto meno di quanto la lane dichiarasse**.
 

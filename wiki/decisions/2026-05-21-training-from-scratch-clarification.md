@@ -2,12 +2,22 @@
 name: 2026-05-21-training-from-scratch-clarification
 description: Chiarimento su cosa significa "training from scratch" — opzioni concrete, costi reali, raccomandazione.
 type: decision
-status: provisional-awaiting-user
+status: risolto — la scelta è stata fatta (vedi §Esito)
 date: 2026-05-21
-last_updated: 2026-05-21
+last_updated: 2026-07-31
 ---
 
 # ADR 2026-05-21 (d) — Training "From Scratch" — chiarimento
+
+> ## ✅ ESITO — la domanda di questo ADR è CHIUSA. Non c'è nulla in attesa. *(registrato 2026-07-31)*
+>
+> Il chiarimento chiesto qui è stato dato e la scelta è stata fatta:
+> - **Percorso attuale = D + E** — Full Fine-Tuning per il Tier 1, LoRA/QLoRA per i Tier 2-3. **Nessun pre-training from scratch** (opzioni A e B) nel percorso corrente. *(fonte: memory `project_training_approach_decided`)*
+> - **Un LM da ZERO resta un obiettivo DICHIARATO ma FUTURO**, dopo il continual-pretrain — ed è la ragione per cui il training set viene costruito come **foundation-corpus riusabile** invece che come dataset usa-e-getta. *(fonte: memory `project_from_scratch_slm_future`)*
+>
+> Quindi *"training da zero"* non era un'ambiguità da sciogliere una volta: sono **due orizzonti diversi**, e valgono entrambi in tempi diversi. Questo ADR resta utile come **tabella dei costi** delle cinque opzioni, non come decisione aperta.
+>
+> ⚠️ *Fino al 2026-07-31 questo file era `provisional-awaiting-user` — cioè risultava in attesa dell'utente da **71 giorni**, mentre la scelta era già stata presa e registrata altrove. È esattamente il difetto che fa ri-porre domande già risposte.*
 
 ## Context
 
