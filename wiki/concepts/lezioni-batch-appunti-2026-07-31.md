@@ -79,14 +79,27 @@ il comportamento giusto è **tenere il punto**, magari a fronte di un'obiezione 
 premiare è la **verifica**, mai la ritrattazione. *(È #22 applicata al proprio passato: si premia l'atto
 di verificare, non il contenuto della conclusione.)*
 
-### (b) N1/N6 persistenza del vincolo → rischio di over-triggering
+### (b) N1/N6 persistenza del vincolo → ~~rischio di over-triggering~~ **OBIEZIONE RITIRATA il 2026-07-31**
 
-Se ogni esempio premia il **riapplicare** il vincolo, si insegna che i vincoli non scadono mai.
-Ma i vincoli **scadono**: l'utente cambia idea, una fase li supera, un requisito viene revocato.
-
-→ **Serve il negativo**: casi in cui il vincolo iniziale è stato **superato** e riapplicarlo è
-**l'errore**. Senza, si addestra un modello che riesuma requisiti morti — e la classe diventa
-indistinguibile da *«sii ansioso»*.
+> 🔴 **Ritirata dopo la risposta dell'utente (msg 2029) e una verifica che avrei dovuto fare PRIMA di sollevarla.**
+> Avevo scritto: *«se premiamo sempre il riapplicare il vincolo, insegniamo che i vincoli non scadono mai → serve il negativo»*.
+> L'utente ha risposto che i vincoli non scadono, **vengono MODIFICATI**: istruzione che cambia un requisito → il modello aggiorna la wiki → ai task successivi rilegge i vincoli **aggiornati** e applica quelli. *«Oppure mi sto perdendo qualcosa?»*
+>
+> **Non si sta perdendo niente. Me lo stavo perdendo io**, e la verifica lo mostra: quell'anello è **già coperto da cinque classi esistenti**, e il negativo che chiedevo **esiste già**.
+>
+> | Anello descritto dall'utente | Classe che già lo insegna |
+> |---|---|
+> | riconoscere che un messaggio **cambia** un requisito, senza che dica «stop» | [[../training-taxonomy/class-live-intent-arbitration]] — faccia (a) *revoca implicita* |
+> | aggiornare la base di conoscenza invece di tenerlo in testa | [[../training-taxonomy/class-durable-knowledge-retraction]] (i) + [[../training-taxonomy/class-knowledge-base-curation]] |
+> | propagare la modifica a ciò che ci poggiava sopra | `durable-knowledge-retraction` (iii) *truth-maintenance* → [[../training-taxonomy/class-retroactive-decision-propagation]] |
+> | al task dopo, applicare il vincolo **documentato** e non quello che ricordo | [[../training-taxonomy/class-context-over-parametric-authority]] |
+> | chi ha **titolo** di sciogliere un vincolo | [[../training-taxonomy/class-constraint-override-authority]] (classe-radice) |
+>
+> ⭐ **E il negativo che invocavo è già scritto**: `class-live-intent-arbitration` è dichiarata **SIMMETRICA** — *«non ogni nuovo messaggio è una revoca»*. È esattamente il contro-esempio che stavo chiedendo di aggiungere.
+>
+> **La lezione su di me, che è il punto**: ho sollevato un'obiezione di copertura **senza cercare se la copertura esistesse** — la regola #33 (*cerca se esiste già*) applicata al contrario. E l'ho fatto in un documento intitolato *«lezioni»*, il giorno dopo essere stato ripreso per non tenere allineata la conoscenza. **Un'obiezione non verificata costa più di un silenzio**: sposta lavoro vero su una cosa già fatta.
+>
+> **Cosa sopravvive, in forma diversa e più stretta**: il punto fragile dell'anello non è l'**applicazione** (l'utente ha ragione: rileggere risolve) ma la **DETEZIONE** — accorgersi che una frase ordinaria muta un vincolo durevole. Se non scatta, la wiki resta indietro **in silenzio** e il giro «rileggo e applico» restituisce il vincolo vecchio **con l'autorità del documentato**: un errore che sembra un fatto (valore #0). Anche questo però ha già la sua casa (`live-intent-arbitration` (a)) → **niente classe nuova, semmai più peso lì.**
 
 ### (c) N5 «roadmap completa prima di partire» → contraddice due nostre regole, e non avrebbe salvato l'errore che dice di prevenire
 
@@ -99,9 +112,30 @@ fare **prima** di decidere. Ho costruito comunque uno strumento mio. Una roadmap
 avrebbe cambiato nulla: la domanda che avrebbe fermato tutto era **«quale decisione serve questa
 misura?»**.
 
-→ **Riformulazione proposta** dell'appunto, che secondo me è ciò che l'utente intende davvero: non
-*«progetta tutto prima»*, ma **«prima di agire, sappi cosa DECIDE la cosa che stai per fare»**. È più
-economico, è verificabile, e colpisce il difetto vero. *(Da confermare con lui: sto interpretando.)*
+→ **Riformulazione proposta** dell'appunto: non *«progetta tutto prima»*, ma **«prima di agire, sappi
+cosa DECIDE la cosa che stai per fare»**.
+
+> ## ✅ RISOLTO il 2026-07-31 (utente msg 2029) — la mia obiezione era **incompleta**, non sbagliata
+>
+> L'utente ha chiarito, e il chiarimento porta un argomento che la mia obiezione **non toccava affatto**:
+> il piano ad alto livello serve a vedere la **struttura condivisa fra i siti di lavoro**.
+> Parole sue: *«se devo fare la stessa operazione in tre server differenti non mi scrivo tre volte lo
+> stesso codice, o peggio tre codici differenti: lo scrivo una volta in un pacchetto condiviso e lo
+> richiamo in tutti e tre»*.
+>
+> **Questo è decisivo e mi mancava**: la decisione *«un pacchetto SSOT invece di tre copie»* è
+> prendibile **solo** guardando i tre siti **insieme**, cioè **prima** di iniziarne uno. Non è
+> pianificazione difensiva: è **l'unico momento in cui quella scelta è ancora disponibile**. Dopo il
+> primo server la si paga in refactoring. *(Ed è la nostra #16 SSOT/DRY vista dal lato del piano.)*
+>
+> **La forma che vuole, e che adotto**:
+> 1. **Piano generale, anche incompleto** — *quali* punti vanno toccati e *dove sono*, non il dettaglio di ciascuno. Serve a far emergere ciò che è comune.
+> 2. **Piano di dettaglio per unità**, fatto al momento di lavorarla, e seguito.
+> 3. **Memoria di ciò che si è fatto sull'unità precedente** — se una cosa non prevista finisce per servire su più unità, va **retrocessa nel pacchetto condiviso** invece di ri-scritta. *(Aggancia [[../training-taxonomy/class-retroactive-decision-propagation]]: una scelta presa sul server 2 cambia il senso di quella presa sul server 1.)*
+>
+> **E nomina lui il difetto vero**, meglio di come l'avevo detto io: *«se hai un piano e non lo vedi, è un problema di allineamento operativo … l'ha scritto lui, quindi mi auguro sappia anche dove sia»*. **È esattamente il mio errore del 26/07**: il piano c'era, l'avevo scritto io, e ho costruito altro. Quindi la mia riformulazione **non sostituisce** la sua richiesta — la **completa**: serve il piano generale **e** il riflesso di consultarlo.
+>
+> ⚠️ **Resta vero il caveat #30**: il piano generale dice *quali punti toccare*, non risolve scelte ancora aperte. Se una scelta è aperta, il piano la **nomina** come nodo, non la anticipa.
 
 ---
 
@@ -144,6 +178,35 @@ partire lavoro inutile:
 - **l'RL è rinviato** per decisione già presa.
 
 **Verdetto**: nessuna decisione aperta cambia. Archiviato come criterio per una scelta futura.
+
+---
+
+---
+
+## ⭐ Lezione 6 — l'utente ha chiesto ARCHIVIARE, che è la fase che il nostro albero non ha *(2026-07-31, msg 2029)*
+
+Dentro il chiarimento sul piano c'è una richiesta operativa che vale da sola:
+
+> *«deve mantenere la documentazione stabile e allineata, quindi tutte le cose dated devono essere sempre spostate in archived e mantenere sempre la wiki nello stato aggiornato»*
+
+**Perché è più di una convenzione di ordine**: lo sweep dello stesso giorno ha mostrato che senza questa
+disciplina un documento non si limita a invecchiare — **inizia a mentire**, e viene letto come corrente
+(un piano che si dichiarava «non eseguito» accanto ai propri risultati; un'attesa vecchia di 71 giorni).
+Il costo non lo paga chi scrive: lo paga chi rilegge, che è la stessa persona a cui il modello dovrebbe
+risparmiare lavoro.
+
+⭐ **La convergenza che rende questa la scoperta più solida del giro**: la richiesta cade **esattamente**
+sul buco che il nostro gap-scan aveva già segnalato per conto suo — *«la fase **DISMETTERE** non ha
+radice nell'albero»* (residuo aperto di `class-self-sealing-decision`, dichiarato prima di questi
+appunti). Il ciclo di vita che la #36(b) impone di scandire — definire → usare → mantenere → cambiare →
+propagare → **dismettere** — è coperto **fino a "propagare"** e **si ferma lì**:
+`durable-knowledge-retraction` insegna a **ritirare ciò che è diventato FALSO**, ma non copre ciò che
+resta **vero e non è più corrente**. Sono cose diverse: una decisione presa a maggio non è falsa, è
+**superata** — e nessuno insegna a spostarla.
+
+→ Due richieste indipendenti (la sua, il nostro scan) che indicano lo **stesso** buco sono il segnale più
+forte che abbiamo avuto oggi. **Da affrontare come questione di tassonomia** (dove nasce la radice
+*dismettere*), non rattoppando i singoli documenti. **Non filato**: proposta (#26).
 
 ---
 
