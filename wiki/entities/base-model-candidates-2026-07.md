@@ -65,6 +65,51 @@ Fonti: [HF poolside/Laguna-S-2.1-base](https://huggingface.co/poolside/Laguna-S-
   3. **MoE + attention ibrida sliding-window = massima fragilità CPT** (stesso profilo-rischio di Qwen3.6-27B ibrido, riga 6).
 - **VERDETTO**: dominio giusto, **architettura sbagliata per il nostro uso-come-BASE**. È il profilo OPPOSTO a ciò che cerchiamo (dense ~27B text-focused per CPT pulito). **→ NON entra nella rosa base** (stesso taglio di Nemotron/MoE-giganti). **Candidatura alternativa da valutare**: come **TEACHER di distillazione coding** (coding-strong + licenza commercial), accanto/vs [[../../memory|project_teacher_deepseek_v4]] — lì la taglia 118B e il MoE **non** sono un problema (il teacher non si CPT-a), e il dominio-coding è un fit. ⚠️ ToS/licenza OpenMDW-1.1 da leggere per l'**uso-in-distillazione** (#29: conta l'USO, non l'accesso).
 
+### 🔁 [2026-08-04] Ri-verifica Laguna S 2.1 su FONTI PRIMARIE — il verdetto regge, **un PRO cade**
+
+> ⚠️ **Nota di processo, prima dei fatti**: questa ri-verifica è nata da una **richiesta ripetuta** dell'utente,
+> e io ho lanciato la ricerca **senza cercare in wiki** che la risposta esistesse già dall'**11 giorni prima**
+> (§sopra, 2026-07-24). È l'errore che la regola #37 nomina per nome: *«se sto ri-decidendo, il perché esiste
+> già — cercalo»*. **Costo pagato**: un agente di ricerca per una domanda già chiusa.
+> **Però** — e per questo la sezione resta — la ri-verifica ha **corretto un fatto** che avevamo registrato
+> come acquisito, ed era proprio quello che la nota del 07-24 dichiarava di non aver chiuso (*«il
+> livello-che-chiude sarebbe la model-card ufficiale»*). Il residuo dichiarato è servito a qualcosa.
+
+**CONFERMATO su fonti primarie** (blog Poolside del ~2026-07-21 · model card HF · repo licenza): 118B totali /
+~8B attivi, 256 routed + 1 shared, 48 layer, attention interleaved (12 global + 36 sliding-window a 512),
+softplus gating, GQA, contesto **1M**, licenza **OpenMDW-1.1** permissiva (commerciale + derivati). Esiste un
+**technical report arXiv 2605.27605** — cioè la fonte primaria che il 07-24 mancava.
+
+🔴 **IL PRO CHE CADE — «esiste la `-base`, buono per CPT» era troppo netto.** Tre fonti **si contraddicono**:
+la model-card di `Laguna-S-2.1` dice che **non esiste un checkpoint base separato**; la pagina
+`Laguna-S-2.1-base` **esiste** e si dichiara base, ma **non scaricabile pubblicamente** (rimanda a un
+**contatto email del vendor** per richiederlo — indirizzo non riportato qui, repo pubblico); il blog afferma
+che la base **è su Hugging Face**. **Contraddizione NON risolta** (budget
+esaurito). → il 🟢 PRO *«ha la base»* va declassato a **«base dietro richiesta, e le fonti non concordano»**:
+per un flusso CPT autonomo è **quasi-squalificante** a prescindere dall'architettura.
+
+🆕 **Esiste una variante `Laguna-XS-2.1`: 33B totali / 3B attivi.** Il *footprint* si avvicina al target 27B —
+ma **3B attivi/token** significa calcolo-per-token da 3B: sull'asse che ci interessa (**ragionamento**, non
+memoria) è **sotto** un 27B denso, pur occupando 33B di memoria. Non risolve il problema, lo sposta.
+
+🔴 **Nessun benchmark di ragionamento generale.** I numeri pubblicati sono **tutti** agentic-coding e **tutti
+auto-riportati** (Terminal-Bench 2.1 70.2 · SWE-bench Multilingual 78.5 · SWE-Bench Pro 59.4 · DeepSWE 40.4 ·
+SWE Atlas 46.2 · Toolathlon 49.7), **nessun MMLU-Pro né GPQA-Diamond**, nessun leaderboard indipendente
+controllato. ⭐ **È decision-relevant per NOI più che per altri**: l'identità del Tier-1 è
+**INTELLIGENZA — analisi del problema e decomposizione — NON codificare** ([[../../memory|project_base_model_intelligence]]);
+il coding è capacità **aggiunta** via LoRA. Un modello eccellente e misurato **solo** sull'asse che abbiamo
+deliberatamente delegato al Tier 2/3 non porta evidenza sull'asse che ci serve.
+
+🔴 **Viabilità di training NON verificata**: trovati solo artefatti di **inferenza** (GGUF/MLX/FP8/NVFP4),
+**nessuna** conferma che Unsloth/Axolotl/TRL/PEFT reggano questa MoE (sliding-window + softplus gating può
+rompere il tooling standard).
+
+**VERDETTO INVARIATO — anzi più solido**: **non entra nella rosa base.** Le tre ragioni strutturali del 07-24
+reggono, e ora se ne aggiungono due indipendenti (base non self-serve · zero evidenza sull'asse-ragionamento),
+ognuna sufficiente da sola. **Resta viva** la candidatura come **teacher di distillazione coding** — lì taglia
+e MoE non pesano — **con il caveat #29 ancora aperto**: la licenza va letta per l'**USO in distillazione**, non
+solo per l'accesso.
+
 ## Raccomandazione (metodo, non verdetto a priori)
 
 **NON blindare Qwen3.6-27B.** Fare un **BAKE-OFF a due teste** (prima sul 4B di test, poi sui finalisti 32B):
