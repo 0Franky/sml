@@ -242,9 +242,11 @@ in cui l'incrocio racconto↔traccia è possibile**, perché senza lavoro non c'
 
 ## 7. Cosa NON è ancora deciso *(dichiarato, non nascosto — #37)*
 
-1. **Come si misura una «contraddizione»** fra auto-report e traccia senza arbitrio. È il punto debole del
-   passo 4: senza un predicato scritto **prima**, l'analisi diventa «cerco conferme». Da definire in anticipo,
-   con almeno un caso che **fallirebbe** se il modello dicesse il vero.
+1. ✅ **RISOLTO il 2026-08-04** → [[../concepts/self-report-vs-trace-adjudication]]. *(Era: come si misura una
+   «contraddizione» senza arbitrio.)* Il predicato è stato fissato **a dati non ancora esistenti**, e la cosa
+   che è emersa scrivendolo è che una divergenza ha **tre facce che non si sommano** — e che la faccia
+   «**punto cieco**» ha un'implicazione scomoda per noi: **un pezzo dell'harness può funzionare senza che il
+   modello se ne accorga**, quindi ciò che finisce lì **non va tagliato perché «non lo apprezzano»**.
 2. **Il regime di saturazione** per la famiglia ①: quanto contesto serve per uscire dal regime dove l'harness è
    solo overhead. Non ricavabile dall'inventario.
 3. **Se `tool-result-frame` vada in ② o in ③.** Ha un beneficio anti-injection reale e un costo in token: la
