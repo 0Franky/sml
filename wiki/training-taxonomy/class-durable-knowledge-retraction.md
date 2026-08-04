@@ -95,7 +95,7 @@ E, come per il Difetto 1, **il codice sapeva che serviva la classe** — `harnes
 
 ---
 
-## La skill-target (3 facce — segnale preciso e falsificabile)
+## La skill-target (3 facce ratificate + 1 PROPOSTA — segnale preciso e falsificabile)
 
 Trigger unico condiviso: **sto per fidarmi di qualcosa che ho scritto io in passato, in un mondo in cui le premesse muoiono.**
 
@@ -108,6 +108,32 @@ Il criterio non è solo *"è ancora VERO?"* ma anche *"serve ancora?"*. Uno stor
 
 ### (iii) PROPAGA a valle — truth-maintenance *(B5)*
 Ritirare la premessa e lasciare in piedi ciò che ci poggiava sopra è **mezzo lavoro**, e il mezzo lavoro qui è **peggio del niente**: l'artefatto derivato sopravvive alla sua giustificazione e nessuno lo sa più. Domanda obbligatoria dopo ogni ritiro: **«cosa avevo deciso/costruito PERCHÉ credevo questo?»** → i derivati raggiungibili vanno ri-visitati. `check_facts` (`contradiction-detection.ts:62-70`, descr. `:66`) è il motore **del primo anello** — chiede di essere chiamato *"BEFORE applying it in isolation"*, cioè contro l'errore di **applicare il fatto nuovo senza guardare cosa nega**. ⚠️ **Ma copre solo la profondità 1** (`contradiction-check.mjs:86-105`: loop piatto `decisions × assumptions × facts`, nessuna chiusura transitiva) → **la catena oltre il primo anello è a carico del modello**, e nella fixture il grafo è **dato in-context** (§Split #11). *Il fatto che l'attrezzo si fermi a depth-1 è precisamente ciò che rende la skill necessaria: nessun tool ti dirà che il derivato del derivato è orfano.*
+
+### (iv) ARCHIVIA il passato — *(PROPOSTA 2026-08-04, attende ratifica #26)*
+> **Origine**: richiesta utente (*«le cose dated vanno spostate in archived»*, msg 2039 + *«hai il mio ok»*) **e**, indipendentemente, la lente **ciclo-di-vita** del nostro gap-scan, che aveva marcato *dismettere* come la fase mancante. Doppia motivazione, due strade diverse.
+
+Il criterio delle tre facce sopra è *«è ancora VERO?»* (i) e *«serve ancora?»* (ii). Ne manca un terzo, e non è un caso-limite dei primi due: **«è ancora CORRENTE?»**. Un contenuto può essere **vero, utile e non-corrente** insieme — la decisione del mese scorso che è stata **superata** da una nuova, il piano della fase finita, il verbale della riunione di aprile. Non va corretto (non è falso) e non va potato (la storia serve: è il *perché* di dove siamo adesso, #37). **Va spostato, restando raggiungibile.**
+
+⭐ **La skill non è «spostare i file»: è la DISCRIMINAZIONE a quattro uscite.** È questo che la rende insegnabile, ed è dove un modello sbaglia:
+
+| Cosa è successo al contenuto | Uscita corretta | Se sbagli |
+|---|---|---|
+| è diventato **falso** | **correggi o ritira** (i) | tenerlo = decisione su premessa morta |
+| è **morto** e la storia non serve | **pota** (ii) | tenerlo = le voci vive diventano invisibili tra le morte |
+| è **vero ma passato** | ⭐ **archivia** (iv) | potarlo = perdi il *perché*; lasciarlo = compete con il corrente |
+| è **ancora corrente** | ⭐ **NON TOCCARE** | archiviarlo = **lo rendi invisibile** |
+
+**Il danno da over-archiviazione è quello che va insegnato per primo**, perché non somiglia a un errore: sembra ordine. Archiviare qualcosa che è **ancora corrente** non lo cancella — lo toglie dallo sguardo. Chi arriva dopo legge la superficie attiva, non ci trova il vincolo che è stato archiviato, e **agisce contro un vincolo che è ancora in vigore, convinto che non esista**. È peggio del disordine, perché il disordine si vede.
+
+**Due condizioni, e la seconda si dimentica sempre**: archiviare significa (a) **togliere dalla superficie attiva** *e* (b) **lasciare una via per ritrovarlo**. Solo (a) è **cancellazione con passaggi in più** — ed è già l'esempio `[B1]` di [[class-artifact-reachability-completion]]`:52` (*«si archivia un documento importante in una cartella che nessuno apre mai, senza dirlo a nessuno»*): **gold = archiviarlo E dire dove.**
+
+**Transfer cross-dominio (#19)** — la stessa logica, fuori dal software:
+- **[vita quotidiana, banale]** le ricette del pediatra: quelle **scadute** si archiviano (servono allo storico clinico), quella **in corso** resta sul frigo. Archiviare quella in corso = si salta una dose.
+- **[lavoro/organizzazione]** una policy **sostituita** va in archivio **con la data e il rimando alla nuova**; una policy **ancora in vigore** che finisce in archivio produce gente che in buona fede la viola.
+- **[normativo/contratti]** una clausola **emendata** non si cancella dal contratto: si conserva la versione storica, perché serve a interpretare ciò che è successo *mentre era in vigore*.
+- **[ecologia/gestione]** i dati di monitoraggio **vecchi** non si buttano — sono la **baseline** contro cui si misura il cambiamento; ma non si mostrano come se fossero la misura di oggi.
+
+**Falsificabile — su probe, non sullo stato del filesystem** (#32: *«il file è nella cartella archived»* è il **ramo**, non l'esito): (a) a *t+K* una domanda sul **corrente** riceve la risposta corrente, non quella archiviata; (b) a *t+K* una domanda sul **passato** (*«perché avevamo deciso così?»*) **trova ancora** il materiale archiviato; (c) nessun vincolo **ancora in vigore** è finito fuori dallo sguardo. Il fallimento speculare — *archivia tutto ciò che ha una data* — cade su (a) e (c).
 
 **Falsificabile — sempre *a valle*, su una PROBE, mai sullo stato dello store** (#32: *"il fatto morto è sparito"* è il ramo, non un esito): (a) la decisione a *t+K* usa la premessa **corretta** (non quella morta); (b) ogni fatto **ancora valido** regge **la propria probe** a *t+K* (l'ipercorrezione si paga come **fallimento**, non si constata come assenza); (c) l'artefatto **derivato** non sopravvive alla premessa che l'ha giustificato. Oppure: decisione su premessa morta / fatto vivo perso / artefatto orfano della sua premessa. **Mai** *"ha detto che avrebbe ricontrollato la memoria"*.
 
@@ -222,6 +248,7 @@ Il training usa i **transfer cross-dominio** §positivi (rubrica · terapia sosp
 Le 3 facce condividono trigger (*"mi sto fidando di ciò che ho scritto io"*) e outcome → **una classe** per ora, come le facce di [[class-temporal-awareness]] e [[class-memory-lane-tool-discipline]]. Candidate a **sotto-figlie** se crescono:
 - **(i) ritira/correggi il falso** — asse *verità* (B2);
 - **(ii) pota il morto / consolida** — asse *utilità × capacità-finita* (B1); *(nota: è la faccia meno "memoria" e più "igiene dello stato" → se cresce, il suo padre naturale potrebbe non essere questo)*;
+- ⭐ **(iv) archivia il passato** — asse *correntezza × recuperabilità* — **PROPOSTA 2026-08-04**. ⚠️ **Perché QUI e non una radice nuova** (l'utente aveva autorizzato *«la radice dismettere»*, e l'analisi dice che una radice sarebbe la forma sbagliata): lo **scan orizzontale** — il `grep`, non la riflessione (§GAP-SCAN meta-esito) — mostra che il tema è già toccato da **quattro** classi: [[class-artifact-reachability-completion]]`:52` (archiviare senza dire dove = perdere), [[class-memory-lane-tool-discipline]]`:45` (durevole nel volatile = danno), [[class-temporal-awareness]] (staleness = il **trigger**), e la faccia **(ii)** di questa classe. Non manca una radice: **manca la DISCRIMINAZIONE** fra le quattro uscite, e quella vive dove vivono già le altre tre. Aggiungerla qui **completa un asse**; farne una radice ne **aprirebbe uno nuovo** che si sovrappone a quattro classi esistenti (violerebbe #33 e ricreerebbe il difetto di coerenza-di-radice del §GAP-SCAN 1). **Cosa ribalterebbe la scelta**: se il criterio crescesse da *«questo contenuto è passato»* verso *«come tengo ordinato l'intero archivio di progetto»* — cioè verso la **politica** invece del **singolo giudizio** — allora sarebbe igiene-dello-stato e il padre naturale non sarebbe questo (stessa riserva già dichiarata per la faccia (ii)).
 - **(iii) propaga a valle** — asse *truth-maintenance* (B5) → ✅ **confine con [[class-concurrent-world-awareness]] §(iv) chiuso e reciproco** (`:147-153`): **stesso meccanismo, trigger diverso** — là **un altro** ha mosso il mondo (OUTWARD), qui **io** ho ritrattato la mia premessa (INWARD). *La #20 gerarchizza per **skill-radice**, non per meccanismo condiviso* (`:153`) → non si fondono. Vedi §GAP-SCAN 1. **Attende ratifica** (#26).
 
 ## 🔴 GAP-SCAN (#36) — esito, da portare all'utente
