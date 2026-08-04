@@ -44,6 +44,20 @@ last_updated: 2026-07-18
 
 ---
 
+## 🔬 2026-08-04 — FASE (C) rendimento harness su modelli CAPACI (Sonnet / Opus 5)
+
+> Richiesta utente msg 2065. Stato consolidato in [[STATO-2026-08-04]] §4; inventario+triage in [[architecture/harness-inventory-triage-2026-08-04]].
+
+- [x] **Passo 1 — inventario + triage FATTO** (2026-08-04, zero crediti): 25 estensioni lette una per una. Criterio = **quale DEFICIT compensa** (① finestra/regime · ② disciplina · ③ garanzia), non "è nata per gli SLM". Più l'asse ortogonale: **le F+S non hanno mai avuto un pilota capace** → (C) è anche la prima occasione di vedere l'harness funzionare, non solo di spegnerlo.
+- [ ] 🔴 **PROFILO "CAPACE" della config — PROSSIMA AZIONE, costo zero.** Oggi `harness/.pi/harness.config.json` sovrascrive **un solo** campo (`evictionCheckpoint`) → i default in vigore sono **regime SLM**: `toolGating: gated` · `laneMemoryHint: full` · `nativeKeepTurns: 6` (anche con finestra 1M) · `maxOpenFileViews: 3` · `messagesCharCap: 4000` · estensione **`slm` installata**. Lanciare Sonnet/Opus così **misura le stampelle, non l'harness**. Serve un profilo config + la procedura di disinstallazione di `slm` (che è **spostare il file**, per design).
+- [ ] **Verificare il gate P0 per OPUS 5** — il gate del 2026-07-11 copre `anthropic/claude-sonnet-5` (ctx 1M, $2/$10 per-M, key valida, credito attivo, `usage.cost` per-call → **CAP in-process con stop a soglia**). **Opus 5 non è mai stato verificato**: slug, finestra, prezzo. Stesso gate, stessa procedura.
+- [ ] **Fondere T2.4 + T2.2 in un lab solo** (è la richiesta dell'utente): il modello **lavora** long-horizon, poi **racconta**, e io **incrocio racconto ↔ traccia**. La fusione è più economica (sessione pagata una volta, intervista ~$0.02-0.04) **ed è l'unica forma in cui l'incrocio è possibile** — senza lavoro non c'è traccia. Vincolo non negoziabile da **C-BLOCK-2**: la parte qualitativa **genera ipotesi, non prova**; ogni risposta introspettiva va **appaiata** al tool-log/`<context>` reale.
+- [ ] 🔴 **Definire PRIMA il predicato di "contraddizione"** fra auto-report e traccia, con almeno un caso che **fallirebbe se il modello dicesse il vero**. Senza, l'analisi diventa "cerco conferme" (#0). ⚠️ **T1.5** del lab-plan misura proprio l'affidabilità introspettiva (lane dichiarata vs lane che conteneva davvero il dato) → va **prima**, o non sappiamo quanto pesare il racconto.
+- [ ] **Estrarre le tracce runtime a fine sessione**: `turn-trace` (`.pi/state/trace/trace-<convId>.jsonl`) + `conversation-capture` (`conversations.db`) + `tool-call-log` danno **già** la storia sequenziale completa — ma sono **gitignored/runtime** → se non si copiano fuori, il materiale del test più costoso è il più facile da perdere.
+- [ ] **Decidere se `tool-result-frame` è ② o ③**: ha un beneficio **anti-injection reale** (nato da un P0 vero) e un costo in token. La collocazione dipende da se un modello capace resti vulnerabile all'injection annidata → **è misurabile**, e vale la pena misurarlo.
+- [ ] **Igiene (#16)**: `harness/.pi/extensions/tool-gating.ts:10` dice *«off (default)»*, la SSOT `harness/src/harness-config.mjs:117` e la **riga 25 dello stesso file** dicono `gated`. Il runtime legge la config → **default effettivo `gated`**. Allineare l'intestazione.
+- [ ] **ATTENDE UTENTE** (chiesto 2026-08-04): tetto di spesa (reco: pilota da 4 sessioni prima di qualunque cosa in scala) · quale traccia di lavoro. ⚠️ **C-BLOCK-3**: il substrato deve essere **novel/rinominato** — un task noto è quasi certamente nel pretraining dei capaci e il recall diventa rispondibile dalla memoria parametrica invece che dalla sessione.
+
 ## 📥 2026-07-31 — BATCH APPUNTI UTENTE (TG 2014-2024) — instradamento
 
 > **Raw immutabile**: `wiki/_private/appunti-2026-07-31.md` (fuori dal pushato: contiene due share-link Gemini e un blocco incollato da un altro progetto dell'utente). **Istruzione dell'utente (msg 2026)**: il materiale grezzo resta privato; nella wiki pubblica vanno **solo le lezioni estratte** — potenzialità, **errori**, cose da sistemare — non l'esempio in sé.
