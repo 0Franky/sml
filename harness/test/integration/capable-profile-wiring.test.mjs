@@ -10,6 +10,15 @@
  *
  * Difetto che questo test avrebbe intercettato (2026-08-04): i 5 combo storici non impostano ne' TOOL_GATING
  * ne' LANE_MEMORY_HINT → tutta la matrice e' girata col gating attivo senza che nessuno lo dichiarasse.
+ *
+ * ── COSA QUESTO TEST **NON** VERIFICA (residuo dichiarato, #15) ────────────────────────────────────────────
+ * Copre la catena  combo → loadHarnessConfig → cfg  e  livello → scaffolding registrato.
+ * Il tratto  combo → env → PROCESSO FIGLIO  e' stato verificato **LEGGENDO** `run-matrix.mjs` (`runCell`:
+ * `for (...) env[k]=v` dopo lo spread di `process.env`, quindi il combo VINCE sull'ambiente; poi `spawnSync`
+ * riceve quell'`env`) — **letto, non eseguito**: nessun test lo attraversa.
+ * L'ultimo tratto — che il modello riceva davvero un contesto senza stampelle — richiede una sessione live,
+ * quindi crediti. Finche' non gira, "il profilo capable funziona" resta vero **fino al confine della config**,
+ * non fino al modello.
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
