@@ -68,6 +68,69 @@ status: proposta (attende scelta scope+budget dall'utente; NON eseguire finché 
 | **T2.4** | **Long-horizon agentic REALE end-to-end** (buco materiale dal critico) | traiettoria vera N≥15 turni, decisione turno-3 vincola turno-18, dipendenza cross-turno reale; {capace vanilla, ours-full, ours-lean} | task-completion (NON recall) — valida la TESI-MADRE "lo scaffold aiuta il lavoro reale" | il recall è proxy; questo è il fine |
 | **T2.5** | **A1 riformulato + digest-off arm** | ours@keep1 vs ours@finestra-piena (NON vs vanilla); braccio digest-OFF per isolare intelligenza-del-modello vs cattura-deterministica; strumenta quali lane consulta | separa i 2 meccanismi che A1 conflate (F27 vs F33/F34) | sui capaci; la "vanilla-perde" va sul locale |
 
+## ⭐ T2.6 — LAB FUSO «lavora, poi raccontami» (2026-08-04, dalla richiesta utente msg 2065)
+
+> **Perché fondere T2.4 e T2.2 invece di eseguirli separati.** L'utente chiede: *«lavorano, eseguono, dopo di
+> che dicono la loro su come si sono trovati, e tu incroci la storia intera del loro lavoro con le loro
+> parole»*. Non è un terzo lab: è **T2.4 (long-horizon reale) e T2.2 (esperienziale ground-truth-paired) che
+> diventano due fasi della stessa sessione**. Due ragioni, e la seconda è vincolante:
+> **(a) costo** — la sessione di lavoro si paga **una volta sola** e l'intervista costa centesimi (scoperta
+> 2026-07-11: una chiamata singola di giudizio è ~$0.02-0.04 anche sui frontier);
+> **(b) è l'unica forma in cui l'incrocio ESISTE** — senza il lavoro non c'è traccia da incrociare, e T2.2
+> girato a sé sarebbe di nuovo un'opinione su un artefatto, non su un'esperienza.
+
+### Le tre fasi, in ordine
+
+**FASE 1 — la traccia di lavoro.** Compito **long-horizon reale** (≥15 turni) con una decisione presa presto
+che vincola tardi. **Substrato**: uno dei casi documentati nel registro-bug di un progetto reale — che ha
+causa-radice, fix, validazione e *lezione appresa* già scritti, quindi **conosciamo l'esito** e possiamo
+misurare se il modello ci arriva e **per quale strada**.
+⚠️ **Va ANONIMIZZATO e RINOMINATO, e le due ragioni sono indipendenti** — il che è comodo, perché la stessa
+mossa le risolve entrambe: **(i) riservatezza**, mandare i contenuti di un progetto a un servizio terzo è un
+atto diverso dal leggerli in locale *(e quei file portano identificativi personali in intestazione)*;
+**(ii) contaminazione** (`C-BLOCK-3`), un problema *noto* verrebbe risolto **a memoria parametrica** invece che
+ragionando, e la misura si sgonfia. Resta la logica, sparisce l'identità.
+
+**FASE 2 — le probe, DENTRO il lavoro, non dopo.** Almeno una probe di tipo **T1.5**: un fatto piantato in
+**una sola** lane, e a *t+K* una domanda **fattuale** su quel fatto (*«da dove viene il nome del
+committente?»*). Serve a stabilire **quanto pesare il racconto della fase 3** — se il modello sbaglia a dire
+cosa ha usato, il suo giudizio sull'ambiente vale poco.
+
+**FASE 3 — l'intervista, e come si pone.** Inquadramento **neutro**: si chiede di **descrivere come si è
+lavorato**, non di **valutare l'ambiente**, e non si dichiara che l'ambiente è nostro (anti-sycophancy,
+`C-BLOCK-2`). Le domande a punteggio sono **fattuali**; quelle valutative si raccolgono ma non si punteggiano.
+
+### Bracci
+
+| Braccio | Cos'è | Nota |
+|---|---|---|
+| **vanilla** | il modello lavora **senza** le nostre estensioni | è il metro. ⚠️ **Non** serve a dimostrare «vanilla perde in overflow» (`C-BLOCK-1`): la sua finestra nativa non la saturiamo |
+| **ours-capable** | combo `capable` di `harness/eval/run-matrix.mjs` — stampelle spente, meccanismi accesi | è il braccio che misura **le nostre cose** su un modello che non ha i deficit per cui erano nate |
+| *(opzionale)* **ours-full** | i default attuali (regime SLM) | quantifica **quanto costano le stampelle** su un capace. Da fare solo se avanza budget |
+
+### Come si legge l'esito — e cosa NON conta come esito
+
+L'incrocio racconto↔traccia segue [[concepts/self-report-vs-trace-adjudication]]: **solo i claim adjudicabili**
+entrano nel punteggio, e le divergenze si tengono **separate in tre** (confabulazione / punto cieco /
+conferma), perché sommarle mescolerebbe fenomeni opposti.
+⛔ **Non conta come esito**: *«ha detto che l'harness è utile»*. Un atto comunicativo positivo è un
+participation-reward travestito (#10/#32) — si guadagnerebbe dove serve e non si perderebbe dove non serve.
+✅ **Conta**: il **compito riuscito** (non il recall, che è un proxy), il **divario** racconto↔traccia, e i
+rilievi in **③ conferma**, che sono difetti nostri **dimostrati**.
+
+### Stato e prerequisiti
+
+- ✅ profilo `capable` costruito e testato al wiring (`test/integration/capable-profile-wiring.test.mjs`)
+- ✅ predicato di contraddizione fissato **prima** dei dati
+- ✅ apparato di registrazione **già esistente** (`turn-trace` + `conversation-capture` + `tool-call-log`) —
+  ⚠️ gitignored/runtime: **copiare fuori a fine sessione**
+- ⏳ **substrato anonimizzato da costruire** (fase 1)
+- ⏳ **via d'accesso** e **quali modelli** — in decisione con l'utente (vedi
+  [[architecture/harness-inventory-triage-2026-08-04]] §8: pi 0.80.2 non conosce i «5»; `opus-4-8`/`sonnet-4-6`
+  sono capaci e a 1M)
+
+---
+
 ## TIER 3 — completamenti / coda-budget (cheap o già-validati; solo se avanza margine)
 
 - **T3.1** — `get_conversation` come recall (F28, mai testato sul capace): canale pull vs push di T1.7.
