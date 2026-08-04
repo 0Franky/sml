@@ -1,0 +1,62 @@
+#!/usr/bin/env sh
+# =============================================================================
+# pre-commit — i CHECKER STRUTTURALI, resi non-scavalcabili
+# =============================================================================
+# PERCHE' ESISTE (2026-08-04, dopo la SECONDA occorrenza dello stesso difetto):
+#   il gate rosso non e' mai stato il problema. Il problema e' che l'ho VISTO
+#   e ho committato lo stesso — una volta scavalcandolo a mano (fix-ledger:81,
+#   "un rosso visibile, letto, e scavalcato"), una volta concatenando con `;`
+#   invece di `&&` cosi' che il commit e' partito nonostante `GATE=1` fosse
+#   stampato sullo schermo.
+#
+#   Le due volte la lezione scritta era la stessa ("guarda l'esito prima di
+#   committare") e non ha funzionato, perche' era una REGOLA e non un
+#   MECCANISMO. Regola del repo: se violi la stessa regola piu' volte, rendila
+#   NON-NECESSARIA — cioe' toglila dalle mani di chi puo' dimenticarla.
+#   (CLAUDE.md #17: l'acknowledgment senza meccanismo e' rumore.)
+#
+# COSA GIRA QUI E COSA NO — deliberato:
+#   SI': i 4 checker strutturali, ~1.1s in totale (misurati). A questo costo
+#        non c'e' nessuna scusa per saltarli.
+#   NO : la suite di test e gli 11 lab. Stanno in `tools/gate.mjs` e restano
+#        li': su OGNI commit sarebbero lenti abbastanza da spingere all'uso
+#        sistematico di --no-verify, che e' peggio di non avere l'hook.
+#        Questo hook NON sostituisce il gate — copre la classe di difetto che
+#        ho dimostrato di saper scavalcare.
+#
+# Bypass:  SKIP_CHECKS=1 git commit ...   (oppure git commit --no-verify)
+#          Legittimo per un WIP; l'anchor-drift lo prende comunque il gate
+#          prima del push.
+# =============================================================================
+
+if [ -n "$SKIP_CHECKS" ]; then
+  echo "[pre-commit] SKIP_CHECKS=1 -> checker strutturali saltati (volutamente)."
+  exit 0
+fi
+
+ROOT=$(git rev-parse --show-toplevel)
+FAILED=""
+
+# L'esito di ogni checker si cattura in una variabile PRIMA che qualunque altra
+# cosa venga eseguita (ANTI-FIX P9: una pipe o un echo in mezzo maschera l'exit
+# code e produce un gate che sembra esistere e non esiste).
+for check in check-anchors check-hierarchy check-decontamination check-stale-pending; do
+  OUT=$(node "$ROOT/harness/tools/$check.mjs" 2>&1)
+  RC=$?
+  if [ $RC -ne 0 ]; then
+    FAILED="$FAILED $check"
+    echo "--- [pre-commit] $check (exit $RC) ---"
+    echo "$OUT" | tail -12
+  fi
+done
+
+if [ -n "$FAILED" ]; then
+  echo ""
+  echo "[pre-commit] BLOCCATO — checker falliti:$FAILED"
+  echo "  Se e' anchor-drift da righe spostate:  node harness/tools/gate.mjs --fix"
+  echo "  Se e' un WIP e vuoi committare comunque:  SKIP_CHECKS=1 git commit ..."
+  exit 1
+fi
+
+echo "[pre-commit] OK: 4 checker strutturali verdi."
+exit 0
