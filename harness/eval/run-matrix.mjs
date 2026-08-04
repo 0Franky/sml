@@ -34,6 +34,30 @@ const FEATURE_COMBOS = [
   { label: "digest+lean",  env: { HARNESS_TASK_DIGEST: "on",  HARNESS_CONTEXT_VIEWS: "off", HARNESS_LANE_MEMORY_HINT_LEVEL: "lean", HARNESS_EVICTION_INJECT_MODE: "preuser" } },
   { label: "digest+views", env: { HARNESS_TASK_DIGEST: "on",  HARNESS_CONTEXT_VIEWS: "on",  HARNESS_LANE_MEMORY_HINT_LEVEL: "full", HARNESS_EVICTION_INJECT_MODE: "preuser" } },
   { label: "all",          env: { HARNESS_TASK_DIGEST: "on",  HARNESS_CONTEXT_VIEWS: "on",  HARNESS_LANE_MEMORY_HINT_LEVEL: "lean", HARNESS_EVICTION_INJECT_MODE: "preuser" } },
+  // ── "capable" (2026-08-04, fase C) — il PROFILO PER UN MODELLO CAPACE: le stampelle SPENTE, i meccanismi ACCESI.
+  // Perche' esiste: i default dell'harness sono tarati sul regime SLM, e i 5 combo sopra NON toccano ne' tool-gating
+  // ne' laneMemoryHint(on/off) → girare Sonnet/Opus con uno di quelli misurerebbe le STAMPELLE, non l'harness.
+  // Triage per-feature e razionale completo: ../../wiki/architecture/harness-inventory-triage-2026-08-04.md
+  //   SPENTO (famiglia ② "deficit di DISCIPLINA" — l'informazione c'e' e il modello debole non la usa):
+  //     TOOL_GATING=off        i 3 meta-tool restano ma NIENTE viene nascosto; nato perche' "un 9B annega con ~50 tool",
+  //                            su un capace SOTTRAE strumenti e aggiunge 2 passaggi per riaverli. ⚠ e' il flag che i
+  //                            combo storici non hanno MAI variato: tutta la matrice e' girata con i tool nascosti.
+  //     LANE_MEMORY_HINT=false spegne how_memory_works/reminder/<resources> (slm.ts si auto-degrada a livello "off").
+  //                            Il file slm.ts lo dichiara di se': "aiuta un modello DEBOLE ma e' RUMORE per uno capace".
+  //     EVICTION_CHECKPOINT=off il nudge "salva prima che scorra via" e' un rimedio all'indisciplina (F33: sul 9B nessun
+  //                            framing lo fa salvare) → su un capace e' la prima cosa da sospettare.
+  //     ANTI_FIXATION=off      gia' default-off e MAI validata ("costruito != efficace") → non entra in un braccio di misura.
+  //   ACCESO (meccanismi che NON dipendono dalla disciplina del modello, o che un capace puo' finalmente PILOTARE):
+  //     TASK_DIGEST=on         cattura DETERMINISTICA dei file-write: e' l'unica vittoria harness dimostrata (F32) e non
+  //                            passa dal modello → resta acceso anche qui, altrimenti si spegne l'unica cosa che funziona.
+  //     CONTEXT_VIEWS=on       tool PULL sulle proprie tool-call: e' F+S, e la meta'-S non e' MAI stata esercitata da un
+  //                            modello capace di esercitarla → questo braccio serve anche a vedere se viene USATO.
+  //     MAX_OPEN_FILE_VIEWS=8  il cap 3 e' un budget da contesto piccolo; con 1M di finestra e' una camicia di forza.
+  //   NB: keepTurns NON si fissa qui — e' l'asse MATRIX_KEEPS. Su un capace il confronto sensato e'
+  //       ours@keep-basso vs ours@finestra-piena, NON ours-vs-vanilla-in-overflow (lab-plan C-BLOCK-1: vanilla usa la
+  //       finestra nativa reale e non la possiamo saturare a costi sensati).
+  { label: "capable",      env: { HARNESS_TASK_DIGEST: "on",  HARNESS_CONTEXT_VIEWS: "on",  HARNESS_LANE_MEMORY_HINT: "false", HARNESS_TOOL_GATING: "off",
+                                  HARNESS_EVICTION_CHECKPOINT: "off", HARNESS_ANTI_FIXATION: "off", HARNESS_MAX_OPEN_FILE_VIEWS: "8" } },
 ];
 
 const TASKSETS = (process.env.MATRIX_TASKSETS || join(DATA, "humaneval-6.jsonl")).split(",").map((s) => resolve(s.trim())).filter(Boolean);
