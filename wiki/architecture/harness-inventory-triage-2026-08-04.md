@@ -256,6 +256,36 @@ in cui l'incrocio racconto↔traccia è possibile**, perché senza lavoro non c'
 
 ---
 
+## 8. Via d'accesso ai due modelli — stato VERIFICATO il 2026-08-04
+
+> Tutto quanto segue è **eseguito, non dedotto**. Nasce da un mio errore: avevo affermato all'utente che
+> l'abbonamento *«non è quel tipo di accesso»*. **Era falso**, e l'ho detto ragionando per categorie invece di
+> aprire il pacchetto — istanza del valore **#0** (fermarsi al livello comodo), con l'aggravante di aver
+> **negato all'utente un'opzione che voleva**, sulla mia autorità.
+
+| Fatto | Come l'ho verificato |
+|---|---|
+| **Anthropic è un provider NATIVO di pi** — nessuna estensione da scrivere, nessun SDK da installare | `pi --list-models anthropic` elenca 25 modelli. *(Stavo per adattare le 604 righe di `examples/extensions/custom-provider-anthropic`: non servivano. Ho anche installato `@anthropic-ai/sdk` e poi **disinstallato** — albero pulito.)* |
+| **L'OAuth Anthropic è nel CORE di pi**, non solo nell'esempio | `…/pi-coding-agent/node_modules/@earendil-works/pi-ai/dist/utils/oauth/anthropic.js` esiste; l'esempio mostra il flusso `/login` → `claude.ai/oauth/authorize` **+** il fallback `ANTHROPIC_API_KEY` |
+| 🔴 **pi 0.80.2 NON conosce i modelli «5»** — il catalogo si ferma a `claude-opus-4-8` e `claude-sonnet-4-6` (entrambi **1M** di contesto) | `--list-models anthropic`, sia `--offline` sia online: stesso esito. **Non è un problema di credenziali: quel nome per pi non esiste** |
+| **pi 0.83.0 è disponibile** (installata: 0.80.2) | `npm view` |
+| **OpenRouter HA i «5»**: `anthropic/claude-opus-5` 1M `$5/$25` · `anthropic/claude-sonnet-5` 1M `$2/$10` | chiamata a `/api/v1/models`. Key valida, **pay-as-you-go senza tetto** (`limit: null`), `usage=$0.78` |
+| **`curl` è bloccato in questo ambiente, `fetch` di Node no** | `curl` → HTTP 000 su qualsiasi host; `node fetch` → 200. **I runner sono Node → funzionano** |
+
+**L'inversione da tenere a mente**: i modelli «5» stanno su **OpenRouter** (che l'utente vuole riservare ai
+base-model), mentre la strada col **suo piano** arriva oggi al **4.8**.
+
+⭐ **Perché il 4.8 probabilmente basta**: la domanda di (C) è *«il nostro contesto aiuta o intralcia un modello
+CAPACE?»*. `opus-4-8` e `sonnet-4-6` **sono capaci e hanno la finestra da 1M** — cioè esattamente il regime in
+cui lo scaffolding rischia di essere solo peso (F32). La misura non cambia. **Cambierebbe** solo se lo scopo
+fosse *certificare la config da spedire sui modelli che l'utente usa davvero*, invece di *capire se l'harness
+funziona*: sono due domande diverse e la risposta dipende da quale delle due stiamo facendo. **Chiesto
+all'utente, in attesa** (#26).
+
+⚠️ **Aggiornare pi a 0.83 è un cambio STRUTTURALE** — è il pavimento sotto 25 estensioni. Non si fa di
+iniziativa e non si fa **mentre** si misura: prima i test sul pavimento attuale, poi eventualmente l'upgrade
+con la sua verifica.
+
 ## Links
 
 [[../STATO-2026-08-04]] (§4 = i quattro passi di (C)) · ⭐ [[../lab-plan-capable-models-validation]] (**il disegno
