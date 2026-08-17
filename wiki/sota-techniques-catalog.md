@@ -422,6 +422,71 @@ confidence: provisional
 10. **Eval suite minima + protocollo statistico** (n-seed, baseline definita, ImpossibleBench + RedCode + custom-criticality) — senza, non sai se l'esperimento ha funzionato; è dove un reviewer ostile distrugge.
 - *cheap-win bonus*: **LoRA+** (LR diversi A/B, ~0 impl); **Dr.GRPO+clip-higher** (config, anti-verbosità); **on-policy-distillation** come cold-start.
 
+## RL-6 — [2026-08-17] Cinque tecniche nuove al servizio del **requisito affidabilità** ([[REQUISITO-AFFIDABILITA]])
+
+> **Provenienza e livello di verifica, dichiarati** (#26): trovate da un agente di ricerca ancorato a **questo**
+> catalogo. **Io ho ri-verificato alla fonte 3 citazioni su 5** — le tre che cambierebbero una decisione — e
+> **tornavano esatte tutte e tre** (titolo, data, tesi). Le altre due (Abstain-R1, Mem-π) sono **riportate ma
+> NON verificate da me**: trattarle come `[?]` finché non si aprono.
+
+### 🔴 (1) La legge di collasso dell'astensione-come-azione — `[V] verificato alla fonte`
+**«Abstention as an Action Can Kill Both the Reward Gradient and the KL Anchor: Collapse Law and Repair for
+Error-Penalized Reinforcement Learning»** · arXiv **2608.00301** · 31-lug-2026.
+Dimostra **formalmente** che se l'astensione è un'**azione discreta** in un reward che penalizza l'errore, il
+modello **deriva verso «rifiuta tutto»**: la copertura collassa e il reward medio di training sale a zero
+perché **gate e ancora KL saturano insieme**.
+**La riparazione**: si addestra un **rapporto di confidenza SEMPRE emesso** con una *strictly proper scoring
+rule* + reward di correttezza; **l'astensione avviene SOLO a deployment**, per soglia. *«The always-emitted
+report has no gate to saturate»* — e l'ottimo calibrato è **attrattivo**.
+⭐ **Perché ci riguarda subito**: il requisito appena elevato a fondante spinge naturalmente verso *«insegnagli
+a dire non lo so»*, e **quella è esattamente la forma che collassa**. Questo paper dice che la strada giusta
+non è addestrare l'astensione: è addestrare la **calibrazione**, e derivare l'astensione da una soglia. →
+**vincola ogni reward futuro sull'incertezza**, e conferma a posteriori perché la misura (b) del requisito è
+**distribuzionale (ECE)**, non per-esempio.
+
+### ⭐ (2) L'illusione dell'auto-correzione — `[V] verificato alla fonte` · **costo ~zero**
+**«The Self-Correction Illusion: Role Relabeling Gates Explicit Error Flagging in LLMs»** · arXiv **2606.05976**
+· giu-2026 (v. finale lug-2026).
+Il modello **non corregge** un'affermazione errata quando è dentro il **proprio** `<thought>`, ma **la corregge**
+se la stessa identica affermazione è ri-etichettata come **messaggio esterno / tool-result / blocco memoria**:
+**+23÷93 punti percentuali**, **senza alcun training**.
+⭐ **È una leva di FORMATTAZIONE, F-harness pura, applicabile subito**: nel nostro passo di auto-revisione basta
+**ri-presentare il ragionamento precedente con un'etichetta di ruolo diversa**. Va sia come feature harness
+immediata sia come augmentation nel curriculum di [[training-taxonomy/class-metacognitive-self-audit]].
+*(De-rischia il caveat già in catalogo su Self-Refine: «critica confabulata che gira a vuoto».)*
+
+### ⭐ (3) Coerenza cross-contestuale (C3) — `[V] verificato alla fonte`
+**«Is This Your Final Answer? Cross-Contextual Consistency as a Measure of LLM Credibility»** · arXiv
+**2608.10315** · 10-ago-2026 · **26 modelli, 6 benchmark**.
+Misura quanto la risposta **resta stabile** sotto riformulazioni del task che ne preservano il contenuto, e
+trova che **minore variazione cross-contestuale correla con maggiore correttezza**. È una **metrica di eval**,
+non una tecnica di training.
+⭐ **Colma un buco esatto**: la **Dimensione 9 (Eval)** oggi **non ha alcuna metrica di coerenza-nel-tempo**, ed
+è precisamente ciò che il requisito fondante chiede (*«non deve dirmi una cosa e poi ritrattare»*). Costo
+basso: riusa l'infrastruttura di eval esistente.
+
+### (4) Abstain-R1 — `[?] riportato, NON verificato da me`
+arXiv **2604.17073** (ACL 2026 Findings), modello 3B: RL sull'astensione con **trigger verificabile** (la query
+è risolvibile dal contesto dato, sì/no) e reward che premia **anche lo spiegare cosa manca**.
+⚠️ **Va letto INSIEME al punto (1)**: se il suo reward tratta l'astensione come azione, ricade nel collasso.
+L'agente stesso dichiara di averlo **dedotto dalla struttura**, non verificato. **Non adottare prima di aver
+letto entrambi per intero.**
+
+### (5) Mem-π — `[?] riportato, NON verificato da me`
+arXiv **2605.21463**, mag-2026: il **quando/cosa scrivere in memoria** come decisione **addestrata**, con un
+modello di guidance a **parametri separati** dall'agente (+30% relativo su web-navigation).
+**Costo alto** — è un secondo modello da addestrare. → **merita un ADR** (modulo separato vs skill nei pesi del
+Tier-1), **non un'adozione automatica**.
+
+### Due aggiornamenti trasversali
+- **L'accuracy pura premia il bluff** (Kalai/Nachum, versione Nature — ⚠️ data non verificata): qualunque
+  benchmark o reward basato su accuratezza secca **incentiva a tirare a indovinare invece di astenersi**, e
+  l'RLHF lo amplifica. → non riguarda solo il reward RL: **il nostro EVAL deve dare credito parziale
+  all'astensione calibrata**, altrimenti misuriamo il contrario di ciò che vogliamo.
+- 🔴 **Nuovo rischio da mettere in watch-list**: *«Agents Don't Just Agree, They Remember»* (arXiv 2607.10526)
+  — la **sycofanzia persistente PEGGIORA nei sistemi con memoria**. Ci riguarda direttamente: stiamo costruendo
+  memoria e lane-wiki, e l'utente ha appena chiesto **anti-sycophancy forte**. → in [[#RL-3]] watch-list.
+
 ## RL-5 — Disciplina di scope (agnostico) + ref da verificare
 
 **Tagliare/relegare a ∞ (fuori-scope MVP coding-org, alcuni contraddicono "latenza non-priorità")**: Tree/Graph-of-Thoughts, MCTS/rStar-Math (è math-competition), MTP-heads, speculative-decoding (single-user locale), per-expert-MoE-quant (gated su MoE-35B = 2 wave avanti), self-play/SPIN (collasso su 4B/<$200), char-level-precision, MemGPT-hierarchy (error-memo+VARS coprono il 90%). → distinguere **F3-pianificato** da **∞-forse-mai** (il catalogo usa "F3" come parcheggio → diluisce il segnale).

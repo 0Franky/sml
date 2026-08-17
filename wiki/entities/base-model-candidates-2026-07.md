@@ -110,6 +110,34 @@ ognuna sufficiente da sola. **Resta viva** la candidatura come **teacher di dist
 e MoE non pesano — **con il caveat #29 ancora aperto**: la licenza va letta per l'**USO in distillazione**, non
 solo per l'accesso.
 
+### 🔴 [2026-08-17] Scan di 3 uscite nuove — **nessuna entra**, e il pattern conta più dei singoli verdetti
+
+> **Metodo**: agente di ricerca ancorato a *questi* criteri (non a criteri suoi), poi **io ho ri-verificato alla
+> fonte i fatti dirimenti** invece di girare il suo rapporto. La ri-verifica ha **cambiato un verdetto**.
+
+| Modello | Data | Cosa è | Verdetto |
+|---|---|---|---|
+| **Muse Glimmer 30B** (Meta) | ago-2026 | ~29.6B **dense** + **vision encoder** ~1.8B · Apache 2.0 · GPQA-D 83.5 (self-report) | 🔴 **multimodale** → escluso per lo **stesso motivo strutturale** già applicato a Gemma-4-12B il 07-24. ⚠️ **MMLU-Pro assente**: in giro c'è *MMMU-Pro* (74), che è un **altro benchmark** (multimodale) — non confonderli. Credibilità dei confronti **contestata** dalla community (thread HF) |
+| **Nemotron 3.5 Lightning** (NVIDIA) | 11-ago-2026 | **MoE 30B tot / 3B attivi**, ibrido Mamba-2+MoE · **OpenMDW-1.1** (non Apache/MIT) · **base ufficiale ESISTE** · GPQA-D 75.4 / MMLU-Pro 81.9 (self-report) | 🔴 **stessa quota-attivi del Nemotron-Nano già scartato** (riga 9) → lo scarto si applica **identico**. Il base ufficiale è un passo avanti ma non tocca il problema architetturale. Training confermato **solo** su stack NeMo |
+| **Qwen3.8-27B** | 14-ago-2026 | **27B dense**, Apache 2.0, ctx 262K→1M, GPQA-D **89.2** | 🔴 **ESCLUSO — ri-verificato DA ME alla model card** *(l'agente non l'aveva rilevato)*: **è MULTIMODALE**. Testuale: *«Type: Causal Language Model **with Vision Encoder**»*, tag `Image-Text-to-Text`, *«Native support for image and video understanding»*. Più: architettura **ibrida linear-attention** (`16 × (3 × (Gated DeltaNet → FFN) → 1 × (Gated Attention → FFN))`) = stesso rischio-CPT del 3.6 · **MMLU-Pro NON citato** · **nessun checkpoint base** menzionato |
+
+⭐ **Il pattern, che vale più dei tre verdetti**: **tutte e tre le uscite recenti sono multimodali o MoE**. Nessuna
+è *dense + text-only + con base scaricabile*, cioè il profilo che ci serve. → **aspettare un base-model
+migliore è una strategia perdente**: il mercato si sta muovendo **via** da ciò che ci serve, non verso.
+L'implicazione operativa è che conviene **impegnarsi su ciò che esiste già** (i leader del bake-off) invece di
+rimandare la scelta in attesa di un candidato ideale che, sul trend attuale, non arriverà.
+
+⚠️ **Il fatto più decision-critical resta APERTO e va detto come tale**: **esiste un checkpoint `-Base` per la
+famiglia 27B recente?** La ricerca mirata dell'agente è **negativa ma non conclusiva**; la mia verifica su
+`Qwen/Qwen3.8-27B-Base` ha restituito **HTTP 401**, che **non è un 404**: su HF può significare *repo gated*
+oppure *inesistente* — l'ambiguità è reale e **non l'ho risolta**. Senza base scaricabile, il CPT non parte:
+è la domanda da chiudere **per prima** su qualunque candidato.
+
+**Sul candidato protetto**: Qwen3.8-27B è il **successore naturale** di Qwen3.6-27B, non un concorrente
+esterno — e porta con sé **entrambi** i difetti del predecessore **più** la multimodalità confermata. Questo
+**non ribalta** la protezione dell'idea utente, ma dice che la linea 3.x-27B si sta muovendo **nella direzione
+sbagliata** per il nostro uso.
+
 ## Raccomandazione (metodo, non verdetto a priori)
 
 **NON blindare Qwen3.6-27B.** Fare un **BAKE-OFF a due teste** (prima sul 4B di test, poi sui finalisti 32B):
