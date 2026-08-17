@@ -163,6 +163,84 @@ if (intestazioniStantie.length) {
   for (const c of intestazioniStantie) console.log(`             ${c.file}:${c.riga}  ${c.testo}`);
 }
 
+// ---- PASSO 3: COERENZA DEI TAG DI STATO (2026-08-17) -----------------------------------------
+// Regola: cc-wiki-core `memory/rules/documentation/state-tag-in-the-title` (idea di Fra).
+// ⚠️ NON si controlla la PRESENZA del tag, e la scelta e' deliberata: "questo documento ha uno
+// stato?" NON e' decidibile da una macchina — una pagina di concetto non e' ne' aperta ne' chiusa,
+// e obbligarla a un tag produce tag finti, cioe' l'inflazione che la regola stessa vieta. Un check
+// che urla su meta' dei file viene spento in un'ora.
+// Si controlla invece la COERENZA, che e' decidibile ed e' dove vive il difetto reale:
+//   (a) se un tag c'e', deve stare in TESTA al titolo (se e' in mezzo, una ricerca non lo vede
+//       come stato — che e' l'unico motivo per cui il tag esiste);
+//   (b) due tag DIVERSI nello stesso titolo = il titolo contraddice se stesso;
+//   (c) il tag contraddice il campo `status:` del frontmatter = due sorgenti che divergono.
+const TAG_STATO = { "✅": "chiuso", "🔴": "aperto", "🟡": "in-corso", "⏳": "attende", "⛔": "proposta", "🗄️": "archiviato" };
+const TAGS = Object.keys(TAG_STATO);
+// status: → stato atteso. Ordine significativo: la prima che matcha vince.
+const STATUS_A_STATO = [
+  [/\bPROPOSTA\b/i, "proposta"],
+  [/\bRATIFICAT|DECIS[AO]|CHIUS[AO]|RISOLT[AO]\b/i, "chiuso"],
+  [/\battende|in attesa\b/i, "attende"],
+  [/\bARCHIVIAT[AO]\b/i, "archiviato"],
+  [/\bin corso\b/i, "in-corso"],
+];
+const tagIncoerenti = [];
+
+for (const file of mdFiles(WIKI)) {
+  const testo = readFileSync(file, "utf8");
+  const righe = testo.split("\n").map((r) => r.replace(/\r$/, ""));
+  const rel = relative(ROOT, file).split(sep).join("/");
+
+  // status: del frontmatter (solo se dentro il blocco --- iniziale)
+  let statusAtteso = null;
+  if (righe[0] === "---") {
+    for (let i = 1; i < righe.length && righe[i] !== "---"; i++) {
+      const m = righe[i].match(/^status:\s*(.+)$/);
+      if (!m) continue;
+      const hit = STATUS_A_STATO.find(([re]) => re.test(m[1]));
+      if (hit) statusAtteso = hit[1];
+      break;
+    }
+  }
+
+  righe.forEach((riga, i) => {
+    const h = riga.match(/^(#{1,4})\s+(.*)$/);
+    if (!h) return;
+    const titolo = h[2];
+    const presenti = [...new Set(TAGS.filter((t) => titolo.includes(t)))];
+    if (!presenti.length) return; // niente tag: non e' un errore (vedi sopra)
+
+    if (presenti.length > 1) {
+      // COMPOSTO LEGITTIMO: due stati ADIACENTI separati da "/" (es. "✅/⏳" = fatto in parte,
+      // in parte in attesa). E' un idioma gia' in uso e porta informazione VERA che forzare a un
+      // solo stato distruggerebbe; resta perfettamente cercabile perche' matcha entrambi.
+      // ⚠️ Falso positivo trovato aprendo un campione PRIMA di riportare il numero: la prima
+      // versione di questo check lo segnalava, ed e' esattamente il rumore che fa disattivare
+      // un controllo. Si segnalano solo i tag SPARSI nel titolo, non i composti.
+      const composto = new RegExp(`(?:${TAGS.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\s*/\\s*(?:${TAGS.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`);
+      if (!composto.test(titolo)) {
+        tagIncoerenti.push({ file: rel, riga: i + 1, perche: `titolo con ${presenti.length} stati SPARSI (${presenti.join(" ")}) — se e' un composto, scrivilo come "${presenti[0]}/${presenti[1]}"` });
+      }
+      return;
+    }
+    const tag = presenti[0];
+    // (a) posizione: deve aprire il titolo (eventuale grassetto/quote prima e' tollerato)
+    if (!/^\s*(?:[*_>`]+\s*)?/.test(titolo.slice(0, titolo.indexOf(tag))) || titolo.indexOf(tag) > 3) {
+      tagIncoerenti.push({ file: rel, riga: i + 1, perche: `tag ${tag} non in testa al titolo (una ricerca non lo legge come stato)` });
+      return;
+    }
+    // (c) coerenza col frontmatter, solo per il titolo H1
+    if (h[1].length === 1 && statusAtteso && TAG_STATO[tag] !== statusAtteso) {
+      tagIncoerenti.push({ file: rel, riga: i + 1, perche: `titolo dice "${TAG_STATO[tag]}" ma il frontmatter status dice "${statusAtteso}"` });
+    }
+  });
+}
+
+if (tagIncoerenti.length) {
+  console.log(`[stale-pending] ⚠️ INFO — ${tagIncoerenti.length} tag di stato incoerenti (posizione / doppi / vs frontmatter). NON bloccante.`);
+  for (const c of tagIncoerenti) console.log(`             ${c.file}:${c.riga}  ${c.perche}`);
+}
+
 // ---- RATCHET -------------------------------------------------------------------------------
 // Il primo giro ha trovato 46 attese senza data, tutte PREESISTENTI. Renderlo bloccante subito
 // avrebbe rotto ogni commit finche' non erano bonificate tutte — cioe' il controllo sarebbe
