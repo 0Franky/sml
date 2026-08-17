@@ -1,9 +1,10 @@
 ---
 name: 2026-07-26-async-memory-injection-not-built
-description: "✅ RATIFICATA dall'utente il 2026-08-17 (TG msg 2092 punto 5: «Ok, ma tienila tracciata come idea scartata e perché») — IDEA SCARTATA, e le ragioni sono qui sotto, non altrove. Era: l'idea utente di una "memoria asincrona" che interroga un RAG/LLM-wiki con gli ultimi messaggi e inietta il risultato come ricordo. Verdetto proposto NON COSTRUIRE, e non per prudenza: il caso dell'esempio è già risolto e misurato al 100%, la seconda metà dell'idea è già stata costruita/accesa/REFUTATA (+74% token, recall peggiore), e il residuo vero l'utente l'ha già assegnato due volte al training."
+description: "✅ RATIFICATA dall'utente il 2026-08-17 (TG msg 2092 punto 5: «Ok, ma tienila tracciata come idea scartata e perché») — IDEA SCARTATA, e le ragioni sono qui sotto, non altrove. Era: l'idea utente di una «memoria asincrona» che interroga un RAG/LLM-wiki con gli ultimi messaggi e inietta il risultato come ricordo. Verdetto proposto NON COSTRUIRE, e non per prudenza: il caso dell'esempio è già risolto e misurato al 100%, la seconda metà dell'idea è già stata costruita/accesa/REFUTATA (+74% token, recall peggiore), e il residuo vero l'utente l'ha già assegnato due volte al training."
 type: decision
-tags: [memoria, harness, rag, context-injection, proposta, ssot, reward-hacking, area-harness]
-last_updated: 2026-07-26
+tags: [memoria, harness, rag, context-injection, idea-scartata, ratificata, ssot, reward-hacking, area-harness]
+status: RATIFICATA 2026-08-17 — idea SCARTATA, il perché si conserva per richiesta esplicita dell'utente
+last_updated: 2026-08-17
 ---
 
 > # ✅ RATIFICATA il **2026-08-17** — **IDEA SCARTATA**, e le ragioni restano scritte qui
