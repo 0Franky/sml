@@ -109,7 +109,11 @@ Il criterio non è solo *"è ancora VERO?"* ma anche *"serve ancora?"*. Uno stor
 ### (iii) PROPAGA a valle — truth-maintenance *(B5)*
 Ritirare la premessa e lasciare in piedi ciò che ci poggiava sopra è **mezzo lavoro**, e il mezzo lavoro qui è **peggio del niente**: l'artefatto derivato sopravvive alla sua giustificazione e nessuno lo sa più. Domanda obbligatoria dopo ogni ritiro: **«cosa avevo deciso/costruito PERCHÉ credevo questo?»** → i derivati raggiungibili vanno ri-visitati. `check_facts` (`contradiction-detection.ts:62-70`, descr. `:66`) è il motore **del primo anello** — chiede di essere chiamato *"BEFORE applying it in isolation"*, cioè contro l'errore di **applicare il fatto nuovo senza guardare cosa nega**. ⚠️ **Ma copre solo la profondità 1** (`contradiction-check.mjs:86-105`: loop piatto `decisions × assumptions × facts`, nessuna chiusura transitiva) → **la catena oltre il primo anello è a carico del modello**, e nella fixture il grafo è **dato in-context** (§Split #11). *Il fatto che l'attrezzo si fermi a depth-1 è precisamente ciò che rende la skill necessaria: nessun tool ti dirà che il derivato del derivato è orfano.*
 
-### (iv) ARCHIVIA il passato — *(PROPOSTA 2026-08-04, attende ratifica #26)*
+### (iv) ARCHIVIA il passato — ✅ **RATIFICATA dall'utente il 2026-08-17** (TG msg 2092, punto 3: *«Ok»*)
+> *(Proposta il 2026-08-04 **in forma diversa da come era stata chiesta** — l'utente aveva autorizzato una
+> «radice dismettere», io ho consegnato una quarta faccia di questa classe perché lo scan orizzontale mostrava
+> che quattro classi coprivano già il tema e mancava la **discriminazione**, non la radice. La deviazione è
+> stata dichiarata al momento della consegna e **approvata esplicitamente**.)*
 > **Origine**: richiesta utente (*«le cose dated vanno spostate in archived»*, msg 2039 + *«hai il mio ok»*) **e**, indipendentemente, la lente **ciclo-di-vita** del nostro gap-scan, che aveva marcato *dismettere* come la fase mancante. Doppia motivazione, due strade diverse.
 
 Il criterio delle tre facce sopra è *«è ancora VERO?»* (i) e *«serve ancora?»* (ii). Ne manca un terzo, e non è un caso-limite dei primi due: **«è ancora CORRENTE?»**. Un contenuto può essere **vero, utile e non-corrente** insieme — la decisione del mese scorso che è stata **superata** da una nuova, il piano della fase finita, il verbale della riunione di aprile. Non va corretto (non è falso) e non va potato (la storia serve: è il *perché* di dove siamo adesso, #37). **Va spostato, restando raggiungibile.**

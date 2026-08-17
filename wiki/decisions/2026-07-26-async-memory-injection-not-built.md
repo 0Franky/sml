@@ -1,12 +1,14 @@
 ---
 name: 2026-07-26-async-memory-injection-not-built
-description: PROPOSTA (#26 — attende ratifica) — l'idea utente di una "memoria asincrona" che interroga un RAG/LLM-wiki con gli ultimi messaggi e inietta il risultato come ricordo. Verdetto proposto NON COSTRUIRE, e non per prudenza: il caso dell'esempio è già risolto e misurato al 100%, la seconda metà dell'idea è già stata costruita/accesa/REFUTATA (+74% token, recall peggiore), e il residuo vero l'utente l'ha già assegnato due volte al training.
+description: "✅ RATIFICATA dall'utente il 2026-08-17 (TG msg 2092 punto 5: «Ok, ma tienila tracciata come idea scartata e perché») — IDEA SCARTATA, e le ragioni sono qui sotto, non altrove. Era: l'idea utente di una "memoria asincrona" che interroga un RAG/LLM-wiki con gli ultimi messaggi e inietta il risultato come ricordo. Verdetto proposto NON COSTRUIRE, e non per prudenza: il caso dell'esempio è già risolto e misurato al 100%, la seconda metà dell'idea è già stata costruita/accesa/REFUTATA (+74% token, recall peggiore), e il residuo vero l'utente l'ha già assegnato due volte al training."
 type: decision
 tags: [memoria, harness, rag, context-injection, proposta, ssot, reward-hacking, area-harness]
 last_updated: 2026-07-26
 ---
 
-> # ⛔ PROPOSTA — attende la ratifica dell'utente **dal 2026-07-26**  *(età dichiarata: vedi nota)*
+> # ✅ RATIFICATA il **2026-08-17** — **IDEA SCARTATA**, e le ragioni restano scritte qui
+> *(Utente TG msg 2092 punto 5: «**Ok, ma tienila tracciata come idea scartata e perché**» — la richiesta di conservare il PERCHÉ è esplicita, quindi questo documento non si archivia e non si accorcia: serve a non ri-prendere la stessa decisione una seconda volta, magari al contrario. È #37 applicata a una decisione negativa.)*
+> ⚠️ **Attesa durata 22 giorni** (2026-07-26 → 2026-08-17). Non per colpa dell'utente: **io non gliel'ho ri-portata**. La data qui sotto serviva a rendere visibile proprio questo.
 > *(La data non è decorazione: fino al 2026-07-31 questa riga non ne aveva, e un'attesa senza data sembra fresca per sempre — è il difetto che ha tenuto un ADR «in attesa» per 71 giorni. Ora invecchia da sola e si vede.)*
 > **Origine**: idea utente TG msg 1964 + *«fai analisi fatta bene»* (msg 1965). Analisi eseguita da un team di ricerca il 2026-07-26; le quattro affermazioni portanti **ri-verificate a mano** prima di accettarle (vedi §Verifica).
 > **Nessun codice scritto, nessun meccanismo toccato.**
@@ -81,7 +83,7 @@ Metrica **giusta**, già disegnata e mai costruita (`harness-wins-validation-pro
 | `task-digest` è default-ON | ✅ `?? "on"` in `task-digest-capture.ts:19` |
 | `<facts>` ha cap 12 | ✅ `DEFAULT_MAX_FACTS = 12` |
 | i fatti-digest stanno a importance 100 | ✅ `TASK_FACT_IMPORTANCE = 100`, commento *«pinned in cima»* |
-| l'utente ha bocciato la cattura deterministica come «pezza» | ✅ **testuale**, `wiki/todo.md:891` — *«Scartato — strato-2 auto-capture regex»* (utente msg 925) |
+| l'utente ha bocciato la cattura deterministica come «pezza» | ✅ **testuale**, `wiki/todo.md:904` — *«Scartato — strato-2 auto-capture regex»* (utente msg 925) |
 
 ⚠️ L'ultima era citata a **`:524`** e a quella riga c'è altro: il numero era **slittato di 4** per le mie modifiche di oggi allo stesso file. **Giudicare dal numero avrebbe prodotto un falso «ha confabulato»** — la sostanza si cerca, non si controlla per indirizzo. *(È il motivo per cui altrove usiamo àncore testuali al posto dei numeri di riga.)*
 

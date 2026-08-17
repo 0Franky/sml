@@ -110,6 +110,59 @@ for (const file of mdFiles(WIKI)) {
 
 console.log(`[stale-pending] ${fileVisti} file, ${righeViste} righe esaminate sotto wiki/ (escluso _private/)`);
 
+// ---- PASSO 2: INTESTAZIONI STANTIE (aggiunto 2026-08-17) -------------------------------------
+// PERCHE' ESISTE: il passo 1 guarda le RIGHE, e non poteva vedere questo. Il 2026-08-17 ho
+// consegnato all'utente un elenco di "cose ferme da settimane" e DUE VOCI SU QUATTRO erano gia'
+// chiuse: l'intestazione della sezione diceva ancora "ATTENDE DECISIONE UTENTE" mentre il corpo
+// sotto portava "✅ DECISO" e la voce-utente barrata come "superata".
+//   → **le intestazioni invecchiano indipendentemente dal contenuto.**
+// Non e' un difetto estetico: un tracker che dichiara attese FALSE fa rifare il lavoro all'utente,
+// che e' esattamente il danno che wiki/REQUISITO-AFFIDABILITA.md esiste per impedire. Una lista
+// sbagliata e' peggio di nessuna lista, perche' viene creduta.
+//
+// NON BLOCCANTE di proposito: un titolo puo' legittimamente restare aperto mentre un suo
+// sotto-punto si chiude, quindi qui il falso positivo e' strutturale e va LETTO da un umano, non
+// imposto. Renderlo bloccante lo farebbe disattivare entro un'ora — lo stesso modo in cui muoiono
+// questi check, gia' documentato nel commento del RATCHET qui sotto.
+const RISOLTO_NEL_CORPO = /✅|\bDECIS[OA]\b|\bFATT[OA]\b|\bsuperat[ao]\b|\bCHIUS[OA]\b|\bRATIFICAT[OA]\b|\bRISOLT[OA]\b/;
+const intestazioniStantie = [];
+
+for (const file of mdFiles(WIKI)) {
+  const righe = readFileSync(file, "utf8").split("\n").map((r) => r.replace(/\r$/, ""));
+  righe.forEach((riga, i) => {
+    const h = riga.match(/^(#{2,4})\s+(.*)$/);
+    if (!h) return;
+    const dichiaraAttesa = MARCATORI.some((re) => re.test(riga) && !soloCitato(riga, re));
+    if (!dichiaraAttesa) return;
+    if (RISOLTO_NEL_CORPO.test(riga)) return; // l'intestazione stessa si dichiara chiusa
+
+    // corpo = fino alla prossima intestazione di livello uguale o superiore
+    const livello = h[1].length;
+    let fine = righe.length;
+    for (let j = i + 1; j < righe.length; j++) {
+      const hh = righe[j].match(/^(#{1,6})\s+/);
+      if (hh && hh[1].length <= livello) { fine = j; break; }
+    }
+    const corpo = righe.slice(i + 1, fine).join("\n");
+    if (RISOLTO_NEL_CORPO.test(corpo)) {
+      intestazioniStantie.push({
+        file: relative(ROOT, file).split(sep).join("/"),
+        riga: i + 1,
+        testo: riga.trim().slice(0, 140),
+      });
+    }
+  });
+}
+
+if (intestazioniStantie.length) {
+  console.log(
+    `[stale-pending] ⚠️ INFO — ${intestazioniStantie.length} intestazioni dichiarano un'attesa MA il corpo contiene una risoluzione.\n` +
+    `             Da leggere a mano: il titolo puo' essere rimasto indietro (2 casi reali il 2026-08-17,\n` +
+    `             riportati all'utente come "fermi da settimane" quando erano chiusi). NON bloccante.`
+  );
+  for (const c of intestazioniStantie) console.log(`             ${c.file}:${c.riga}  ${c.testo}`);
+}
+
 // ---- RATCHET -------------------------------------------------------------------------------
 // Il primo giro ha trovato 46 attese senza data, tutte PREESISTENTI. Renderlo bloccante subito
 // avrebbe rotto ogni commit finche' non erano bonificate tutte — cioe' il controllo sarebbe
