@@ -11,6 +11,7 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 
 ## Overview
 
+- 🔴 [`REQUISITO-AFFIDABILITA.md`](REQUISITO-AFFIDABILITA.md) — **REQUISITO FONDANTE, sovraordinato a tutto** (utente 2026-08-17): il difetto da estirpare **non è sbagliare, è RITRATTARE dopo che l'utente ha già agito**. La certezza viaggia **con** la risposta · la wiki si consulta **prima** · verifica su ciò che **discrimina**. Col **polo simmetrico** (il difetto non è la sicurezza, è quella non guadagnata) e le **tre misure** che lo rendono verificabile. Dove un'altra pagina confligge, **vince questa**
 - [`README.md`](README.md) — entry point + synthesis del progetto
 - [`STATO-2026-08-04.md`](STATO-2026-08-04.md) ⭐🧭 — **STATO CONSOLIDATO corrente**: i tre obiettivi tenuti separati (A modello-base · B buchi-da-addestrare · C rendimento-harness), cosa è deciso **con il perché e cosa lo ribalterebbe**, cosa è aperto **e di chi è**, e la SINGOLA prossima azione. Parte da qui se non sai dove sei
 - [`model-testbook.md`](model-testbook.md) 🆕🎯 — **TEST-BOOK del modello**: registro vivo di OGNI "voglio che il modello faccia/capisca X" + la sua **VERIFICA** (probe/eval/held-out, outcome-anchored). Riconcilia *voluto vs effettivamente appreso* a eval-time. Regola permanente (utente msg 449)

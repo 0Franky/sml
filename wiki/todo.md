@@ -44,6 +44,28 @@ last_updated: 2026-07-18
 
 ---
 
+## 🔴 2026-08-17 — REQUISITO AFFIDABILITÀ + 14 richieste utente (TG msg 2086-2089)
+
+> **Requisito fondante**: [[REQUISITO-AFFIDABILITA]] — sovraordinato a tutto il resto. Raw + decodifica completa delle 14 richieste: `wiki/_private/richiesta-affidabilita-2026-08-17.md` (gitignored).
+> ⚠️ **Regola di ingaggio per questo blocco**: l'utente ha appena dichiarato che il difetto che non tollera più è *«mi dice una cosa, io ci prendo decisioni sopra, e ore dopo ritratta»*. → **niente risposte di getto** su E/F/K/H/I/J: sono domande di design dove una risposta sicura e sbagliata è **esattamente il danno**. Si risponde **dopo** aver verificato, e **con il residuo dichiarato**.
+
+- [x] ✅ **B — requisito affidabilità formalizzato** (wiki + CLAUDE.md #-1 + memory + index), 2026-08-17
+- [x] ✅ **cattura durevole** delle 4 richieste verbatim + decodifica a 14 voci
+- [ ] 🔄 **A — verifica 4 modelli** (muse glimmer 30b · nostro base · ultimo Nemotron · Qwen dense recente) — *agente lanciato, ancorato ai criteri già in wiki*
+- [ ] 🔄 **ricerca tecniche dai paper** con priorità su calibrazione/astensione/retrieval-before-answer — *agente lanciato, ancorato al catalogo SOTA esistente*
+- [ ] 🔴 **B2/B3 — disciplina wiki-first come COMPORTAMENTO, non buona intenzione**: oggi nessuna classe insegna *«consulta prima di asserire»* con reward sull'esito. + **il grafo è fermo al 2026-07-08 (244 commit dopo)**: un grafo stantio è **peggio** di nessun grafo → decidere se aggiornarlo o smettere di citarlo come garanzia
+- [ ] 🔴 **registro delle claim DECISION-BEARING** — senza, la misura (a) dell'affidabilità (tasso di ritrattazione su ciò su cui l'utente ha agito) **non esiste**. Oggi non lo registriamo
+- [ ] **C+D — classe: rilevare da sé lo scostamento e reagire in proporzione.** ⚠️ **NON è un tetto fisso di agenti**: 16 può andare, 10 pure, **800 può essere giusto** se locale e senza limiti. La skill è il **trade-off tempo↔risorse** letto sul **modello del mondo attuale** (quanti token consumano i subagent? c'è un limite di sessione?) + la **deviazione dalla volontà dell'utente** → poi proporre. Include: **rilevare da solo** · **informare** · scusarsi (opzionale) · **reagire in proporzione**
+- [ ] **E — indice delle skill** da iniettare in training (trasferirle nei pesi + far scegliere al modello) + **laboratorio bilanciato** su tutte le skill, nessuna propensione
+- [ ] **F — skill frontend: disgiunte o unificate?** Rischio dichiarato dall'utente: due skill generano lo stesso stile in modo diverso → interiorizzate e poi rimosse → il modello **mescola** → incoerenza. Vuole **consistenza + variabilità creativa**: *«non deve essere una strada ma delle direttive»*
+- [ ] **H — `/clarify` interiorizzato**: prima lo **schema**, `design.md` scritto e mantenuto coerente; valutare se **componibile** (linee guida generali + file per caso d'uso)
+- [ ] **I — semi-strutturazione dell'informazione**: cosa diventa bottone/card, cosa raggruppare, cosa sezionare; sapere se un'informazione va in **un box solo** o divisa (warning con titolo+descrizione+«procedi, sono consapevole»)
+- [ ] **J — redesign da UI slop**: estrarre contenuto, sezionare, raggruppare, creare componenti (4 info separate → **una card financial-style** con freccia/%/media e gerarchia tipografica)
+- [ ] 🗳️ **K — DOMANDA DIRETTA dell'utente, richiede risposta motivata**: nel system prompt *«interiorizza e non menzionare mai le skill»* + durante l'RL **tagliare dalla sequenza premiata il caricamento delle skill**, così il credito va ai token che hanno fatto il lavoro e senza skill il modello deve **eguagliare** quella performance. **Migliorerebbe il risultato?** + fase ad-hoc separata per la **scelta** della skill. ⚠️ Non rispondere senza aver verificato: è credit-assignment, e una risposta sicura-e-sbagliata qui costa un ciclo di training
+- [ ] **L — estrazione del goal REALE (esplicito + implicito) + anti-sycophancy forte**. Casi dati: *«alternativa al sale»* → **bromuro di sodio** (la richiesta è su qualcosa che si **mangia** → la salute viene prima e da sola esclude la risposta) · ragazzi in crisi → **mai assecondare**. Vale per **entrambe** le modalità harness (storico standard **e** dynamic context engineering)
+- [ ] **M — punto della situazione** per l'utente: cosa resta aperto **lato suo** + reco **con contesto**, seguendo il protocollo di comunicazione già in wiki. **Pullare i repository**
+- [ ] **N — verification loop** prima di consegnare la risposta complessiva
+
 ## 🔬 2026-08-04 — FASE (C) rendimento harness su modelli CAPACI (Sonnet / Opus 5)
 
 > Richiesta utente msg 2065. Stato consolidato in [[STATO-2026-08-04]] §4; inventario+triage in [[architecture/harness-inventory-triage-2026-08-04]].
