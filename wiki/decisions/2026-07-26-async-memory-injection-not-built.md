@@ -83,7 +83,7 @@ Metrica **giusta**, già disegnata e mai costruita (`harness-wins-validation-pro
 | `task-digest` è default-ON | ✅ `?? "on"` in `task-digest-capture.ts:19` |
 | `<facts>` ha cap 12 | ✅ `DEFAULT_MAX_FACTS = 12` |
 | i fatti-digest stanno a importance 100 | ✅ `TASK_FACT_IMPORTANCE = 100`, commento *«pinned in cima»* |
-| l'utente ha bocciato la cattura deterministica come «pezza» | ✅ **testuale**, `wiki/todo.md:904` — *«Scartato — strato-2 auto-capture regex»* (utente msg 925) |
+| l'utente ha bocciato la cattura deterministica come «pezza» | ✅ **testuale**, `wiki/todo.md:908` — *«Scartato — strato-2 auto-capture regex»* (utente msg 925) |
 
 ⚠️ L'ultima era citata a **`:524`** e a quella riga c'è altro: il numero era **slittato di 4** per le mie modifiche di oggi allo stesso file. **Giudicare dal numero avrebbe prodotto un falso «ha confabulato»** — la sostanza si cerca, non si controlla per indirizzo. *(È il motivo per cui altrove usiamo àncore testuali al posto dei numeri di riga.)*
 
