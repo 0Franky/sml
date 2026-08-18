@@ -59,7 +59,8 @@ Cioe': se le classi con esito oggettivo (**Q** — passa/non passa, misurabile d
 
 1. **Aggiungere la colonna «misurabile?» alla tassonomia**, derivata **dai lab** (direzione che funziona), non dichiarata a mano nelle classi — cosi' non puo' divergere.
 2. **Il controllo di reciprocita' lab↔classe** come quinto checker: rende il legame **visibile da entrambi i lati** e impedisce che si rompa di nuovo.
-3. **Chiudere la domanda Q-vs-L** con un conteggio sui tag: e' un'ora di lavoro e trasforma *«bilanciato»* da aspirazione a numero.
+3. ~~**Chiudere la domanda Q-vs-L** con un conteggio sui tag: e' un'ora di lavoro.~~ 🔴 **PROVATO SUBITO, E NON E' ESEGUIBILE COSI'** — e questo e' il risultato, non un intoppo. **Il tag Q/L non esiste a livello di CLASSE**: sta nelle **foglie delle aree** (`area-01` ne ha 13 Q e 8 L), e **nemmeno uniformemente** (`area-03` non ne ha nessuno in quella forma). Nei 74 file di classe: **zero**. → il conteggio richiede **prima** di assegnare Q/L alle classi, che e' un lavoro di giudizio su 74 pagine, non un `grep`.
+   ⚠️ **E sotto c'e' una domanda strutturale piu' grossa, che nomino e non risolvo**: **classi** e **foglie-d'area** sono **due assi diversi senza una mappatura esplicita**. Finche' non si sa quale foglia corrisponde a quale classe, *«copertura per tipo di reward»* non e' definita — e nemmeno *«copertura»* tout court, perche' non e' detto che l'unita' giusta da coprire sia la classe.
 4. **Solo dopo**, decidere quali lab costruire — perche' la scelta va fatta guardando **il buco**, non l'elenco di cio' che sarebbe bello avere.
 
 ## Cosa la ribalterebbe *(#37)*
