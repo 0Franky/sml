@@ -43,6 +43,12 @@ La richiesta **F** chiedeva: skill frontend **disgiunte o unificate**? Con il ri
 
 → **Risposta a F**: **unificato lo strato di struttura, disgiunti gli strati di resa.** Non e' un compromesso fra le due opzioni: e' che la domanda *disgiunte-o-unificate* si applica a **due cose diverse** con risposte opposte.
 
+## ⭐ Conferma trovata nel corpus, non argomentata a tavolino
+
+Cercando prima di scrivere (#33), la meta'-resa **esiste gia' nella tassonomia e porta gia' l'etichetta giusta**: [[../training-taxonomy/class-visual-design-quality]] e' una **radice** con due figlie ([[../training-taxonomy/class-frontend-ux-spacing-quality]] · [[../training-taxonomy/class-svg-spatial-composition]]), taggata **`tier-3, lora-vertical`** dal 2026-07-08. Lo split non e' una proposta nuova: **meta' era gia' stata presa** mesi fa, e questa pagina la completa nominando l'altra meta'.
+
+⚠️ **E il confine fra le due e' netto, non sfumato**: quella famiglia giudica la composizione contro **leggi verificabili** — prossimita', allineamento, gerarchia, contrasto. La legge di prossimita' dice *«le cose che appartengono insieme devono stare vicine»*; **non dice QUALI cose appartengono insieme**. Quella e' una decisione sul **contenuto**, presa prima di qualunque pixel: quattro dati diventano **una** card non per una legge visiva, ma perche' sono **lo stesso fatto visto da quattro angoli**. → **la legge visiva CONSUMA la decisione di struttura; non la produce.**
+
 ## Cosa ne segue per I e J *(che erano bloccate)*
 
 Entrambe cadono **quasi per intero** nella meta'-struttura, quindi **sono Tier-1 e si possono scrivere subito**:

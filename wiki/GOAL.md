@@ -59,8 +59,8 @@ Le tre conseguenze operative, in una riga ciascuna:
 
 > ✅ **Consegnate il 2026-08-18, attendono solo una sua decisione — non altro lavoro mio**: **L** ([[training-taxonomy/class-instrumental-request-real-goal]]) · **C+D** ([[training-taxonomy/class-consumption-scale-for-budget]]) · **K** ([[concepts/skill-internalization-and-credit-assignment]], risposta + reco in 3 mosse).
 
-1. **I · J** — semi-strutturazione dell'informazione · redesign da UI disordinata. ✅ **Sbloccate**: la scomposizione #11 ([[concepts/frontend-capability-split-tier1-vs-vertical]]) le colloca **quasi per intero nella metà-struttura**, quindi sono **Tier-1 e scrivibili subito**. ⚠️ Prima però un **gap-scan orizzontale**: condividono un muscolo evidente (*raggruppare ciò che appartiene insieme*) e potrebbero essere **due facce di una classe sola**.
-2. **E** — indice delle skill da iniettare + laboratorio bilanciato. *(**F** ha ricevuto risposta: unificato lo strato di struttura, disgiunti gli strati di resa — attende solo il suo ok.)*
+1. **E** — indice delle skill da iniettare + laboratorio bilanciato. *(È l'unico rimasto che non aspetta una sua decisione.)*
+2. 🗳️ **I + J** — gap-scan fatto: sono **una classe sola con due facce**, ma **nessuna delle 8 radici la contiene** → serve una decisione sua su una **nona radice** (*architettura dell'informazione*) — **attesa nata il 2026-08-18**. Proposta argomentata in [[todo]]; **non eseguita**, perché è un cambio strutturale.
 3. **Infrastruttura dell'affidabilità**: disciplina wiki-first come **comportamento addestrato** · **registro delle claim decision-bearing** (senza, «sei affidabile?» resta un'opinione).
 4. **Fixture e scorer** delle classi proposte — finché non esistono, «classe scritta» significa *argomentata*, non *validata*, e la distinzione va detta ogni volta.
 
