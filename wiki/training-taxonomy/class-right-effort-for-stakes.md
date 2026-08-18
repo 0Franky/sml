@@ -96,3 +96,12 @@ Il fallimento più comune **non è scegliere male il livello: è non porsi la do
 ## Links
 
 [[class-constraint-fit-decision]] (padre) · [[class-code-optimization]] (figlia: la faccia 3 applicata al codice) · [[class-project-stakes-awareness]] (**fornisce la POSTA** — questa classe la consuma: là si percepisce quanto conta il progetto, qui si decide quanto sforzo metterci) · [[class-instrument-coverage-scope]] (la faccia 1 ha bisogno di sapere **fin dove** guarda lo strumento) · [[../fix-ledger]].
+
+## 🧪 Laboratorio
+
+Questa classe **e' misurabile**: [`harness/verifiers/right-effort-lab.mjs`](../../harness/verifiers/right-effort-lab.mjs).
+
+> Il retro-link e' stato aggiunto il **2026-08-18**: il lab nominava la classe da sempre, la classe **non nominava il lab**,
+> quindi aprendo questa pagina non si poteva sapere che esiste un modo di misurarla. Da oggi il legame e' verificato **nelle due
+> direzioni** da [`harness/tools/check-lab-coverage.mjs`](../../harness/tools/check-lab-coverage.mjs) — stessa disciplina che
+> `check-hierarchy` applica al legame padre↔figlia.

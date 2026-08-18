@@ -95,3 +95,12 @@ Due componenti, entrambe necessarie:
 ## Links
 
 [[class-situational-awareness]] (padre) · [[class-prompt-injection-resistance]] (confine: riconoscere vs non obbedire) · [[class-constraint-override-authority]] (fase 2 vive vicino a lì: chi ha titolo di sciogliere un vincolo) · [[class-live-intent-arbitration]] (sorella: quale mandato è vivo) · [[area-02-criticality-safety]] (area).
+
+## 🧪 Laboratorio
+
+Questa classe **e' misurabile**: [`harness/verifiers/situation-classification-lab.mjs`](../../harness/verifiers/situation-classification-lab.mjs).
+
+> Il retro-link e' stato aggiunto il **2026-08-18**: il lab nominava la classe da sempre, la classe **non nominava il lab**,
+> quindi aprendo questa pagina non si poteva sapere che esiste un modo di misurarla. Da oggi il legame e' verificato **nelle due
+> direzioni** da [`harness/tools/check-lab-coverage.mjs`](../../harness/tools/check-lab-coverage.mjs) — stessa disciplina che
+> `check-hierarchy` applica al legame padre↔figlia.

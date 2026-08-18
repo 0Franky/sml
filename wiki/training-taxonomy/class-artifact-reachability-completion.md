@@ -89,3 +89,12 @@ Il criterio di completamento che viene naturale è **«il pezzo fa la sua cosa»
 ## Links
 
 [[class-metacognitive-self-audit]] (padre) · [[class-prospective-obligation-discharge]] (confine: impegno vs artefatto) · [[class-instrument-coverage-scope]] (C2: lo zero misura chi è **riuscito** a segnalare) · [[class-right-effort-for-stakes]] (N5: quando il wiring costa più del beneficio) · [[class-durable-knowledge-retraction]] (il gap (a): i riferimenti orfani dopo una rimozione) · [[../fix-ledger]] (§F1, §F3: le due istanze reali).
+
+## 🧪 Laboratorio
+
+Questa classe **e' misurabile**: [`harness/verifiers/reachability-lab.mjs`](../../harness/verifiers/reachability-lab.mjs).
+
+> Il retro-link e' stato aggiunto il **2026-08-18**: il lab nominava la classe da sempre, la classe **non nominava il lab**,
+> quindi aprendo questa pagina non si poteva sapere che esiste un modo di misurarla. Da oggi il legame e' verificato **nelle due
+> direzioni** da [`harness/tools/check-lab-coverage.mjs`](../../harness/tools/check-lab-coverage.mjs) — stessa disciplina che
+> `check-hierarchy` applica al legame padre↔figlia.

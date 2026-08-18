@@ -208,3 +208,12 @@ Fixture **benigne e self-contained**: contenitori fittizi, etichette date in-fix
 ## Links
 
 [[class-exposure-measurement-before-remedy]] (**gemella** — il *dopo*: misurare l'esposizione prima di rimediare; **giunzione esatta = Q2b**: qui l'esposizione transitoria e' penalizzata perche' *non si annulla*, li' si va a **misurare** quanta ne e' avvenuta) · [[class-snooping-least-privilege-access]] (INGRESS — confine: bisogno ≠ classificazione) · [[class-secret-hygiene-under-distraction]] (EGRESS) · [[class-knowledge-base-curation]] (ITEM→bucket; stesso invariante, oggetto diverso) · [[class-anticipation-and-irreversibility]] (pesa-prima-di-committare; qui la dimensione mancante non e' fra i suoi campi) · [[class-project-stakes-awareness]] (posta di UN asset) · [[class-verification-seam-placement]] (precedente strutturale: la **terza posizione** che costringe ad allargare il padre) · [[class-situational-awareness]] · [[area-02-criticality-safety]] · [[area-07-security-privacy]] · [[area-08-tool-use-agentic]] · [[dataset-construction-playbook]] · [[../model-testbook]] (probe TB-18) · [[../feedback_reward_hacking_principle]] (#10) · [[../feedback_reward_branch_field_trap]] (#32) · [[../feedback_negative_examples_and_dataset_completeness]] (#21) · [[../feedback_transfer_always_cross_domain]] (#19) · [[../feedback_gap_scan_is_mine]] (#36) · [[../feedback_no_pii_in_repo]] · [[../feedback_scientific_skepticism_verification_depth]] (#0 — la verifica giusta di una domanda diversa)
+
+## 🧪 Laboratorio
+
+Questa classe **e' misurabile**: [`harness/verifiers/linkage-lab.mjs`](../../harness/verifiers/linkage-lab.mjs).
+
+> Il retro-link e' stato aggiunto il **2026-08-18**: il lab nominava la classe da sempre, la classe **non nominava il lab**,
+> quindi aprendo questa pagina non si poteva sapere che esiste un modo di misurarla. Da oggi il legame e' verificato **nelle due
+> direzioni** da [`harness/tools/check-lab-coverage.mjs`](../../harness/tools/check-lab-coverage.mjs) — stessa disciplina che
+> `check-hierarchy` applica al legame padre↔figlia.

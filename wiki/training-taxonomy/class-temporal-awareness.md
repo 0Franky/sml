@@ -167,3 +167,12 @@ La faccia **ORDINAMENTO** cresce in una sotto-figlia dedicata (una figlia che cr
 ## Links
 [[class-situational-awareness]] (padre) · [[class-temporal-order-from-timestamp]] (FIGLIA — sotto-specializzazione ricorsiva sulla faccia ORDINAMENTO) · [[class-confabulation-retrieval-failure]] (gemella: il volatile-mal-ricordato è confabulazione temporale) · [[class-harness-environment-awareness]] (sorella) · [[class-knowledge-base-curation]] (sorella) · [[area-04-context-metacognition]] (§Temporal-awareness + §Stale/TTL — esempio-space) · [[area-11-refusal-scope]] (faccia i-bis: dimensione valori/safety — non adottare norme d'epoca dannose) · [[../concepts/temporal-awareness-timestamps]] · [[../concepts/training-vs-harness-classification]] · [[../feedback_training_set_factual_integrity]] · [[../feedback_reward_hacking_principle]] · [[../feedback_transfer_always_cross_domain]] · [[../harness-experiment-log]]
 > **Grounding esterno (faccia i-bis, temporal anchoring / nostalgia bias)**: arXiv 2510.07238 (When Benchmarks Age, TAG / nostalgia bias) · arXiv 2412.13377 (DateLogicQA, temporal biases) · TACL 2022 (Time-Aware LMs as Temporal KBs) · arXiv 2606.27275 (*How Surprising Is Historical Italian to LMs* — prepend del periodo storico riduce la perplessità del **−58% medio** [range −43%/−66%] su italiano del XVII sec.; **verificato 2026-07-10**) `[EXTRACTED]`.
+
+## 🧪 Laboratorio
+
+Questa classe **e' misurabile**: [`harness/verifiers/silent-decay-lab.mjs`](../../harness/verifiers/silent-decay-lab.mjs).
+
+> Il retro-link e' stato aggiunto il **2026-08-18**: il lab nominava la classe da sempre, la classe **non nominava il lab**,
+> quindi aprendo questa pagina non si poteva sapere che esiste un modo di misurarla. Da oggi il legame e' verificato **nelle due
+> direzioni** da [`harness/tools/check-lab-coverage.mjs`](../../harness/tools/check-lab-coverage.mjs) — stessa disciplina che
+> `check-hierarchy` applica al legame padre↔figlia.

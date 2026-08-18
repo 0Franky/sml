@@ -96,3 +96,12 @@ Tre movimenti:
 ## Links
 
 [[class-metacognitive-self-audit]] (padre) · [[class-exposure-measurement-before-remedy]] (sorella: l'estensione, non la forma) · [[class-accidental-property-removal]] (cugina: là il fix apre un buco, qui i fix non chiudono la causa) · [[class-right-effort-for-stakes]] (N4: la cura strutturale ha un costo) · [[class-artifact-reachability-completion]].
+
+## 🧪 Laboratorio
+
+Questa classe **e' misurabile**: [`harness/verifiers/defect-shape-lab.mjs`](../../harness/verifiers/defect-shape-lab.mjs).
+
+> Il retro-link e' stato aggiunto il **2026-08-18**: il lab nominava la classe da sempre, la classe **non nominava il lab**,
+> quindi aprendo questa pagina non si poteva sapere che esiste un modo di misurarla. Da oggi il legame e' verificato **nelle due
+> direzioni** da [`harness/tools/check-lab-coverage.mjs`](../../harness/tools/check-lab-coverage.mjs) — stessa disciplina che
+> `check-hierarchy` applica al legame padre↔figlia.

@@ -36,7 +36,7 @@ const LAB = [
   "retroactive-propagation", "defect-shape", "silent-decay", "accidental-property",
   "assumption-audit", "scope-exit",
 ];
-const CHECK = ["check-anchors", "check-hierarchy", "check-decontamination", "check-stale-pending"];
+const CHECK = ["check-anchors", "check-hierarchy", "check-decontamination", "check-stale-pending", "check-lab-coverage"];
 
 /** Esegue uno script node e ritorna l'exit code REALE (mai una pipe di mezzo — ANTI-FIX P9). */
 function run(relPath, args = []) {

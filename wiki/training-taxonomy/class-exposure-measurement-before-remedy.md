@@ -165,3 +165,12 @@ Fixture **benigne e self-contained**: nessun payload pericoloso, nessuna procedu
 ## Links
 
 [[class-linkage-classification-compatibility]] (**gemella** — il *prima*: verificare la classificazione prima di creare il legame; **giunzione esatta**: il suo termine di reward `Q2b` incide che *l'esposizione transitoria non si annulla col rimedio* → e' esattamente la premessa che rende **dovuta** la misura di questa classe, invece di assumere che rimuovere basti) · [[class-anticipation-and-irreversibility]] (**padre candidato 1**, Facet B) · [[class-metacognitive-self-audit]] (**padre candidato 2**, radice-AUDIT) · [[class-instrument-epistemic-reach]] (perche' epistemico della misura) · [[class-compositional-reversibility]] (sorella: undo-path di un piano) · [[class-secret-hygiene-under-distraction]] (il caso-segreti, sotto-dominio) · [[class-project-stakes-awareness]] (posta → profondita' della misura, #0 simmetria) · [[area-02-criticality-safety]] · [[area-03-reasoning-scientific-method]] · [[area-07-security-privacy]] · [[dataset-construction-playbook]] · [[../model-testbook]] (probe TB-19) · [[../feedback_reward_hacking_principle]] (#10) · [[../feedback_reward_branch_field_trap]] (#32) · [[../feedback_negative_examples_and_dataset_completeness]] (#21) · [[../feedback_transfer_always_cross_domain]] (#19) · [[../feedback_instrument_before_hypothesizing]] · [[../feedback_gap_scan_is_mine]] (#36) · [[../feedback_scientific_skepticism_verification_depth]] (#0 — l'osservazione deve DISCRIMINARE)
+
+## 🧪 Laboratorio
+
+Questa classe **e' misurabile**: [`harness/verifiers/exposure-remedy-lab.mjs`](../../harness/verifiers/exposure-remedy-lab.mjs).
+
+> Il retro-link e' stato aggiunto il **2026-08-18**: il lab nominava la classe da sempre, la classe **non nominava il lab**,
+> quindi aprendo questa pagina non si poteva sapere che esiste un modo di misurarla. Da oggi il legame e' verificato **nelle due
+> direzioni** da [`harness/tools/check-lab-coverage.mjs`](../../harness/tools/check-lab-coverage.mjs) — stessa disciplina che
+> `check-hierarchy` applica al legame padre↔figlia.

@@ -37,11 +37,20 @@ Le 11: `accidental-property-removal` · `assumption-audit-both-directions` · `d
 
 → **Il laboratorio NON e' bilanciato.** Non e' un'opinione ed e' la prima volta che c'e' un numero: **63 classi su 74 non hanno oggi nessun modo di essere misurate**, e finora questo non compariva da nessuna parte.
 
-## ⚠️ Secondo difetto trovato: la reciprocita' lab↔classe e' rotta
+## ✅ Secondo difetto trovato — e CHIUSO lo stesso giorno: la reciprocita' lab↔classe era rotta
 
-Gli 11 lab esistono, ma **solo 5 classi li nominano**. Quindi **aprire la pagina di una classe non dice se e' misurabile** — l'informazione c'e', ma sta solo dall'altro lato.
+Gli 11 lab esistevano, ma **solo 1 classe nominava il proprio** (`attentional-scope-exit`). Quindi **aprire la pagina di una classe non diceva se e' misurabile** — l'informazione c'era, ma solo dall'altro lato.
 
-E' **esattamente** il difetto che [[../../harness/tools/check-hierarchy.mjs]] esiste per impedire sul legame **padre↔figlia** (*«la figlia dichiara il padre, il padre non la elenca»*), su un legame diverso per cui **nessuno ha costruito il controllo**. → **Meccanismo proposto** (#17: la lezione diventa meccanismo, non buona intenzione): un controllo di **reciprocita' lab↔classe** nella stessa famiglia dei quattro esistenti — un lab che nomina una classe che non lo nomina e' un legame a senso unico, e fallisce.
+E' **esattamente** il difetto che `check-hierarchy` impedisce sul legame **padre↔figlia**, su un legame per cui **nessuno aveva costruito il controllo**.
+
+**Fatto** (#17: la lezione diventa meccanismo, non buona intenzione): `harness/tools/check-lab-coverage.mjs`, **quinto checker** del gate. Fa fallire tre cose — **senso-unico** · **classe fantasma** (un lab nomina una classe che non e' un file) · **lab non eseguito** (un `*-lab.mjs` che `gate.mjs` non lancia: girerebbe mai, ed e' indistinguibile da un lab che non esiste). **I 10 legami a senso unico sono stati chiusi**, ogni classe misurabile ora lo dichiara.
+**Mutation-test su tutti e tre i rami**: il senso-unico ha fatto fuoco su **10 casi reali** ed e' tornato verde dopo il fix (fire-test in entrambe le direzioni, su dati veri); gli altri due su un lab-mutante creato e rimosso.
+
+### ⚠️ E il tool ha riprodotto, alla prima stesura, l'ERRORE CHE ERA NATO PER EVITARE
+
+La prima versione stampava **12**. Il dodicesimo era `class-async-dispatch-and-prioritization`, servita da `async-schedule-gen` — un **generatore**, che produce esempi e **non misura niente**. Cioe' **la stessa identica conflazione** che aveva reso sbagliato il conteggio «43».
+
+**Corretto**: il tool ora separa **laboratorio** (`*-lab.mjs`, misura) da **generatore** (produce), e stampa i due numeri distinti. La lezione, che vale oltre questo tool: **scrivere lo strumento contro un errore non immunizza dall'errore** — il perimetro va deciso *dentro* lo strumento, esplicitamente, o si infila di nuovo.
 
 ## Terza parte — «bilanciato» va DEFINITO, altrimenti non e' verificabile
 
@@ -57,8 +66,8 @@ Cioe': se le classi con esito oggettivo (**Q** — passa/non passa, misurabile d
 
 ## Reco — nell'ordine, e la prima costa quasi zero
 
-1. **Aggiungere la colonna «misurabile?» alla tassonomia**, derivata **dai lab** (direzione che funziona), non dichiarata a mano nelle classi — cosi' non puo' divergere.
-2. **Il controllo di reciprocita' lab↔classe** come quinto checker: rende il legame **visibile da entrambi i lati** e impedisce che si rompa di nuovo.
+1. ✅ **FATTO — la colonna «misurabile?» esiste**, ed e' **emessa dal checker a ogni run** invece di essere dichiarata a mano: non puo' divergere perche' non e' una seconda scrittura, e' una derivazione.
+2. ✅ **FATTO — il quinto checker** `harness/tools/check-lab-coverage.mjs`, agganciato al gate, con i 10 legami a senso unico gia' chiusi.
 3. ~~**Chiudere la domanda Q-vs-L** con un conteggio sui tag: e' un'ora di lavoro.~~ 🔴 **PROVATO SUBITO, E NON E' ESEGUIBILE COSI'** — e questo e' il risultato, non un intoppo. **Il tag Q/L non esiste a livello di CLASSE**: sta nelle **foglie delle aree** (`area-01` ne ha 13 Q e 8 L), e **nemmeno uniformemente** (`area-03` non ne ha nessuno in quella forma). Nei 74 file di classe: **zero**. → il conteggio richiede **prima** di assegnare Q/L alle classi, che e' un lavoro di giudizio su 74 pagine, non un `grep`.
    ⚠️ **E sotto c'e' una domanda strutturale piu' grossa, che nomino e non risolvo**: **classi** e **foglie-d'area** sono **due assi diversi senza una mappatura esplicita**. Finche' non si sa quale foglia corrisponde a quale classe, *«copertura per tipo di reward»* non e' definita — e nemmeno *«copertura»* tout court, perche' non e' detto che l'unita' giusta da coprire sia la classe.
 4. **Solo dopo**, decidere quali lab costruire — perche' la scelta va fatta guardando **il buco**, non l'elenco di cio' che sarebbe bello avere.

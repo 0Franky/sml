@@ -59,7 +59,7 @@ Le tre conseguenze operative, in una riga ciascuna:
 
 > ✅ **Consegnate il 2026-08-18, attendono solo una sua decisione — non altro lavoro mio**: **L** ([[training-taxonomy/class-instrumental-request-real-goal]]) · **C+D** ([[training-taxonomy/class-consumption-scale-for-budget]]) · **K** ([[concepts/skill-internalization-and-credit-assignment]], risposta + reco in 3 mosse).
 
-1. **Le mosse di [[concepts/skill-index-and-lab-balance]]** — il **quinto checker** di reciprocità lab↔classe, che emette come sottoprodotto la colonna «misurabile?» (derivata dai lab, quindi non duplicabile). *(Non aspetta nessuna sua decisione: la misura è fatta — **11 classi su 74** hanno un laboratorio.)*
+1. ✅ **FATTO 2026-08-18** — quinto checker `check-lab-coverage` nel gate, 10 legami a senso unico chiusi, colonna «misurabile?» emessa a ogni run. Misura: **11 classi su 74** hanno un laboratorio.
    🔴 **La terza mossa — il conteggio Q-vs-L — è BLOCCATA e il perché conta**: il tag Q/L **non esiste a livello di classe**, sta nelle foglie delle aree e neanche uniformemente. Sotto c'è una domanda strutturale aperta: **classi e foglie-d'area sono due assi senza mappatura esplicita**, quindi «copertura» non è ancora definita.
 2. 🗳️ **I + J** — gap-scan fatto: sono **una classe sola con due facce**, ma **nessuna delle 8 radici la contiene** → serve una decisione sua su una **nona radice** (*architettura dell'informazione*) — **attesa nata il 2026-08-18**. Proposta argomentata in [[todo]]; **non eseguita**, perché è un cambio strutturale.
 3. **Infrastruttura dell'affidabilità**: disciplina wiki-first come **comportamento addestrato** · **registro delle claim decision-bearing** (senza, «sei affidabile?» resta un'opinione).

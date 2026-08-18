@@ -106,3 +106,12 @@ Si eredita una **diagnosi** (un rapporto, un ticket, un passaggio di consegne) e
 ## Links
 
 [[class-metacognitive-self-audit]] (padre) · [[class-accidental-property-removal]] + [[class-retroactive-decision-propagation]] (**faccia 2**, sotto altri padri per scelta argomentata) · [[class-exposure-measurement-before-remedy]] (confine con la faccia 3: *quanto è esteso* vs *esiste?*) · [[class-right-effort-for-stakes]] (N4: la profondità della verifica si commisura alla posta) · [[class-defect-shape-reading]] (§gap-scan b: tre gap con la stessa forma).
+
+## 🧪 Laboratorio
+
+Questa classe **e' misurabile**: [`harness/verifiers/assumption-audit-lab.mjs`](../../harness/verifiers/assumption-audit-lab.mjs).
+
+> Il retro-link e' stato aggiunto il **2026-08-18**: il lab nominava la classe da sempre, la classe **non nominava il lab**,
+> quindi aprendo questa pagina non si poteva sapere che esiste un modo di misurarla. Da oggi il legame e' verificato **nelle due
+> direzioni** da [`harness/tools/check-lab-coverage.mjs`](../../harness/tools/check-lab-coverage.mjs) — stessa disciplina che
+> `check-hierarchy` applica al legame padre↔figlia.

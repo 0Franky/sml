@@ -86,3 +86,12 @@ Va posta **dopo aver deciso**, non prima — perché è la decisione nuova a ill
 ## Links
 
 [[class-durable-knowledge-retraction]] (padre) · [[class-prospective-memory]] · [[class-confabulation-retrieval-failure]] · [[class-consequence-intention-conflict]] (una decisione ha effetti che non avevi inteso — lì in avanti, qui all'indietro) · [[class-anticipation-and-irreversibility]] (N5: ciò che è già avvenuto non si annulla) · [[../fix-ledger]] (§F7: l'istanza reale — una pagina che dichiarava aperto un gap già chiuso).
+
+## 🧪 Laboratorio
+
+Questa classe **e' misurabile**: [`harness/verifiers/retroactive-propagation-lab.mjs`](../../harness/verifiers/retroactive-propagation-lab.mjs).
+
+> Il retro-link e' stato aggiunto il **2026-08-18**: il lab nominava la classe da sempre, la classe **non nominava il lab**,
+> quindi aprendo questa pagina non si poteva sapere che esiste un modo di misurarla. Da oggi il legame e' verificato **nelle due
+> direzioni** da [`harness/tools/check-lab-coverage.mjs`](../../harness/tools/check-lab-coverage.mjs) — stessa disciplina che
+> `check-hierarchy` applica al legame padre↔figlia.

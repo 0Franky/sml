@@ -105,3 +105,12 @@ Tre movimenti:
 ## Links
 
 [[class-consequence-intention-conflict]] (padre) · **[[class-self-sealing-decision]]** (**sorella**, stesso asse — *togliere qualcosa ha un secondo effetto che non guardi*, altra posizione: **qui** la proprietà reggeva **per ACCIDENTE** e non sapevi che quel pezzo la tenesse; **là** ciò che si toglie è **il revisore della premessa su cui si sta decidendo** — lo sapevi benissimo, non hai visto che sorvegliava *anche la ragione per cui lo spegnevi*) · [[class-instrument-coverage-scope]] (§faccia-b: la recinzione di Chesterton — **complemento inverso**) · [[class-retroactive-decision-propagation]] (cugina: là una scelta nuova invalida una vecchia, qui un fix invalida una protezione implicita) · [[class-right-effort-for-stakes]] (N5: la profondità dell'indagine si commisura alla posta) · [[class-artifact-reachability-completion]].
+
+## 🧪 Laboratorio
+
+Questa classe **e' misurabile**: [`harness/verifiers/accidental-property-lab.mjs`](../../harness/verifiers/accidental-property-lab.mjs).
+
+> Il retro-link e' stato aggiunto il **2026-08-18**: il lab nominava la classe da sempre, la classe **non nominava il lab**,
+> quindi aprendo questa pagina non si poteva sapere che esiste un modo di misurarla. Da oggi il legame e' verificato **nelle due
+> direzioni** da [`harness/tools/check-lab-coverage.mjs`](../../harness/tools/check-lab-coverage.mjs) — stessa disciplina che
+> `check-hierarchy` applica al legame padre↔figlia.
