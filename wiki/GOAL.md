@@ -59,8 +59,8 @@ Le tre conseguenze operative, in una riga ciascuna:
 
 > ✅ **Consegnate il 2026-08-18, attendono solo una sua decisione — non altro lavoro mio**: **L** ([[training-taxonomy/class-instrumental-request-real-goal]]) · **C+D** ([[training-taxonomy/class-consumption-scale-for-budget]]) · **K** ([[concepts/skill-internalization-and-credit-assignment]], risposta + reco in 3 mosse).
 
-1. **I · J** — semi-strutturazione dell'informazione · redesign da UI disordinata. *(Prime perché non dipendono da nessuna sua risposta — ma ⚠️ entrambe toccano il frontend: prima di scriverle va deciso se la METÀ-RAGIONAMENTO (cosa diventa card, cosa si raggruppa) è Tier-1 e solo la METÀ-RESA è verticale. Quella scomposizione è #11 e la posso fare io: è anche ciò che rende argomentata la risposta al punto 2.)*
-2. **E · F** — indice delle skill + laboratorio bilanciato · skill frontend disgiunte o unificate. ⚠️ **Bloccate da una domanda a lui**: frontend = Tier-1 o LoRA verticale? *(reco: verticale)*
+1. **I · J** — semi-strutturazione dell'informazione · redesign da UI disordinata. ✅ **Sbloccate**: la scomposizione #11 ([[concepts/frontend-capability-split-tier1-vs-vertical]]) le colloca **quasi per intero nella metà-struttura**, quindi sono **Tier-1 e scrivibili subito**. ⚠️ Prima però un **gap-scan orizzontale**: condividono un muscolo evidente (*raggruppare ciò che appartiene insieme*) e potrebbero essere **due facce di una classe sola**.
+2. **E** — indice delle skill da iniettare + laboratorio bilanciato. *(**F** ha ricevuto risposta: unificato lo strato di struttura, disgiunti gli strati di resa — attende solo il suo ok.)*
 3. **Infrastruttura dell'affidabilità**: disciplina wiki-first come **comportamento addestrato** · **registro delle claim decision-bearing** (senza, «sei affidabile?» resta un'opinione).
 4. **Fixture e scorer** delle classi proposte — finché non esistono, «classe scritta» significa *argomentata*, non *validata*, e la distinzione va detta ogni volta.
 
