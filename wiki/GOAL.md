@@ -57,13 +57,12 @@ Le tre conseguenze operative, in una riga ciascuna:
 
 > Dettaglio completo e sempre aggiornato in **[[todo]]**, blocco `2026-08-17`. Qui solo l'ordine.
 
-> ✅ **Chiuse come classi PROPOSTE il 2026-08-18** (attendono solo la sua ratifica, non altro lavoro): **L** ([[training-taxonomy/class-instrumental-request-real-goal]]) e **C+D** ([[training-taxonomy/class-consumption-scale-for-budget]]).
+> ✅ **Consegnate il 2026-08-18, attendono solo una sua decisione — non altro lavoro mio**: **L** ([[training-taxonomy/class-instrumental-request-real-goal]]) · **C+D** ([[training-taxonomy/class-consumption-scale-for-budget]]) · **K** ([[concepts/skill-internalization-and-credit-assignment]], risposta + reco in 3 mosse).
 
-1. **K** — la domanda diretta sull'RL (tagliare il caricamento delle skill dalla sequenza premiata). **Richiede una risposta motivata, non un'esecuzione**: è credit-assignment, e una risposta sicura-e-sbagliata qui costa un ciclo di training.
-2. **E · F** — indice delle skill + laboratorio bilanciato · skill frontend disgiunte o unificate. ⚠️ **Bloccate da una domanda a lui**: frontend = Tier-1 o LoRA verticale?
-3. **H · I · J** — `/clarify` interiorizzato + `design.md` · semi-strutturazione dell'informazione · redesign da UI disordinata.
-4. **Infrastruttura dell'affidabilità**: disciplina wiki-first come **comportamento addestrato** · **registro delle claim decision-bearing** (senza, «sei affidabile?» resta un'opinione).
-5. **Fixture e scorer** delle classi proposte — finché non esistono, «classe scritta» significa *argomentata*, non *validata*.
+1. **H · I · J** — `/clarify` interiorizzato + `design.md` · semi-strutturazione dell'informazione · redesign da UI disordinata. *(Primi perché non dipendono da nessuna sua risposta.)*
+2. **E · F** — indice delle skill + laboratorio bilanciato · skill frontend disgiunte o unificate. ⚠️ **Bloccate da una domanda a lui**: frontend = Tier-1 o LoRA verticale? *(reco: verticale)*
+3. **Infrastruttura dell'affidabilità**: disciplina wiki-first come **comportamento addestrato** · **registro delle claim decision-bearing** (senza, «sei affidabile?» resta un'opinione).
+4. **Fixture e scorer** delle classi proposte — finché non esistono, «classe scritta» significa *argomentata*, non *validata*, e la distinzione va detta ogni volta.
 
 ## 5. Il prompt da incollare
 
