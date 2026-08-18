@@ -27,6 +27,11 @@ Le tre conseguenze operative, in una riga ciascuna:
 
 ⚠️ **Polo simmetrico, senza cui il requisito si autodistrugge**: il difetto non è la sicurezza, è **la sicurezza non guadagnata**. Ciò che è verificato si dice piatto e netto; l'incertezza su cose verificabili in dieci secondi è scaricare il lavoro sull'utente.
 
+## 1-bis. Il vincolo architetturale che non si negozia
+
+**I LoRA fanno EMERGERE, non INSEGNANO.** Il modello base deve gia' contenere la conoscenza; gli adattatori la fanno affiorare come competenza. Se la conoscenza non c'e', **il verticale e' inutile** e produce forma senza sostanza.
+-> SSOT: [[architecture/three-tier-design]] §VINCOLO FONDANTE. Conseguenza: la **copertura di conoscenza** e' criterio di prima classe nella scelta del base, e un dominio e' candidabile a verticale **solo se il base gia' lo conosce** — da verificare, non da assumere.
+
 ## 2. Cosa leggere, in quest'ordine, a ogni ripartenza
 
 | # | File | Cosa ci trovo |

@@ -40,6 +40,20 @@ last_updated: 2026-05-21
 └──────────────────────────────────────────────────────────────┘
 ```
 
+## ⭐ VINCOLO FONDANTE — i LoRA fanno EMERGERE, non INSEGNANO
+
+> **SSOT di questo principio.** Utente 2026-08-18 (TG msg 2111): *«il modello deve già avere una conoscenza di base; i LoRA servono semplicemente per far emergere meglio questi pattern, non li apprendono. Il modello deve già contenere tutte quante le informazioni e la conoscenza necessaria; poi i LoRA faranno emergere le competenze, ma se non ha le conoscenze di base i LoRA diventano inutili.»*
+
+**Un adattatore riorganizza ciò che c'è. Non aggiunge ciò che manca.** Se la conoscenza di dominio non è già nel modello base, il LoRA verticale non la crea: al massimo insegna la **forma** di una risposta che non ha **sostanza** — cioè produce esattamente ciò che questo progetto considera il difetto peggiore, un output plausibile e vuoto.
+
+**Le tre conseguenze operative, e nessuna è teorica:**
+
+1. ⭐ **Cambia i criteri di scelta del modello base.** La **copertura di conoscenza** diventa un criterio di **prima classe**, non un di più accanto ai punteggi di ragionamento. Un base bravissimo a ragionare ma ignorante nei domini che serviranno ai verticali **non è adatto**, per quanto brilli sui benchmark. → vincola [[../entities/base-model-candidates-2026-07]].
+2. ⭐ **Un dominio è candidabile a verticale SOLO SE il base già lo conosce**, e questa è una **verifica da fare prima**, non un'assunzione. Prima di decidere che una capacità vive in un LoRA, si misura se il substrato c'è.
+3. **Il Tier 1 non è esentato.** La sua identità resta *intelligenza operativa* ([[../../memory|project_base_model_intelligence]]), ma quella identità è **il modo di usare** la conoscenza — non un sostituto dell'averla.
+
+⚠️ **Il modo di sbagliare che questo vincolo previene**: dare per scontato che «tanto poi lo si addestra col LoRA». È il ragionamento che porta a scegliere un base sulla carta delle prestazioni e a scoprire a valle che i verticali non attaccano — quando cambiare base costa l'intera pipeline.
+
 ## Cosa NON è
 
 - ❌ **Non è MoE neurale.** Il livello superiore non "delega" attraverso un router differenziabile a runtime. Il base orchestratore decide (es. emettendo un token speciale `<load:react>` o tramite classifier esterno) e il sistema (PEFT / vLLM `--enable-lora`) fa **hot-swap dell'adapter**.

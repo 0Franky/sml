@@ -138,6 +138,12 @@ esterno — e porta con sé **entrambi** i difetti del predecessore **più** la 
 **non ribalta** la protezione dell'idea utente, ma dice che la linea 3.x-27B si sta muovendo **nella direzione
 sbagliata** per il nostro uso.
 
+### ⭐ [2026-08-18] VINCOLO che cambia i criteri: i LoRA fanno EMERGERE, non INSEGNANO
+
+SSOT: [[../architecture/three-tier-design]] §VINCOLO FONDANTE (utente msg 2111). Un adattatore **riorganizza cio' che c'e', non aggiunge cio' che manca** -> se la conoscenza di dominio non e' gia' nel base, il verticale insegna la **forma** di una risposta senza **sostanza**.
+
+**Conseguenza diretta su questa pagina**: la **copertura di conoscenza** diventa criterio di **prima classe**, accanto a dense/taglia/base-scaricabile — non un di piu'. Un base fortissimo nel ragionare ma ignorante nei domini che serviranno ai verticali **non e' adatto**, per quanto brilli sui benchmark. E per ogni dominio candidato a verticale va **verificato prima** che il substrato ci sia, invece di assumerlo. ⚠️ Riguarda anche i verdetti gia' emessi: i modelli valutati **solo** su benchmark agentici (Laguna, e in parte i tre del 2026-08-17) non portano evidenza su questo asse.
+
 ## Raccomandazione (metodo, non verdetto a priori)
 
 **NON blindare Qwen3.6-27B.** Fare un **BAKE-OFF a due teste** (prima sul 4B di test, poi sui finalisti 32B):
