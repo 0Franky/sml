@@ -40,7 +40,19 @@ FAILED=""
 # L'esito di ogni checker si cattura in una variabile PRIMA che qualunque altra
 # cosa venga eseguita (ANTI-FIX P9: una pipe o un echo in mezzo maschera l'exit
 # code e produce un gate che sembra esistere e non esiste).
-for check in check-anchors check-hierarchy check-decontamination check-stale-pending; do
+# La LISTA dei checker si LEGGE da gate.mjs, non si riscrive qui (SSOT #16).
+# Il 2026-08-18 il quinto checker e' entrato nel gate e NON in questa lista: l'hook ha continuato a
+# stampare "4 checker verdi" mentre erano cinque, cioe' un controllo che sembrava esserci e non c'era.
+# Se gate.mjs non risponde, si FALLISCE invece di proseguire con una lista vuota (un `for` su niente
+# uscirebbe verde: e' esattamente il "grep -c che ritorna 1 su zero risultati").
+CHECKS=$(node "$ROOT/harness/tools/gate.mjs" --list-checks 2>/dev/null)
+if [ -z "$CHECKS" ]; then
+  echo "[pre-commit] BLOCCATO — non riesco a leggere la lista dei checker da gate.mjs --list-checks."
+  echo "  Un elenco vuoto passerebbe in silenzio: meglio fermarsi."
+  exit 1
+fi
+
+for check in $CHECKS; do
   OUT=$(node "$ROOT/harness/tools/$check.mjs" 2>&1)
   RC=$?
   if [ $RC -ne 0 ]; then
@@ -58,5 +70,6 @@ if [ -n "$FAILED" ]; then
   exit 1
 fi
 
-echo "[pre-commit] OK: 4 checker strutturali verdi."
+N=$(echo "$CHECKS" | wc -w | tr -d ' ')
+echo "[pre-commit] OK: $N checker strutturali verdi."
 exit 0

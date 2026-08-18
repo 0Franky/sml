@@ -38,6 +38,13 @@ const LAB = [
 ];
 const CHECK = ["check-anchors", "check-hierarchy", "check-decontamination", "check-stale-pending", "check-lab-coverage"];
 
+// --list-checks: stampa i nomi dei checker, uno per riga, e basta.
+// ⚠️ ESISTE PER LA SSOT (#16), non per comodita': `.githooks/pre-commit` aveva la PROPRIA lista
+// hardcoded, e il 2026-08-18 il quinto checker e' entrato qui e NON li' — l'hook ha continuato a
+// stampare "4 checker verdi" mentre i checker erano cinque. Una seconda scrittura diverge sempre,
+// e diverge in silenzio proprio dove serve che non lo faccia. Ora l'hook LEGGE da qui.
+if (process.argv.includes("--list-checks")) { console.log(CHECK.join("\n")); process.exit(0); }
+
 /** Esegue uno script node e ritorna l'exit code REALE (mai una pipe di mezzo — ANTI-FIX P9). */
 function run(relPath, args = []) {
   const r = spawnSync(process.execPath, [join(HARNESS, relPath), ...args], {
