@@ -57,12 +57,13 @@ Le tre conseguenze operative, in una riga ciascuna:
 
 > Dettaglio completo e sempre aggiornato in **[[todo]]**, blocco `2026-08-17`. Qui solo l'ordine.
 
-1. **L** — estrazione del bisogno REALE (esplicito + implicito) + **anti-sycophancy forte**. *Il più importante: è l'unico con un rischio di sicurezza vero, e un modello che asseconda è inaffidabile per costruzione.*
-2. **C+D** — rilevare da sé lo scostamento e reagire **in proporzione** (non un tetto fisso: il trade-off tempo↔risorse letto sul mondo reale).
-3. **K** — la domanda diretta sull'RL (tagliare il caricamento delle skill dalla sequenza premiata). **Richiede una risposta motivata, non un'esecuzione.**
-4. **E · F** — indice delle skill + laboratorio bilanciato · skill frontend disgiunte o unificate.
-5. **H · I · J** — `/clarify` interiorizzato + `design.md` · semi-strutturazione dell'informazione · redesign da UI disordinata.
-6. **Infrastruttura dell'affidabilità**: disciplina wiki-first come **comportamento addestrato** · **registro delle claim decision-bearing** (senza, «sei affidabile?» resta un'opinione).
+> ✅ **Chiuse come classi PROPOSTE il 2026-08-18** (attendono solo la sua ratifica, non altro lavoro): **L** ([[training-taxonomy/class-instrumental-request-real-goal]]) e **C+D** ([[training-taxonomy/class-consumption-scale-for-budget]]).
+
+1. **K** — la domanda diretta sull'RL (tagliare il caricamento delle skill dalla sequenza premiata). **Richiede una risposta motivata, non un'esecuzione**: è credit-assignment, e una risposta sicura-e-sbagliata qui costa un ciclo di training.
+2. **E · F** — indice delle skill + laboratorio bilanciato · skill frontend disgiunte o unificate. ⚠️ **Bloccate da una domanda a lui**: frontend = Tier-1 o LoRA verticale?
+3. **H · I · J** — `/clarify` interiorizzato + `design.md` · semi-strutturazione dell'informazione · redesign da UI disordinata.
+4. **Infrastruttura dell'affidabilità**: disciplina wiki-first come **comportamento addestrato** · **registro delle claim decision-bearing** (senza, «sei affidabile?» resta un'opinione).
+5. **Fixture e scorer** delle classi proposte — finché non esistono, «classe scritta» significa *argomentata*, non *validata*.
 
 ## 5. Il prompt da incollare
 
