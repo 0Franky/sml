@@ -28,6 +28,39 @@ Ogni classe si costruisce applicando TUTTE insieme (fonte autoritativa = CLAUDE.
 | **#22** | Integrità fattuale | mai fatti inventati/incompleti; split verificato-citato (I) vs incerto→verify-step (II); fixture self-contained | [[../feedback_training_set_factual_integrity]] |
 | **#23** | Aggiorna il manuale | ogni finding → wiki subito (qui, experiment-log, concepts) | [[../feedback_always_update_model_manual]] |
 | **#25** | Playbook + coerenza | segna qui ogni osservazione; ogni classe conforme + coherence-audit | questa pagina |
+| ⭐ **P-COPPIA** | **Tutto cio' che si INIETTA va in coppia** | ogni scaffolding (skill, workflow, mappa, hint, lane) si genera in **due bracci sulla STESSA traccia** — iniettato / non iniettato | §2-ter qui sotto |
+
+---
+
+## §2-ter — ⭐ P-COPPIA: **tutto cio' che si inietta va costruito in coppia** *(utente TG msg 2141+2146, 2026-08-25 — «usa il principio come mindset principale della creazione di tutto quanto, laboratori e training»)*
+
+> **La regola, in una riga**: **ogni cosa che l'harness INIETTA nel contesto — una skill, un workflow, una mappa, un hint, una lane — si genera in DUE BRACCI sulla STESSA traccia: con l'iniezione e senza.**
+
+### Perche' e' una METODOLOGIA e non un accorgimento
+
+Tre cose che il singolo braccio non puo' dare, e che la coppia da' tutte insieme:
+
+1. **Impedisce la dipendenza dallo scaffolding.** Se il modello vede l'aiuto **sempre**, non impara mai a farne a meno: lo scaffolding **non recede** — l'opposto della dottrina #33/#11, e l'opposto del *pareggio-senza-skill* che l'utente chiede da [[../concepts/skill-internalization-and-credit-assignment]].
+2. ⭐ **Rende il divario un DELTA PER-TASK.** *(E' il motivo per cui la sua versione batte quella che avevo proposto io.)* Confrontare *rollout diversi* con e senza aiuto mette la **varianza fra compiti** dentro la misura, e quella varianza puo' nascondere l'effetto. La **stessa traccia** in due bracci **controlla la difficolta'**: cio' che resta e' l'effetto dell'iniezione, e basta.
+3. **Rende la calibrazione misurabile.** Senza coppie bilanciate non c'e' distribuzione su cui calcolare l'**ECE** — e la riparazione anti-collasso dell'astensione ([[../sota-techniques-catalog]] §RL-6(1)) resterebbe teoria.
+
+### ⚠️ I due modi in cui la coppia si usa MALE — entrambi osservati o previsti
+
+- 🔴 **Il pareggio NON va nel reward.** Se si premia *«i due bracci si equivalgono»*, il modo **piu' facile** di ottenerlo e' **peggiorare il braccio con-aiuto**: si equalizza **verso il basso**, hack riuscito e inutile (famiglia #32). → reward sulla **prestazione assoluta di ciascun braccio**; il pareggio e' una **metrica di monitoraggio**, mai un termine di ottimizzazione.
+- **I due bracci non vanno nello stesso gruppo di advantage.** Il prompt differisce, quindi sono **condizioni diverse**: nello stesso gruppo il baseline si calcola **attraverso** la condizione e il braccio-con-aiuto alza l'asticella all'altro. **La coppia serve alla MISURA**, l'appaiamento avviene **in lettura**.
+
+### Dove si applica — non solo alle skill
+
+| oggetto iniettato | braccio A | braccio B |
+|---|---|---|
+| documento-skill / workflow | iniettato | assente |
+| mappa delle skill nel prompt | presente | assente |
+| lane di scaffolding (`how_memory_works`, hint) | accesa | spenta |
+| ⭐ **informazione da recuperare** | presente | **assente** *(e `presente-ma-superato` come terzo stato — vedi [[../concepts/presence-absence-minimal-pair-lab]])* |
+
+⭐ **Nota di parentela**: e' lo **stesso device** della coppia minimale gia' in uso per la **discriminazione** (§4 ¶DISCRIMINAZIONE) — qui pero' il flip non e' sul **contenuto della fixture** ma su **cosa l'ambiente fornisce**. Due assi diversi, stessa disciplina: *cambia UNA cosa sola e guarda il delta*.
+
+⚠️ **Il costo, dichiarato**: la coppia **raddoppia i rollout**. Non e' gratis, ed e' una decisione di **budget** — vedi [[class-consumption-scale-for-budget]]. Su un aiuto la cui utilita' e' gia' misurata e stabile, il secondo braccio si puo' campionare invece che generare sempre.
 
 ---
 
