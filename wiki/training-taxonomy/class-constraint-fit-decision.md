@@ -41,3 +41,9 @@ Ogni figlia premia l'**allocazione corretta** verificata sull'esito reale (costo
 
 ## Links
 [[class-resource-appropriate-substitution]] · [[class-metacognitive-self-audit]] · [[class-consequence-intention-conflict]] · [[../concepts/training-set-construction-principles]] · [[../feedback_optimization_first]] · [[../feedback_intelligence_gap_to_training_class]] · [[area-03-reasoning-scientific-method]]
+
+## Figlia ratificata il 2026-08-25
+
+- [[class-consumption-scale-for-budget]] — **placement ratificato** dall'utente (TG msg 2142). ⚠️ Ratificata la **collocazione**, non il **contenuto**:
+  quel file dichiara ancora fixture e scorer **non costruiti**, quindi **non e' usabile per il training**. La distinzione e' voluta —
+  approvare dove sta una classe non e' approvare cosa dice.

@@ -1,18 +1,18 @@
 ---
 name: class-design-artifact-lifecycle
-description: "⛔ PROPOSTA (attende ratifica #26 dal 2026-08-18) — Figlia di knowledge-base-curation: il documento che GOVERNA un lavoro (schema, design.md, contratto d'interfaccia) va prodotto PRIMA di costruire e tenuto VERO mentre si costruisce. Due facce di un ciclo di vita solo, non due skill. La specializzazione rispetto al padre e' la natura dell'artefatto: la wiki DESCRIVE, il design PRESCRIVE — quindi la sua deriva non e' un'affermazione falsa, e' una DECISIONE PERSA, e il codice vince in silenzio senza che nessuno l'abbia deciso. Simmetrica su entrambi i poli: nessuno schema dove il lavoro e' di tre righe, e nessun documento tenuto in vita quando la decisione che conteneva e' morta."
+description: "🟡 PLACEMENT RATIFICATO 2026-08-25 — il contenuto NO (fixture e scorer non costruiti, non usare per il training). Figlia di knowledge-base-curation: il documento che GOVERNA un lavoro (schema, design.md, contratto d'interfaccia) va prodotto PRIMA di costruire e tenuto VERO mentre si costruisce. Due facce di un ciclo di vita solo, non due skill. La specializzazione rispetto al padre e' la natura dell'artefatto: la wiki DESCRIVE, il design PRESCRIVE — quindi la sua deriva non e' un'affermazione falsa, e' una DECISIONE PERSA, e il codice vince in silenzio senza che nessuno l'abbia deciso. Simmetrica su entrambi i poli: nessuno schema dove il lavoro e' di tre righe, e nessun documento tenuto in vita quando la decisione che conteneva e' morta."
 type: training-class
-status: ⛔ PROPOSTA — attende ratifica dell'utente (creata 2026-08-18)
+status: 🟡 PLACEMENT RATIFICATO 2026-08-25 (utente TG msg 2142) — ⚠️ il CONTENUTO resta non revisionato e le fixture non sono costruite: NON usare per il training
 tags: [reasoning, planning, documentation, coherence, design, lifecycle, area-01, area-04, child-class, proposta]
 sources:
   - utente TG msg 2088 (2026-08-17), richiesta H — «/clarify interiorizzato: prima lo SCHEMA, design.md scritto e mantenuto coerente; valutare se componibile (linee guida generali + file per caso d'uso)»
 last_updated: 2026-08-18
 ---
 
-# ⛔ Il documento che governa il lavoro: PRIMA, e VERO dopo
+# 🟡 Il documento che governa il lavoro: PRIMA, e VERO dopo
 
 > **Padre**: [[class-knowledge-base-curation]] — a sua volta figlia di [[class-situational-awareness]].
-> ⚠️ Parentela **PROPOSTA**, non ratificata (#26): il padre **non deve elencarla** finche' non e' approvata.
+> ✅ Parentela **RATIFICATA** il **2026-08-25** (utente TG msg 2142, *«vai con la ratifica»*): il padre la elenca.
 
 ## Placement — e cosa di H era GIA' COPERTO (#33 prima di #20)
 

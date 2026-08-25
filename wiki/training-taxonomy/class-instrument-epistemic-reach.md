@@ -324,3 +324,9 @@ nella provenienza; ospita F2/Chesterton dal 2026-07-25, col materiale dal 2026-0
 [[../feedback_scientific_skepticism_verification_depth]] (**#0 — la regola di cui questo nodo e' una faccia**) ·
 [[../feedback_hierarchy_placement_by_traversal]] · [[../feedback_gap_scan_is_mine]] ·
 [[../feedback_reward_hacking_principle]] · [[../feedback_instrument_before_hypothesizing]]
+
+## Figlia ratificata il 2026-08-25
+
+- [[class-action-report-vs-effect]] — **placement ratificato** dall'utente (TG msg 2142). ⚠️ Ratificata la **collocazione**, non il **contenuto**:
+  quel file dichiara ancora fixture e scorer **non costruiti**, quindi **non e' usabile per il training**. La distinzione e' voluta —
+  approvare dove sta una classe non e' approvare cosa dice.

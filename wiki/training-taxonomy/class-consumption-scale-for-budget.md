@@ -1,8 +1,8 @@
 ---
 name: class-consumption-scale-for-budget
-description: "⛔ PROPOSTA (attende ratifica #26 dal 2026-08-18) — Sesta figlia di constraint-fit-decision, GEMELLA DI PERNO di right-effort-for-stakes: quella calibra la CURA sulla POSTA (leggendo il compito), questa calibra la QUANTITA' DI CONSUMO sul BUDGET REALE DELL'AMBIENTE (leggendolo). Non e' un tetto fisso: 800 agenti possono essere GIUSTI se la risorsa e' locale e illimitata, e tre possono essere troppi se il limite e' vicino — la posta non cambia, cambia l'ambiente. La skill e' quantificare il costo unitario x N PRIMA di ripetere N volte, far cadere il tetto DAL MODELLO della risorsa invece di riceverlo come numero, e quando l'ambiente segnala correggere la STRATEGIA, non l'istanza."
+description: "🟡 PLACEMENT RATIFICATO 2026-08-25 — il contenuto NO (fixture e scorer non costruiti, non usare per il training). Sesta figlia di constraint-fit-decision, GEMELLA DI PERNO di right-effort-for-stakes: quella calibra la CURA sulla POSTA (leggendo il compito), questa calibra la QUANTITA' DI CONSUMO sul BUDGET REALE DELL'AMBIENTE (leggendolo). Non e' un tetto fisso: 800 agenti possono essere GIUSTI se la risorsa e' locale e illimitata, e tre possono essere troppi se il limite e' vicino — la posta non cambia, cambia l'ambiente. La skill e' quantificare il costo unitario x N PRIMA di ripetere N volte, far cadere il tetto DAL MODELLO della risorsa invece di riceverlo come numero, e quando l'ambiente segnala correggere la STRATEGIA, non l'istanza."
 type: training-class
-status: ⛔ PROPOSTA — attende ratifica dell'utente (creata 2026-08-18)
+status: 🟡 PLACEMENT RATIFICATO 2026-08-25 (utente TG msg 2142) — ⚠️ il CONTENUTO resta non revisionato e le fixture non sono costruite: NON usare per il training
 tags: [reasoning, planning, resource-awareness, budget, calibration, agentic, area-03, area-08, child-class, proposta]
 sources:
   - utente TG msg 2088 (2026-08-17) — richieste C+D: rilevare da se' lo scostamento e reagire in proporzione; ⚠️ esplicito «NON un tetto fisso: 800 puo' essere giusto se locale e senza limiti»
@@ -10,10 +10,10 @@ sources:
 last_updated: 2026-08-18
 ---
 
-# ⛔ Calibra il CONSUMO sul BUDGET (non sulla posta, non su un numero ricevuto)
+# 🟡 Calibra il CONSUMO sul BUDGET (non sulla posta, non su un numero ricevuto)
 
 > **Padre**: [[class-constraint-fit-decision]] — a sua volta ⛔ non validata.
-> ⚠️ Parentela **PROPOSTA**, non ratificata (#26): il padre **non deve elencarla** finche' non e' approvata.
+> ✅ Parentela **RATIFICATA** il **2026-08-25** (utente TG msg 2142, *«vai con la ratifica»*): il padre la elenca.
 > **Consuma il modello dell'ambiente da**: [[class-harness-environment-awareness]].
 
 > **Serve [[../REQUISITO-AFFIDABILITA]] da un lato poco ovvio**: esaurire la risorsa a meta' di un lavoro

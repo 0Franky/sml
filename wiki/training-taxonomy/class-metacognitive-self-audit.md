@@ -82,3 +82,9 @@ Ogni figlia ha i propri generatori (i disguised di [[class-sign-wrap-blindspot]]
 
 ## Links
 [[class-instrument-epistemic-reach]] (**figlia — nodo intermedio, padre a sua volta di** [[class-tool-perception-fidelity]] **e** [[class-static-dynamic-evidence-modality]]; **PROPOSTA #26**) · [[class-situational-awareness]] (gemello-OUTWARD) · [[class-stagnation-recovery]] · [[gold-example-transfer-assumption-audit]] · [[class-consequence-intention-conflict]] · [[class-confabulation-retrieval-failure]] · [[class-prospective-memory]] · [[class-instruction-phase-clarification]] · [[class-instruction-fidelity-no-overreach]] · [[class-effort-honesty-under-difficulty]] (figlia — onestà-esecutiva sotto difficoltà, forethought) · [[class-task-granularity-and-state-sync]] (figlia — audit dello stato-dichiarato del task-tracking; **PROPOSTA #26**) · [[class-ground-truth-integrity]] (radice-sorella; ex-figlia independent-verification RE-HOMED lì) · [[class-independent-verification-integrity]] (ora figlia di ground-truth-integrity; cross-link per provenienza-audit) · [[class-domain-categorization-routing]] · [[../concepts/compositional-curriculum-thinking-optimization]] · [[area-03-reasoning-scientific-method]] · [[area-04-context-metacognition]] · [[../feedback_reward_hacking_principle]] · [[../feedback_intelligence_gap_to_training_class]] · [[../feedback_transfer_always_cross_domain]]
+
+## Figlia ratificata il 2026-08-25
+
+- [[class-instrumental-request-real-goal]] — **placement ratificato** dall'utente (TG msg 2142). ⚠️ Ratificata la **collocazione**, non il **contenuto**:
+  quel file dichiara ancora fixture e scorer **non costruiti**, quindi **non e' usabile per il training**. La distinzione e' voluta —
+  approvare dove sta una classe non e' approvare cosa dice.

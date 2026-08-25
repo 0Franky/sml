@@ -121,3 +121,9 @@ Le istanze osservate della NOSTRA curazione-wiki (questi stessi file, la struttu
 
 ## Links
 [[class-situational-awareness]] (padre) · [[class-confabulation-retrieval-failure]] (USE — consulta invece di confabulare; astensione su citazione-assente) · [[class-prospective-memory]] (GENERATE — persisti il durevole) · [[class-harness-environment-awareness]] (sorella — usa l'indice-KB come affordance) · [[../feedback_no_pii_in_repo]] (N1 security-critical) · [[../feedback_ssot_dry]] (N3 no-duplicati) · [[../concepts/runtime-symbol-randomization-training]] · [[../concepts/dynamic-context-training-regime]] · [[../concepts/training-vs-harness-classification]] · [[area-04-context-metacognition]] · [[../feedback_reward_hacking_principle]] · [[../feedback_transfer_always_cross_domain]] · [[../feedback_wiki_pattern]]
+
+## Figlia ratificata il 2026-08-25
+
+- [[class-design-artifact-lifecycle]] — **placement ratificato** dall'utente (TG msg 2142). ⚠️ Ratificata la **collocazione**, non il **contenuto**:
+  quel file dichiara ancora fixture e scorer **non costruiti**, quindi **non e' usabile per il training**. La distinzione e' voluta —
+  approvare dove sta una classe non e' approvare cosa dice.

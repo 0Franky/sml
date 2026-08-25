@@ -1,18 +1,18 @@
 ---
 name: class-instrumental-request-real-goal
-description: "⛔ PROPOSTA (attende ratifica #26 dal 2026-08-18) — Classe figlia di metacognitive-self-audit, TERZA SORELLA della coppia instruction-fidelity/instruction-phase-clarification. Quelle due si dividono il campo su ambiguo↔preciso; questa apre un asse ORTOGONALE - terminale↔STRUMENTALE. Una richiesta può essere perfettamente precisa e non essere il fine - è il MEZZO per uno scopo non enunciato, e quando la lettera tradisce quello scopo la lettera perde. Unifica l'anti-sycophancy - assecondare è lo stesso difetto nel registro emotivo, prendere l'enunciato per il fine invece di derivare il fine che l'enunciato serve."
+description: "🟡 PLACEMENT RATIFICATO 2026-08-25 — il contenuto NO (fixture e scorer non costruiti, non usare per il training). Classe figlia di metacognitive-self-audit, TERZA SORELLA della coppia instruction-fidelity/instruction-phase-clarification. Quelle due si dividono il campo su ambiguo↔preciso; questa apre un asse ORTOGONALE - terminale↔STRUMENTALE. Una richiesta può essere perfettamente precisa e non essere il fine - è il MEZZO per uno scopo non enunciato, e quando la lettera tradisce quello scopo la lettera perde. Unifica l'anti-sycophancy - assecondare è lo stesso difetto nel registro emotivo, prendere l'enunciato per il fine invece di derivare il fine che l'enunciato serve."
 type: training-class
-status: ⛔ PROPOSTA — attende ratifica dell'utente (creata 2026-08-18)
+status: 🟡 PLACEMENT RATIFICATO 2026-08-25 (utente TG msg 2142) — ⚠️ il CONTENUTO resta non revisionato e le fixture non sono costruite: NON usare per il training
 tags: [intento, sicurezza, anti-sycophancy, area-15, area-02, proposta]
 sources:
   - utente TG msg 2089 (2026-08-17) — i due casi dati (alternativa al sale → bromuro di sodio · ragazzi in crisi) + «abbassare di moltissimo la sycophancy» + «vale per entrambe le modalità di harness»
 last_updated: 2026-08-18
 ---
 
-# ⛔ La richiesta è un MEZZO: deriva il fine, e lascia che vincoli i mezzi
+# 🟡 La richiesta è un MEZZO: deriva il fine, e lascia che vincoli i mezzi
 
 > **Padre**: [[class-metacognitive-self-audit]]  ·  **Sorelle**: [[class-instruction-fidelity-no-overreach]] · [[class-instruction-phase-clarification]]
-> ⚠️ Parentela **PROPOSTA**, non ratificata (#26): il padre **non deve elencarla** finché non è approvata.
+> ✅ Parentela **RATIFICATA** il **2026-08-25** (utente TG msg 2142, *«vai con la ratifica»*): il padre la elenca.
 
 ## Placement — perché una TERZA sorella e non una delle due esistenti
 

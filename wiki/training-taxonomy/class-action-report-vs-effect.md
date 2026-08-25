@@ -1,8 +1,8 @@
 ---
 name: class-action-report-vs-effect
-description: "⛔ PROPOSTA (attende ratifica #26 dal 2026-08-17) — Classe figlia (c) di instrument-epistemic-reach, GEMELLA SIMMETRICA di tool-perception-fidelity: quella copre il polo NEGATIVO («non lo vedo» ≠ «non c'è»), questa copre il polo POSITIVO — «lo strumento dice fatto» ≠ «è fatto». Il resoconto di un'azione è una proprietà dell'ESECUZIONE, non dello stato del mondo: exit 0 significa «il processo è finito senza errori», non «il file adesso è giusto». La skill è verificare l'ARTEFATTO con un controllo che FALLIREBBE se l'azione fosse andata storta, proporzionalmente a quanto poco si controlla il canale. Simmetrica: ri-verificare il banale su canali senza quella classe di errore è spreco."
+description: "🟡 PLACEMENT RATIFICATO 2026-08-25 — il contenuto NO (fixture e scorer non costruiti, non usare per il training). Classe figlia (c) di instrument-epistemic-reach, GEMELLA SIMMETRICA di tool-perception-fidelity: quella copre il polo NEGATIVO («non lo vedo» ≠ «non c'è»), questa copre il polo POSITIVO — «lo strumento dice fatto» ≠ «è fatto». Il resoconto di un'azione è una proprietà dell'ESECUZIONE, non dello stato del mondo: exit 0 significa «il processo è finito senza errori», non «il file adesso è giusto». La skill è verificare l'ARTEFATTO con un controllo che FALLIREBBE se l'azione fosse andata storta, proporzionalmente a quanto poco si controlla il canale. Simmetrica: ri-verificare il banale su canali senza quella classe di errore è spreco."
 type: training-class
-status: ⛔ PROPOSTA — attende ratifica dell'utente (creata 2026-08-17)
+status: 🟡 PLACEMENT RATIFICATO 2026-08-25 (utente TG msg 2142) — ⚠️ il CONTENUTO resta non revisionato e le fixture non sono costruite: NON usare per il training
 tags: [verifica, strumenti, affidabilita, area-metacognizione, proposta]
 sources:
   - utente TG msg 2098 (2026-08-17) — «dopo ogni azione o batch di azioni su uno più file poi verifichi lo stato… quelle di cui non hai l'esatto controllo devono essere sempre verificate. Fallo, mettilo in wikicore e mettilo anche nel training set»
@@ -11,10 +11,10 @@ sources:
 last_updated: 2026-08-17
 ---
 
-# ⛔ Il resoconto di un'azione non è il suo effetto
+# 🟡 Il resoconto di un'azione non è il suo effetto
 
 > **Padre**: [[class-instrument-epistemic-reach]]  ·  **Nonno**: [[class-metacognitive-self-audit]]
-> ⚠️ Parentela **PROPOSTA**, non ratificata (#26): il padre **non deve elencarla** finché non è approvata.
+> ✅ Parentela **RATIFICATA** il **2026-08-25** (utente TG msg 2142, *«vai con la ratifica»*): il padre la elenca.
 
 > **Serve direttamente [[../REQUISITO-AFFIDABILITA]]**: dichiarare fatto ciò che non è fatto — con la sicurezza di chi ha appena guardato — è **una delle vie con cui nasce la ritrattazione di domani**.
 
