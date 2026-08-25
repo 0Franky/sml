@@ -83,9 +83,25 @@ for (const m of moduli) {
     }
   }
 
-  const citate = [...new Set(src.match(/class-[a-z0-9-]+/g) ?? [])]
+  // ⚠️ TERZA VOLTA OGGI CHE UNA MISURA SBAGLIA PERIMETRO — e stavolta dentro il tool nato per evitarlo.
+  // Contare le MENZIONI di `class-…` equivale a «coperta», ma un lab puo' nominare una classe **per dire
+  // che NON la copre**: `presence-absence-lab` dichiara nel proprio header quali skill lascia fuori, e il
+  // conteggio e' passato da 11 a 14 in un colpo, con due falsi senso-unico al seguito (2026-08-25).
+  // → si LEGGE una dichiarazione esplicita invece di inferirla. `@misura` e' la SSOT di cosa un lab misura.
+  const dichiarate = [...(src.matchAll(/@misura\s+(class-[a-z0-9-]+)/g))].map((m) => m[1]);
+  const menzionate = [...new Set(src.match(/class-[a-z0-9-]+/g) ?? [])]
     .map((s) => s.replace(/-+$/, ""))
     .filter((s) => s.length > "class-".length);
+
+  // Senza dichiarazione si ripiega sulle menzioni — corretto finche' la menzione e' UNA sola.
+  // Con due o piu' menzioni e nessun `@misura`, il tool NON SA quale misura: e' un errore, non una nota
+  // (stessa regola di check-hierarchy: «non lo so» non e' «va bene»).
+  if (dichiarate.length === 0 && menzionate.length > 1) {
+    problemi.push({ tipo: "misura-ambigua", lab: base,
+      dettaglio: `nomina ${menzionate.length} classi e non dichiara quale misura -> aggiungi \`@misura <slug>\` nell'header` });
+    continue;
+  }
+  const citate = dichiarate.length ? dichiarate : menzionate;
 
   if (citate.length === 0) { senzaClasse.push(base); continue; }
 

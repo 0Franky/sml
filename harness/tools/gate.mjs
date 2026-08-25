@@ -34,7 +34,7 @@ const FIX = process.argv.includes("--fix");
 const LAB = [
   "linkage", "exposure-remedy", "reachability", "right-effort", "situation-classification",
   "retroactive-propagation", "defect-shape", "silent-decay", "accidental-property",
-  "assumption-audit", "scope-exit",
+  "assumption-audit", "scope-exit", "presence-absence",
 ];
 const CHECK = ["check-anchors", "check-hierarchy", "check-decontamination", "check-stale-pending", "check-lab-coverage"];
 

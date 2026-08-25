@@ -330,3 +330,13 @@ nella provenienza; ospita F2/Chesterton dal 2026-07-25, col materiale dal 2026-0
 - [[class-action-report-vs-effect]] — **placement ratificato** dall'utente (TG msg 2142). ⚠️ Ratificata la **collocazione**, non il **contenuto**:
   quel file dichiara ancora fixture e scorer **non costruiti**, quindi **non e' usabile per il training**. La distinzione e' voluta —
   approvare dove sta una classe non e' approvare cosa dice.
+
+## 🧪 Laboratorio
+
+Questa classe **e' misurabile**: [`harness/verifiers/presence-absence-lab.mjs`](../../harness/verifiers/presence-absence-lab.mjs) — costruito il **2026-08-25** su design dell'utente (TG msg 2137, scelta *terna + tetto* al msg 2144). Prima di oggi questa classe e le sue tre figlie **non avevano alcun laboratorio**.
+
+**Come rende eseguibile la skill-radice** (*un negativo e' una proprieta' dello strumento finche' non dimostri che e' del mondo*):
+- **Tre stati, non due** — `assente` · `presente-e-VALIDO` · `presente-ma-SUPERATO`. ⭐ **L'ablazione lo dimostra invece di argomentarlo**: sul set a due stati la policy *cerca-finche-trovi-poi-fidati* **pareggia il gold (6/6)**; aggiungendo il terzo crolla a **6/9**. Il terzo stato e' l'unico che distingue *aver cercato* da *essersi fermato al primo hit* — ed e' il difetto reale del 2026-08-17, quando la ricerca **trovava** la riga e la riga diceva il falso.
+- **Il verdetto non basta a passare**: sulle fixture `assente` il PASS esige **vie esaurite** e **residuo dichiarato**. L'assenza e' indimostrabile dall'interno, quindi premiare la conclusione *«non c'e'»* premierebbe una scommessa fortunata (#32) — si gronda **la ricerca**, non il ramo. Il **tetto** chiude l'altro lato: sforare fallisce, cosi' `cerca-tutto-sempre` non vince.
+
+⚠️ **Cosa il lab NON misura, dichiarato**: la **formalizzazione in documentazione** di cio' che si e' recuperato e' un'altra skill ([[class-design-artifact-lifecycle]] · [[class-knowledge-base-curation]]) e vuole un **secondo scorer sullo stesso trace** — tenerla qui confonderebbe due misure. E le fixture sono **sintetiche**: provano che il gate discrimina, non che un modello reale ci riesca.
