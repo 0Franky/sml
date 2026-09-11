@@ -3,7 +3,7 @@ name: base-model-candidates-2026-07
 description: "Ricerca comparativa (utente msg 1325, 2026-07-08) — il base attuale Qwen3.6-27B è davvero il più intelligente+knowledgeable per i nostri requisiti, o c'è di meglio? Ranking di 9+ candidati ~27-36B (dense preferiti, msg 1326) con verdetto, caveat e reco BAKE-OFF. NON decide: input per l'utente."
 type: entity
 tags: [base-model, continual-pretrain, model-selection, dense-vs-moe, qwen, seed-oss, glm, olmo, gemma, reference, decision-input]
-last_updated: 2026-07-10
+last_updated: 2026-09-11
 ---
 
 # Base model candidates — ricerca 2026-07-08
@@ -137,6 +137,27 @@ oppure *inesistente* — l'ambiguità è reale e **non l'ho risolta**. Senza bas
 esterno — e porta con sé **entrambi** i difetti del predecessore **più** la multimodalità confermata. Questo
 **non ribalta** la protezione dell'idea utente, ma dice che la linea 3.x-27B si sta muovendo **nella direzione
 sbagliata** per il nostro uso.
+
+### 🔴 [2026-09-11] La domanda «esiste un checkpoint -Base?» CHIUSA per la linea Qwen — e cambia la rosa
+
+> **Metodo che discrimina** (la ri-verifica del 08-17 era ferma su un HTTP 401, ambiguo fra *gated* e *inesistente*): interrogato l'**elenco pubblico** dell'API di Hugging Face — `api/models?author=Qwen&search=Base&limit=100` — che elenca **tutti** i repo pubblici dell'autore, compresi quelli *gated* (che compaiono con il campo `gated`). Risposta: **13 repo** con «Base» nell'id — Qwen3 **0.6B / 1.7B / 4B / 8B / 14B / 30B-A3B**, Qwen3.5 **0.8B / 2B / 4B / 9B / 35B-A3B**, più due TTS. **Nessun `Qwen3-32B-Base`, nessun `Qwen3.6-27B-Base`, nessun `Qwen3.8-27B-Base`**; la famiglia 3.6-27B espone solo `Qwen3.6-27B` e `-FP8`. Il 401 sulle URL dirette era quindi *inesistente*, non *gated* (HF risponde 401 anche ai repo che non esistono). **Residuo**: l'elenco è dei repo pubblici; un base privato/non rilasciato non si vede — e per il nostro uso equivale a non esistere.
+
+| Candidato | Base scaricabile? | Fonte (2026-09-11) | Nota |
+|---|---|---|---|
+| **Seed-OSS-36B-Base-woSyn** | ✅ `ByteDance-Seed/Seed-OSS-36B-Base-woSyn` | model card HF | 36B dense, 64 layer, GQA, 512K, Apache-2.0; **MMLU-Pro 60.4 · GPQA-D 35.2** (woSyn; con syn 65.1 / 31.7) — numeri **bassi** in assoluto: è un base, non un thinking model |
+| **Qwen3-32B** | ❌ nessun `-Base` | elenco API HF | il «default sicuro» **cade** come base di CPT: esiste solo post-trained |
+| **Qwen3.6-27B** (target protetto) | ❌ nessun `-Base` | elenco API HF | + ibrido GatedDeltaNet (caveat 2b) |
+| **Qwen3.8-27B** | ❌ nessun `-Base` | elenco API HF | + multimodale (scan 08-17) |
+| **GLM-4-32B-Base-0414** | ✅ `zai-org/GLM-4-32B-Base-0414` | model card HF | 33B dense, **MIT**, ctx 32K; pre-training con *«substantial reasoning-type synthetic data»* → substrato meno pulito |
+| **OLMo 3 32B** | ✅ `allenai/Olmo-3-1125-32B` | elenco HF | Apache-2.0, dati aperti (Dolma 3): il controllo scientifico del CPT; i 3.1 sono post-training sopra |
+
+**Conseguenza (regola checkpoint: CPT SOLO da un vero base)**: la **linea Qwen esce dalla rosa come base di CPT** — tutte e tre le taglie che ci interessano esistono solo post-trained. La rosa che resta, dense + testo + base scaricabile: **Seed-OSS-36B-Base-woSyn** (unico che soddisfa *tutti* i vincoli), **GLM-4-32B-Base** (MIT, ctx corto, substrato sintetico), **OLMo-3-32B** (controllo). Qwen rientra **solo** se Fra rilascia la regola e accetta il CPT da un checkpoint post-trained (substrato sporco: le tracce di reasoning/instruct del post-training restano nei pesi).
+
+**Accesso per le probe di inferenza (Stage 0)**: la key **SiliconFlow è configurata e valida** (`harness/eval/_verify-siliconflow.mjs`, GET gratuito: auth OK, 78 modelli) ed espone `ByteDance-Seed/Seed-OSS-36B-Instruct` — l'**Instruct**, non il Base: va bene per le probe di comportamento, non è ciò che si scarica per il CPT.
+
+**Scan nuove uscite**: ricerca web del 2026-09-11 su *dense ~30B base Apache ago-set 2026* → non ha portato nulla oltre a ciò che il scan del 08-17 aveva già giudicato (Muse Glimmer 30B: multimodale, distillato da Muse Spark; Qwen3.8-27B: multimodale, senza base). Perimetro: due ricerche, non un censimento.
+
+**Cosa ribalterebbe questo esito**: la comparsa di un `-Base` per un 27-32B Qwen (da ricontrollare con la stessa query API prima del bake-off), oppure la decisione di Fra di ammettere il CPT da post-trained.
 
 ### ⭐ [2026-08-18] VINCOLO che cambia i criteri: i LoRA fanno EMERGERE, non INSEGNANO
 
