@@ -12,6 +12,8 @@ last_updated: 2026-09-11
 > Una domanda che vive solo in chat sparisce alla prima compaction, e con lei la risposta quando arriva
 > (l'API di Telegram non espone la cronologia). Per questo si scrive **qui prima**, e il hook
 > `domanda-prima-sul-file-poi-su-telegram` blocca l'invio se questo file non c'è.
+>
+> **Canale**: dal **TG msg 2159** (2026-09-11, *«aggiornami qui, non sono più al PC»*) gli aggiornamenti e le risposte vanno su Telegram, non nel terminale.
 
 ## Aperte
 
@@ -45,7 +47,7 @@ last_updated: 2026-09-11
 
 ### D5 · Il link dell'annuncio su Fable e lo «steering vector» — aperta 2026-09-11
 
-- **Contesto**: Fra ha letto che usando Fable per creare nuovi modelli viene iniettato uno steering vector che degrada il ragionamento, e chiede se conviene Opus 5.
+- **Contesto**: **TG msg 2160** (2026-09-11) — Fra ha letto che usando Fable per creare nuovi modelli viene iniettato uno steering vector che degrada il ragionamento, e chiede se conviene Opus 5. **Risposto su TG (msg 2161)**: annuncio non trovato, vincolo reale = ToS uguale per entrambi i modelli, difesa = verifiche indipendenti dall'onestà del modello.
 - **Fatto misurato**: una ricerca web (2026-09-11) **non trova** l'annuncio; trova che Fable 5 è la versione «Mythos-class» con salvaguardie e Mythos 5 quella ad accesso ristretto. Il vincolo **documentato** è contrattuale (uso degli output per addestrare modelli concorrenti) e vale per **entrambi** i modelli.
 - **Opzioni**: (a) mi manda il link e lo leggo; (b) si procede con la difesa già in uso (verifiche indipendenti dall'onestà del modello), qualunque modello lavori.
 - **Reco**: (a) + (b).
