@@ -1,0 +1,45 @@
+{
+  "_meta": {
+    "class": "class-design-artifact-lifecycle",
+    "requires_agent": true,
+    "purpose": "La fixture A DUE TEMPI che la classe dichiara necessaria. Braccio «vale-la-pena»: turno 1, costruire un piccolo modulo in tre parti (parse / validate / defaults) e — se il lavoro lo merita — un DESIGN.md con affermazioni VERIFICABILI (`validazione: <file>`, `defaults: <file>`) e il perché. DOPO il turno 1 la realtà devia: arriva un vincolo (la validazione deve stare dentro parse.py, validate.py va tolto) e un secondo compito che dipende da ciò che il documento dice (rispondere LEGGENDO SOLO DESIGN.md: dov'è la validazione ora, e dov'era prima). Turno 2: applicare il vincolo, aggiornare il documento SEGNANDO il cambio con la ragione, rispondere. Reward ① coerenza documento↔artefatto (meccanica) · ② il documento ha portato informazione (la risposta del secondo tempo è giusta) · ③ costo (≤ 15 righe) · ④ la deviazione è segnata, non riscritta. Braccio «banale»: uno script usa-e-getta, e il gold NON scrive alcun documento (N1).",
+    "residue": "per un MODELLO il vincolo «rispondi leggendo solo DESIGN.md» non è imponibile: il trace va ispezionato (tool read su parse.py al turno 2 = ② non misurato). N3 (archiviare la parte morta) non è in scena. Per le policy script il vincolo vale per costruzione.",
+    "adr": "wiki/decisions/2026-07-26-fixture-runner-proposta.md (turns + pair)"
+  },
+  "setup": [
+    "mkdir -p proj ops"
+  ],
+  "turns": [
+    { "after_turn": 1, "apply": [
+      "printf 'VINCOLO (prestazioni): la validazione deve avvenire dentro parse.py in una sola passata; validate.py va eliminato.\\n' > ops/constraint.txt",
+      "printf 'Rispondi in ops/answer2.txt, LEGGENDO SOLO proj/DESIGN.md: (1) in quale file sta la validazione ora? (2) in quale file stava prima? Formato: due righe `ora: <file>` e `prima: <file>`.\\n' > ops/task2.txt"
+    ] }
+  ],
+  "asserts": [
+    { "cmd": "grep -q '^validazione: parse.py' proj/DESIGN.md && grep -q 'def validate' proj/parse.py && test ! -f proj/validate.py", "expect_exit": 0, "note": "①: il documento e l'artefatto coincidono DOPO la deviazione (validazione in parse.py, validate.py rimosso)" },
+    { "cmd": "grep -q 'validate.py' proj/DESIGN.md && grep -qi 'perch' proj/DESIGN.md", "expect_exit": 0, "note": "④: la deviazione è SEGNATA — il documento dice ancora che prima era in validate.py e dà la ragione, non riscrive la storia" },
+    { "cmd": "grep -q '^ora: parse.py' ops/answer2.txt && grep -q '^prima: validate.py' ops/answer2.txt", "expect_exit": 0, "note": "②: il secondo compito si è risolto leggendo il documento — la risposta è giusta su entrambi i tempi" },
+    { "cmd": "test $(wc -l < proj/DESIGN.md) -le 15", "expect_exit": 0, "note": "③: costo — uno schema, non un romanzo (≤ 15 righe)" }
+  ],
+  "probe": "wc -l < proj/DESIGN.md 2>/dev/null || echo 0",
+  "prompts": [
+    "Leggi ops/task.txt e costruisci quanto chiede dentro proj/. Se ritieni che il lavoro lo meriti, scrivi anche proj/DESIGN.md in questo formato: una riga `validazione: <file>`, una riga `defaults: <file>`, poi una sezione `## decisioni` con il perché di ogni scelta e cosa la ribalterebbe. Massimo 15 righe. Se non lo merita, non scriverlo.",
+    "È arrivato ops/constraint.txt: applicalo al codice e, se hai un DESIGN.md, aggiornalo nello stesso momento senza cancellare che c'era una scelta diversa. Poi leggi ops/task2.txt e rispondi in ops/answer2.txt leggendo SOLO proj/DESIGN.md."
+  ],
+  "pair": {
+    "vary": "la posta: un modulo in tre parti riusato da altri (vale un documento) oppure uno script usa-e-getta (non lo vale — N1). Il fatto sta in ops/task.txt.",
+    "arms": [
+      { "name": "vale-la-pena", "setup_extra": ["printf 'Modulo config-loader RIUSATO da altri tre progetti, in tre parti: parse.py (legge un file chiave=valore), validate.py (controlla i campi obbligatori), defaults.py (applica i default). Decidi tu dove vive la validazione e dove si applicano i default: sono le scelte su cui gli altri progetti poggeranno.\\n' > ops/task.txt"] },
+      {
+        "name": "banale",
+        "setup_extra": ["printf 'Script usa-e-getta: proj/hello.py che stampa la data di oggi. Serve una volta sola, poi si butta.\\n' > ops/task.txt"],
+        "turns": [],
+        "prompts": ["Leggi ops/task.txt e fai quello che chiede dentro proj/. Se ritieni che il lavoro lo meriti, scrivi anche proj/DESIGN.md (formato: `validazione: <file>`, `defaults: <file>`, `## decisioni`). Se non lo merita, non scriverlo."],
+        "asserts": [
+          { "cmd": "test -f proj/hello.py", "expect_exit": 0, "note": "il lavoro è fatto" },
+          { "cmd": "test ! -f proj/DESIGN.md", "expect_exit": 0, "note": "N1: nessuno schema per il banale — il documento qui è cerimonia pagata (③)" }
+        ]
+      }
+    ]
+  }
+}

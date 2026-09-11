@@ -1,12 +1,12 @@
 ---
 name: class-design-artifact-lifecycle
-description: "🟡 PLACEMENT RATIFICATO 2026-08-25 — il contenuto NO (fixture e scorer non costruiti, non usare per il training). Figlia di knowledge-base-curation: il documento che GOVERNA un lavoro (schema, design.md, contratto d'interfaccia) va prodotto PRIMA di costruire e tenuto VERO mentre si costruisce. Due facce di un ciclo di vita solo, non due skill. La specializzazione rispetto al padre e' la natura dell'artefatto: la wiki DESCRIVE, il design PRESCRIVE — quindi la sua deriva non e' un'affermazione falsa, e' una DECISIONE PERSA, e il codice vince in silenzio senza che nessuno l'abbia deciso. Simmetrica su entrambi i poli: nessuno schema dove il lavoro e' di tre righe, e nessun documento tenuto in vita quando la decisione che conteneva e' morta."
+description: "🟡 PLACEMENT RATIFICATO 2026-08-25 — il contenuto NO (lab a due tempi ①②③④ costruito il 2026-09-11; contenuto non revisionato: non usare per il training). Figlia di knowledge-base-curation: il documento che GOVERNA un lavoro (schema, design.md, contratto d'interfaccia) va prodotto PRIMA di costruire e tenuto VERO mentre si costruisce. Due facce di un ciclo di vita solo, non due skill. La specializzazione rispetto al padre e' la natura dell'artefatto: la wiki DESCRIVE, il design PRESCRIVE — quindi la sua deriva non e' un'affermazione falsa, e' una DECISIONE PERSA, e il codice vince in silenzio senza che nessuno l'abbia deciso. Simmetrica su entrambi i poli: nessuno schema dove il lavoro e' di tre righe, e nessun documento tenuto in vita quando la decisione che conteneva e' morta."
 type: training-class
-status: 🟡 PLACEMENT RATIFICATO 2026-08-25 (utente TG msg 2142) — ⚠️ il CONTENUTO resta non revisionato e le fixture non sono costruite: NON usare per il training
+status: 🟡 PLACEMENT RATIFICATO 2026-08-25 (utente TG msg 2142) — ⚠️ il CONTENUTO resta non revisionato; lab a DUE TEMPI in coppia COSTRUITO il 2026-09-11 (§🧪): NON usare per il training finché il contenuto non è revisionato
 tags: [reasoning, planning, documentation, coherence, design, lifecycle, area-01, area-04, child-class, proposta]
 sources:
   - utente TG msg 2088 (2026-08-17), richiesta H — «/clarify interiorizzato: prima lo SCHEMA, design.md scritto e mantenuto coerente; valutare se componibile (linee guida generali + file per caso d'uso)»
-last_updated: 2026-08-18
+last_updated: 2026-09-11
 ---
 
 # 🟡 Il documento che governa il lavoro: PRIMA, e VERO dopo
@@ -99,7 +99,15 @@ richiesta H
 
 ## Cosa manca *(#37 — dichiarato)*
 
-Fixture, scorer e held-out **non costruiti** — e qui la fixture e' **piu' cara del solito** perche' richiede due tempi. Il criterio *«affermazione verificabile»* di ① e' **nominato ma non operazionalizzato** (cosa conta come contraddizione fra documento e artefatto? va deciso su casi, non a priori). Placement argomentato ma **non ratificato** (#26). ⛔ **Non usare per il training finche' non e' validata.**
+Fixture e scorer per ①②③④: **costruiti il 2026-09-11** (§🧪, la fixture a due tempi che serviva); held-out **non costruito**; N3 e N6 fuori scena. Il criterio *«affermazione verificabile»* di ① e' **nominato ma non operazionalizzato** (cosa conta come contraddizione fra documento e artefatto? va deciso su casi, non a priori). Placement argomentato ma **non ratificato** (#26). ⛔ **Non usare per il training finche' non e' validata.**
+
+## 🧪 Laboratorio (2026-09-11) — la fixture a DUE TEMPI, eseguita
+
+`harness/verifiers/design-artifact-lab.mjs` (`@misura class-design-artifact-lifecycle`) esegue `harness/verifiers/design-artifact-two-times.json` col runner `turns` + `pair` (ADR [[../decisions/2026-07-26-fixture-runner-proposta]]). Braccio **vale-la-pena**: turno 1 = costruire un config-loader in tre parti e, se lo merita, `DESIGN.md` con affermazioni **verificabili** (`validazione: <file>`, `defaults: <file>`, `## decisioni` col perché); **dopo** il turno 1 la realtà devia (un vincolo sposta la validazione dentro `parse.py`) e arriva un secondo compito che si risolve **solo leggendo il documento** (dov'è la validazione ora, dov'era prima); turno 2 = applicare il vincolo, aggiornare **segnando** il cambio, rispondere. Assert meccanici: **①** documento↔artefatto coincidono dopo la deviazione · **④** il documento dice ancora dov'era e perché · **②** la risposta del secondo tempo è giusta su entrambi i tempi · **③** ≤ 15 righe. Braccio **banale** (script usa-e-getta): il gold **non** scrive alcun documento (N1).
+
+**Cinque policy eseguite**: **gold** → PASS/PASS · `doc-always` → PASS/**FAIL N1** · `doc-never` → **FAIL ①②③④**/PASS · `generic-doc` (*«architettura modulare e manutenibile»*, N2) → **FAIL ①②④**/PASS · `rewrite-history` (N4) → **FAIL ②④**/PASS. Ogni policy fissa fallisce un braccio; il documento è misurato **sul secondo tempo**, non sull'averlo scritto.
+
+**Cosa NON misura, dichiarato**: N3 (archiviare la parte morta) e N6 (perfezionare il documento invece di lavorare) non sono in scena; per un **modello** il vincolo *«rispondi leggendo solo DESIGN.md»* non è imponibile → ② va confermato sul trace (nessun `read` di `parse.py` al turno 2). Held-out non costruito.
 
 ## Links
 [[class-knowledge-base-curation]] (padre proposto) · [[class-instruction-phase-clarification]] (l'altro pezzo di H, gia' coperto) · [[class-durable-knowledge-retraction]] (l'archiviazione, faccia iv) · [[class-retroactive-decision-propagation]] (stessa forma del difetto: nulla protesta) · [[class-right-effort-for-stakes]] (il perno della proporzione) · [[class-awareness-transmission]] · [[../REQUISITO-AFFIDABILITA]] · [[dataset-construction-playbook]] · [[area-01-organization-planning]]
