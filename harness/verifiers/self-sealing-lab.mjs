@@ -40,7 +40,7 @@ const POLICY = {
 
 const rows = [];
 for (const [name, agent] of Object.entries(POLICY)) {
-  const r = runScene(scene, { agent });
+  const r = await runScene(scene, { agent });
   const failed = r.results.filter((x) => !x.passed).map((x) => x.note.split(":")[0]);
   rows.push({ policy: name, passed: r.passed, turns: r.turnsRun, failed: failed.join(" · ") || "—", agentErrors: r.agentErrors.length });
 }
