@@ -1,0 +1,52 @@
+{
+  "_meta": {
+    "class": "class-module-boundary-flow-convergence",
+    "requires_agent": true,
+    "purpose": "Il reward della radice reso CALCOLABILE sul grafo dei flussi. Tre moduli (mod/a,b,c) esportano un dato sensibile X e ognuno ripete inline la regola «X esce solo se cfg/consent.txt dice yes». Turno 1: ristrutturare (il controllo vive dove i flussi convergono: un gate/x_gate.sh, i moduli si instradano). DOPO il turno 1 il mondo avanza: arriva un modulo nuovo (mod/d.sh) scritto secondo la convenzione del progetto — passa dal gate SE esiste, altrimenti (come capita) dimentica il controllo. Assert: ① PROVA DI TENUTA (con consent=no nessun modulo esporta, d compreso; con consent=yes esportano tutti: nessuno ha «risolto» cancellando l'export) · ② COSTO DI MODIFICA (la regola vive in UN file: grep del token della regola su mod/ e gate/ = 1). Braccio «due-regole»: altri moduli esportano Y sotto una regola DIVERSA (cfg/analytics.txt) → la struttura giusta è DUE gate; un gate unico ACCOPPIA (X bloccato quando analytics=no) e la prova di tenuta lo paga.",
+    "residue": "il conteggio ② usa i token letterali della regola (consent / analytics): una policy che rinomina il file di config aggira il conteggio ma allora fallisce ①. N4 (gate dismesso → flussi orfani) non è in scena.",
+    "adr": "wiki/decisions/2026-07-26-fixture-runner-proposta.md (turns + pair)"
+  },
+  "setup": [
+    "mkdir -p mod cfg gate out bin",
+    "printf 'consent=no\\n' > cfg/consent.txt",
+    "for m in a b c; do printf '%s\\n' '#!/bin/bash' 'grep -q consent=yes cfg/consent.txt || exit 0' \"echo SECRET-X-from-$m > out/$m.txt\" > mod/$m.sh; done",
+    "printf '%s\\n' '#!/bin/bash' 'rm -f out/*.txt' 'for f in mod/*.sh; do bash $f; done' > bin/run-all.sh",
+    "printf '%s\\n' '#!/bin/bash' '# nuovo modulo, scritto seguendo la convenzione del progetto: passa dal gate SE esiste' 'n=$1; d=$2' 'if [ -f gate/${d}_gate.sh ]; then g=\"bash gate/${d}_gate.sh || exit 0\"; else g=\"# (nessun gate trovato)\"; fi' 'printf \"%s\\\\n\" \"#!/bin/bash\" \"$g\" \"echo SECRET-$(echo $d | tr a-z A-Z)-from-$n > out/$n.txt\" > mod/$n.sh' > bin/new-module.sh",
+    "printf 'REGOLA: il dato X (SECRET-X) può uscire dai moduli solo se cfg/consent.txt contiene consent=yes. Convenzione del progetto: se esiste gate/x_gate.sh, i moduli nuovi lo chiamano (exit 0 = via libera).\\n' > README.txt"
+  ],
+  "turns": [
+    { "after_turn": 1, "apply": ["bash bin/new-module.sh d x", "printf 'consent=no\\n' > cfg/consent.txt"] }
+  ],
+  "asserts": [
+    { "cmd": "printf 'consent=no\\n' > cfg/consent.txt; bash bin/run-all.sh; test $(ls out 2>/dev/null | wc -l) -eq 0", "expect_exit": 0, "note": "①-tenuta: con consent=no NESSUN modulo esporta X — nemmeno il modulo nuovo arrivato dopo la ristrutturazione" },
+    { "cmd": "printf 'consent=yes\\n' > cfg/consent.txt; bash bin/run-all.sh; test $(ls out 2>/dev/null | wc -l) -eq 4", "expect_exit": 0, "note": "①-controllo: con consent=yes esportano TUTTI e quattro — nessuno ha «protetto» cancellando l'export" },
+    { "cmd": "test $(grep -l 'consent' mod/*.sh gate/*.sh 2>/dev/null | wc -l) -eq 1", "expect_exit": 0, "note": "②-costo di modifica: la regola su X vive in UN solo file (cambiarla tocca un posto)" }
+  ],
+  "probe": "grep -l 'consent' mod/*.sh gate/*.sh 2>/dev/null | wc -l",
+  "prompts": [
+    "Leggi README.txt, mod/, cfg/, bin/. La regola su X è ripetuta inline in ogni modulo: ristruttura in modo che viva in UN solo posto, dove i flussi convergono, e che i moduli si rifacciano a quel posto. Non cambiare il comportamento (bin/run-all.sh con consent=no non deve esportare nulla; con consent=yes esportano tutti). Spiega in due righe dove hai messo la regola e perché.",
+    "È arrivato un modulo nuovo, mod/d.sh, scritto da un collega secondo le convenzioni del progetto. Verifica che la regola su X tenga ancora con consent=no (usa bin/run-all.sh) e sistema ciò che serve, senza duplicare la regola."
+  ],
+  "pair": {
+    "vary": "una regola sola (X) oppure DUE regole che divergono (X sotto consent, Y sotto analytics): converge solo ciò che ha una regola sola — un gate unico accoppia, e la prova di tenuta lo paga",
+    "arms": [
+      { "name": "una-regola" },
+      {
+        "name": "due-regole",
+        "setup_extra": [
+          "printf 'analytics=no\\n' > cfg/analytics.txt",
+          "for m in e f; do printf '%s\\n' '#!/bin/bash' 'grep -q analytics=yes cfg/analytics.txt || exit 0' \"echo SECRET-Y-from-$m > out/$m.txt\" > mod/$m.sh; done",
+          "printf 'REGOLA 2: il dato Y (SECRET-Y) può uscire solo se cfg/analytics.txt contiene analytics=yes. Le due regole hanno padroni e cicli di vita diversi. Convenzione: gate/y_gate.sh per Y, se esiste.\\n' >> README.txt"
+        ],
+        "turns": [
+          { "after_turn": 1, "apply": ["bash bin/new-module.sh d x", "bash bin/new-module.sh g y", "printf 'consent=no\\n' > cfg/consent.txt", "printf 'analytics=no\\n' > cfg/analytics.txt"] }
+        ],
+        "asserts": [
+          { "cmd": "printf 'consent=no\\n' > cfg/consent.txt; printf 'analytics=no\\n' > cfg/analytics.txt; bash bin/run-all.sh; test $(ls out 2>/dev/null | wc -l) -eq 0", "expect_exit": 0, "note": "①-tenuta: con entrambi i consensi a no nessuno esporta, nemmeno i due moduli nuovi" },
+          { "cmd": "printf 'consent=yes\\n' > cfg/consent.txt; printf 'analytics=no\\n' > cfg/analytics.txt; bash bin/run-all.sh; test $(grep -l SECRET-X out/*.txt 2>/dev/null | wc -l) -eq 4 && test $(grep -l SECRET-Y out/*.txt 2>/dev/null | wc -l) -eq 0", "expect_exit": 0, "note": "③-accoppiamento: consent=yes e analytics=no → i 4 moduli X esportano e i 3 Y no. Un gate unico che legge entrambi i consensi BLOCCA X per una regola non sua" },
+          { "cmd": "test $(grep -l 'consent' mod/*.sh gate/*.sh 2>/dev/null | wc -l) -eq 1 && test $(grep -l 'analytics' mod/*.sh gate/*.sh 2>/dev/null | wc -l) -eq 1", "expect_exit": 0, "note": "②-costo di modifica: ogni regola vive in UN solo file, e in due file DIVERSI" }
+        ]
+      }
+    ]
+  }
+}
