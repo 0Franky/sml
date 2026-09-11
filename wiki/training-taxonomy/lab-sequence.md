@@ -1,0 +1,42 @@
+---
+name: lab-sequence
+description: "⛔ PROPOSTA (2026-09-11, non ratificata) — la SEQUENZA dei laboratori come curriculum: in quale ordine si allenano le scene, quali dipendono da quali, e la regola perché una fase non pesti i piedi all'altra. Richiesta di Fra (TG msg 2200): «prima la fase di gathering, poi l'aggiornamento dei dati, poi i gate che diventano rossi; specificare bene tutte le fasi per non farsi pestare i piedi a vicenda». Poggia su compositional-curriculum (skill isolate → composizione a finestra), playbook §2-bis (per-esempio prima, aggregato dopo) e curriculum-stages-detail (i 5 stadi di training): questa pagina è il livello dei LAB, che quelle pagine non hanno."
+type: concept
+status: ⛔ PROPOSTA 2026-09-11 — attende ratifica (#26/#34); nessun lab è stato ancora riordinato
+tags: [curriculum, labs, sequencing, composition, proposta]
+sources:
+  - utente TG msg 2200 (2026-09-11) — la richiesta
+  - utente TG msg 1140 (2026-07-05) — curriculum a skill isolate → composizione (concepts/compositional-curriculum-thinking-optimization)
+  - utente TG msg 1991 (2026-07-26) — vincolo per-esempio prima, aggregato dopo (playbook §2-bis)
+last_updated: 2026-09-11
+---
+
+# ⛔ La sequenza dei laboratori — proposta
+
+> **Perché una pagina a sé**: [[../concepts/compositional-curriculum-thinking-optimization]] dice *come* si compone (skill isolate, poi 1+2, 2+3, poi 1+2+3), [[dataset-construction-playbook]] §2-bis dice *quando* si misura (per-esempio prima, aggregato dopo), [[curriculum-stages-detail]] dice *in quale stadio di training* (SFT scuola → SFT coding → RL). Nessuna dice **quale lab viene prima di quale**, né cosa succede se due lab premiano comportamenti che si contraddicono. Questa pagina propone entrambe le cose; Fra ratifica.
+
+## La regola che evita di pestarsi i piedi (il punto di Fra)
+
+⭐ **Un lab entra nel curriculum solo quando ha la sua COPPIA.** La prova è già in casa: il primo lab del canary, da solo, lasciava passare *«lascia sempre un innesco»* — e un curriculum che lo avesse usato prima del braccio «definitiva» avrebbe **insegnato** quel tic, che il lab successivo avrebbe dovuto disinsegnare. Due lab si pestano i piedi quando **uno premia ciò che l'altro penalizza**; la coppia (P-COPPIA, playbook §2-ter) è ciò che impedisce a un lab di premiare una cerimonia. Corollario: **nessuna scena a braccio singolo nel curriculum**.
+
+Seconda regola: **la fase n non può richiedere una skill che si allena nella fase n+1** — le dipendenze sotto sono esplicite proprio per questo.
+
+## Le fasi (ordine proposto)
+
+| fase | cosa si allena | lab/scene di oggi | dipende da | misura |
+|---|---|---|---|---|
+| **0 — skill isolate, per-esempio** | ogni scena da sola, con il suo oracolo deterministico e la sua coppia | `self-sealing` (canary scade/definitiva) · `consumption-scale` (scarso/abbondante) · `design-artifact` (vale-la-pena/banale) · `module-boundary` (una/due regole) · i 12 lab a criterio già esistenti | — | il gold batte le policy fisse (già vero); il modello supera la coppia sull'held-out |
+| **1 — gathering → aggiornamento** *(la sequenza che Fra nomina)* | prima **raccogliere** ciò che serve (presence-absence a terna, instrument-epistemic-reach), poi **aggiornare** i pezzi che dipendono da ciò che si è raccolto (retroactive-propagation, artifact-reachability) | `presence-absence-lab` → `retroactive-propagation-lab` → scena `retroactive-noise-hook` a **k=0** | fase 0 | composizione 1+2: il pezzo aggiornato è quello che il gathering ha trovato, non uno a caso |
+| **2 — rumore** | le stesse scene con **k turni di lavoro vero** in mezzo (k = 2, 5, 10): decadimento misurato per modello | `retroactive-noise-hook` k2/k5/k10 · (da costruire) self-sealing col rumore fra decisione e scadenza · consumption col budget che cambia a metà · design-artifact con deviazione dopo k turni | fasi 0-1 | la curva su k; qui il braccio `ours` dell'harness deve fare la differenza |
+| **3 — i gate che diventano rossi** *(skill nuova, da gap-scannare)* | il modello **costruisce il proprio controllo** che si accende quando manca un'informazione o un file non è aggiornato — non solo passa i controlli dati | nessuna scena ancora; vicine: `class-artifact-reachability-completion` (il criterio «ci arriva qualcuno?»), `class-verification-seam-placement` (dove attaccare il metro), il gate `checklist-fatto` di core come **F** che recede | fasi 1-2 (senza aver imparato a raccogliere e ad aggiornare, un gate proprio è cerimonia) | il gate costruito dal modello **è rosso** sulla fixture rotta e **verde** su quella sana (mutation test del suo stesso gate) |
+| **4 — aggregato** | held-out distribuzionale + ECE sui domini non-software (playbook §2-bis, fase 2) | i transfer B/C delle classi | fasi 0-3 | il segnale aggregato eredita ciò che le fasi per-esempio hanno depositato |
+
+## Cosa la ribalterebbe / cosa manca
+
+- **Fase 3 è una classe nuova**: *«costruire il proprio gate»* non ha una classe (grep 2026-09-11 su *gate che diventano rossi / self-check* → nessun hit in tassonomia). Va gap-scannata (#36) prima di allenarla: asse completo (costruire ↔ **dismettere** un gate proprio), inverso (un gate che grida a vuoto = spento), coerenza di radice (metacognitive-self-audit? ground-truth-integrity?).
+- **Il confine fase-1/fase-2 per area** resta la 🗳️ aperta del playbook §2-bis: questa pagina non la chiude.
+- **Costo dichiarato**: ordinare i lab non costa nulla finché non si costruisce il curriculum di training; costruire le tre scene col rumore mancanti costa ~1 giorno.
+- **Cosa la ribalterebbe**: se le scene con `ours` **non** migliorano su k (fase 2), il rumore non è il problema che crediamo e la fase va ripensata; se un lab a braccio singolo si rivelasse necessario, la regola della coppia va indebolita — ma con prova.
+
+## Links
+[[../concepts/compositional-curriculum-thinking-optimization]] · [[dataset-construction-playbook]] (§2-bis, §2-ter, §2 passo 6-bis) · [[curriculum-stages-detail]] · [[class-retroactive-decision-propagation]] · [[class-self-sealing-decision]] · [[class-artifact-reachability-completion]] · [[class-verification-seam-placement]] · [[../decisions/2026-07-26-fixture-runner-proposta]]

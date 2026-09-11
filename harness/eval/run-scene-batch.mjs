@@ -9,8 +9,9 @@
  * Output: tabella su stdout; exit 0 se tutti i run sono terminati (il PASS/FAIL è il dato, non l'esito del processo).
  */
 import { spawnSync } from "node:child_process";
-import { appendFileSync } from "node:fs";
+import { appendFileSync, mkdtempSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -26,9 +27,13 @@ const rows = [];
 for (const model of models) {
   for (let rep = 1; rep <= n; rep++) {
     const t0 = Date.now();
+    // Stato dell'harness ISOLATO per run (braccio `ours`: conversation store, vars, meta — letti a import-time da
+    // state-paths.mjs via HARNESS_STATE_DIR): due run non devono vedersi, come in run-session-ab.mjs.
+    const stateDir = mkdtempSync(join(tmpdir(), "scene-state-"));
     const r = spawnSync(process.execPath, [join(here, "run-scene.mjs"), scene], {
-      env: { ...process.env, MODEL_ID: model, EVAL_ARM: arm }, encoding: "utf8", maxBuffer: 64 * 1024 * 1024,
+      env: { ...process.env, MODEL_ID: model, EVAL_ARM: arm, HARNESS_STATE_DIR: stateDir }, encoding: "utf8", maxBuffer: 64 * 1024 * 1024,
     });
+    rmSync(stateDir, { recursive: true, force: true });
     let out = null;
     try { out = JSON.parse((r.stdout || "").trim().split("\n").pop()); } catch { /* run rotto: resta null */ }
     // scena singola: results/perTurn al top-level · coppia: per braccio (si appiattisce in ordine di braccio)
