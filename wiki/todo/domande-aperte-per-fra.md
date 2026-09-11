@@ -2,12 +2,12 @@
 name: domande-aperte-per-fra
 description: "🔴 REGISTRO delle domande aperte per Fra — si scrive QUI prima di mandarle su Telegram (regola sua, 2026-08-23: «segnare sempre le domande prima in locale sul file»). Ogni voce: contesto, fatto misurato, opzioni, reco. Quando risponde, la voce si chiude con la data e il numero del messaggio."
 type: tracker
-status: 🔴 aperto — 1 domanda aperta (D3), 4 chiuse, 1 segnalazione (2026-09-11)
+status: ✅ nessuna domanda aperta — 5 chiuse, 1 segnalazione (2026-09-11)
 tags: [tracker, decisioni, telegram, area-processo]
 last_updated: 2026-09-11
 ---
 
-# 🔴 Domande aperte per Fra
+# ✅ Domande aperte per Fra — nessuna al 2026-09-11
 
 > Una domanda che vive solo in chat sparisce alla prima compaction, e con lei la risposta quando arriva
 > (l'API di Telegram non espone la cronologia). Per questo si scrive **qui prima**, e il hook
@@ -17,14 +17,14 @@ last_updated: 2026-09-11
 
 ## Aperte
 
-### D3 · `skills/remotion/SKILL.md` non versionato — aperta 2026-09-11 · Fra (TG msg 2163): *«che fa questa skill?»*
-
-- **Contesto**: `check-install-drift` confronta `~/.claude` col bundle di core; è l'**unico** finding rimasto (`UNVERSIONED`).
-- **Fatto misurato**: è una skill generica per **Remotion**, il framework React che genera **video programmatici** (composizioni, frame, `interpolate`/`spring`, render MP4/WebM per social, explainer, video da dati). 5 KB, un solo file, datato **2026-02-04**, **non citata** da nessun manifest, da `settings.json` né da alcun repo. Nessun progetto attuale (SLM, NetView, WillHouse) fa video.
-- **Opzioni**: (a) **rimuoverla** (è una skill pubblica, si reinstalla in un minuto se mai servisse); (b) darle casa in `cc-wiki-core/claude/skills/` così viene rispecchiata ovunque; (c) dichiararla eccezione in `install-scope.json`.
-- **Reco**: (a). Non l'ho fatto perché ha chiesto cosa fa, non di toglierla: una parola e sparisce.
+*(nessuna)*
 
 ## Chiuse
+
+### D3 · `skills/remotion/SKILL.md` non versionato — ✅ chiusa 2026-09-11, TG msg 2165 «3 togli skill»
+
+- **Fatto**: rimossa `~/.claude/skills/remotion/` (era l'unica copia: skill generica per video programmatici con React, 5 KB, 2026-02-04, non citata da nessun manifest né progetto). Copia di sicurezza in `~/.claude/backups/removed-skills-2026-09-11/remotion/`. Dopo la rimozione `check-install-drift` non ha più alcun finding: bundle, copia viva e origin coincidono.
+
 
 ### D5 · L'annuncio su Fable e lo «steering vector» — ✅ risposto 2026-09-11 (TG msg 2160 domanda · 2163 link · risposta corretta su TG)
 
