@@ -2,12 +2,12 @@
 name: domande-aperte-per-fra
 description: "🔴 REGISTRO delle domande aperte per Fra — si scrive QUI prima di mandarle su Telegram (regola sua, 2026-08-23: «segnare sempre le domande prima in locale sul file»). Ogni voce: contesto, fatto misurato, opzioni, reco. Quando risponde, la voce si chiude con la data e il numero del messaggio."
 type: tracker
-status: ✅ nessuna domanda aperta — 5 chiuse, 1 segnalazione (2026-09-11)
+status: 🔴 1 domanda aperta (D6 prossimi passi) — 5 chiuse, 1 segnalazione (2026-09-11)
 tags: [tracker, decisioni, telegram, area-processo]
 last_updated: 2026-09-11
 ---
 
-# ✅ Domande aperte per Fra — nessuna al 2026-09-11
+# 🔴 Domande aperte per Fra
 
 > Una domanda che vive solo in chat sparisce alla prima compaction, e con lei la risposta quando arriva
 > (l'API di Telegram non espone la cronologia). Per questo si scrive **qui prima**, e il hook
@@ -17,7 +17,12 @@ last_updated: 2026-09-11
 
 ## Aperte
 
-*(nessuna)*
+### D6 · Prossimi passi: quale binario apro per primo? — aperta 2026-09-11 (TG msg 2166 «quindi i prossimi passi quali sono? come procediamo?»)
+
+- **Contesto**: l'infrastruttura di oggi è chiusa (decisioni per-progetto, sorgente auto-allineante, nona radice). Il lavoro aperto del progetto SLM sta in tre binari con costi diversi.
+- **Fatto misurato**: **77 classi, 12 con un laboratorio** — «classe scritta» significa *argomentata*, non *validata*. Il batch di **11 idee** del 2026-09-11 è catturato e non triato (l'ultimo triage ha trovato 6 idee su 11 già coperte: cercare prima di scrivere). L'**idea 12** (gate convergente) è già la seconda figlia della nona radice, da scrivere. Tutto il binario **empirico** (esperimento base64, ri-misura F34 sul target, calibrazione/ECE, fase C sui modelli capaci) aspetta **un modello** — o il base model (bake-off ancora aperto) o l'ok a spendere sul piano Anthropic per la fase C, già approvata ad agosto con Opus 4.8 + Sonnet 4.6.
+- **Opzioni**: (a) **triage delle 11 idee** → le 2-3 classi vere, partendo dalle due che lui marca fondamentali (partire dal confident · «aspetta, prima conviene X») — zero spesa; (b) **classe «confini di modulo»** dall'idea 12 — zero spesa; (c) **da argomentata a validata**: fixture + scorer per le classi ratificate, partendo da quelle con l'oracolo più pulito (design-artifact-lifecycle, consumption-scale-for-budget) — zero spesa, è il buco più grosso; (d) **binario empirico** — serve la sua decisione sul modello/spesa.
+- **Reco**: (a) → (b) → (c) in quest'ordine, subito e in autonomia; (d) appena decide il modello o l'ok alla fase C sul piano. In parallelo, cose sue: il commit del puntatore del submodule in WillHouse; il rebuild deliberato di graphify (fermo da 65 giorni, costa: serve il suo ok).
 
 ## Chiuse
 
