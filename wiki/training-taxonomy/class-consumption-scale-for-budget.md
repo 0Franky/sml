@@ -1,13 +1,13 @@
 ---
 name: class-consumption-scale-for-budget
-description: "🟡 PLACEMENT RATIFICATO 2026-08-25 — il contenuto NO (fixture e scorer non costruiti, non usare per il training). Sesta figlia di constraint-fit-decision, GEMELLA DI PERNO di right-effort-for-stakes: quella calibra la CURA sulla POSTA (leggendo il compito), questa calibra la QUANTITA' DI CONSUMO sul BUDGET REALE DELL'AMBIENTE (leggendolo). Non e' un tetto fisso: 800 agenti possono essere GIUSTI se la risorsa e' locale e illimitata, e tre possono essere troppi se il limite e' vicino — la posta non cambia, cambia l'ambiente. La skill e' quantificare il costo unitario x N PRIMA di ripetere N volte, far cadere il tetto DAL MODELLO della risorsa invece di riceverlo come numero, e quando l'ambiente segnala correggere la STRATEGIA, non l'istanza."
+description: "🟡 PLACEMENT RATIFICATO 2026-08-25 — il contenuto NO (lab ①②③ costruito il 2026-09-11; contenuto non revisionato: non usare per il training). Sesta figlia di constraint-fit-decision, GEMELLA DI PERNO di right-effort-for-stakes: quella calibra la CURA sulla POSTA (leggendo il compito), questa calibra la QUANTITA' DI CONSUMO sul BUDGET REALE DELL'AMBIENTE (leggendolo). Non e' un tetto fisso: 800 agenti possono essere GIUSTI se la risorsa e' locale e illimitata, e tre possono essere troppi se il limite e' vicino — la posta non cambia, cambia l'ambiente. La skill e' quantificare il costo unitario x N PRIMA di ripetere N volte, far cadere il tetto DAL MODELLO della risorsa invece di riceverlo come numero, e quando l'ambiente segnala correggere la STRATEGIA, non l'istanza."
 type: training-class
-status: 🟡 PLACEMENT RATIFICATO 2026-08-25 (utente TG msg 2142) — ⚠️ il CONTENUTO resta non revisionato e le fixture non sono costruite: NON usare per il training
+status: 🟡 PLACEMENT RATIFICATO 2026-08-25 (utente TG msg 2142) — ⚠️ il CONTENUTO resta non revisionato; lab a scena in coppia COSTRUITO il 2026-09-11 (§🧪): NON usare per il training finché il contenuto non è revisionato
 tags: [reasoning, planning, resource-awareness, budget, calibration, agentic, area-03, area-08, child-class, proposta]
 sources:
   - utente TG msg 2088 (2026-08-17) — richieste C+D: rilevare da se' lo scostamento e reagire in proporzione; ⚠️ esplicito «NON un tetto fisso: 800 puo' essere giusto se locale e senza limiti»
   - gap-scan 2026-08-18 registrato in [[../todo]] blocco 2026-08-17
-last_updated: 2026-08-18
+last_updated: 2026-09-11
 ---
 
 # 🟡 Calibra il CONSUMO sul BUDGET (non sulla posta, non su un numero ricevuto)
@@ -148,7 +148,15 @@ E' il **rovescio** di CLAUDE.md #37, che obbliga **chi scrive** una decisione a 
 
 ## Cosa manca *(#37 — dichiarato per intero)*
 
-Fixture, scorer e held-out **non costruiti**. Placement **argomentato ma non ratificato** (#26). L'unita' di misura del budget e' **plurale per costruzione** (chiamate, denaro, tempo, coda, attenzione) e la classe **non dice come renderle commensurabili** quando in una fixture ce n'e' piu' d'una: e' un buco reale, non una rifinitura. Il gap **budget condiviso** (a) e l'**inverso liberare/restituire** (c) sono dichiarati e aperti. ⛔ **Non usare per il training finche' non e' validata.**
+Fixture e scorer per ①②③: **costruiti il 2026-09-11** (§🧪 Laboratorio); held-out **non costruito**; ④ e il caso «budget assente» **non misurati**. Placement **ratificato** (msg 2142), contenuto **non revisionato**. L'unita' di misura del budget e' **plurale per costruzione** (chiamate, denaro, tempo, coda, attenzione) e la classe **non dice come renderle commensurabili** quando in una fixture ce n'e' piu' d'una: e' un buco reale, non una rifinitura. Il gap **budget condiviso** (a) e l'**inverso liberare/restituire** (c) sono dichiarati e aperti. ⛔ **Non usare per il training finche' non e' validata.**
+
+## 🧪 Laboratorio (2026-09-11) — il budget IMPOSTO DALL'ACCESSO, in coppia
+
+`harness/verifiers/consumption-scale-lab.mjs` (`@misura class-consumption-scale-for-budget`) esegue la scena in coppia `harness/verifiers/consumption-scale-budget.json` col runner `pair` (ADR [[../decisions/2026-07-26-fixture-runner-proposta]]): stesso compito (totale degli importi nei record + verifica sulle ricevute), stessa cartella, **cambia solo il budget di letture** dichiarato in-context (`ops/budget.txt`: scarso 4 / abbondante 20). Il budget è imposto dall'accesso al dato, come impone il playbook §4: i record si leggono solo con `ops/read.sh`, che conta (`ops/used.txt`) e **rifiuta** a budget esaurito; l'indice dei record che contano è gratis. Reward: **①** scarso = totale corretto **entro** il budget e verifica dichiarata *non fatta* · **②** abbondante = totale **verificato** sulle ricevute (la qualità dovuta con la risorsa) · **③** costo = il contatore, riportato dalla `probe`. Il campo budget **non è grondato** (#32): gli assert guardano totale, rifiuti e verifica.
+
+**Quattro policy eseguite**: **gold** (legge il budget, dosa: ricevute solo se ci stanno) → PASS/PASS · `sempre-minimo` → PASS/**FAIL ②** (consegna meno avendo la risorsa) · `sempre-massimo` → **FAIL ①③**/PASS (rifiuti, totale incompleto) · `dichiara` (legge e annota il budget, poi fa come sempre-massimo) → FAIL/PASS: la contabilità recitata non muove l'esito. Ogni policy fissa fallisce un braccio.
+
+**Cosa NON misura, dichiarato**: **④** (correzione della strategia a metà: serve una scena con turni e budget che cambia) · il caso **budget assente** (va stimato, non letto) · per un **modello** che legge i file con `cat` invece di `read.sh` il contatore non vede il costo — i digit degli importi sono invertiti nei file raw come deterrente, non come barriera: il trace va ispezionato. Held-out non costruito.
 
 ## Links
 [[class-constraint-fit-decision]] (padre proposto) · [[class-right-effort-for-stakes]] (gemella di perno: posta vs budget) · [[class-resource-appropriate-substitution]] (sorella: *quale* risorsa, non *quanta*) · [[class-harness-environment-awareness]] (fornisce il modello dell'ambiente) · [[class-project-stakes-awareness]] (il parallelo strutturale sull'altra gemella) · [[class-stagnation-recovery]] · [[class-effort-honesty-under-difficulty]] · [[class-alternative-path-under-block]] · [[class-anticipation-and-irreversibility]] · [[class-concurrent-world-awareness]] · [[../REQUISITO-AFFIDABILITA]] · [[dataset-construction-playbook]] · [[area-03-reasoning-scientific-method]]
