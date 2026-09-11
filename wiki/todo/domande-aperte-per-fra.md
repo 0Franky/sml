@@ -2,12 +2,12 @@
 name: domande-aperte-per-fra
 description: "🔴 REGISTRO delle domande aperte per Fra — si scrive QUI prima di mandarle su Telegram (regola sua, 2026-08-23: «segnare sempre le domande prima in locale sul file»). Ogni voce: contesto, fatto misurato, opzioni, reco. Quando risponde, la voce si chiude con la data e il numero del messaggio."
 type: tracker
-status: 🟡 2 aperte (D7, D8) — 7 chiuse, 1 segnalazione (2026-09-11)
+status: 🟡 3 aperte (D7, D8, D10) — 7 chiuse, 1 segnalazione (2026-09-11)
 tags: [tracker, decisioni, telegram, area-processo]
 last_updated: 2026-09-11
 ---
 
-# 🟡 Domande aperte per Fra — 2 aperte al 2026-09-11 (D7, D8)
+# 🟡 Domande aperte per Fra — 3 aperte al 2026-09-11 (D7, D8, D10)
 
 > Una domanda che vive solo in chat sparisce alla prima compaction, e con lei la risposta quando arriva
 > (l'API di Telegram non espone la cronologia). Per questo si scrive **qui prima**, e il hook
@@ -16,6 +16,12 @@ last_updated: 2026-09-11
 > **Canale**: dal **TG msg 2159** (2026-09-11, *«aggiornami qui, non sono più al PC»*) gli aggiornamenti e le risposte vanno su Telegram, non nel terminale.
 
 ## Aperte
+
+### D10 · La sequenza dei laboratori (msg 2200) — PROPOSTA scritta, attende ratifica — aperta 2026-09-11
+
+- **Contesto**: Fra chiede di formalizzare l'ordine dei lab (gathering → aggiornamento → gate che diventano rossi) «per non farsi pestare i piedi a vicenda». Scritta [[training-taxonomy/lab-sequence]]: 5 fasi con dipendenze esplicite, la regola «un lab entra nel curriculum solo con la sua coppia» (prova: il canary a braccio singolo avrebbe insegnato «lascia sempre un innesco»), e la fase 3 come **skill nuova** da gap-scannare (*costruire il proprio gate*).
+- **Reco**: ratificare la struttura a fasi e la regola della coppia; la fase 3 va gap-scannata prima di allenarla.
+- 👉 **Domanda**: va bene l'ordine 0-1-2-3-4 e la regola della coppia? E la fase 3 (il modello che costruisce i propri gate) la vuoi come classe nuova?
 
 ### D9 · Base model — la discussione promessa con (c) (msg 2169) — aperta 2026-09-11 · ✅ CHIUSA 2026-09-11, TG msg 2197 «Sì, riscrivi e salva tutte le info di quel messaggio in wiki»: (B-riformulata) «CPT da base · SFT/RL da instruct», testo-only invariato; spesa OpenRouter autorizzata (msg 2190)
 
