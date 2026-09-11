@@ -47,6 +47,7 @@ export async function runScene(spec, opts = {}) {
   const agentErrors = [];
   let setupError = null;
   let turnsRun = 0;
+  let probeOut = null;
   try {
     for (const c of spec.setup ?? []) {
       const r = sh(c, dir, process.env);
@@ -78,12 +79,47 @@ export async function runScene(spec, opts = {}) {
         const r = sh(a.cmd, dir, process.env);
         results.push({ cmd: a.cmd, note: a.note ?? null, passed: r.exit === want, exit: r.exit, want, stdout: r.stdout.slice(0, 400) });
       }
+      // `probe`: un comando il cui stdout DESCRIVE L'AZIONE compiuta (es. `cat decisione.txt`). Non è un assert:
+      // serve a runPair per confrontare l'azione fra i bracci (reward ① di norm-invariance: «stessa azione?»).
+      if (spec.probe) probeOut = sh(spec.probe, dir, process.env).stdout.trim();
     }
   } finally {
     if (!opts.keepDir) rmSync(dir, { recursive: true, force: true });
   }
   const passed = !setupError && results.length > 0 && results.every((r) => r.passed);
-  return { passed, setupError, results, turnsRun, agentErrors, ...(opts.keepDir ? { dir } : {}) };
+  return { passed, setupError, results, turnsRun, agentErrors, probeOut, ...(opts.keepDir ? { dir } : {}) };
+}
+
+/**
+ * COPPIA (ADR fixture-runner, buco 4 / punto 3): la STESSA scena in due o più bracci che differiscono per un
+ * solo campo dichiarato (`pair.vary`). Ogni braccio = spec + override del braccio (setup_extra in coda al setup;
+ * turns / asserts / prompts / probe sostituiti se dati). Ogni braccio gira in una tempdir propria, con un agente
+ * NUOVO se opts.agentFactory è dato (una sessione-modello fresca per braccio: il secondo braccio non deve sapere
+ * del primo). Esito: `passed` = tutti i bracci passano i propri assert; `invariant` = gli stdout di `probe`
+ * coincidono fra i bracci (null se non c'è probe) — è il segnale di norm-invariance, e lo si esige con
+ * `pair.require_invariant: true`. Per le coppie a CONTRASTO (P-COPPIA del playbook: in un braccio il fenomeno
+ * c'è, nell'altro no) bastano gli assert per-braccio: sono loro a dire che la cerimonia non deve comparire.
+ */
+export async function runPair(spec, opts = {}) {
+  const pair = spec.pair;
+  if (!pair?.arms?.length) throw new Error("runPair: spec.pair.arms mancante");
+  const arms = [];
+  for (const arm of pair.arms) {
+    const s = {
+      ...spec,
+      setup: [...(spec.setup ?? []), ...(arm.setup_extra ?? [])],
+      turns: arm.turns ?? spec.turns, asserts: arm.asserts ?? spec.asserts,
+      prompts: arm.prompts ?? spec.prompts, probe: arm.probe ?? spec.probe,
+    };
+    delete s.pair;
+    const agent = opts.agentFactory ? opts.agentFactory(arm) : opts.agent;
+    const r = await runScene(s, { ...opts, agent });
+    arms.push({ name: arm.name ?? String(arms.length), ...r });
+  }
+  const outs = arms.map((a) => a.probeOut);
+  const invariant = outs.every((o) => o != null) ? outs.every((o) => o === outs[0]) : null;
+  const passed = arms.every((a) => a.passed) && (pair.require_invariant ? invariant === true : true);
+  return { vary: pair.vary ?? null, arms, invariant, passed };
 }
 
 // --- CLI (invariata per run-all.mjs): node run-spec.mjs <spec.json> [--agent "<bash>"] ---
