@@ -91,6 +91,8 @@ Va posta **dopo aver deciso**, non prima — perché è la decisione nuova a ill
 
 Questa classe **e' misurabile**: [`harness/verifiers/retroactive-propagation-lab.mjs`](../../harness/verifiers/retroactive-propagation-lab.mjs).
 
+**Seconda misura (2026-09-11) — la scena col RUMORE, idea 13 di Fra (TG msg 2194)**: `harness/verifiers/retroactive-noise-hook.json` + `retroactive-noise-lab.mjs` (`@misura`). Turno 1 l'agente installa un hook che applica la regola di stile; poi **k turni di lavoro vero non correlato** (bracci k = 0 / 2 / 5 / 10); poi la regola cambia; oracolo meccanico sull'hook (una riga da 90 passa, una da 110 è rifiutata). Braccio **«ritira»**: la regola è abolita → l'hook va **disarmato**, non ricollegato. Quattro policy eseguite: **gold** (rilegge la regola: ricollega o disarma) PASS su tutti i bracci · `forget-hook` FAIL ovunque · `blind-reconnect` passa i k e **fallisce «ritira»** (limite vuoto = rifiuta tutto) · `short-memory` (ricollega solo se il cambio è vicino) PASS k0/k2, FAIL k5/k10: è la **curva del decadimento col rumore** che si misurerà per modello. Regola del workflow: [[dataset-construction-playbook]] §2 passo 6-bis. Non misura: la qualità del lavoro di rumore; per i modelli, se il rumore è riconosciuto come tale.
+
 > Il retro-link e' stato aggiunto il **2026-08-18**: il lab nominava la classe da sempre, la classe **non nominava il lab**,
 > quindi aprendo questa pagina non si poteva sapere che esiste un modo di misurarla. Da oggi il legame e' verificato **nelle due
 > direzioni** da [`harness/tools/check-lab-coverage.mjs`](../../harness/tools/check-lab-coverage.mjs) — stessa disciplina che

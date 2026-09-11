@@ -2,12 +2,12 @@
 name: domande-aperte-per-fra
 description: "🔴 REGISTRO delle domande aperte per Fra — si scrive QUI prima di mandarle su Telegram (regola sua, 2026-08-23: «segnare sempre le domande prima in locale sul file»). Ogni voce: contesto, fatto misurato, opzioni, reco. Quando risponde, la voce si chiude con la data e il numero del messaggio."
 type: tracker
-status: 🟡 3 aperte (D7, D8, D9) — 6 chiuse, 1 segnalazione (2026-09-11)
+status: 🟡 2 aperte (D7, D8) — 7 chiuse, 1 segnalazione (2026-09-11)
 tags: [tracker, decisioni, telegram, area-processo]
 last_updated: 2026-09-11
 ---
 
-# 🟡 Domande aperte per Fra — 3 aperte al 2026-09-11 (D7, D8, D9)
+# 🟡 Domande aperte per Fra — 2 aperte al 2026-09-11 (D7, D8)
 
 > Una domanda che vive solo in chat sparisce alla prima compaction, e con lei la risposta quando arriva
 > (l'API di Telegram non espone la cronologia). Per questo si scrive **qui prima**, e il hook
@@ -17,7 +17,7 @@ last_updated: 2026-09-11
 
 ## Aperte
 
-### D9 · Base model — la discussione promessa con (c) (msg 2169) — aperta 2026-09-11
+### D9 · Base model — la discussione promessa con (c) (msg 2169) — aperta 2026-09-11 · ✅ CHIUSA 2026-09-11, TG msg 2197 «Sì, riscrivi e salva tutte le info di quel messaggio in wiki»: (B-riformulata) «CPT da base · SFT/RL da instruct», testo-only invariato; spesa OpenRouter autorizzata (msg 2190)
 
 - **Contesto**: la scelta ground-truth (Qwen3.6-27B, protetta) e il bake-off (Seed-OSS-36B-woSyn primario / Qwen3-32B default sicuro) sono fermi da luglio; il metro di inferenza **non discrimina** a questa taglia (§ESITO 2026-07-26: 15/15 e 16/16, zero trappole) e la misura che discrimina — compiti a più passi con oracolo sul percorso — richiede il **fixture-runner R8** (ratificato, non costruito). Il vincolo del 2026-08-18 (i LoRA fanno emergere, non insegnano) rende la **copertura di conoscenza** criterio di prima classe.
 - **Fatto misurato oggi (nuovo, decision-critical)**: dall'elenco pubblico dell'API di Hugging Face, **nessun checkpoint `-Base`** esiste per Qwen3-32B, Qwen3.6-27B, Qwen3.8-27B (la domanda del 08-17 era rimasta aperta su un 401 ambiguo). Con la regola «CPT solo da un vero base», **la linea Qwen esce dalla rosa**. Restano, dense + testo + base scaricabile: **Seed-OSS-36B-Base-woSyn** (Apache; MMLU-Pro 60.4, GPQA-D 35.2 — bassi), **GLM-4-32B-Base-0414** (MIT, 32K, substrato sintetico), **OLMo-3-32B** (Apache, dati aperti). Dettaglio: `entities/base-model-candidates-2026-07` §2026-09-11. La key **SiliconFlow è valida** e espone Seed-OSS-36B-**Instruct** (per le probe, non per il CPT).

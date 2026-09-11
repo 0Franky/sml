@@ -9,6 +9,8 @@ last_updated: 2026-05-21
 
 # Adversarial Needle-in-Haystack Training
 
+> **Agg. 2026-09-11 — la forma-lab esiste.** Fra (TG msg 2194/2198/2199) ha ri-proposto l'idea come *«laboratori con rumore di lunghezza variabile attorno alle informazioni»* e ricordato che *«un accenno dovrebbe esserci sull'ago nel pagliaio»*: è questa pagina. Ora è un **asse del workflow** di costruzione dei lab ([[../training-taxonomy/dataset-construction-playbook]] §2 passo 6-bis) e ha una prima scena eseguibile: `harness/verifiers/retroactive-noise-hook.json` (hook installato → k turni di lavoro vero → la regola cambia → l'hook va ricollegato, o disarmato se la regola è abolita), lab `retroactive-noise-lab.mjs` con la policy `short-memory` che disegna la curva del decadimento su k. Differenza dal regime descritto qui sotto: là il rumore è **nel contesto** (token), qui è **nei turni** (lavoro): sono i due assi dello stesso pagliaio.
+
 ## Trigger utente (2026-05-21)
 
 > "Altra categoria che vorrei supportare: azione ago nel pagliaio → in una chat 1M context, sporcare contesto e metterci (a ogni step/epoch in posizione diversa) e tanto testo sporco tra la richiesta di azione e la risposta che deve produrre il modello → forzare a ricordare anche con tanto contesto in mezzo da una richiesta esplicita e forte e con rumore in mezzo."
