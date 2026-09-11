@@ -1,20 +1,36 @@
 ---
 name: 2026-08-25-nona-radice-architettura-informazione
-description: "⏳ ATTENDE DECISIONE UTENTE dal 2026-08-25 — Le sue richieste I e J (semi-strutturazione dell'informazione · redesign da UI disordinata) sono UNA classe con due facce, non due classi. Ma nessuna delle 8 radici della tassonomia la contiene, e appenderla alla famiglia visiva sarebbe l'errore di coerenza-di-radice. Proposta: una NONA RADICE, «architettura dell'informazione». Documento self-contained scritto su sua richiesta esplicita («non ricordo di cosa si tratta, fammi un file dove mi spieghi tutto secondo il protocollo di comunicazione»)."
+description: "✅ DECISA 2026-09-11 — nona radice CREATA (utente TG msg 2154: «I + j ok tua reco nona radice»). Le sue richieste I e J (semi-strutturazione dell'informazione · redesign da UI disordinata) sono UNA classe con due facce, non due classi. Ma nessuna delle 8 radici della tassonomia la contiene, e appenderla alla famiglia visiva sarebbe l'errore di coerenza-di-radice. Proposta: una NONA RADICE, «architettura dell'informazione». Documento self-contained scritto su sua richiesta esplicita («non ricordo di cosa si tratta, fammi un file dove mi spieghi tutto secondo il protocollo di comunicazione»)."
 type: decision
-status: ⏳ ATTENDE DECISIONE UTENTE — aperta il 2026-08-25
+status: ✅ DECISA 2026-09-11 — opzione 1 (nona radice) scelta dall utente; classi create
 tags: [decisione, tassonomia, radice, frontend, information-architecture, area-processo]
 sources:
   - utente TG msg 2088 (2026-08-17) — le richieste I e J
   - utente TG msg 2146/2147 (2026-08-25) — «per I più J non ricordo di cosa si tratta, mi serve una file dove mi spieghi tutto secondo il protocollo di comunicazione»
-last_updated: 2026-08-25
+last_updated: 2026-09-11
 ---
 
-# ⏳ I + J e la nona radice — tutto quello che serve per decidere
+# ✅ I + J e la nona radice — tutto quello che serve per decidere
 
 > **Perche' questo file esiste**: l'hai chiesto tu, e la ragione che hai dato e' *«non ricordo di cosa si tratta»*.
 > Quindi e' scritto per essere letto **da solo**, dal telefono, **senza aprire altro** e senza ricostruire niente.
 > Se una frase qui dentro ti obbliga ad andare a cercare qualcos'altro, il documento ha fallito il suo scopo.
+
+---
+
+## ✅ ESITO — deciso il 2026-09-11
+
+**Scelta: opzione 1, la nona radice.** Provenienza citabile (#26): utente TG **msg 2154**, testuale — *«I + j ok tua reco nona radice»*.
+
+**Creato lo stesso giorno**:
+- [[../training-taxonomy/class-information-architecture]] — la **nona radice**: *quali elementi formano un'unita', e a quale livello*;
+- [[../training-taxonomy/class-information-presentation-structure]] — la figlia con le **due facce** (dal contenuto alla forma · dalla forma sbagliata al contenuto), col fallimento proprio della seconda (**ancoraggio alla forma esistente**) e il perno che specializza il padre: il **percorso di lettura** di chi riceve.
+
+**Verificato**: `check-hierarchy` conta ora **9 radici**, 77 classi, **0 legami rotti**.
+⚠️ **Ratificato il PLACEMENT, non il CONTENUTO** — entrambe le classi dichiarano fixture e scorer **non costruiti**: non sono usabili per il training.
+⚠️ **Rischio dichiarato dentro la radice**: con **una sola** figlia e' a rischio *«ombrello vuoto»* (#20). E' giustificata dal transfer sui cinque domini, ma **se fra qualche mese la seconda figlia non e' nata, va ri-discussa invece di restare per inerzia.**
+
+> ⚠️ **Le sezioni 6 e 8 qui sotto sono SUPERATE dall'esito** — le lascio **invariate di proposito**: dicevano *«non l'ho creata»* e *«la decisione che serve»*, ed erano vere **quando sono state scritte**. Cancellarle nasconderebbe che **c'e' stata una scelta**, che e' l'informazione piu' utile fra un mese. *(E' la faccia «segna la deviazione senza riscrivere la storia» di [[../training-taxonomy/class-design-artifact-lifecycle]] — applicata a questo stesso file.)*
 
 ---
 
