@@ -27,6 +27,7 @@ last_updated: 2026-09-11
 - **Cosa la ribalterebbe**: un `-Base` Qwen che compare (ricontrollo con la stessa query prima del bake-off), o una sua scelta per (B).
 - 👉 **Domande**: (1) (A), (B) o (C)? (2) ok all'ordine e alla spesa di pochi dollari per le probe di calibrazione, quando (1) è pronto? (3) il vincolo testo-only resta?
 - **Risposta parziale (TG msg 2190, 2026-09-11 19:48)**: *«su OpenRouter dovrei avere sette dollari di credito almeno: usali al meglio»* → **spesa autorizzata** sul credito OpenRouter (tetto ≈ 7 $, da verificare via API) per le scene sui candidati; in più chiede di provare **anche il braccio `ours`** (il nostro harness e context engineering) e di chiudere la shell ollama se non serve. **Restano aperte** (1) e (3).
+- **TG msg 2192 (20:16)**: Fra chiede *«base (pre-instruct) o Qwen3.8-27B dense instruct? cosa cambia, qual è la strada migliore?»* → risposta data (dettaglio in `entities/base-model-candidates-2026-07` §2026-09-11 «Base o instruct?»): la regola presuppone un CPT vero che il piano non ha mai dimensionato; i nostri dati sono di scala SFT/RL; il gap base→instruct (Seed-OSS: +22 MMLU-Pro, +36 GPQA-D) è post-training irriproducibile → **reco: «CPT da base · SFT/RL da instruct»**, Tier-1 da instruct dense, scelta fra instruct per misura (scene prima/dopo SFT ridotto), prerequisito test LoRA sull'ibrido col 4B locale. 👉 chiede a Fra di confermare la riformulazione di (B) e il testo-only.
 
 ### D8 · Ratifica delle tre proposte scritte dal batch 2026-09-11 (idee 4, 5, 9) — aperta 2026-09-11
 
