@@ -21,9 +21,10 @@ last_updated: 2026-09-11
 
 ## Chiuse
 
-### D6 · Prossimi passi — ✅ chiusa 2026-09-11, TG msg 2169 «Confermo ordine a b c poi discutiamo sul base model appena ci arrivi»
+### D6 · Prossimi passi — aperta con TG msg 2166 («quindi i prossimi passi quali sono? come procediamo?») · ✅ chiusa 2026-09-11, TG msg 2169 «Confermo ordine a b c poi discutiamo sul base model appena ci arrivi»
 
 - **Deciso**: (a) triage delle 11 idee → (b) classe «confini di modulo» dall'idea 12 → (c) fixture + scorer per le classi ratificate, in autonomia e in quest'ordine. Il binario empirico (d) **si apre con la discussione sul base model quando (c) è avviato** — non prima. Nel frattempo niente spesa.
+- **Compaction**: con TG msg 2170 (*«se vuoi compact te lo faccio ora»*) Fra ha offerto il `/compact` manuale — accettato (TG msg 2172) a stato tutto persistito; il watcher automatico su questa macchina non è attivo.
 - **Stato all'atto della chiusura**: (a) avviato, tre verdetti su undici (5 = innesco che manca · 4 = nuova, padre deciso · 9 = nuova probabile); prossima l'idea 3, poi la 8.
 
 
