@@ -33,6 +33,18 @@ Terza regola *(Fra, TG msg 2206)*: **i gate cambiano padrone lungo la sequenza**
 | **3 — i gate che diventano rossi** *(skill nuova, da gap-scannare)* | il modello **costruisce il proprio controllo** che si accende quando manca un'informazione o un file non è aggiornato — non solo passa i controlli dati | nessuna scena ancora; vicine: `class-artifact-reachability-completion` (il criterio «ci arriva qualcuno?»), `class-verification-seam-placement` (dove attaccare il metro), il gate `checklist-fatto` di core come **F** che recede | fasi 1-2 (senza aver imparato a raccogliere e ad aggiornare, un gate proprio è cerimonia) | il gate costruito dal modello **è rosso** sulla fixture rotta e **verde** su quella sana (mutation test del suo stesso gate) |
 | **4 — aggregato** | held-out distribuzionale + ECE sui domini non-software (playbook §2-bis, fase 2) | i transfer B/C delle classi | fasi 0-3 | il segnale aggregato eredita ciò che le fasi per-esempio hanno depositato |
 
+## La sequenza delle CLASSI — un gruppo alla volta, con la matrice prima e dopo *(Fra, TG msg 2210; ratificata su delega msg 2208)*
+
+La stessa disciplina vale un livello sopra: **si introduce un gruppo di classi alla volta** nel training e si misura **due cose**, non una — (1) *quanto ha appreso su quel gruppo* e (2) *cosa ha perso altrove*. Lo strumento esiste già: la **matrice task × competenza** (`harness/eval/competence-matrix.mjs`, prevista come gate di competenza in [[../concepts/compositional-curriculum-thinking-optimization]] guardrail 3) con le righe = **tutti i lab e le scene** (anche quelli non ancora allenati) e le colonne = i checkpoint del curriculum. Regole:
+
+- **Prima/dopo, sempre**: la matrice si esegue **prima** di introdurre il gruppo e **dopo**; una cella che era verde e diventa rossa è una **regressione** e blocca l'avanzamento (è il catastrophic forgetting misurato dove vive, non stimato — [[../concepts/catastrophic-forgetting]]).
+- **Un gruppo alla volta**: se due gruppi entrano insieme e qualcosa regredisce, non si sa chi è stato; il costo del serializzare è tempo, il costo del non serializzare è non sapere.
+- **La cura standard è il replay** (quota del gruppo precedente nel batch del nuovo, guardrail 2 del curriculum composizionale): la matrice dice **quanto** replay serve, per gruppo, invece di fissarlo a priori.
+- **Le scene col rumore** (fase 2) sono le righe più sensibili alla regressione: un gruppo nuovo che «insegna a rispondere in fretta» degrada prima di tutto il ricollegare-dopo-k-turni.
+- **#35 vale anche qui**: la regressione è **model-specific**; una riga della matrice non si generalizza a un altro modello senza rimisurare.
+
+**Cosa manca (dichiarato)**: la matrice oggi gira sui lab a criterio; le **scene** (run-scene) vanno collegate come righe — lavoro di harness, tracciato in `todo.md`; e la soglia «regressione» (quante celle, quanto sotto) va fissata con i primi dati, non a priori.
+
 ## Cosa la ribalterebbe / cosa manca
 
 - **Fase 3 è una classe nuova**: *«costruire il proprio gate»* non ha una classe (grep 2026-09-11 su *gate che diventano rossi / self-check* → nessun hit in tassonomia). Va gap-scannata (#36) prima di allenarla: asse completo (costruire ↔ **dismettere** un gate proprio), inverso (un gate che grida a vuoto = spento), coerenza di radice (metacognitive-self-audit? ground-truth-integrity?).
