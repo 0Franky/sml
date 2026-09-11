@@ -103,7 +103,7 @@ confidence: provisional
 | **Tree/Graph-of-Thoughts** (2305.10601) | esplora rami di ragionamento | 🆕 | S+F-serving | F3 | overhead alto, casi specifici |
 | **Backtracking / stream-of-search** | il modello impara a tornare indietro nel reasoning | 🆕 | S | F3 | utile per error-recovery |
 
-🔎 **da-sweep dim-3**: reasoning 2026 (long-CoT efficiency, **latent reasoning**/Coconut, **budget-forcing**/s1, parallel-thinking, **self-verification** trainata); confidence-aware CoT; reasoning-distillation SOTA.
+✅ **sweep eseguita il 2026-09-11** (richiesta Fra, TG msg 2202; agente `ricerca-tecniche`): rapporto in `wiki/_private/research-sweep-2026-09-11.md` (gitignored, 201 righe, **65 ID arXiv** con pagina abs aperta, 9 problemi coperti, 3 «non trovato con queste parole» dichiarati). **Verifica a campione mia** (4/4 combaciano con l'abstract): `2603.06621` *Reward Under Attack* (PRM appresi = detector di fluenza: 43% del reward da stile, accuratezza <4% con reward >0.9) · `2605.26438` *LURE* (prefisso di log reali + coda di valutazione → meno eval-awareness) · `2609.01217` *Prompt-Robust LMs* (un solo template per batch batte i metodi complessi) · `2606.12941` *Multi-Turn Reasoning When Context Arrives in Pieces* (sharding di QA in episodi a turni = label-gen per il rumore). ⛔ **Nessuna voce entra nel catalogo finché non è triata una per una** (residuo del rapporto: [V] solo sugli abstract, non sui PDF). Le 5 raccomandazioni dell'agente sono tracciate in `todo.md`. 🔎 *(era)* **da-sweep dim-3**: reasoning 2026 (long-CoT efficiency, **latent reasoning**/Coconut, **budget-forcing**/s1, parallel-thinking, **self-verification** trainata); confidence-aware CoT; reasoning-distillation SOTA.
 
 ---
 

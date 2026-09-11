@@ -21,6 +21,8 @@ last_updated: 2026-09-11
 
 Seconda regola: **la fase n non può richiedere una skill che si allena nella fase n+1** — le dipendenze sotto sono esplicite proprio per questo.
 
+Terza regola *(Fra, TG msg 2206)*: **i gate cambiano padrone lungo la sequenza**. Nelle fasi 0-2 i gate sono **nostri** — sono gli assert della fixture: il modello non li vede, noi li usiamo come **metro** per dire se ha svolto il compito (aggiornato tutti i file, ricollegato l'hook). Nella fase 3 i gate diventano **suoi**: impara a costruirli. Il passaggio ha un test proprio: **il gate costruito dal modello concorda col nostro** (rosso dove il nostro è rosso, verde dove è verde) — così la fase 3 non può premiare un gate decorativo. È una fase a sé, fra la 2 e la 4, non un'appendice della 2.
+
 ## Le fasi (ordine proposto)
 
 | fase | cosa si allena | lab/scene di oggi | dipende da | misura |
