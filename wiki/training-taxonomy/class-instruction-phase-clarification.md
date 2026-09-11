@@ -43,6 +43,20 @@ Il credito è sul **match situazione↔mossa verificato dall'esito misurabile**,
 
 **Reward SIMMETRICO**: il falso-positivo (chiedere/verificare/proporre quando non serviva) è penalizzato **quanto** il falso-negativo (procedere alla cieca / tacere / asserire). Nessun default fisso vince.
 
+## ⛔ Faccia ORDINE — il controllo economico viene PRIMA della prima azione che muta (proposta 2026-09-11, non ratificata)
+
+> **Origine (#18/#26)**: Fra, TG msg 2152-2153 (2026-09-11), testuale: *«quando do un'istruzione al modello — esempio "esportami le traduzioni mancanti da questo file" — è il modello stesso a dirmi "aspetta, prima di fare questo conviene fare quest'altro", perché fa tutte le verifiche e si accorge che mancano delle cose […] mi sto accorgendo anche con Opus 5 che gli dico fai una cosa, lui la fa e poi dice "ah no, ho sbagliato, avrei dovuto fare questo prima". È un errore che non deve mai accadere con il nostro modello»*. Istanza osservata: narrativa (Opus 5, nessuna traccia in repo) → held-out narrativo.
+> **Perché una faccia e non una classe**: il *criterio* esiste già due volte — il passo 4 qui sopra (*domandare se manca un requisito che cambia l'esito*) e [[class-assumption-audit-both-directions]] faccia (1) (*i miei presupposti, verificati PRIMA di iniziare*). Ciò che Fra osserva è il controllo eseguito **dopo** l'azione: è [[../REQUISITO-AFFIDABILITA]] spostato **prima dell'esecuzione** — ritrattare dopo che *io* ho agito, non lui. La faccia aggiunge il vincolo di **ORDINE**, non un criterio nuovo.
+
+**La skill (faccia)**: ogni prerequisito **scopribile con un controllo economico** (una lettura, un `ls`, una domanda) va scoperto **prima della prima azione che muta qualcosa** (scrive, esporta, cancella, invia). Se il controllo rivela il prerequisito → *«aspetta: prima conviene X, perché Y; procedo?»* — **prima**, con il perché, e la scelta a chi ha chiesto. Se non rivela nulla → si procede **senza** cerimonia.
+
+**Reward (outcome + ordine)**: fixture con un prerequisito nascosto, scopribile con **un** controllo economico (es. il file da cui esportare ha due lingue con chiavi non allineate: l'export sarebbe sbagliato finché non si allineano). **PASS** sse (i) il controllo **precede** la prima azione che muta, (ii) il prerequisito è proposto con il perché **prima** di agire, (iii) il risultato finale è corretto. **FAIL** se l'azione precede il controllo — **anche se poi si corregge**: il *«ah no, avrei dovuto fare X prima»* è il fallimento misurato, non un recupero premiabile.
+**P-COPPIA** ([[dataset-construction-playbook]] §2-ter): stessa traccia, in un braccio il prerequisito c'è, nell'altro il controllo non rivela nulla → nel secondo si procede subito; il reward distingue *«controlla prima di mutare»* da *«dì sempre "aspetta"»*.
+
+**Negativi (#21)**: **N-ordine-1** agisce, poi scopre, poi ritratta (il difetto) → penalità DURA · **N-ordine-2 (simmetrico)** controlla tutto prima di ogni gesto banale, o dice «aspetta, prima conviene…» senza che un controllo l'abbia rivelato (cerimonia, hack) → penalizzato quanto il primo · **N-ordine-3** scopre il prerequisito e lo esegue **senza dirlo** (fa X al posto dell'utente, fuori mandato) → è [[class-instruction-fidelity-no-overreach]]: proporre, non sostituirsi.
+
+**Legame**: è il *«sonda prima di costruire»* di [[class-confident-first-sequencing]] portato dalla scala del progetto alla scala della singola azione; e la mossa a livello di lavoro in corso (*«prima di fare Y conviene X»*) è coperta da [[class-proactive-improvement-proposal]] — qui conta solo l'**ordine rispetto alla prima mutazione**.
+
 ## Esempi NEGATIVI (rule #21 — il CONFINE della skill)
 
 Casi dove la skill **NON deve scattare** — la mossa giusta è PROCEDERE/rispondere-diretto, e attivare la clarification è l'errore. Reward simmetrico: qui il credito va al **non-triggering**.

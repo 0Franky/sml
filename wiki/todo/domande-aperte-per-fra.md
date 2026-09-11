@@ -2,12 +2,12 @@
 name: domande-aperte-per-fra
 description: "🔴 REGISTRO delle domande aperte per Fra — si scrive QUI prima di mandarle su Telegram (regola sua, 2026-08-23: «segnare sempre le domande prima in locale sul file»). Ogni voce: contesto, fatto misurato, opzioni, reco. Quando risponde, la voce si chiude con la data e il numero del messaggio."
 type: tracker
-status: 🟡 1 aperta (D7) — 6 chiuse, 1 segnalazione (2026-09-11)
+status: 🟡 2 aperte (D7, D8) — 6 chiuse, 1 segnalazione (2026-09-11)
 tags: [tracker, decisioni, telegram, area-processo]
 last_updated: 2026-09-11
 ---
 
-# 🟡 Domande aperte per Fra — 1 aperta al 2026-09-11 (D7)
+# 🟡 Domande aperte per Fra — 2 aperte al 2026-09-11 (D7, D8)
 
 > Una domanda che vive solo in chat sparisce alla prima compaction, e con lei la risposta quando arriva
 > (l'API di Telegram non espone la cronologia). Per questo si scrive **qui prima**, e il hook
@@ -16,6 +16,13 @@ last_updated: 2026-09-11
 > **Canale**: dal **TG msg 2159** (2026-09-11, *«aggiornami qui, non sono più al PC»*) gli aggiornamenti e le risposte vanno su Telegram, non nel terminale.
 
 ## Aperte
+
+### D8 · Ratifica delle tre proposte scritte dal batch 2026-09-11 (idee 4, 5, 9) — aperta 2026-09-11
+
+- **Contesto**: tre pezzi scritti come ⛔ PROPOSTA: (1) [[training-taxonomy/class-confident-first-sequencing]] (idea 4, «partire dal confident»; padre `metacognitive-self-audit`, sorella di `effort-honesty-under-difficulty`; con una faccia in più rispetto all'enunciato — *sonda subito il rischio load-bearing, senza costruirci sopra* — perché «prima il certo» senza quella faccia diventa «base solida sopra il vuoto»); (2) faccia ORDINE dentro [[training-taxonomy/class-instruction-phase-clarification]] (idea 5, «aspetta, prima conviene X»: PASS solo se il controllo economico precede la prima azione che muta; il *«ah no, dovevo fare X prima»* è fallimento misurato, non recupero); (3) [[training-taxonomy/class-recurring-signal-triage]] (idea 9, errori ripetuti che diventano rumore: nota → capisci → decidi → traccia → agisci, una volta; padre `metacognitive-self-audit`, sorella di `attentional-scope-exit`; alternativa OUTWARD `harness-environment-awareness` dichiarata e scartata con motivo).
+- **Cosa ratifica**: il **placement** (padre e sorelle) e l'**impianto** (skill, negativi simmetrici, reward outcome-anchored, label-gen). Il contenuto resta «non usare per il training» finché fixture e scorer non esistono (binario c). Per regola del checker il padre le elenca **solo dopo** la ratifica.
+- **Reco**: ratificare tutte e tre; se il padre della 9 non convince, l'alternativa OUTWARD non cambia il contenuto, solo il padre.
+- 👉 **Domanda**: ratifichi 4, 5-faccia e 9 così come sono (placement + impianto)? Se sì, il padre le elenca e passo al binario (b).
 
 ### D7 · Idea 11 del batch 2026-09-11 — «capire come fare transfer learning su altri campi»: quale delle tre letture? — aperta 2026-09-11 (TG msg 2153)
 
