@@ -1,9 +1,9 @@
 ---
 name: steering-vectors
-description: Esplorazione di activation steering / representation engineering per il progetto SLM. Cosa sono, tecniche di estrazione, 8 aree di applicazione mappate sul progetto, le 3 più promettenti, tradeoff vs LoRA, rischi. Da nota utente 2026-06-23.
+description: Esplorazione di activation steering / representation engineering per il progetto SLM. Cosa sono, tecniche di estrazione, 9 aree di applicazione mappate sul progetto (la 9ª, 2026-09-11, steering come segnale avversario di training), le 3 più promettenti, tradeoff vs LoRA, rischi. Da nota utente 2026-06-23.
 type: concept
 tags: [steering-vectors, activation-steering, representation-engineering, inference-time-control, reasoning-control, safety, exploratory]
-last_updated: 2026-06-23
+last_updated: 2026-09-11
 status: exploratory — esplosione concetto su richiesta utente, da prioritizzare in Wave
 confidence: provisional
 ---
@@ -42,7 +42,7 @@ dove `v_ℓ` è il vettore di steering al layer ℓ e α la forza (positiva = ve
 - Refusal direction — "Refusal in Language Models Is Mediated by a Single Direction" (Arditi et al. 2024)
 - ITI — "Inference-Time Intervention: Eliciting Truthful Answers from a Language Model" (Li et al. 2023)
 
-## 3. Le 8 aree di applicazione (mappate sul progetto)
+## 3. Le 9 aree di applicazione (mappate sul progetto)
 
 | # | Applicazione | Asse di steering | Collega a |
 |---|---|---|---|
@@ -54,6 +54,9 @@ dove `v_ℓ` è il vettore di steering al layer ℓ e α la forza (positiva = ve
 | 6 | **Anti-sycophancy** | compiacente ↔ critico oggettivo | meta-allineato alla regola "critica oggettiva no piaggeria" |
 | 7 | **Aderenza al formato strutturato** | libero ↔ structured-context format | [[structured-context-sections]], [[structured-thinking]] |
 | 8 | **Persona / tono operativo** | stile risposta (conciso, formale...) | wrapper UX |
+| 9 | **Steering come segnale AVVERSARIO di training** (steering awareness + scissione operatività↔condizionamento) | iniettato ↔ pulito, a intensità variabile | idea Fra 2026-09-11 (TG msg 2153); gap bias-vs-pertinenza (todo, batch 2026-08-25 riga 11c); padre proposto [[../training-taxonomy/class-metacognitive-self-audit]] |
+
+> **Agg. 2026-09-11 — area 9, verificata su fonti primarie.** Origine: concept injection di Anthropic (Lindsey, *Emergent Introspective Awareness*, 29 ott 2025: Opus 4.1 nota e nomina il concetto iniettato in ~20% dei trial al layer e all'intensità ottimali; a intensità alta ne è «consumato»). La detection è **addestrabile**: *Steering Awareness* (arXiv:2511.21399) — 95.5% detection, 71.2% identificazione, 0 falsi positivi, generalizza a concetti held-out — **ma non conferisce resistenza: i modelli addestrati a rilevarlo sono più steerabili dei base**. Qwen 32B ha già il segnale latente e lo nega in output (arXiv:2602.20031). Lo steering è off-manifold rispetto a qualunque prompt (arXiv:2604.09839): l'«intensità anomala» è un fatto geometrico, e un'iniezione di attivazione non è un prompt-injection. Per noi: **label-gen a ground-truth noto** per il gap bias-vs-pertinenza, coppia iniettato/pulito sulla stessa traccia, **reward sull'esito del braccio pulito, mai sul report** (altrimenti si compra il tic e non la separazione — è ciò che il paper ha misurato). Residuo: il transfer da spinte off-manifold a bias on-manifold non è stabilito. Solo a training time (forward hook, pesi aperti). Numeri e verdetto: `wiki/todo.md` «BATCH IDEE 2026-09-11», riga 7.
 
 ## 4. Le 3 più promettenti per il progetto
 

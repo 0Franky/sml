@@ -2,12 +2,12 @@
 name: domande-aperte-per-fra
 description: "🔴 REGISTRO delle domande aperte per Fra — si scrive QUI prima di mandarle su Telegram (regola sua, 2026-08-23: «segnare sempre le domande prima in locale sul file»). Ogni voce: contesto, fatto misurato, opzioni, reco. Quando risponde, la voce si chiude con la data e il numero del messaggio."
 type: tracker
-status: ✅ nessuna domanda aperta — 6 chiuse, 1 segnalazione (2026-09-11)
+status: 🟡 1 aperta (D7) — 6 chiuse, 1 segnalazione (2026-09-11)
 tags: [tracker, decisioni, telegram, area-processo]
 last_updated: 2026-09-11
 ---
 
-# ✅ Domande aperte per Fra — nessuna al 2026-09-11
+# 🟡 Domande aperte per Fra — 1 aperta al 2026-09-11 (D7)
 
 > Una domanda che vive solo in chat sparisce alla prima compaction, e con lei la risposta quando arriva
 > (l'API di Telegram non espone la cronologia). Per questo si scrive **qui prima**, e il hook
@@ -17,7 +17,12 @@ last_updated: 2026-09-11
 
 ## Aperte
 
-*(nessuna)*
+### D7 · Idea 11 del batch 2026-09-11 — «capire come fare transfer learning su altri campi»: quale delle tre letture? — aperta 2026-09-11 (TG msg 2153)
+
+- **Contesto**: la riga è una sola e ammette tre letture: (a) transfer **degli esempi** cross-dominio nel dataset → già regola #19, in vigore su ogni classe; (b) transfer learning **in senso ML** — riusare pesi/LoRA del Tier 1 su altri verticali → è la three-tier stessa (LoRA verticali); (c) una **skill del modello**: portare attivamente una lezione da un campo a un altro (trasferimento analogico) — in tassonomia c'è il guardiano (`training-taxonomy/gold-example-transfer-assumption-audit`: *quando trasferisci, audita i presupposti*) ma non la mossa.
+- **Fatto misurato**: grep «analogi» in `wiki/training-taxonomy` → solo occorrenze incidentali (esempi «ereditati per analogia»), nessuna classe.
+- **Reco**: se (c), è un gap probabile e va gap-scannato contro `class-metacognitive-self-audit` e `class-consequence-intention-conflict` prima di scrivere; se (a) o (b), nulla da fare.
+- 👉 **Domanda**: intendevi (a), (b) o (c)?
 
 ## Chiuse
 
