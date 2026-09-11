@@ -1,8 +1,8 @@
 ---
 name: lab-sequence
-description: "⛔ PROPOSTA (2026-09-11, non ratificata) — la SEQUENZA dei laboratori come curriculum: in quale ordine si allenano le scene, quali dipendono da quali, e la regola perché una fase non pesti i piedi all'altra. Richiesta di Fra (TG msg 2200): «prima la fase di gathering, poi l'aggiornamento dei dati, poi i gate che diventano rossi; specificare bene tutte le fasi per non farsi pestare i piedi a vicenda». Poggia su compositional-curriculum (skill isolate → composizione a finestra), playbook §2-bis (per-esempio prima, aggregato dopo) e curriculum-stages-detail (i 5 stadi di training): questa pagina è il livello dei LAB, che quelle pagine non hanno."
+description: "✅ RATIFICATA su delega 2026-09-11 (Fra, TG msg 2208) — la SEQUENZA dei laboratori come curriculum: in quale ordine si allenano le scene, quali dipendono da quali, e la regola perché una fase non pesti i piedi all'altra. Richiesta di Fra (TG msg 2200): «prima la fase di gathering, poi l'aggiornamento dei dati, poi i gate che diventano rossi; specificare bene tutte le fasi per non farsi pestare i piedi a vicenda». Poggia su compositional-curriculum (skill isolate → composizione a finestra), playbook §2-bis (per-esempio prima, aggregato dopo) e curriculum-stages-detail (i 5 stadi di training): questa pagina è il livello dei LAB, che quelle pagine non hanno."
 type: concept
-status: ⛔ PROPOSTA 2026-09-11 — attende ratifica (#26/#34); nessun lab è stato ancora riordinato
+status: ✅ RATIFICATA su delega 2026-09-11 (Fra, TG msg 2208 «carta bianca, ratifica come meglio credi»); nessun lab è stato ancora riordinato; la fase 3 va gap-scannata prima di diventare classe
 tags: [curriculum, labs, sequencing, composition, proposta]
 sources:
   - utente TG msg 2200 (2026-09-11) — la richiesta
@@ -11,7 +11,7 @@ sources:
 last_updated: 2026-09-11
 ---
 
-# ⛔ La sequenza dei laboratori — proposta
+# ✅ La sequenza dei laboratori — ratificata su delega (msg 2208)
 
 > **Perché una pagina a sé**: [[../concepts/compositional-curriculum-thinking-optimization]] dice *come* si compone (skill isolate, poi 1+2, 2+3, poi 1+2+3), [[dataset-construction-playbook]] §2-bis dice *quando* si misura (per-esempio prima, aggregato dopo), [[curriculum-stages-detail]] dice *in quale stadio di training* (SFT scuola → SFT coding → RL). Nessuna dice **quale lab viene prima di quale**, né cosa succede se due lab premiano comportamenti che si contraddicono. Questa pagina propone entrambe le cose; Fra ratifica.
 

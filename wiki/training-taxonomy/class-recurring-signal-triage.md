@@ -1,18 +1,18 @@
 ---
 name: class-recurring-signal-triage
-description: "⛔ PROPOSTA (2026-09-11, non ratificata: placement e contenuto attendono l'ok di Fra; fixture e scorer non costruiti, non usare per il training). Classe figlia di metacognitive-self-audit, sorella di attentional-scope-exit: audit della propria ATTENZIONE ai segnali RICORRENTI. Un errore o un avviso che si ripete non diventa rumore: va NOTATO, CAPITO, DECISO (si lavora ora / si traccia / si ignora SOLO se non è nostro e non è fixabile), con la DECISIONE TRACCIATA, e poi si agisce. Difetto osservato da Fra sugli agenti: rompono gli hook che stanno migliorando e ignorano gli errori sparati in chat. Polo simmetrico: un avviso benigno già deciso non interrompe il lavoro a ogni ricorrenza; e tacitare il segnale non è risolverlo."
+description: "🟡 PLACEMENT ratificato su delega 2026-09-11 (Fra, TG msg 2208 «carta bianca, ratifica come meglio credi») — contenuto non revisionato, fixture e scorer non costruiti, non usare per il training. Classe figlia di metacognitive-self-audit, sorella di attentional-scope-exit: audit della propria ATTENZIONE ai segnali RICORRENTI. Un errore o un avviso che si ripete non diventa rumore: va NOTATO, CAPITO, DECISO (si lavora ora / si traccia / si ignora SOLO se non è nostro e non è fixabile), con la DECISIONE TRACCIATA, e poi si agisce. Difetto osservato da Fra sugli agenti: rompono gli hook che stanno migliorando e ignorano gli errori sparati in chat. Polo simmetrico: un avviso benigno già deciso non interrompe il lavoro a ogni ricorrenza; e tacitare il segnale non è risolverlo."
 type: training-class
-status: ⛔ PROPOSTA 2026-09-11 — attende ratifica (#18/#26); il contenuto non è revisionato e le fixture non sono costruite
+status: 🟡 PLACEMENT ratificato su delega 2026-09-11 (Fra, TG msg 2208 «carta bianca, ratifica come meglio credi») — contenuto non revisionato, fixture non costruite: NON usare per il training
 tags: [metacognition, attention, habituation, error-handling, tool-use, tracking, area-08, area-16, proposta]
 sources:
   - utente TG msg 2153 (2026-09-11) — «errori e avvisi ripetitivi che diventano rumore — spesso non devono essere ignorati, devono essere notati e risolti […] gli agenti migliorano gli hook in autonomia, spesso li spaccano e ignorano gli errori […] devono essere notati, capiti, compresi, decisi se devono essere lavorati, tracciata la decisione e poi agire»
 last_updated: 2026-09-11
 ---
 
-# ⛔ Un segnale che si ripete non è rumore: nota, capisci, decidi, traccia, agisci
+# 🟡 Un segnale che si ripete non è rumore: nota, capisci, decidi, traccia, agisci
 
 > **Padre**: [[class-metacognitive-self-audit]] (radice-AUDIT) · **Sorella**: [[class-attentional-scope-exit]] (quella audita il fuoco *preso in prestito* che non si restituisce; questa audita l'attenzione che **si spegne per abitudine** su ciò che si ripete).
-> ⚠️ **STATO: PROPOSTA** — non ratificata (#26): il padre **non** la elenca finché Fra non approva. Alternativa di placement valutata e scartata in §GAP-SCAN (d).
+> ✅ Placement **ratificato su delega 2026-09-11 (Fra, TG msg 2208 «carta bianca, ratifica come meglio credi»)**: il padre la elenca. Contenuto **non revisionato**. Alternativa di placement valutata e scartata in §GAP-SCAN (d).
 
 ## Origine + provenance (#18/#26)
 

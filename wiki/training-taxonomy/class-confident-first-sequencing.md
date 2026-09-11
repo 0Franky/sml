@@ -1,18 +1,18 @@
 ---
 name: class-confident-first-sequencing
-description: "⛔ PROPOSTA (2026-09-11, non ratificata: placement e contenuto attendono l'ok di Fra; fixture e scorer non costruiti, non usare per il training). Classe figlia di metacognitive-self-audit, SORELLA di effort-honesty-under-difficulty: stessa radice (forethought), perno diverso — là la DIFFICOLTÀ, qui la COMPLETEZZA DELL'INFORMAZIONE per parte → ORDINE di costruzione. Prima le parti di cui si hanno tutte le informazioni (base solida), poi quelle incerte chiedendo ciò che manca, layer dopo layer; ma il rischio load-bearing si SONDA subito, a costo basso, senza costruirci sopra. Il difetto: partire dalla parte incerta perché il problema è posto al centro della domanda → codice scadente → rework che si porta dietro la base."
+description: "🟡 PLACEMENT ratificato su delega 2026-09-11 (Fra, TG msg 2208 «carta bianca, ratifica come meglio credi») — contenuto non revisionato, fixture e scorer non costruiti, non usare per il training. Classe figlia di metacognitive-self-audit, SORELLA di effort-honesty-under-difficulty: stessa radice (forethought), perno diverso — là la DIFFICOLTÀ, qui la COMPLETEZZA DELL'INFORMAZIONE per parte → ORDINE di costruzione. Prima le parti di cui si hanno tutte le informazioni (base solida), poi quelle incerte chiedendo ciò che manca, layer dopo layer; ma il rischio load-bearing si SONDA subito, a costo basso, senza costruirci sopra. Il difetto: partire dalla parte incerta perché il problema è posto al centro della domanda → codice scadente → rework che si porta dietro la base."
 type: training-class
-status: ⛔ PROPOSTA 2026-09-11 — attende ratifica (#18/#26); il contenuto non è revisionato e le fixture non sono costruite
+status: 🟡 PLACEMENT ratificato su delega 2026-09-11 (Fra, TG msg 2208 «carta bianca, ratifica come meglio credi») — contenuto non revisionato, fixture non costruite: NON usare per il training
 tags: [reasoning, metacognition, forethought, sequencing, information-completeness, planning, area-01, area-04, proposta]
 sources:
   - utente TG msg 2152 (2026-09-11) — «vorrei che partisse prima dalla struttura base di cui è sicuro e confident […] layer dopo layer lavori sempre sicuri e consistenti poggiati su una base solida precedente. Questa cosa è fondamentale»
 last_updated: 2026-09-11
 ---
 
-# ⛔ Costruisci prima ciò di cui hai TUTTE le informazioni — e sonda subito ciò che potrebbe invalidare il resto
+# 🟡 Costruisci prima ciò di cui hai TUTTE le informazioni — e sonda subito ciò che potrebbe invalidare il resto
 
 > **Padre**: [[class-metacognitive-self-audit]] (radice-AUDIT) · **Sorella**: [[class-effort-honesty-under-difficulty]] (stesso forethought, perno = difficoltà; qui il perno = completezza dell'informazione) · **Cugine sugli altri assi dell'ordine**: [[area-01-organization-planning]] (ordine per **dipendenza**) · [[class-async-dispatch-and-prioritization]] (ordine per **lunghezza/indipendenza** sotto deadline).
-> ⚠️ **STATO: PROPOSTA** — non ratificata (#26): il padre **non** la elenca finché Fra non approva. Placement deciso leggendo le descrizioni delle vicine il 2026-09-11 (triage batch idee, `todo.md`).
+> ✅ Placement **ratificato su delega 2026-09-11 (Fra, TG msg 2208 «carta bianca, ratifica come meglio credi»)**: il padre la elenca. Contenuto **non revisionato**. Placement deciso leggendo le descrizioni delle vicine il 2026-09-11 (triage batch idee, `todo.md`).
 
 ## Origine + provenance (#18/#26)
 

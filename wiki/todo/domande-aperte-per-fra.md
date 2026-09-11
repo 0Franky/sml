@@ -2,12 +2,12 @@
 name: domande-aperte-per-fra
 description: "🔴 REGISTRO delle domande aperte per Fra — si scrive QUI prima di mandarle su Telegram (regola sua, 2026-08-23: «segnare sempre le domande prima in locale sul file»). Ogni voce: contesto, fatto misurato, opzioni, reco. Quando risponde, la voce si chiude con la data e il numero del messaggio."
 type: tracker
-status: 🟡 3 aperte (D7, D8, D10) — 7 chiuse, 1 segnalazione (2026-09-11)
+status: ✅ nessuna domanda aperta — 10 chiuse (3 su delega, msg 2208), 1 segnalazione (2026-09-11)
 tags: [tracker, decisioni, telegram, area-processo]
 last_updated: 2026-09-11
 ---
 
-# 🟡 Domande aperte per Fra — 3 aperte al 2026-09-11 (D7, D8, D10)
+# ✅ Domande aperte per Fra — nessuna al 2026-09-11 (10 chiuse, 3 su delega)
 
 > Una domanda che vive solo in chat sparisce alla prima compaction, e con lei la risposta quando arriva
 > (l'API di Telegram non espone la cronologia). Per questo si scrive **qui prima**, e il hook
@@ -17,7 +17,7 @@ last_updated: 2026-09-11
 
 ## Aperte
 
-### D10 · La sequenza dei laboratori (msg 2200) — PROPOSTA scritta, attende ratifica — aperta 2026-09-11
+### D10 · La sequenza dei laboratori (msg 2200) — aperta 2026-09-11 · ✅ CHIUSA 2026-09-11 su delega (TG msg 2208 «carta bianca, ratifica come meglio credi»): fasi 0-4 e regola della coppia ratificate; la fase 3 sarà una classe nuova dopo il gap-scan
 
 - **Contesto**: Fra chiede di formalizzare l'ordine dei lab (gathering → aggiornamento → gate che diventano rossi) «per non farsi pestare i piedi a vicenda». Scritta [[training-taxonomy/lab-sequence]]: 5 fasi con dipendenze esplicite, la regola «un lab entra nel curriculum solo con la sua coppia» (prova: il canary a braccio singolo avrebbe insegnato «lascia sempre un innesco»), e la fase 3 come **skill nuova** da gap-scannare (*costruire il proprio gate*).
 - **Reco**: ratificare la struttura a fasi e la regola della coppia; la fase 3 va gap-scannata prima di allenarla.
@@ -35,14 +35,14 @@ last_updated: 2026-09-11
 - **Risposta parziale (TG msg 2190, 2026-09-11 19:48)**: *«su OpenRouter dovrei avere sette dollari di credito almeno: usali al meglio»* → **spesa autorizzata** sul credito OpenRouter (tetto ≈ 7 $, da verificare via API) per le scene sui candidati; in più chiede di provare **anche il braccio `ours`** (il nostro harness e context engineering) e di chiudere la shell ollama se non serve. **Restano aperte** (1) e (3).
 - **TG msg 2192 (20:16)**: Fra chiede *«base (pre-instruct) o Qwen3.8-27B dense instruct? cosa cambia, qual è la strada migliore?»* → risposta data (dettaglio in `entities/base-model-candidates-2026-07` §2026-09-11 «Base o instruct?»): la regola presuppone un CPT vero che il piano non ha mai dimensionato; i nostri dati sono di scala SFT/RL; il gap base→instruct (Seed-OSS: +22 MMLU-Pro, +36 GPQA-D) è post-training irriproducibile → **reco: «CPT da base · SFT/RL da instruct»**, Tier-1 da instruct dense, scelta fra instruct per misura (scene prima/dopo SFT ridotto), prerequisito test LoRA sull'ibrido col 4B locale. 👉 chiede a Fra di confermare la riformulazione di (B) e il testo-only.
 
-### D8 · Ratifica delle tre proposte scritte dal batch 2026-09-11 (idee 4, 5, 9) — aperta 2026-09-11
+### D8 · Ratifica delle tre proposte scritte dal batch 2026-09-11 (idee 4, 5, 9) — aperta 2026-09-11 · ✅ CHIUSA 2026-09-11 su delega (TG msg 2208): placement e impianto di 4, 5-faccia e 9 ratificati; il padre le elenca; contenuto non revisionato
 
 - **Contesto**: tre pezzi scritti come ⛔ PROPOSTA: (1) [[training-taxonomy/class-confident-first-sequencing]] (idea 4, «partire dal confident»; padre `metacognitive-self-audit`, sorella di `effort-honesty-under-difficulty`; con una faccia in più rispetto all'enunciato — *sonda subito il rischio load-bearing, senza costruirci sopra* — perché «prima il certo» senza quella faccia diventa «base solida sopra il vuoto»); (2) faccia ORDINE dentro [[training-taxonomy/class-instruction-phase-clarification]] (idea 5, «aspetta, prima conviene X»: PASS solo se il controllo economico precede la prima azione che muta; il *«ah no, dovevo fare X prima»* è fallimento misurato, non recupero); (3) [[training-taxonomy/class-recurring-signal-triage]] (idea 9, errori ripetuti che diventano rumore: nota → capisci → decidi → traccia → agisci, una volta; padre `metacognitive-self-audit`, sorella di `attentional-scope-exit`; alternativa OUTWARD `harness-environment-awareness` dichiarata e scartata con motivo).
 - **Cosa ratifica**: il **placement** (padre e sorelle) e l'**impianto** (skill, negativi simmetrici, reward outcome-anchored, label-gen). Il contenuto resta «non usare per il training» finché fixture e scorer non esistono (binario c). Per regola del checker il padre le elenca **solo dopo** la ratifica.
 - **Reco**: ratificare tutte e tre; se il padre della 9 non convince, l'alternativa OUTWARD non cambia il contenuto, solo il padre.
 - 👉 **Domanda**: ratifichi 4, 5-faccia e 9 così come sono (placement + impianto)? Se sì, il padre le elenca e passo al binario (b).
 
-### D7 · Idea 11 del batch 2026-09-11 — «capire come fare transfer learning su altri campi»: quale delle tre letture? — aperta 2026-09-11 (TG msg 2153)
+### D7 · Idea 11 del batch 2026-09-11 — «capire come fare transfer learning su altri campi»: quale delle tre letture? — aperta 2026-09-11 (TG msg 2153) · ✅ CHIUSA 2026-09-11 su delega (TG msg 2208): scelta la lettura (c) — trasferimento analogico come skill — perché (a) e (b) sono già coperte; candidato gap da gap-scannare, non scritto
 
 - **Contesto**: la riga è una sola e ammette tre letture: (a) transfer **degli esempi** cross-dominio nel dataset → già regola #19, in vigore su ogni classe; (b) transfer learning **in senso ML** — riusare pesi/LoRA del Tier 1 su altri verticali → è la three-tier stessa (LoRA verticali); (c) una **skill del modello**: portare attivamente una lezione da un campo a un altro (trasferimento analogico) — in tassonomia c'è il guardiano (`training-taxonomy/gold-example-transfer-assumption-audit`: *quando trasferisci, audita i presupposti*) ma non la mossa.
 - **Fatto misurato**: grep «analogi» in `wiki/training-taxonomy` → solo occorrenze incidentali (esempi «ereditati per analogia»), nessuna classe.
