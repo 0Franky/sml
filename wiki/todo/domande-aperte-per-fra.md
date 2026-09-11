@@ -2,7 +2,7 @@
 name: domande-aperte-per-fra
 description: "🔴 REGISTRO delle domande aperte per Fra — si scrive QUI prima di mandarle su Telegram (regola sua, 2026-08-23: «segnare sempre le domande prima in locale sul file»). Ogni voce: contesto, fatto misurato, opzioni, reco. Quando risponde, la voce si chiude con la data e il numero del messaggio."
 type: tracker
-status: 🔴 aperto — 2 domande aperte, 3 chiuse, 1 segnalazione (2026-09-11)
+status: 🔴 aperto — 1 domanda aperta (D3), 4 chiuse, 1 segnalazione (2026-09-11)
 tags: [tracker, decisioni, telegram, area-processo]
 last_updated: 2026-09-11
 ---
@@ -24,14 +24,17 @@ last_updated: 2026-09-11
 - **Opzioni**: (a) **rimuoverla** (è una skill pubblica, si reinstalla in un minuto se mai servisse); (b) darle casa in `cc-wiki-core/claude/skills/` così viene rispecchiata ovunque; (c) dichiararla eccezione in `install-scope.json`.
 - **Reco**: (a). Non l'ho fatto perché ha chiesto cosa fa, non di toglierla: una parola e sparisce.
 
-### D5 · Il link dell'annuncio su Fable e lo «steering vector» — aperta 2026-09-11 · link ricevuto (TG msg 2163)
-
-- **Contesto**: **TG msg 2160** (2026-09-11) — Fra ha letto che usando Fable per creare nuovi modelli viene iniettato uno steering vector che degrada il ragionamento, e chiede se conviene Opus 5. **Risposto su TG (msg 2161)**: annuncio non trovato, vincolo reale = ToS uguale per entrambi i modelli, difesa = verifiche indipendenti dall'onestà del modello.
-- **Fatto misurato**: una prima ricerca web (2026-09-11) **non trovava** l'annuncio. Con il **msg 2163** Fra ha mandato il link: `reddit.com/r/ClaudeAI/comments/1u1e6u0/when_fable_5_is_used_for_frontier_llm_development/` (dice che dentro c'è anche il link alla **system card** di Anthropic). Il mio fetch **non raggiunge reddit.com** (bloccato): sto cercando il post e la system card per altre vie.
-- **Opzioni**: (a) leggere la system card e riportare **il passaggio verbatim**; (b) se irraggiungibile, chiedere a Fra di incollare il passaggio.
-- **Reco**: (a), poi decidere sul testo, non sul riassunto di un post.
-
 ## Chiuse
+
+### D5 · L'annuncio su Fable e lo «steering vector» — ✅ risposto 2026-09-11 (TG msg 2160 domanda · 2163 link · risposta corretta su TG)
+
+- **⚠️ Correzione**: la mia prima risposta (TG msg 2161) diceva *«annuncio non trovato»*. **Era una ricerca fallita, non una prova di assenza.** L'annuncio esiste.
+- **Fatto verificato** (system card di Claude Fable 5 / Mythos 5, p. 13, citato verbatim dai post di Simon Willison del 10 e 11 giugno 2026 — il PDF da 319 pagine supera il limite del mio fetch): le richieste di *frontier LLM development* — *«building pretraining pipelines, distributed training infrastructure, or ML accelerator design»* — vengono limitate con *«prompt modification, steering vectors, or parameter-efficient fine-tuning (PEFT)»*; in origine *«these safeguards will not be visible to the user»*; portata stimata *«~0.03% of traffic, concentrated in fewer than 0.1% of organizations»*.
+- **Il dietrofront (11 giugno 2026)**, Anthropic testuale: *«Starting this week, flagged requests will visibly fall back to Opus 4.8—the same as our safeguards for cyber and bio»* e *«that was the wrong tradeoff. You should have visibility into the safeguards we have in place, and why»*. Il filtro **resta**, ma **visibile**: una richiesta segnalata passa a Opus 4.8 e lo si vede; il motivo esposto anche via API.
+- **Cosa significa per noi**: il perimetro colpito è il pretraining di frontiera, l'infrastruttura di training distribuito e il design di acceleratori. Il nostro lavoro — SLM da 27B su base open, SFT/LoRA/RL, harness, tassonomia, laboratori — **non è quello**, ma non posso garantire come classifica il filtro una singola richiesta. Il punto pratico: dopo l'11 giugno il modo in cui si rompe è **visibile** (fallback dichiarato a Opus 4.8), non uno steering silenzioso. Se compare un fallback durante il nostro lavoro, quello è il segnale — e la difesa resta la stessa: verifiche indipendenti dall'onestà del modello.
+- **Su «meglio Opus 5?»**: le fonti descrivono la salvaguardia per Fable 5 (classe Mythos); **nessuna fonte** dice che Opus 5 ce l'abbia, e **nessuna** dice che non ce l'abbia. Non lo affermo.
+- Fonti: https://simonwillison.net/2026/Jun/10/if-claude-fable-stops-helping-you/ · https://simonwillison.net/2026/Jun/11/anthropic-walks-back-policy/ · https://fortune.com/2026/06/10/anthropic-accu-claude-fable-5-limits-capabilities-ai-researchers-developers/ · system card (PDF): https://www-cdn.anthropic.com/d00db56fa754a1b115b6dd7cb2e3c342ee809620.pdf
+
 
 ### D1 · Allineare il submodule `WillHouse/wiki/_core` a `origin/main` — ✅ chiusa 2026-09-11, TG msg 2163 «1 Ok»
 
