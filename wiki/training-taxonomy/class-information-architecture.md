@@ -52,10 +52,11 @@ La tentazione era appenderla a [[class-visual-design-quality]], perche' il **tem
 | Figlia | Dominio | Doc |
 |---|---|---|
 | **struttura della PRESENTAZIONE** *(creata 2026-09-11)* | l'informazione destinata a **una persona che legge**: cosa diventa una card, cosa si raggruppa, cosa si seziona — e il caso inverso, ricostruire la struttura da una resa disordinata | [[class-information-presentation-structure]] |
-| *(futura)* confini di MODULO | cosa sta dentro un'unita' di codice e cosa ne esce | — |
+| 🟡 **confini di MODULO — contenuto ARRIVATO 2026-09-11** | cosa sta dentro un'unita' di codice e cosa ne esce. ⭐ L'utente ne ha dato la forma operativa (TG msg 2155): **modellare il grafo dei flussi** → *chi tocca quel tipo di dato* → **far convergere i flussi in UN gate** che possiede verticalmente quel dato, invece di replicare il controllo in ogni modulo. E' **SSOT (#16) applicato al codice** invece che ai valori | da scrivere — raw in `wiki/_private/user-ideas-2026-09-11.md` §12 |
 | *(futura)* superficie di API | quali operazioni sono una, quali due | — |
 
 > Le figlie *(futura)* sono **placeholder estensibili** (#20): la gerarchia cresce quando emerge un gap **reale**, non a priori. ⚠️ **E finche' la figlia e' una sola, questa radice e' a rischio «ombrello vuoto»**: e' giustificata dal transfer sopra, ma se fra qualche mese la seconda figlia non e' nata, **va ri-discussa** invece di restare per inerzia.
+> ⭐ **Il rischio si e' chiuso lo stesso giorno, e non per merito mio**: l'utente ha mandato (TG msg 2155) il contenuto operativo della seconda figlia — il **grafo dei flussi con gate convergente** — **un'ora dopo** che l'avevo dichiarato vuoto. Lascio il rischio scritto perche' la previsione era giusta, e vale la pena vedere **quanto poco** e' durata.
 
 ## Reward (condiviso, ancorato all'OUTCOME #10 + simmetrico #21)
 
