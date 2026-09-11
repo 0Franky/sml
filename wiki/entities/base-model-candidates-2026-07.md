@@ -156,6 +156,8 @@ sbagliata** per il nostro uso.
 
 **Accesso per le probe di inferenza (Stage 0)**: la key **SiliconFlow è configurata e valida** (`harness/eval/_verify-siliconflow.mjs`, GET gratuito: auth OK, 78 modelli) ed espone `ByteDance-Seed/Seed-OSS-36B-Instruct` — l'**Instruct**, non il Base: va bene per le probe di comportamento, non è ciò che si scarica per il CPT.
 
+**Accesso via OpenRouter, verificato dall'API il 2026-09-11 (credito: 8 $ totali, 0,78 $ usati → ≈ 7,2 $ disponibili; Fra, TG msg 2190: *«usali al meglio»*)**: `qwen/qwen3-32b` ctx 131K, **0,08 / 0,28 $ per M** (in/out) · `qwen/qwen3.6-27b` 262K, 0,30 / 2,00 · `qwen/qwen3.8-27b` 1M, 0,42 / 3,00 · `google/gemma-4-31b-it` 262K, 0,09 / 0,34 **e variante `:free`** · `z-ai/glm-4.5-air` 0,13 / 0,85 (MoE, non candidato base). **Assenti** su OpenRouter: GLM-4-32B-0414, OLMo-3-32B, Seed-OSS (quest'ultimo via SiliconFlow, key valida). Tutti con `tools=true`.
+
 **Scan nuove uscite**: ricerca web del 2026-09-11 su *dense ~30B base Apache ago-set 2026* → non ha portato nulla oltre a ciò che il scan del 08-17 aveva già giudicato (Muse Glimmer 30B: multimodale, distillato da Muse Spark; Qwen3.8-27B: multimodale, senza base). Perimetro: due ricerche, non un censimento.
 
 **Cosa ribalterebbe questo esito**: la comparsa di un `-Base` per un 27-32B Qwen (da ricontrollare con la stessa query API prima del bake-off), oppure la decisione di Fra di ammettere il CPT da post-trained.

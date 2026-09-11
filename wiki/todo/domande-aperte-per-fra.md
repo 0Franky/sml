@@ -26,6 +26,7 @@ last_updated: 2026-09-11
 - **Reco**: **(A)**, con l'ordine: (1) lavoro a spesa zero dentro (c) — fixture-runner R8 (prerequisito del bake-off) + meccanismo CPT+LoRA sul 4B locale; (2) probe API di calibrazione a pochi dollari (MMLU-Pro / GPQA-D su sottoinsiemi + probe di conoscenza per i verticali) su Seed-OSS (SiliconFlow) e GLM/OLMo (OpenRouter) — **solo con il suo ok alla spesa**; (3) CPT bake-off ridotto in cloud sui finalisti, con tetto di spesa suo. Vincolo «testo-only» invariato (la parte visiva è peso morto per il CPT; il world model resta *implementazione futura con cambio probabile di base*, msg 2140).
 - **Cosa la ribalterebbe**: un `-Base` Qwen che compare (ricontrollo con la stessa query prima del bake-off), o una sua scelta per (B).
 - 👉 **Domande**: (1) (A), (B) o (C)? (2) ok all'ordine e alla spesa di pochi dollari per le probe di calibrazione, quando (1) è pronto? (3) il vincolo testo-only resta?
+- **Risposta parziale (TG msg 2190, 2026-09-11 19:48)**: *«su OpenRouter dovrei avere sette dollari di credito almeno: usali al meglio»* → **spesa autorizzata** sul credito OpenRouter (tetto ≈ 7 $, da verificare via API) per le scene sui candidati; in più chiede di provare **anche il braccio `ours`** (il nostro harness e context engineering) e di chiudere la shell ollama se non serve. **Restano aperte** (1) e (3).
 
 ### D8 · Ratifica delle tre proposte scritte dal batch 2026-09-11 (idee 4, 5, 9) — aperta 2026-09-11
 
