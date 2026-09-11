@@ -144,7 +144,7 @@ sbagliata** per il nostro uso.
 
 | Candidato | Base scaricabile? | Fonte (2026-09-11) | Nota |
 |---|---|---|---|
-| **Seed-OSS-36B-Base-woSyn** | ✅ `ByteDance-Seed/Seed-OSS-36B-Base-woSyn` | model card HF | 36B dense, 64 layer, GQA, 512K, Apache-2.0; **MMLU-Pro 60.4 · GPQA-D 35.2** (woSyn; con syn 65.1 / 31.7) — numeri **bassi** in assoluto: è un base, non un thinking model |
+| **Seed-OSS-36B-Base-woSyn** | ✅ `ByteDance-Seed/Seed-OSS-36B-Base-woSyn` | model card HF | 36B dense, 64 layer, GQA, 512K, Apache-2.0; **MMLU-Pro 60.4 · GPQA-D 35.2** (woSyn; con syn 65.1 / 31.7) — numeri **bassi** in assoluto: è un base, non un thinking model. ⚠️ **Correzione alla riga #1 del ranking**: i suoi «MMLU-Pro 82.7, GPQA-D 71.4» sono i numeri dell'**Instruct** (model card `Seed-OSS-36B-Instruct`, verificata 2026-09-11), non del Base-woSyn — il «reproduction gap» di luglio era anche un gap di **variante** |
 | **Qwen3-32B** | ❌ nessun `-Base` | elenco API HF | il «default sicuro» **cade** come base di CPT: esiste solo post-trained |
 | **Qwen3.6-27B** (target protetto) | ❌ nessun `-Base` | elenco API HF | + ibrido GatedDeltaNet (caveat 2b) |
 | **Qwen3.8-27B** | ❌ nessun `-Base` | elenco API HF | + multimodale (scan 08-17) |

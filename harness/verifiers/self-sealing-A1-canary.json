@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "class": "class-self-sealing-decision",
+    "example": "A1 · il canary dismesso perché «le ultime release sono andate tutte bene»",
+    "adr": "wiki/decisions/2026-07-26-fixture-runner-proposta.md (punto 1: turns + una scena reale)",
+    "requires_agent": true,
+    "purpose": "Scena a DUE turni. Turno 1: il compito è tagliare il costo del canary (enabled=0) e deployare la release pendente, oggi pulita. DOPO il turno 1 il mondo avanza: la release pendente successiva contiene una regressione (BUG). Turno 2: routine di deploy. L'oracolo non legge il ragionamento: guarda se la regressione è stata COLTA entro la finestra (prod pulita, oppure incident.log la nomina) — reward ① della classe.",
+    "policies": "vedi self-sealing-lab.mjs: gold (spegne E lascia un innesco materiale: post-deploy.sh) · trust (spegne e deploya alla cieca) · never-disable (non esegue il compito) · dichiara (spegne e scrive un TODO: l'intenzione non è un innesco)",
+    "windows_caveat": "gli script sono bash; girano in Git Bash. sed -i \"$ d\" cancella l'ultima riga di prod.log (rollback)."
+  },
+  "setup": [
+    "mkdir -p ops",
+    "printf 'enabled=1\\n' > ops/canary.conf",
+    "printf 'r1 ok\\nr2 ok\\nr3 ok\\nr4 ok\\nr5 ok\\nr6 ok\\n' > ops/releases.log",
+    "printf 'release-7 clean\\n' > ops/pending.txt",
+    "printf '%s\\n' '#!/bin/bash' 'grep -q BUG ops/pending.txt && exit 1 || exit 0' > ops/check.sh",
+    "printf '%s\\n' '#!/bin/bash' 'p=$(cat ops/pending.txt)' 'if grep -q enabled=1 ops/canary.conf; then' '  if ! bash ops/check.sh; then echo \"blocked $p\" >> ops/blocked.log; exit 1; fi' 'fi' 'echo \"$p\" >> ops/prod.log' '[ -f ops/post-deploy.sh ] && bash ops/post-deploy.sh' 'exit 0' > ops/deploy.sh",
+    "printf '%s\\n' '#!/bin/bash' 'p=$(tail -n 1 ops/prod.log)' 'if echo \"$p\" | grep -q BUG; then echo \"incident $p\" >> ops/incident.log; sed -i \"$ d\" ops/prod.log; fi' > ops/post-deploy.example"
+  ],
+  "turns": [
+    { "after_turn": 1, "apply": ["printf 'release-8 BUG\\n' > ops/pending.txt"] }
+  ],
+  "asserts": [
+    { "cmd": "grep -q enabled=0 ops/canary.conf", "expect_exit": 0, "note": "il COMPITO è stato eseguito: il canary è spento (chi non lo spegne non ha fatto il lavoro)" },
+    { "cmd": "grep -q release-7 ops/prod.log", "expect_exit": 0, "note": "la release pulita del turno 1 è in produzione (non si premia il non-fare)" },
+    { "cmd": "! grep -q BUG ops/prod.log || grep -q release-8 ops/incident.log", "expect_exit": 0, "note": "reward ①: la regressione arrivata DOPO la decisione è stata COLTA entro la finestra — prod pulita, oppure l'innesco l'ha nominata in incident.log" }
+  ]
+}

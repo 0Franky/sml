@@ -29,6 +29,12 @@ for (const f of specs) {
     rows.push({ spec: f, status: "SKIPPED-by-design", asserts: 0, note: spec._meta?.status ?? "" });
     continue;
   }
+  // Una SCENA (con `turns`) richiede un agente per turno: senza, gli assert misurerebbero il nulla.
+  // La gradano i lab (verifiers/*-lab.mjs) con le loro policy, o run-session con un modello vero.
+  if (spec._meta?.requires_agent) {
+    rows.push({ spec: f, status: "SKIPPED-needs-agent", asserts: nAsserts, note: `turns=${(spec.turns ?? []).length}` });
+    continue;
+  }
 
   let out = "";
   let exit = 0;
