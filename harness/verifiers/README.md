@@ -62,6 +62,8 @@ ADR `wiki/decisions/2026-07-26-fixture-runner-proposta.md`, costruita in tre pun
 | `retroactive-noise-hook` | **k = 0/2/5/10** + braccio **«ritira»** | retroactive-decision-propagation (ricollega **o disarma**) |
 | `gate-concordance` | i candidati nascosti hanno **esche / sono piani** | verification-discipline (**fase 3**: il gate lo costruisce il modello) |
 
+> 🔴 **Come si LEGGE la tabella del batch** (regola nata da tre errori in due giorni, 2026-09-12): la colonna `PASS k/n` — **tutti** gli assert del braccio — è l'unica cifra con cui si rivendica un successo. Le colonne `a1…aN` per-assert servono a **spiegare un fallimento**, mai a dichiarare una riuscita: un assert-reward può passare **perché il compito non è stato fatto** (canary non spento → è il canary a bloccare il BUG; export rotto → «nessuno esporta X»). Per questo ogni assert-reward ha in scena il suo **gemello di controllo**: leggili **insieme**, e specialmente quando il numero piace.
+
 **Come si gradano con un modello vero**: `EVAL_PROVIDER=openrouter MODEL_ID=qwen/qwen3.6-27b node eval/run-scene-batch.mjs verifiers/<scena>.json --models <slug> --n 3 --arm vanilla|ours`. Gli esiti per modello stanno in `wiki/harness-experiment-log.md` (F41-F45) e nella vista per-modello §0.
 
 ## Mapping gold → spec
