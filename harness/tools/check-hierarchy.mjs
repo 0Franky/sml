@@ -172,7 +172,23 @@ for (const f of files) {
  * → va nel bucket "in attesa dell'utente", non fra i rotti. (Segnalato dall'agente su compositional-reversibility,
  *   2026-07-18; verificato: **4/4** i senso-unico di allora erano figlie non ratificate.)
  */
-const isUnratified = (slug) => /NON VALIDATA|STATO:\s*PROPOSTA|—\s*PROPOSTA|attende (ok|ratifica)/i.test((bodies.get(slug) ?? "").slice(0, 3000));
+/**
+ * Riconosce una classe NON RATIFICATA. ⚠️ Allargato il 2026-09-12, e il perche' vale piu' del fix:
+ * la vecchia forma esigeva stringhe quasi esatte (`STATO: PROPOSTA`, `— PROPOSTA`, `NON VALIDATA`) e
+ * una classe nuova che dichiarava `status: ⛔ PROPOSTA (#26 — NON ratificata)` **non veniva riconosciuta**
+ * → il checker la segnalava come legame a senso unico, cioe' chiedeva di elencarla nel padre, cioe'
+ * chiedeva di **asserire una ratifica che non esiste** (#26). E' la stessa famiglia di difetto della
+ * regola scritta oggi nel playbook (*un confronto a stringa esatta misura la FORMA*): qui la forma
+ * decorativa (un'emoji fra `status:` e `PROPOSTA`) cambiava il verdetto.
+ * Ora si legge il **campo `status:` del frontmatter** — che e' il posto dove lo stato e' DICHIARATO —
+ * accettando qualunque decorazione, senza allargare a «proposta» detto in prosa (che non e' uno stato).
+ */
+const isUnratified = (slug) => {
+  const src = (bodies.get(slug) ?? "").slice(0, 3000);
+  if (/NON VALIDATA|—\s*PROPOSTA|attende (ok|ratifica)/i.test(src)) return true;
+  const status = src.match(/^status:[^\n]*/im)?.[0] ?? "";
+  return /\b(PROPOSTA|NON ratificata|NON VALIDATA)\b/i.test(status);
+};
 
 // --tree / --write-registry: l'albero misurato come registro (v. USO in testa). Tre livelli: radice → figlia →
 // nipoti in linea; livelli piu' profondi non sono stampati (dichiarato, oggi non esistono). ⛔ = figlia dichiarata
