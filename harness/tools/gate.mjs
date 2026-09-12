@@ -34,7 +34,7 @@ const FIX = process.argv.includes("--fix");
 const LAB = [
   "linkage", "exposure-remedy", "reachability", "right-effort", "situation-classification",
   "retroactive-propagation", "defect-shape", "silent-decay", "accidental-property",
-  "assumption-audit", "scope-exit", "presence-absence", "self-sealing", "consumption-scale", "design-artifact", "module-boundary", "retroactive-noise", "self-sealing-noise",
+  "assumption-audit", "scope-exit", "presence-absence", "self-sealing", "consumption-scale", "design-artifact", "module-boundary", "retroactive-noise", "self-sealing-noise", "consumption-midway", "design-artifact-noise",
 ];
 const CHECK = ["check-anchors", "check-hierarchy", "check-decontamination", "check-stale-pending", "check-lab-coverage"];
 
@@ -65,8 +65,10 @@ for (const c of CHECK) {
   const { code, out } = run(`tools/${c}.mjs`);
   if (code !== 0) rossi.push({ nome: c, code, out });
 }
+// 2026-09-11: il rosso di `npm test` portava solo l'exit code — il gate ha detto «npm test (exit 1)» e la suite
+// rilanciata da sola era verde 72/72: senza il NOME del test caduto non si distingue un difetto da una flakiness.
 const suite = run("run-tests.mjs");
-if (suite.code !== 0) rossi.push({ nome: "npm test", code: suite.code });
+if (suite.code !== 0) rossi.push({ nome: "npm test", code: suite.code, out: suite.out });
 
 if (rossi.length === 0) {
   if (!QUIET) console.log(`✅ GATE VERDE — ${LAB.length} lab · ${CHECK.length} checker · suite unit+integration`);
@@ -78,7 +80,7 @@ console.log(`\n🔴 GATE ROSSO — ${rossi.length} controlli falliti. NON commit
 for (const r of rossi) {
   console.log(`   ✗ ${r.nome}  (exit ${r.code})`);
   if (r.out && !QUIET) {
-    const righe = r.out.split("\n").filter((x) => /🔴|❌|ROTTO|Error/.test(x)).slice(0, 4);
+    const righe = r.out.split("\n").filter((x) => /🔴|❌|ROTTO|Error|[1-9]\d* failed|falliti: [1-9]/.test(x)).slice(0, 6);
     for (const x of righe) console.log(`       ${x.trim().slice(0, 150)}`);
   }
 }

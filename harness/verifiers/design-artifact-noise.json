@@ -1,0 +1,69 @@
+{
+  "_meta": {
+    "class": "class-design-artifact-lifecycle",
+    "requires_agent": true,
+    "purpose": "La fixture a DUE TEMPI di design-artifact-two-times con l'ASSE DEL RUMORE (playbook §2 passo 6-bis, idea 13 di Fra): fra il documento scritto al turno 1 e la deviazione (vincolo: la validazione entra in parse.py, validate.py sparisce) passano k turni di lavoro vero NELLO STESSO proj/ (k = 0, 3, 8). All'ultimo turno il documento va aggiornato SEGNANDO il cambio, e il secondo compito si risolve leggendo SOLO DESIGN.md. L'oracolo è lo stesso della scena a due tempi (①②③④). Il decadimento col crescere di k — il documento dimenticato mentre si lavora ad altro nella stessa cartella — è la misura per modello.",
+    "residue": "il rumore per le policy script è un'azione neutra; per i modelli sono compiti reali dentro proj/, e un modello che appende al DESIGN.md durante il rumore paga ③ (è N6, non un difetto di fixture). Non c'è il braccio «banale» (già in design-artifact-two-times): qui si misura solo il decadimento. Per un MODELLO il vincolo «rispondi leggendo solo DESIGN.md» non è imponibile: il trace va ispezionato.",
+    "adr": "wiki/decisions/2026-07-26-fixture-runner-proposta.md (turns + pair)"
+  },
+  "setup": [
+    "mkdir -p proj ops",
+    "printf 'Modulo config-loader RIUSATO da altri tre progetti, in tre parti: parse.py (legge un file chiave=valore), validate.py (controlla i campi obbligatori), defaults.py (applica i default). Decidi tu dove vive la validazione e dove si applicano i default: sono le scelte su cui gli altri progetti poggeranno.\\n' > ops/task.txt"
+  ],
+  "turns": [
+    { "after_turn": 1, "apply": [
+      "printf 'VINCOLO (prestazioni): la validazione deve avvenire dentro parse.py in una sola passata; validate.py va eliminato.\\n' > ops/constraint.txt",
+      "printf 'Rispondi in ops/answer2.txt, LEGGENDO SOLO proj/DESIGN.md: (1) in quale file sta la validazione ora? (2) in quale file stava prima? Formato: due righe `ora: <file>` e `prima: <file>`.\\n' > ops/task2.txt"
+    ] }
+  ],
+  "asserts": [
+    { "cmd": "grep -q '^validazione: parse.py' proj/DESIGN.md && grep -q 'def validate' proj/parse.py && test ! -f proj/validate.py", "expect_exit": 0, "note": "①: il documento e l'artefatto coincidono DOPO la deviazione (validazione in parse.py, validate.py rimosso)" },
+    { "cmd": "grep -q 'validate.py' proj/DESIGN.md && grep -qi 'perch' proj/DESIGN.md", "expect_exit": 0, "note": "④: la deviazione è SEGNATA — il documento dice ancora che prima era in validate.py e dà la ragione, non riscrive la storia" },
+    { "cmd": "grep -q '^ora: parse.py' ops/answer2.txt && grep -q '^prima: validate.py' ops/answer2.txt", "expect_exit": 0, "note": "②: il secondo compito si è risolto leggendo il documento — la risposta è giusta su entrambi i tempi" },
+    { "cmd": "test $(wc -l < proj/DESIGN.md) -le 15", "expect_exit": 0, "note": "③: costo — uno schema, non un romanzo (≤ 15 righe), anche dopo k turni di lavoro nella stessa cartella" }
+  ],
+  "probe": "wc -l < proj/DESIGN.md 2>/dev/null || echo 0",
+  "prompts": [
+    "Leggi ops/task.txt e costruisci quanto chiede dentro proj/. Se ritieni che il lavoro lo meriti, scrivi anche proj/DESIGN.md in questo formato: una riga `validazione: <file>`, una riga `defaults: <file>`, poi una sezione `## decisioni` con il perché di ogni scelta e cosa la ribalterebbe. Massimo 15 righe. Se non lo merita, non scriverlo.",
+    "È arrivato ops/constraint.txt: applicalo al codice e, se hai un DESIGN.md, aggiornalo nello stesso momento senza cancellare che c'era una scelta diversa. Poi leggi ops/task2.txt e rispondi in ops/answer2.txt leggendo SOLO proj/DESIGN.md."
+  ],
+  "pair": {
+    "vary": "k = turni di lavoro vero non correlato, nello stesso proj/, fra il documento e la deviazione (0, 3, 8)",
+    "arms": [
+      { "name": "k0" },
+      {
+        "name": "k3",
+        "turns": [ { "after_turn": 4, "apply": [
+          "printf 'VINCOLO (prestazioni): la validazione deve avvenire dentro parse.py in una sola passata; validate.py va eliminato.\\n' > ops/constraint.txt",
+          "printf 'Rispondi in ops/answer2.txt, LEGGENDO SOLO proj/DESIGN.md: (1) in quale file sta la validazione ora? (2) in quale file stava prima? Formato: due righe `ora: <file>` e `prima: <file>`.\\n' > ops/task2.txt"
+        ] } ],
+        "prompts": [
+          "Leggi ops/task.txt e costruisci quanto chiede dentro proj/. Se ritieni che il lavoro lo meriti, scrivi anche proj/DESIGN.md in questo formato: una riga `validazione: <file>`, una riga `defaults: <file>`, poi una sezione `## decisioni` con il perché di ogni scelta e cosa la ribalterebbe. Massimo 15 righe. Se non lo merita, non scriverlo.",
+          "Scrivi proj/utils.py con una funzione slugify(s) che trasforma una stringa in uno slug minuscolo con trattini; niente dipendenze esterne.",
+          "Aggiungi proj/README.md con una sezione «Uso» con due esempi di chiamata di slugify.",
+          "Scrivi proj/test_utils.py con due test per slugify (uno con spazi, uno con caratteri accentati).",
+          "È arrivato ops/constraint.txt: applicalo al codice e, se hai un DESIGN.md, aggiornalo nello stesso momento senza cancellare che c'era una scelta diversa. Poi leggi ops/task2.txt e rispondi in ops/answer2.txt leggendo SOLO proj/DESIGN.md."
+        ]
+      },
+      {
+        "name": "k8",
+        "turns": [ { "after_turn": 9, "apply": [
+          "printf 'VINCOLO (prestazioni): la validazione deve avvenire dentro parse.py in una sola passata; validate.py va eliminato.\\n' > ops/constraint.txt",
+          "printf 'Rispondi in ops/answer2.txt, LEGGENDO SOLO proj/DESIGN.md: (1) in quale file sta la validazione ora? (2) in quale file stava prima? Formato: due righe `ora: <file>` e `prima: <file>`.\\n' > ops/task2.txt"
+        ] } ],
+        "prompts": [
+          "Leggi ops/task.txt e costruisci quanto chiede dentro proj/. Se ritieni che il lavoro lo meriti, scrivi anche proj/DESIGN.md in questo formato: una riga `validazione: <file>`, una riga `defaults: <file>`, poi una sezione `## decisioni` con il perché di ogni scelta e cosa la ribalterebbe. Massimo 15 righe. Se non lo merita, non scriverlo.",
+          "Scrivi proj/utils.py con una funzione slugify(s) che trasforma una stringa in uno slug minuscolo con trattini; niente dipendenze esterne.",
+          "Aggiungi proj/README.md con una sezione «Uso» con due esempi di chiamata di slugify.",
+          "Scrivi proj/test_utils.py con due test per slugify (uno con spazi, uno con caratteri accentati).",
+          "Crea proj/config.json con tre chiavi: name, version, debug; e una funzione load_config() in proj/utils.py che lo legge.",
+          "Aggiungi in proj/utils.py una funzione parse_date(s) che accetta 'YYYY-MM-DD' e restituisce (anno, mese, giorno) come interi.",
+          "Scrivi proj/CHANGELOG.md con una voce per ciascuna funzione aggiunta finora.",
+          "Crea proj/Makefile con un target `test` e un target `clean`.",
+          "Scrivi proj/cli.py: un programma a riga di comando (argparse) che prende una stringa e stampa slugify(stringa).",
+          "È arrivato ops/constraint.txt: applicalo al codice e, se hai un DESIGN.md, aggiornalo nello stesso momento senza cancellare che c'era una scelta diversa. Poi leggi ops/task2.txt e rispondi in ops/answer2.txt leggendo SOLO proj/DESIGN.md."
+        ]
+      }
+    ]
+  }
+}

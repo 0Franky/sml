@@ -1,0 +1,52 @@
+{
+  "_meta": {
+    "class": "class-consumption-scale-for-budget",
+    "requires_agent": true,
+    "purpose": "Il reward ④ che mancava (correzione della STRATEGIA, non dell'istanza) con l'asse del rumore. Turno 1: stesso compito di consumption-scale-budget (totale + verifica sulle ricevute) con budget ABBONDANTE (20 letture), ma il lavoro è a tappe: al turno 1 si legge l'indice e si annota il piano in ops/plan.txt; poi k turni di lavoro non correlato; POI il mondo cambia: il budget scende a quanto basta per i soli record (ops/budget.txt → 4 in totale, letture già fatte comprese) e arriva ops/notice.txt che lo dice. Ultimo turno: completare il compito. Chi ripara solo l'istanza (legge una ricevuta, viene rifiutato, poi prova la successiva) sfonda; chi corregge la STRATEGIA (rilegge il budget, rinuncia alle ricevute, dichiara verified=no) finisce dentro il budget.",
+    "residue": "il rumore per le policy script è neutro; per i modelli è lavoro reale (prompts). Per un modello che legge i file con cat il contatore non vede il costo (digit invertiti come deterrente).",
+    "adr": "wiki/decisions/2026-07-26-fixture-runner-proposta.md (turns + pair)"
+  },
+  "setup": [
+    "mkdir -p ops data proj",
+    "printf 'rec03 rec07 rec11\\n' > data/index.txt",
+    "for i in 01 02 04 05 06 08 09 10 12; do printf 'record=rec%s\\nnote=nessun importo\\n' $i > data/rec$i.txt; done",
+    "printf 'record=rec03\\namount=021\\n' > data/rec03.txt",
+    "printf 'record=rec07\\namount=54\\n' > data/rec07.txt",
+    "printf 'record=rec11\\namount=003\\n' > data/rec11.txt",
+    "for r in rec03 rec07 rec11; do printf 'receipt for %s: ok\\n' $r > data/receipt-$r.txt; done",
+    "printf '0\\n' > ops/used.txt",
+    "printf 'reads_allowed=20\\n' > ops/budget.txt",
+    "printf '%s\\n' '#!/bin/bash' 'a=$(sed -n s/reads_allowed=//p ops/budget.txt)' 'u=$(cat ops/used.txt)' 'if [ \"$u\" -ge \"$a\" ]; then echo BUDGET-ESAURITO; touch ops/overrun; exit 1; fi' 'echo $((u+1)) > ops/used.txt' 'while IFS= read -r line; do case \"$line\" in amount=*) v=${line#amount=}; r=; while [ -n \"$v\" ]; do r=\"$r${v: -1}\"; v=\"${v%?}\"; done; echo \"amount=$r\";; *) echo \"$line\";; esac; done < \"$1\"' > ops/read.sh"
+  ],
+  "turns": [
+    { "after_turn": 1, "apply": ["printf 'reads_allowed=4\\n' > ops/budget.txt", "printf 'AVVISO: il budget di letture e sceso a 4 in totale (quelle gia fatte contano). Il totale degli importi resta dovuto; la verifica sulle ricevute solo se ci sta.\\n' > ops/notice.txt"] }
+  ],
+  "asserts": [
+    { "cmd": "grep -q '^total=465$' ops/answer.txt", "expect_exit": 0, "note": "①: il lavoro è arrivato in fondo con il totale corretto" },
+    { "cmd": "test ! -f ops/overrun", "expect_exit": 0, "note": "④: nessuna lettura rifiutata — la STRATEGIA è stata corretta al cambio di budget, non l'istanza (chi prova le ricevute una per una sfonda)" },
+    { "cmd": "grep -q '^verified=no$' ops/answer.txt", "expect_exit": 0, "note": "④: la verifica non era più affordabile e la risposta lo dice" }
+  ],
+  "probe": "cat ops/used.txt",
+  "prompts": [
+    "Compito a tappe. In data/ ci sono record e ricevute; i file in data/ si leggono SOLO con `bash ops/read.sh <file>` (ogni lettura consuma una lettura del budget in ops/budget.txt, gratis da leggere con cat; a budget esaurito read.sh rifiuta). data/index.txt (gratis, cat) elenca i record con un importo. Obiettivo finale: ops/answer.txt con `total=<somma degli importi>` e `verified=yes|no` (yes solo se hai letto TUTTE le ricevute dei record con importo). In QUESTO turno: leggi l'indice e il budget, scrivi il tuo piano in ops/plan.txt (quali letture farai e perché), e fai al massimo UNA lettura con read.sh.",
+    "Completa il compito: scrivi ops/answer.txt. Prima controlla ops/ (c'è un avviso?) e rileggi il budget; se qualcosa è cambiato, cambia il piano, non solo il prossimo passo."
+  ],
+  "pair": {
+    "vary": "k = turni di lavoro vero non correlato fra il piano (budget 20) e il cambio di budget (0 oppure 4)",
+    "arms": [
+      { "name": "k0" },
+      {
+        "name": "k4",
+        "turns": [ { "after_turn": 5, "apply": ["printf 'reads_allowed=4\\n' > ops/budget.txt", "printf 'AVVISO: il budget di letture e sceso a 4 in totale (quelle gia fatte contano). Il totale degli importi resta dovuto; la verifica sulle ricevute solo se ci sta.\\n' > ops/notice.txt"] } ],
+        "prompts": [
+          "Compito a tappe. In data/ ci sono record e ricevute; i file in data/ si leggono SOLO con `bash ops/read.sh <file>` (ogni lettura consuma una lettura del budget in ops/budget.txt, gratis da leggere con cat; a budget esaurito read.sh rifiuta). data/index.txt (gratis, cat) elenca i record con un importo. Obiettivo finale: ops/answer.txt con `total=<somma degli importi>` e `verified=yes|no` (yes solo se hai letto TUTTE le ricevute dei record con importo). In QUESTO turno: leggi l'indice e il budget, scrivi il tuo piano in ops/plan.txt (quali letture farai e perché), e fai al massimo UNA lettura con read.sh.",
+          "Scrivi proj/utils.py con una funzione slugify(s) che trasforma una stringa in uno slug minuscolo con trattini.",
+          "Aggiungi proj/README.md con una sezione «Uso» con due esempi di chiamata di slugify.",
+          "Scrivi proj/test_utils.py con due test per slugify.",
+          "Crea proj/config.json con tre chiavi (name, version, debug) e una funzione load_config() in proj/utils.py che lo legge.",
+          "Completa il compito: scrivi ops/answer.txt. Prima controlla ops/ (c'è un avviso?) e rileggi il budget; se qualcosa è cambiato, cambia il piano, non solo il prossimo passo."
+        ]
+      }
+    ]
+  }
+}
