@@ -25,7 +25,7 @@ wiki/
 ├── index.md             # catalogo di TUTTE le pagine (completezza garantita da un checker)
 ├── log.md               # ledger cronologico (gitignored: è il diario di lavoro)
 ├── todo.md              # cosa resta, con lo stato
-├── open-questions.md    # decisioni aperte storiche (le domande vive stanno in todo/)
+├── open-questions.md    # tracker del 2026-06-29, parzialmente superato dagli ADR — ⚠️ 10 item risultano ancora aperti e nessuno li ha ri-triati (todo); le domande VIVE stanno in todo/
 ├── harness-experiment-log.md   # cosa abbiamo MISURATO (§0 = vista per-modello)
 ├── sota-techniques-catalog.md  # tecniche esterne, triate voce per voce
 ├── REQUISITO-AFFIDABILITA.md   # il requisito fondante
