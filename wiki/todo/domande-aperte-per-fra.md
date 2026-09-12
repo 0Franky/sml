@@ -2,12 +2,12 @@
 name: domande-aperte-per-fra
 description: "🔴 REGISTRO delle domande aperte per Fra — si scrive QUI prima di mandarle su Telegram (regola sua, 2026-08-23: «segnare sempre le domande prima in locale sul file»). Ogni voce: contesto, fatto misurato, opzioni, reco. Quando risponde, la voce si chiude con la data e il numero del messaggio."
 type: tracker
-status: ✅ nessuna domanda aperta — 10 chiuse (3 su delega, msg 2208), 1 segnalazione (2026-09-11)
+status: 🗳️ 1 aperta (D11, 2026-09-12: PRM appreso fuori dal loop di Wave 6?) — 10 chiuse (3 su delega, msg 2208), 1 segnalazione (2026-09-11)
 tags: [tracker, decisioni, telegram, area-processo]
-last_updated: 2026-09-11
+last_updated: 2026-09-12
 ---
 
-# ✅ Domande aperte per Fra — nessuna al 2026-09-11 (10 chiuse, 3 su delega)
+# 🗳️ Domande aperte per Fra — 1 al 2026-09-12 (D11) · 10 chiuse (3 su delega)
 
 > Una domanda che vive solo in chat sparisce alla prima compaction, e con lei la risposta quando arriva
 > (l'API di Telegram non espone la cronologia). Per questo si scrive **qui prima**, e il hook
@@ -16,6 +16,14 @@ last_updated: 2026-09-11
 > **Canale**: dal **TG msg 2159** (2026-09-11, *«aggiornami qui, non sono più al PC»*) gli aggiornamenti e le risposte vanno su Telegram, non nel terminale.
 
 ## Aperte
+
+### D11 · Wave 6: togliere il PRM APPRESO dal loop di RL e tenere solo gli oracoli deterministici per fase? — aperta 2026-09-12 (⛔ tocca la tua decisione del 2026-05-21, open question #15)
+
+- **Contesto**: la strategia post-training decisa il 2026-05-21 dice *«Wave 6 cloud: ORPO + PRM (process reward model su criticality awareness) + GRPO opzionale»* (memoria `project_post_training_strategy`, ADR [[../decisions/2026-05-21-training-philosophy-roadmap]]). Il PRM è anche il *claim #4* del paper. Da luglio il nostro reward per fase è però un **oracolo deterministico** (concept `phased-reward-and-rh-detection`, D3 del protocollo), e dal 2026-09-11 è eseguito nelle scene a più turni (F41-F44).
+- **Fatto misurato (letto il 2026-09-12 nel testo completo, via riassuntore; abstract verificati da me l'11)**: *Reward Under Attack* (arXiv 2603.06621) — RL contro un PRM appreso: reward del PRM a **1,0 entro 100 step** con accuratezza vera a **0 %** (Qwen2.5-Math-PRM-7B), **43 %** del guadagno di reward da **stile**; perimetro: matematica, due PRM piccoli, policy 1,5B, **nessuna mitigazione testata**. *VPR* (arXiv 2605.10325) — oracoli deterministici per turno battono outcome-only e PRM Monte-Carlo (Sudoku 56 % vs 48 % vs 35 %) e trasferiscono; **un oracolo debole fa peggio della base anche fuori dominio**; l'estensione agli ambienti agentici con oracolo su stato è dichiarata aperta (è dove siamo noi).
+- **Opzioni**: **(A)** Wave 6 = ORPO + **oracoli deterministici per fase** (le scene/lab) + GRPO opzionale; giudice LLM solo **etichettatore offline** (held-out, ECE), mai reward in loop; gate di qualità dell'oracolo (lab a ≥3 policy fisse + assert gemelli) prima che un oracolo entri nel reward — il claim #4 diventa *«verifiable process rewards per l'operare agentico»*. **(B)** tenere il PRM appreso, ma solo dopo un PRM-BiasBench nostro (8 perturbazioni sulle nostre tracce) e un closed-loop di 100 step con oracolo a fianco. **(C)** lasciare la voce com'è e decidere a Wave 6.
+- **Reco**: **(A)** — costo zero (sparisce un componente), difesa dall'hacking che sale, e il nostro lavoro di settembre è già (A). **Cosa la ribalterebbe**: un PRM ≥7B non solo matematico che passi PRM-BiasBench e regga il closed-loop; classi senza oracolo dove il giudice offline non basta (decisione separata, per classe). Dettaglio: [[../decisions/2026-09-12-prm-appreso-escluso-proposta]].
+- 👉 **Domanda**: (A), (B) o (C)?
 
 ### D10 · La sequenza dei laboratori (msg 2200) — aperta 2026-09-11 · ✅ CHIUSA 2026-09-11 su delega (TG msg 2208 «carta bianca, ratifica come meglio credi»): fasi 0-4 e regola della coppia ratificate; la fase 3 sarà una classe nuova dopo il gap-scan
 
