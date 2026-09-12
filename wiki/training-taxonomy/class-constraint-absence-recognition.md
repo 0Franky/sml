@@ -13,7 +13,7 @@ last_updated: 2026-07-24
 
 > **Padre**: [[class-constraint-fit-decision]] (PADRE già esistente e deciso, regola #20). Questa classe è il **POLO OPPOSTO MANCANTE** del suo asse, non una sorella scollegata (#20/#36): constraint-fit copre *"c'è una dimensione che discrimina → trova il fit"* (class-constraint-fit-decision.md:16); questa copre il caso **degenere** dello stesso asse — *"NESSUNA dimensione discrimina → riconoscilo, dillo, non inventarne una"*. Stessa muscolatura (mappare requisiti↔proprietà), stesso padre → coerenza-di-radice #36.
 > **Sorella cross-dominio forte**: [[class-confabulation-retrieval-failure]] — questa è *"non fabbricare un VINCOLO"*, quella è *"non fabbricare un FATTO"*: stessa disciplina anti-confabulazione applicata alla **base decisionale** anziché alla base fattuale. Cross-link forte, ma la CASA resta constraint-fit (è lì che vive il difetto-del-reward, vedi §Amendment al padre).
-> **Origine**: gap-scan 2026-07-24 su P1; difetto osservato in E-COMP ([[../harness-experiment-log]] §E-COMP, harness-experiment-log.md:356) — dare la mezza-skill "estrai il requisito load-bearing / dimensiona la risposta" tende a **peggiorare** il sapersi fermare (incatenamento-per-rito `3/12` vs `0/12` del controllo nudo, **sotto-soglia**, ipotesi coerente non fatto).
+> **Origine**: gap-scan 2026-07-24 su P1; difetto osservato in E-COMP ([[../harness-experiment-log]] §E-COMP, harness-experiment-log.md:358) — dare la mezza-skill "estrai il requisito load-bearing / dimensiona la risposta" tende a **peggiorare** il sapersi fermare (incatenamento-per-rito `3/12` vs `0/12` del controllo nudo, **sotto-soglia**, ipotesi coerente non fatto).
 
 ## Il gap
 
@@ -82,11 +82,11 @@ Senza i negativi, *"di' sempre che sono equivalenti"* **oppure** *"trova sempre 
 
 ## Held-out di validazione (#18 — decontaminazione)
 
-**Item N1 di E-COMP** ([[../harness-experiment-log]], uno dei 4 negativi dove la risposta giusta è FERMARSI, harness-experiment-log.md:349 «se spezziamo una skill in due classi»): *scegliere fra bianco opaco e verde salvia per un ambiente dove — per costruzione della fixture — tutte le dimensioni rilevanti (resa, costo, copertura, durata) sono equivalenti*. Il gold: riconoscere l'equivalenza + non fabbricare una preferenza. **Tenuto HELD-OUT**: mai nel training set; se il modello ha imparato la skill lo risolve **per transfer**, non per memorizzazione (msg 1125). È anche la **metrica di successo**.
+**Item N1 di E-COMP** ([[../harness-experiment-log]], uno dei 4 negativi dove la risposta giusta è FERMARSI, harness-experiment-log.md:352 «se spezziamo una skill in due classi»): *scegliere fra bianco opaco e verde salvia per un ambiente dove — per costruzione della fixture — tutte le dimensioni rilevanti (resa, costo, copertura, durata) sono equivalenti*. Il gold: riconoscere l'equivalenza + non fabbricare una preferenza. **Tenuto HELD-OUT**: mai nel training set; se il modello ha imparato la skill lo risolve **per transfer**, non per memorizzazione (msg 1125). È anche la **metrica di successo**.
 
 ## Amendment al PADRE richiesto da questa classe (gap-scan orizzontale #36)
 
-Il difetto-del-reward **vive nel padre**: se [[class-constraint-fit-decision]] premia *sempre* "produrre un vincolo che regge", **crea** l'hack "fabbrica un vincolo plausibile" (è la lettura meccanicistica del segnale E-COMP, harness-experiment-log.md:356). → **PROPOSTA**: iniettare nel reward DI constraint-fit un **negativo simmetrico** (#21) — sugli item dove **nessuna dimensione discrimina**, "trova comunque un vincolo" deve **fallire** l'oracolo. Così il polo-assenza è difeso **dentro** il padre, non solo in questa figlia. *(Non applico la modifica al file del padre: è una proposta, attende ratifica #26.)*
+Il difetto-del-reward **vive nel padre**: se [[class-constraint-fit-decision]] premia *sempre* "produrre un vincolo che regge", **crea** l'hack "fabbrica un vincolo plausibile" (è la lettura meccanicistica del segnale E-COMP, harness-experiment-log.md:358). → **PROPOSTA**: iniettare nel reward DI constraint-fit un **negativo simmetrico** (#21) — sugli item dove **nessuna dimensione discrimina**, "trova comunque un vincolo" deve **fallire** l'oracolo. Così il polo-assenza è difeso **dentro** il padre, non solo in questa figlia. *(Non applico la modifica al file del padre: è una proposta, attende ratifica #26.)*
 
 ## Hack-check (OBBLIGATORIO)
 

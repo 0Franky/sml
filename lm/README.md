@@ -25,3 +25,7 @@ lm/
 - `../wiki/concepts/training-curriculum-design.md` + `curriculum-stages-detail.md` — pipeline 5-stadi
 - `../wiki/training-taxonomy/` — tassonomia capability + gold-example + foglie
 - `../wiki/decisions/2026-06-29-monorepo-itlmv1.md` — struttura monorepo
+
+## Strumenti (2026-09-12)
+
+- `tools/lora-coverage.py` — misura **quali moduli** una ricetta LoRA copre su un'architettura, dal **solo `config.json`** su device `meta` (zero pesi, zero GPU). Nato per gli ibridi Qwen3.5/3.6/3.8 (GatedDeltaNet 3:1): con i target di default la LoRA lascia congelate le `in_proj_*` del mixer in 3/4 dei layer; con `all-linear` le copre. Esito e residui: `../wiki/harness-experiment-log.md` F44.
