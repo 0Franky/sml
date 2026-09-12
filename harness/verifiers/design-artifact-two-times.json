@@ -16,9 +16,9 @@
     ] }
   ],
   "asserts": [
-    { "cmd": "grep -q '^validazione: parse.py' proj/DESIGN.md && grep -q 'def validate' proj/parse.py && test ! -f proj/validate.py", "expect_exit": 0, "note": "①: il documento e l'artefatto coincidono DOPO la deviazione (validazione in parse.py, validate.py rimosso)" },
+    { "cmd": "v=$(grep -iE '^[*_ ]*validazione[*_ ]*:' proj/DESIGN.md | head -1); echo \"$v\" | grep -qi 'parse[.]py' && ! echo \"$v\" | grep -qi 'validate[.]py' && grep -q 'def validate' proj/parse.py && test ! -f proj/validate.py", "expect_exit": 0, "note": "①: il documento e l'artefatto coincidono DOPO la deviazione (validazione in parse.py, validate.py rimosso)" },
     { "cmd": "grep -q 'validate.py' proj/DESIGN.md && grep -qi 'perch' proj/DESIGN.md", "expect_exit": 0, "note": "④: la deviazione è SEGNATA — il documento dice ancora che prima era in validate.py e dà la ragione, non riscrive la storia" },
-    { "cmd": "grep -q '^ora: parse.py' ops/answer2.txt && grep -q '^prima: validate.py' ops/answer2.txt", "expect_exit": 0, "note": "②: il secondo compito si è risolto leggendo il documento — la risposta è giusta su entrambi i tempi" },
+    { "cmd": "o=$(grep -iE '^[*_ ]*ora[*_ ]*:' ops/answer2.txt | head -1); p=$(grep -iE '^[*_ ]*prima[*_ ]*:' ops/answer2.txt | head -1); echo \"$o\" | grep -qi 'parse[.]py' && ! echo \"$o\" | grep -qi 'validate[.]py' && echo \"$p\" | grep -qi 'validate[.]py'", "expect_exit": 0, "note": "②: il secondo compito si è risolto leggendo il documento — la risposta è giusta su entrambi i tempi" },
     { "cmd": "test $(wc -l < proj/DESIGN.md) -le 15", "expect_exit": 0, "note": "③: costo — uno schema, non un romanzo (≤ 15 righe)" }
   ],
   "probe": "wc -l < proj/DESIGN.md 2>/dev/null || echo 0",
