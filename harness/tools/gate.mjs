@@ -36,7 +36,7 @@ const LAB = [
   "retroactive-propagation", "defect-shape", "silent-decay", "accidental-property",
   "assumption-audit", "scope-exit", "presence-absence", "self-sealing", "consumption-scale", "design-artifact", "module-boundary", "retroactive-noise", "self-sealing-noise", "consumption-midway", "design-artifact-noise", "consumption-lost", "gate-concordance",
 ];
-const CHECK = ["check-anchors", "check-hierarchy", "check-decontamination", "check-stale-pending", "check-lab-coverage"];
+const CHECK = ["check-anchors", "check-hierarchy", "check-decontamination", "check-stale-pending", "check-lab-coverage", "check-index-coverage"];
 
 // --list-checks: stampa i nomi dei checker, uno per riga, e basta.
 // ⚠️ ESISTE PER LA SSOT (#16), non per comodita': `.githooks/pre-commit` aveva la PROPRIA lista
