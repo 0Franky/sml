@@ -18,6 +18,11 @@
  *    rende stantio il padre, **sempre**. Non fallisce: distinguere una nota storica da una claim sullo
  *    stato corrente e' semantica (#24), e il tool si limita a **contare e affiancare**.
  *
+ * USO (2026-09-12): `node tools/check-hierarchy.mjs` (check, exit 1 sui rotti) · `--tree` stampa l'albero MISURATO
+ *   in markdown · `--write-registry` lo scrive fra i marcatori `<!-- registry:inizio -->` / `<!-- registry:fine -->`
+ *   del playbook §6. Perche': il registro a mano mentiva (5 radici su 9 il 2026-09-11) perche' nessun evento lo
+ *   rigenerava; ora e' DERIVATO dagli stessi marcatori che il check legge per fallire, non digitato (#16).
+ *
  * ⚠️ TRE STATI, NON DUE — e la differenza decide l'exit code:
  *   1. **ROTTO** (senso-unico / padre fantasma / padre inesistente) → **errore**: e' un difetto reale.
  *   2. **ILLEGGIBILE** (padre in prosa libera, nessun marcatore) → **errore**: e' *"non lo so"*, e non lo so
@@ -48,7 +53,7 @@
  *   node harness/tools/check-hierarchy.mjs --json
  *   exit 0 = nessun legame rotto · exit 1 = rotti (usabile in CI / pre-commit)
  */
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 
 const ROOT = resolve(dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")), "..", "..");
@@ -168,6 +173,42 @@ for (const f of files) {
  *   2026-07-18; verificato: **4/4** i senso-unico di allora erano figlie non ratificate.)
  */
 const isUnratified = (slug) => /NON VALIDATA|STATO:\s*PROPOSTA|—\s*PROPOSTA|attende (ok|ratifica)/i.test((bodies.get(slug) ?? "").slice(0, 3000));
+
+// --tree / --write-registry: l'albero misurato come registro (v. USO in testa). Tre livelli: radice → figlia →
+// nipoti in linea; livelli piu' profondi non sono stampati (dichiarato, oggi non esistono). ⛔ = figlia dichiarata
+// ma non ratificata (lo stato sta nel suo file, #26): elencarla qui NON asserisce una ratifica, la mostra pendente.
+if (process.argv.includes("--tree") || process.argv.includes("--write-registry")) {
+  const kids = new Map();
+  for (const d of declared) (kids.get(d.parent) ?? kids.set(d.parent, []).get(d.parent)).push(d.child);
+  const sorted = (s) => [...(kids.get(s) ?? [])].sort();
+  const label = (s) => `[[${s}]]${isUnratified(s) ? " ⛔" : ""}`;
+  const withGrand = (c) => label(c) + (sorted(c).length ? ` (→ ${sorted(c).map(label).join(" · ")})` : "");
+  const inTree = new Set();
+  const walk = (s) => { if (inTree.has(s)) return; inTree.add(s); for (const c of sorted(s)) walk(c); };
+  const out = [];
+  out.push(`> Generato da \`node harness/tools/check-hierarchy.mjs --write-registry\` il ${new Date().toISOString().slice(0, 10)} — **non editare a mano, si rigenera**. ${roots.length} radici · ${declared.length} legami dichiarati (dal marcatore **Padre** nel file della figlia) · ⛔ = il file della classe si dichiara PROPOSTA / NON VALIDATA (lo stato sta lì, #26: elencarla qui non la ratifica) · 🟡 = padre DA-DECIDERE.`);
+  for (const r of [...roots].sort()) {
+    walk(r);
+    const k = sorted(r);
+    out.push(`- 👑 ${label(r)} (${k.length} figlie)`);
+    for (const c of k) out.push(`  - ${withGrand(c)}`);
+  }
+  const orfane = [...bodies.keys()].filter((s) => !inTree.has(s) && !undecided.includes(s)).sort();
+  if (undecided.length) out.push(`- 🟡 padre DA-DECIDERE: ${undecided.sort().map((s) => `[[${s}]]`).join(" · ")}`);
+  if (orfane.length) out.push(`- ⚠️ senza radice misurata (padre fantasma, inesistente o illeggibile: v. il check): ${orfane.map((s) => `[[${s}]]`).join(" · ")}`);
+  const text = out.join("\n");
+  if (process.argv.includes("--write-registry")) {
+    const pb = resolve(TAX, "dataset-construction-playbook.md");
+    const src = readFileSync(pb, "utf8");
+    const A = "<!-- registry:inizio -->", B = "<!-- registry:fine -->";
+    const i = src.indexOf(A), j = src.indexOf(B);
+    if (i < 0 || j < 0 || j < i) { console.error(`🔴 marcatori ${A} / ${B} non trovati nel playbook: registro NON scritto`); process.exit(1); }
+    const next = src.slice(0, i + A.length) + "\n" + text + "\n" + src.slice(j);
+    if (next !== src) { writeFileSync(pb, next); console.log(`registry scritto nel playbook §6 (${out.length - 1} righe).`); }
+    else console.log("registry già aggiornato: nessuna modifica.");
+  } else console.log(text);
+  process.exit(0);
+}
 
 const problems = [];
 for (const d of declared) {

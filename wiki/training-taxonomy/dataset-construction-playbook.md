@@ -330,19 +330,77 @@ Tutti Y con evidenza → coerente. ≥1 N → correggi prima di dichiarare pront
 Le **aree** (backbone 16): [[area-01-organization-planning]] … [[area-16-self-evaluation-critique]] (vedi [[README]]).
 Le **classi/gerarchie** attuali (padri 👑 → figlie):
 
-> ⚠️ **Registry a mano, STANTIO (misurato 2026-09-11)**: elenca 5 radici, la tassonomia ne ha 9 (76 file `class-*`). La SSOT meccanica della gerarchia è `node harness/tools/check-hierarchy.mjs` (legge i marcatori **Padre** nei file): in caso di disaccordo vince il checker, non questa lista. Proposta tracciata in `todo.md` (2026-09-11): sostituirla col suo output. Correzione applicata oggi: `independent-verification-integrity` tolta da metacognitive-self-audit (re-home ratificato 2026-07-11, segnalato da `class-verification-seam-placement` il 2026-07-16) e radice `ground-truth-integrity` aggiunta.
+> ✅ **Registry DERIVATO, non digitato (dal 2026-09-12)**. Fino a ieri questa era una lista a mano ed era **stantia** (misurato 2026-09-11: 5 radici elencate, 9 nella tassonomia) perché nessun evento la rigenerava — la stessa famiglia di difetti della lista LAB a mano e della lista checker duplicata (2026-08-18: *la seconda scrittura mente*). Ora il blocco qui sotto è scritto da `node harness/tools/check-hierarchy.mjs --write-registry`, che legge gli **stessi marcatori `**Padre**`** che il check usa per fallire: una sola sorgente (#16). Si rigenera a ogni classe nuova (parte del wiring #12); in caso di disaccordo con un file vince il file, e il check lo dice. **Cambio strutturale (#34)**: rimossa la lista a mano con le sue note in linea; le **note di ruolo** che portavano conoscenza sono conservate sotto il blocco.
 
-- 👑 [[class-metacognitive-self-audit]] (INWARD, àudita la MENTE) → stagnation-recovery (→ focus-decompose / jot) · transfer-assumption-audit (#145) · consequence-intention-conflict (→ subgoal-hijacks-task · **anticipation-and-irreversibility** [mining #16]) · confabulation-retrieval-failure · prospective-memory · instruction-phase-clarification · **instruction-fidelity-no-overreach** [mining #6] · domain-categorization-routing · **task-granularity-and-state-sync** (audit stato-dichiarato task-tracking, T3) [PROPOSTA #26].
-- 👑 [[class-ground-truth-integrity]] (integrità verso il CANALE di verifica, due direzioni: controllore ↔ controllato) → independent-verification-integrity (re-home 2026-07-11) · evaluation-integrity · norm-invariance-under-observation · solution-availability-integrity · verification-seam-placement — figlie **dichiarate nei file** (lo stato di ratifica sta nei file stessi).
-- 👑 [[class-situational-awareness]] (OUTWARD, modella la SITUAZIONE — gemello del precedente) → temporal-awareness (+recency-epistemica · → **temporal-order-from-timestamp** [T2]) · harness-environment-awareness (fondamento memory-twins · → **memory-lane-tool-discipline** [T1]) · knowledge-base-curation · **context-over-parametric-authority** (autorità-della-fonte, mining #5) · **proactive-improvement-proposal** (obiettivo-utente & value-add, msg 1516 — tensione-gemella con instruction-fidelity sull'altro padre) · **project-stakes-awareness** (VALUTA la posta vera: stadio×blast-radius, oltre l'etichetta; msg 1586/1591 — LEGGE, nutre constraint-fit `right-effort-for-stakes` che SCEGLIE; ri-ancorata post-review P0-1/P0-2). **Refine collegati**: domain-categorization-routing §Addendum (task-type→thinking-mode) · [[../concepts/compositional-curriculum-thinking-optimization]] §Addendum (optimize-while-implement + authoring-tags).
-- 👑 [[class-constraint-fit-decision]] → resource-appropriate-substitution · alternative-path-under-block (→ A parità-per-misura / B best-fit-per-uso).
-- 👑 [[class-action-execution-optimization]] → async-dispatch-and-prioritization · batching-repeated-ops · decision-cache-per-block · (foglie parallelization Area-1).
-- 👑 [[class-visual-design-quality]] → frontend-ux-spacing-quality · svg-spatial-composition.
-- Safety: [[class-prompt-injection-resistance]] · [[class-non-overridable-protection]] · [[class-secret-hygiene-under-distraction]].
-- Reasoning/interazione: [[class-requirements-driven-tree-navigation]] · [[class-scope-adaptive-knowledge-aggregation]] · [[class-domain-categorization-routing]] · [[class-sign-wrap-blindspot]]. *(instruction-phase-clarification / -fidelity ora sotto metacognitive-self-audit.)*
-- Metodologia trasversale (non-classe): [[../concepts/discriminative-mcq-hard-distractors]].
+<!-- registry:inizio -->
+> Generato da `node harness/tools/check-hierarchy.mjs --write-registry` il 2026-09-12 — **non editare a mano, si rigenera**. 9 radici · 71 legami dichiarati (dal marcatore **Padre** nel file della figlia) · ⛔ = il file della classe si dichiara PROPOSTA / NON VALIDATA (lo stato sta lì, #26: elencarla qui non la ratifica) · 🟡 = padre DA-DECIDERE.
+- 👑 [[class-action-execution-optimization]] (3 figlie)
+  - [[class-async-dispatch-and-prioritization]]
+  - [[class-batching-repeated-ops]]
+  - [[class-decision-cache-per-block]]
+- 👑 [[class-constraint-fit-decision]] (5 figlie)
+  - [[class-alternative-path-under-block]]
+  - [[class-constraint-absence-recognition]] ⛔
+  - [[class-consumption-scale-for-budget]] ⛔
+  - [[class-resource-appropriate-substitution]]
+  - [[class-right-effort-for-stakes]] ⛔ (→ [[class-code-optimization]])
+- 👑 [[class-constraint-override-authority]] ⛔ (2 figlie)
+  - [[class-non-overridable-protection]]
+  - [[class-prompt-injection-resistance]]
+- 👑 [[class-ground-truth-integrity]] (5 figlie)
+  - [[class-evaluation-integrity]]
+  - [[class-independent-verification-integrity]]
+  - [[class-norm-invariance-under-observation]] ⛔
+  - [[class-solution-availability-integrity]] ⛔
+  - [[class-verification-seam-placement]] ⛔
+- 👑 [[class-information-architecture]] (2 figlie)
+  - [[class-information-presentation-structure]]
+  - [[class-module-boundary-flow-convergence]]
+- 👑 [[class-least-privilege-information-boundary]] ⛔ (3 figlie)
+  - [[class-linkage-classification-compatibility]] ⛔
+  - [[class-secret-hygiene-under-distraction]]
+  - [[class-snooping-least-privilege-access]] ⛔
+- 👑 [[class-metacognitive-self-audit]] (23 figlie)
+  - [[class-artifact-reachability-completion]] ⛔
+  - [[class-assumption-audit-both-directions]] ⛔
+  - [[class-attentional-scope-exit]] ⛔
+  - [[class-confabulation-retrieval-failure]]
+  - [[class-confident-first-sequencing]]
+  - [[class-consequence-intention-conflict]] (→ [[class-accidental-property-removal]] ⛔ · [[class-anticipation-and-irreversibility]] · [[class-self-sealing-decision]] ⛔ · [[class-subgoal-hijacks-task]])
+  - [[class-defect-shape-reading]] ⛔
+  - [[class-domain-categorization-routing]]
+  - [[class-durable-knowledge-retraction]] ⛔ (→ [[class-retroactive-decision-propagation]] ⛔)
+  - [[class-effort-honesty-under-difficulty]]
+  - [[class-exposure-measurement-before-remedy]] ⛔
+  - [[class-instruction-fidelity-no-overreach]]
+  - [[class-instruction-phase-clarification]]
+  - [[class-instrument-epistemic-reach]] ⛔ (→ [[class-action-report-vs-effect]] · [[class-instrument-coverage-scope]] ⛔ · [[class-static-dynamic-evidence-modality]] ⛔ · [[class-tool-perception-fidelity]])
+  - [[class-instrumental-request-real-goal]]
+  - [[class-prospective-memory]] (→ [[class-prospective-obligation-discharge]] ⛔)
+  - [[class-recurring-signal-triage]]
+  - [[class-requirements-driven-tree-navigation]]
+  - [[class-scope-adaptive-knowledge-aggregation]]
+  - [[class-stagnation-recovery]] (→ [[class-sign-wrap-blindspot]])
+  - [[class-task-granularity-and-state-sync]] ⛔
+  - [[class-utterance-provenance-audit]] ⛔
+  - [[gold-example-transfer-assumption-audit]]
+- 👑 [[class-situational-awareness]] (10 figlie)
+  - [[class-awareness-transmission]] ⛔
+  - [[class-concurrent-world-awareness]] ⛔
+  - [[class-context-over-parametric-authority]]
+  - [[class-harness-environment-awareness]] (→ [[class-memory-lane-tool-discipline]])
+  - [[class-knowledge-base-curation]] (→ [[class-design-artifact-lifecycle]])
+  - [[class-live-intent-arbitration]] ⛔
+  - [[class-proactive-improvement-proposal]]
+  - [[class-project-stakes-awareness]]
+  - [[class-situation-classification-continuous]] ⛔
+  - [[class-temporal-awareness]] (→ [[class-temporal-order-from-timestamp]])
+- 👑 [[class-visual-design-quality]] (2 figlie)
+  - [[class-frontend-ux-spacing-quality]]
+  - [[class-svg-spatial-composition]]
+<!-- registry:fine -->
 
-> Aggiornare questo registry a ogni classe nuova (parte del wiring #12) → è la mappa che rende visibili le contraddizioni/gap di coerenza.
+**Note di ruolo (conoscenza, non struttura — restano a mano)**: [[class-metacognitive-self-audit]] = **INWARD**, àudita la MENTE · [[class-situational-awareness]] = **OUTWARD**, modella la SITUAZIONE (gemello del precedente) · [[class-ground-truth-integrity]] = integrità verso il **canale di verifica**, due direzioni (controllore ↔ controllato) · [[class-information-architecture]] = nona radice (2026-08-25): dove vive l'informazione e per dove passano i flussi · [[class-constraint-fit-decision]] = la scelta sotto vincolo (posta vs budget vs sostituto) · [[class-action-execution-optimization]] = l'esecuzione (async, batching, cache) · [[class-visual-design-quality]] = la resa visiva · safety = [[class-prompt-injection-resistance]] · [[class-non-overridable-protection]] · [[class-secret-hygiene-under-distraction]] · metodologia trasversale (non-classe): [[../concepts/discriminative-mcq-hard-distractors]]. Il registro mostra ⛔ sulle figlie dichiarate ma non ratificate: **elencarle non le ratifica** (#26), le mostra pendenti.
 
 ---
 
