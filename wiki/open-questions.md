@@ -2,10 +2,23 @@
 name: open-questions
 description: Decisioni da chiudere con l'utente. Status aggiornato + raccomandazioni precompilate.
 type: questions
-last_updated: 2026-06-29
+last_updated: 2026-09-12
 ---
 
 # Open Questions
+
+> 🔎 **RI-TRIAGE del 2026-09-12 — prima parte, fatta leggendo, non a memoria.** Questa pagina è ferma al **2026-06-29** e **10 item su 32 non portano alcun segno di chiusura**. Li ho aperti uno per uno: **nessuno è davvero “in attesa di una risposta che blocca il lavoro”**, ma le ragioni sono di tre tipi diversi e vale la pena non confonderle. ⚠️ **Non segno nessuno come «deciso da Fra»**: dove il lavoro è andato avanti lo dico come *«coperta di fatto»*, che è un'osservazione mia, non una sua ratifica (#26).
+>
+> | item | esito del ri-triage |
+> |---|---|
+> | **#21** coinvolgimento (autonomia vs step-by-step) | **coperta di fatto dalla pratica**, e codificata: `feedback_be_autonomous_safe` (autonomia su reversibile/safe) + `feedback_staged_design_workflow` (gate sul design nuovo) + la delega esplicita del 2026-09-11 (msg 2208). Nulla da chiedere. |
+> | **#18** custom eval interno | **coperta di fatto**: l'eval suite è decisa (memoria `project_eval_suite`, criticality 200 task) e oggi il metro operativo sono le **scene** ([[harness-experiment-log]] F41-F46). La forma «200 task per verticale» riguarda i LoRA, che non esistono ancora. |
+> | **#10** programming generalist necessario | **analizzata a fondo** in [[decisions/2026-07-08-tier2-justification-analysis]] (che questa pagina non cita). Da lì in poi non è più una domanda aperta ma una **validazione empirica rinviata** al momento in cui il Tier-2 esisterà. |
+> | **#19** baseline + soffitto | **parzialmente decisa** (msg 314) ma **i riferimenti sono cambiati**: il 4B è diventato *test-only* e il bake-off ha altri candidati. Non è «aperta»: è **da riscrivere** quando si fissa il primo training. |
+> | **#2** forma del wrapper · **#12** dataset interni · **Curriculum SFT stage-by-stage** | **superate dagli eventi**: il wrapper è pi + estensioni (ADR 2026-06-23), i dataset si costruiscono (tassonomia), il curriculum ha il suo concept e la sua sequenza ([[training-taxonomy/lab-sequence]]). |
+> | **#4** vincoli di pubblicazione · **#20** timeline/scadenze · **#23** ipotesi del paper | ⛔ **genuinamente mai chieste**, e nessuna ha bloccato niente in quattro mesi. Restano qui: **se e quando** si va verso una pubblicazione, si chiedono insieme — non prima, perché la risposta non cambierebbe nessun lavoro di oggi (#30). |
+>
+> **Conseguenza sulla fonte**: questa pagina **non è più il posto dove guardare** per sapere cosa è aperto. Le domande vive stanno in [[todo/domande-aperte-per-fra]] (oggi: D11, D12) e il lavoro in [[todo]].
 
 > ⚠️ Parzialmente superato dagli ADR 2026-06-28 (D1-D6) + msg 266 (compute-access); vedi [[decisions/2026-06-28-decisions-d1-d5]]. Diversi item ancora marcati `open` qui sono stati chiusi o ridefiniti da quelle decisioni. Contenuto storico mantenuto: i pointer indicano dove la decisione è stata superata.
 
