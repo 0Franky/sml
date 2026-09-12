@@ -45,6 +45,7 @@ Catalogo content-oriented. Ogni pagina = 1 riga (link + one-line summary). Aggio
 ## Entities (paper, modelli, framework, persone)
 
 ### Modelli base candidati
+- [`entities/generatori-del-training-set-2026-09.md`](entities/generatori-del-training-set-2026-09.md) 🆕⭐ — **CHI può creare il training set** (richiesta di Fra, msg 2240): dossier del ruolo **generatore/teacher**, separato da quello del base perché i criteri sono opposti (il base lo devi **possedere**, il generatore dev'essere **bravo e a basso costo in OUTPUT**). Prezzi/ctx/tool verificati sull'API il 2026-09-12. ⚠️ Il criterio che decide non è il prezzo ma la **licenza d'uso degli output** (#29) — e i pesi aperti girati da noi quel problema **non ce l'hanno**.
 - [`entities/qwen3-coder.md`](entities/qwen3-coder.md) — Qwen3-Coder, base coding-specialized
 - [`entities/qwen3-coder-next.md`](entities/qwen3-coder-next.md) — Qwen3-Coder-Next 80B-A3B MoE
 
