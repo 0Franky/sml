@@ -45,7 +45,18 @@ globalThis.fetch = async (url, opts) => {
   if (/openrouter|groq|api\.openai|completions/i.test(u) && opts?.body && !captured) {
     try {
       const p = JSON.parse(opts.body);
-      if (Array.isArray(p?.tools)) captured = { n: p.tools.length, bytes: opts.body.length, names: p.tools.map((t) => t?.function?.name ?? t?.name ?? "?") };
+      if (Array.isArray(p?.tools)) {
+        const msgs = Array.isArray(p.messages) ? p.messages : [];
+        captured = {
+          n: p.tools.length, bytes: opts.body.length,
+          names: p.tools.map((t) => t?.function?.name ?? t?.name ?? "?"),
+          // il peso si divide in DUE cose diverse, e confonderle nasconde quale delle due si paga:
+          toolBytes: JSON.stringify(p.tools).length,
+          msgBytes: JSON.stringify(msgs).length,
+          sysBytes: msgs.filter((m) => m?.role === "system").reduce((s, m) => s + JSON.stringify(m).length, 0),
+          nMsg: msgs.length,
+        };
+      }
     } catch { /* body non-JSON → ignora */ }
   }
   return _f(url, opts);
@@ -61,7 +72,9 @@ await wait;
 
 if (!captured) { console.log("🔴 nessuna richiesta con `tools` intercettata: il modello non ha mai chiamato il provider (wiring da guardare)."); process.exit(2); }
 const nostri = captured.names.filter((n) => NOSTRI.test(n));
-console.log(`tool OFFERTI al modello: ${captured.n} · body ${(captured.bytes / 1024).toFixed(1)} KB`);
+const kb = (b) => (b / 1024).toFixed(1) + " KB";
+console.log(`tool OFFERTI al modello: ${captured.n} · body ${kb(captured.bytes)}`);
+console.log(`  di cui: schemi dei tool ${kb(captured.toolBytes)} · messaggi ${kb(captured.msgBytes)} (${captured.nMsg}, di cui system ${kb(captured.sysBytes)})`);
 console.log(`  delle NOSTRE lane (${nostri.length}): ${nostri.join(", ") || "NESSUNO"}`);
 console.log(`  tutti: ${captured.names.join(", ")}`);
 process.exit(0);
