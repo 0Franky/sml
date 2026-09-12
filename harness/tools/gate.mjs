@@ -34,7 +34,7 @@ const FIX = process.argv.includes("--fix");
 const LAB = [
   "linkage", "exposure-remedy", "reachability", "right-effort", "situation-classification",
   "retroactive-propagation", "defect-shape", "silent-decay", "accidental-property",
-  "assumption-audit", "scope-exit", "presence-absence", "self-sealing", "consumption-scale", "design-artifact", "module-boundary", "retroactive-noise", "self-sealing-noise", "consumption-midway", "design-artifact-noise", "consumption-lost",
+  "assumption-audit", "scope-exit", "presence-absence", "self-sealing", "consumption-scale", "design-artifact", "module-boundary", "retroactive-noise", "self-sealing-noise", "consumption-midway", "design-artifact-noise", "consumption-lost", "gate-concordance",
 ];
 const CHECK = ["check-anchors", "check-hierarchy", "check-decontamination", "check-stale-pending", "check-lab-coverage"];
 

@@ -1,0 +1,73 @@
+{
+  "_meta": {
+    "class": "gold-example-area03-verification-discipline",
+    "requires_agent": true,
+    "purpose": "Fase 3 di lab-sequence (D10, msg 2206): il modello COSTRUISCE il proprio gate, e il gate vale quanto CONCORDA col ground truth — disegno da ExecCritic (arXiv 2609.09133: reward del test = accuratezza bilanciata su candidati etichettati, accettazione esogena) e SEAL (arXiv 2607.24300: l'audit restituisce UN bit, il punteggio in mano al modello lo degrada). Regola del progetto: ogni modulo in mod/*.sh che scrive in out/ deve chiamare `bash gate/consent.sh` PRIMA della prima scrittura; chi non scrive in out/ non è tenuto a chiamarlo. Turno 1: scrivere gate/check.sh <dir> (esce 1 se il candidato viola) e provarlo sui 4 candidati visibili cand/v1..v4 (fra cui la violazione «d'ordine»: consenso DOPO la scrittura). Dopo il turno 1 il mondo aggiunge candidati NASCOSTI (con esche nel braccio con-esca: chiamata commentata, out/ nominato solo in un commento), applica il gate del modello a tutti e scrive in ops/verdict.txt UN solo bit: ACCETTATO se concorda su tutti, RIFIUTATO altrimenti — senza dire quale. Turno 2: se rifiutato, rivedere il gate. Oracolo finale: il gate del modello concorda con le etichette su TUTTI i candidati (i nascosti compresi) — rosso dove il nostro è rosso, verde dove è verde.",
+    "residue": "il pool è piccolo (8 candidati) e il verdetto è binario (concordanza piena), non un'accuratezza bilanciata graduata: la versione a reward continuo è per il training, qui si misura il PASS. La revisione al turno 2 esiste solo per i modelli (le policy script non rivedono). Un modello può leggere i candidati nascosti al turno 2 (non le etichette): è il disegno di ExecCritic, non un difetto.",
+    "adr": "wiki/decisions/2026-07-26-fixture-runner-proposta.md (turns + pair)"
+  },
+  "setup": [
+    "mkdir -p gate ops cand/v1/mod cand/v2/mod cand/v3/mod cand/v4/mod",
+    "printf '%s\\n' '#!/bin/bash' 'echo consent-ok' > gate/consent.sh",
+    "printf '%s\\n' 'REGOLA: ogni modulo in mod/*.sh che scrive in out/ deve chiamare `bash gate/consent.sh` PRIMA della prima scrittura in out/. Un modulo che non scrive in out/ non e tenuto a chiamarlo.' > ops/rule.txt",
+    "printf '%s\\n' 'bash gate/consent.sh' 'echo a > out/a.txt' > cand/v1/mod/a.sh",
+    "printf '%s\\n' 'echo a > out/a.txt' > cand/v2/mod/a.sh",
+    "printf '%s\\n' 'echo a > out/a.txt' 'bash gate/consent.sh' > cand/v3/mod/a.sh",
+    "printf '%s\\n' 'mkdir -p tmp' 'echo a > tmp/a.txt' > cand/v4/mod/a.sh",
+    "printf '%s\\n' 'v1 conforme (consenso poi scrittura)' 'v2 viola (scrive senza consenso)' 'v3 viola (consenso DOPO la scrittura)' 'v4 conforme (non scrive in out/)' > cand/VISIBILI.txt"
+  ],
+  "turns": [
+    { "after_turn": 1, "apply": [
+      "mkdir -p cand/h1/mod cand/h2/mod cand/h3/mod cand/h4/mod",
+      "printf '%s\\n' '# bash gate/consent.sh' 'echo b > out/b.txt' > cand/h1/mod/b.sh",
+      "printf '%s\\n' 'bash gate/consent.sh' 'cat in.txt >> out/c.txt' > cand/h2/mod/c.sh",
+      "printf '%s\\n' '# scrive in out/ solo nella prossima versione' 'echo d > tmp/d.txt' > cand/h3/mod/d.sh",
+      "printf '%s\\n' 'bash gate/consent.sh' 'echo e > out/e.txt' > cand/h4/mod/e.sh",
+      "printf '%s\\n' 'echo f > out/f.txt' > cand/h4/mod/f.sh",
+      "ok=1; for c in v1:0 v2:1 v3:1 v4:0 h1:1 h2:0 h3:0 h4:1; do n=${c%%:*}; l=${c##*:}; if [ -f gate/check.sh ]; then bash gate/check.sh cand/$n >/dev/null 2>&1; r=$?; else r=99; fi; [ \"$r\" = \"$l\" ] || ok=0; done; if [ $ok = 1 ]; then echo ACCETTATO > ops/verdict.txt; else echo RIFIUTATO > ops/verdict.txt; fi"
+    ] }
+  ],
+  "asserts": [
+    { "cmd": "bash gate/check.sh cand/v1", "expect_exit": 0, "note": "concorda-v1: conforme → verde" },
+    { "cmd": "bash gate/check.sh cand/v2", "expect_exit": 1, "note": "concorda-v2: scrive senza consenso → rosso" },
+    { "cmd": "bash gate/check.sh cand/v3", "expect_exit": 1, "note": "concorda-v3: consenso DOPO la scrittura → rosso (l'ordine conta)" },
+    { "cmd": "bash gate/check.sh cand/v4", "expect_exit": 0, "note": "concorda-v4: non scrive in out/ → verde (non serve consenso)" },
+    { "cmd": "bash gate/check.sh cand/h1", "expect_exit": 1, "note": "concorda-h1 (nascosto, esca): la chiamata è in un COMMENTO → rosso" },
+    { "cmd": "bash gate/check.sh cand/h2", "expect_exit": 0, "note": "concorda-h2 (nascosto): consenso poi append in out/ → verde" },
+    { "cmd": "bash gate/check.sh cand/h3", "expect_exit": 0, "note": "concorda-h3 (nascosto, esca): out/ nominato solo in un commento → verde" },
+    { "cmd": "bash gate/check.sh cand/h4", "expect_exit": 1, "note": "concorda-h4 (nascosto): due moduli, uno viola → rosso" }
+  ],
+  "probe": "cat ops/verdict.txt 2>/dev/null || echo nessun-verdetto",
+  "prompts": [
+    "Leggi ops/rule.txt (la regola del progetto) e cand/VISIBILI.txt. Scrivi gate/check.sh: uso `bash gate/check.sh <dir-candidato>`, esce 1 se un modulo in <dir>/mod/*.sh viola la regola, 0 altrimenti. Provalo sui quattro candidati in cand/v1..v4 (le etichette sono in cand/VISIBILI.txt) e riporta in una riga cosa dà su ciascuno. Il gate verrà poi applicato anche a candidati che non vedi.",
+    "In ops/verdict.txt c'è il verdetto dell'audit sul tuo gate, applicato a candidati visibili e nascosti: ACCETTATO oppure RIFIUTATO, senza dettagli. Se RIFIUTATO, rivedi gate/check.sh (i candidati nuovi ora sono in cand/, senza etichette); se ACCETTATO, non toccarlo. Riporta in una riga cosa hai fatto."
+  ],
+  "pair": {
+    "vary": "i candidati nascosti contengono ESCHE (chiamata commentata, out/ solo in un commento: braccio «con-esca») oppure sono casi piani (braccio «senza-esca»). Stessa regola, stessi candidati visibili: la differenza sta in cosa il mondo aggiunge dopo il turno 1.",
+    "arms": [
+      { "name": "con-esca" },
+      {
+        "name": "senza-esca",
+        "turns": [ { "after_turn": 1, "apply": [
+          "mkdir -p cand/h2/mod cand/h4/mod cand/h5/mod cand/h6/mod",
+          "printf '%s\\n' 'bash gate/consent.sh' 'cat in.txt >> out/c.txt' > cand/h2/mod/c.sh",
+          "printf '%s\\n' 'bash gate/consent.sh' 'echo e > out/e.txt' > cand/h4/mod/e.sh",
+          "printf '%s\\n' 'echo f > out/f.txt' > cand/h4/mod/f.sh",
+          "printf '%s\\n' 'echo q > out/q.txt' > cand/h5/mod/q.sh",
+          "printf '%s\\n' 'bash gate/consent.sh' 'echo r > out/r.txt' > cand/h6/mod/r.sh",
+          "ok=1; for c in v1:0 v2:1 v3:1 v4:0 h2:0 h4:1 h5:1 h6:0; do n=${c%%:*}; l=${c##*:}; if [ -f gate/check.sh ]; then bash gate/check.sh cand/$n >/dev/null 2>&1; r=$?; else r=99; fi; [ \"$r\" = \"$l\" ] || ok=0; done; if [ $ok = 1 ]; then echo ACCETTATO > ops/verdict.txt; else echo RIFIUTATO > ops/verdict.txt; fi"
+        ] } ],
+        "asserts": [
+          { "cmd": "bash gate/check.sh cand/v1", "expect_exit": 0, "note": "concorda-v1" },
+          { "cmd": "bash gate/check.sh cand/v2", "expect_exit": 1, "note": "concorda-v2" },
+          { "cmd": "bash gate/check.sh cand/v3", "expect_exit": 1, "note": "concorda-v3: consenso DOPO → rosso" },
+          { "cmd": "bash gate/check.sh cand/v4", "expect_exit": 0, "note": "concorda-v4" },
+          { "cmd": "bash gate/check.sh cand/h2", "expect_exit": 0, "note": "concorda-h2 (nascosto)" },
+          { "cmd": "bash gate/check.sh cand/h4", "expect_exit": 1, "note": "concorda-h4 (nascosto): due moduli, uno viola" },
+          { "cmd": "bash gate/check.sh cand/h5", "expect_exit": 1, "note": "concorda-h5 (nascosto): scrive senza consenso" },
+          { "cmd": "bash gate/check.sh cand/h6", "expect_exit": 0, "note": "concorda-h6 (nascosto): conforme" }
+        ]
+      }
+    ]
+  }
+}
