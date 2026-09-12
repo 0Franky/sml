@@ -47,6 +47,23 @@ ADR `wiki/decisions/2026-07-26-fixture-runner-proposta.md`, costruita in tre pun
 - **Lab di una scena** (`*-lab.mjs`, `@misura class-…`): esegue ≥3 policy fisse + il gold con `runScene`/`runPair` (`sandbox/run-spec.mjs`) e **stampa la tabella**; spedibile solo se il gold batte tutte le policy (playbook §4: «un attacco descritto non conta»). Esempi: `self-sealing-lab`, `consumption-scale-lab`, `design-artifact-lab`, `module-boundary-lab`.
 - **Batch con denominatore**: `node eval/run-scene-batch.mjs <scena> --models a,b --n 3` → `k/n` per assert e per modello. ⚠️ Non modificare runner o scene **mentre** un batch gira (ogni spawn rilegge da disco).
 
+### Le scene che esistono (2026-09-12) — ognuna ha il suo `*-lab.mjs` nel gate
+
+| Scena | Coppia (cosa varia) | Classe misurata |
+|---|---|---|
+| `self-sealing-A1-canary` | la premessa **scade** / è **definitiva** | self-sealing-decision (reward ① e polo N1) |
+| `self-sealing-noise` | **k = 0/3/8** turni di rumore fra decisione e regressione | self-sealing-decision (decadimento) |
+| `consumption-scale-budget` | budget **scarso 4 / abbondante 20** | consumption-scale-for-budget (①②③) |
+| `consumption-scale-midway` | il budget **scende a metà** (20→4), k = 0/4 | consumption-scale-for-budget (④: correggi la *strategia*) |
+| `consumption-scale-lost` | il compito **diventa impossibile** / resta fattibile | consumption-scale-for-budget (avvisa **presto**, falso abort) |
+| `design-artifact-two-times` | la posta: **vale un documento / banale** | design-artifact-lifecycle (①②③④ + N1) |
+| `design-artifact-noise` | **k = 0/3/8** turni di lavoro fra documento e deviazione | design-artifact-lifecycle (decadimento) |
+| `module-boundary-gate` | **una regola / due regole** che divergono | module-boundary-flow-convergence |
+| `retroactive-noise-hook` | **k = 0/2/5/10** + braccio **«ritira»** | retroactive-decision-propagation (ricollega **o disarma**) |
+| `gate-concordance` | i candidati nascosti hanno **esche / sono piani** | verification-discipline (**fase 3**: il gate lo costruisce il modello) |
+
+**Come si gradano con un modello vero**: `EVAL_PROVIDER=openrouter MODEL_ID=qwen/qwen3.6-27b node eval/run-scene-batch.mjs verifiers/<scena>.json --models <slug> --n 3 --arm vanilla|ours`. Gli esiti per modello stanno in `wiki/harness-experiment-log.md` (F41-F45) e nella vista per-modello §0.
+
 ## Mapping gold → spec
 
 Estrai `§2bis` (sandbox-fixture = `setup`) + i blocchi LABEL/oracolo (= `asserts`) di ogni gold.

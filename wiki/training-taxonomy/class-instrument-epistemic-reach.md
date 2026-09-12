@@ -1,6 +1,6 @@
 ---
 name: class-instrument-epistemic-reach
-description: Nodo INTERMEDIO (figlio di metacognitive-self-audit, padre di 3) — la PORTATA EPISTEMICA dello strumento: che domanda questo strumento puo' IN LINEA DI PRINCIPIO rispondere, e quale no. La radice condivisa e' che un risultato NEGATIVO ("non lo vedo", "0 match", "non si riproduce") e' una proprieta' dello STRUMENTO finche' non dimostri che e' una proprieta' del MONDO. TRE figlie sull'asse che le separa - (a) tool-perception-fidelity = lo strumento perde RISOLUZIONE sullo stesso oggetto (rimedio- guarda MEGLIO); (c) instrument-coverage-scope = lo strumento e' giusto ma PUNTATO su un'altra porzione, inclusa quella che non si guarda mai, il passato (rimedio- guarda PIU' LARGO); (b) static-dynamic-evidence-modality = lo strumento osserva un TIPO DIVERSO di oggetto, modalita' (rimedio- cambia il TIPO di sguardo). Origine - ristrutturazione ratificata utente 2026-07-16 ("sono d'accordo", opzione 2).
+description: Nodo INTERMEDIO (figlio di metacognitive-self-audit, padre di 4 — misurato 2026-09-12, la quarta e' action-report-vs-effect) — la PORTATA EPISTEMICA dello strumento: che domanda questo strumento puo' IN LINEA DI PRINCIPIO rispondere, e quale no. La radice condivisa e' che un risultato NEGATIVO ("non lo vedo", "0 match", "non si riproduce") e' una proprieta' dello STRUMENTO finche' non dimostri che e' una proprieta' del MONDO. Le TRE figlie originarie sull'asse che le separa (piu' la quarta, entrata dopo, sul rapporto fra REPORT dello strumento ed EFFETTO nel mondo) - (a) tool-perception-fidelity = lo strumento perde RISOLUZIONE sullo stesso oggetto (rimedio- guarda MEGLIO); (c) instrument-coverage-scope = lo strumento e' giusto ma PUNTATO su un'altra porzione, inclusa quella che non si guarda mai, il passato (rimedio- guarda PIU' LARGO); (b) static-dynamic-evidence-modality = lo strumento osserva un TIPO DIVERSO di oggetto, modalita' (rimedio- cambia il TIPO di sguardo). Origine - ristrutturazione ratificata utente 2026-07-16 ("sono d'accordo", opzione 2).
 type: training-class
 tags: [reasoning, metacognition, self-audit, epistemics, instrument-reach, negative-result, area-03, area-04, intermediate-class, parent-class, proposta]
 last_updated: 2026-07-26
@@ -11,7 +11,7 @@ last_updated: 2026-07-26
 > dall'utente il 2026-07-16 (*"sono d'accordo"* sull'**opzione 2**) — la **ratifica copre la STRUTTURA**
 > (creare il nodo intermedio con quelle due figlie), **non il contenuto di questo file**, che nessuno ha
 > ancora letto ne' revisionato (#26). Un difetto qui **si stampa nei pesi** (#22).
-> **Nessuna delle TRE figlie e' validata**: (a) — **stato dei suoi findings: vedi il banner della figlia**,
+> **Nessuna delle TRE figlie originarie e' validata** *(le figlie misurate al 2026-09-12 sono QUATTRO: la quarta, [[class-action-report-vs-effect]], porta il proprio stato nel proprio file)*: (a) — **stato dei suoi findings: vedi il banner della figlia**,
 > non ripetuto qui *(⚠️ **corretto il 2026-07-26**: questa riga **copiava** il conteggio della figlia, e lo
 > copiava **sbagliato** — diceva 1 mentre la figlia era gia' a 0. **L'avevo scritta io poche ore prima**,
 > dopo aver registrato **cinque volte** nello stesso giorno che *un'asserzione sullo stato di un ALTRO file
@@ -30,7 +30,7 @@ last_updated: 2026-07-26
 
 > **Ruolo** (#20): **Padre**: [[class-metacognitive-self-audit]] — radice INWARD (*"sospendere la fiducia nel
 > proprio output/stato intermedio e verificarlo contro un riferimento oggettivo"*,
-> `class-metacognitive-self-audit.md:19`). Questo nodo ne e' **figlio** ed e' a sua volta **padre di 3**.
+> `class-metacognitive-self-audit.md:19`). Questo nodo ne e' **figlio** ed e' a sua volta **padre di 4** *(era «di 3» fino al 2026-09-12: la quarta figlia era entrata senza che questa riga fosse rivista — il registro §6 del playbook, ora generato dal checker, e' la sorgente)*.
 > **La torsione, dichiarata**: nel padre l'oggetto sospeso e' un **ragionamento**; qui e' **il risultato di uno
 > strumento** — e il "riferimento oggettivo" del padre e' precisamente cio' che questo nodo problematizza,
 > perche' *un riferimento e' oggettivo solo dentro la portata dello strumento che lo produce*. Questo nodo e'
