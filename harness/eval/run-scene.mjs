@@ -12,12 +12,26 @@
  * Env:  EVAL_PROVIDER=ollama|openrouter|groq|openai|gemini (default ollama) · MODEL_ID (default qwen-ctx16k)
  *       EVAL_ARM=vanilla|ours (default vanilla) · EVAL_TURN_TIMEOUT_MS (default 180000) · MODEL_CTX
  *       EVAL_TRACE=<file> → salva anche l'ultimo testo del modello per turno e i tool chiamati (diagnosi)
+ *       EVAL_INTERCALL_DELAY_MS=<ms> → **pacing fra le chiamate al provider** (default 0 = no-op)
+ *
+ * ⚠️ PERCHE' IL PACING E' QUI (2026-09-12). `eval/pacer.mjs` esisteva dal 2026-07-26 — estratto da
+ * `run-session.mjs` proprio per i provider a TPM stretto — ma **non era mai stato wired in run-scene**,
+ * e run-scene e' il runner che gradua i modelli sulle scene. Conseguenza concreta: **Seed-OSS-36B**, il
+ * candidato PRIMARIO del bake-off, **non e' mai stato girato su nessuna scena** — non e' su OpenRouter e
+ * su SiliconFlow il TPM per-account uccide il run dopo ~4 chiamate (F37). Il rimedio non era da costruire:
+ * era da collegare. Con `EVAL_INTERCALL_DELAY_MS=45000` le chiamate si distanziano PRIMA di partire.
+ * ⚠️ NON e' un backoff (quello reagisce dopo il 429, che ha gia' consumato quota): questo previene.
  * Output: UNA riga JSON su stdout. NON stampa mai una chiave.
  */
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { runScene, runPair } from "../sandbox/run-spec.mjs";
 import { openSession } from "./_pi-session.mjs";
+import { installProviderPacing } from "./pacer.mjs";
+
+// Pacing fra le chiamate al provider (v. header). No-op a 0: `installProviderPacing` ritorna la fetch
+// invariata, quindi ollama/OpenRouter non pagano nulla e il comportamento di prima non cambia.
+globalThis.fetch = installProviderPacing(Number(process.env.EVAL_INTERCALL_DELAY_MS || 0));
 
 const args = process.argv.slice(2);
 const scenePath = args.find((a) => !a.startsWith("--"));

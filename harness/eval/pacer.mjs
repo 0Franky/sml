@@ -54,4 +54,30 @@ export function makePacer(delayMs, deps = {}) {
   };
 }
 
-export default { makePacer };
+/** URL che valgono come «chiamata al PROVIDER»: distanziare localhost/ollama sarebbe solo tempo buttato. */
+export const PROVIDER_URL = /groq|openrouter|siliconflow|generativelanguage|api\.openai|completions|:generateContent/i;
+
+/**
+ * installProviderPacing — avvolge una `fetch` perche' le chiamate al PROVIDER passino dal pacer.
+ *
+ * PERCHE' ESISTE (2026-09-12): il pacer c'era dal 2026-07-26 ma era wired **solo** in `run-session`;
+ * `run-scene` — il runner che gradua i modelli sulle scene — non l'aveva, e per questo **Seed-OSS-36B,
+ * il candidato PRIMARIO del bake-off, non e' mai stato girato su una scena** (TPM per-account, F37).
+ * Estratto qui invece di ri-scriverlo inline perche' l'unica cosa che conta e' **testabile**: che il
+ * ritardo sia applicato alle chiamate del provider **e non** alle altre (#16 SSOT, #14 il bug vive nel wiring).
+ *
+ * @param {number} delayMs  0 (o negativo) → **no-op**: ritorna la fetch data, non avvolge nulla.
+ * @param {{fetchImpl?:Function, now?:Function, sleep?:Function}} deps  iniettabili per i test (orologio finto).
+ * @returns {Function} la fetch da usare (avvolta solo se delayMs > 0).
+ */
+export function installProviderPacing(delayMs, deps = {}) {
+  const base = deps.fetchImpl || globalThis.fetch;
+  if (!(Number(delayMs) > 0)) return base;
+  const pace = makePacer(delayMs, deps);
+  return async function pacedFetch(url, opts) {
+    if (PROVIDER_URL.test(String(url?.url ?? url))) await pace();
+    return base(url, opts);
+  };
+}
+
+export default { makePacer, installProviderPacing, PROVIDER_URL };
