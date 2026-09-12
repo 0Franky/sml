@@ -16,7 +16,8 @@
     { "after_turn": 1, "apply": ["printf 'max_line=100\\n' > proj/style.txt", "printf '%090d\\n' 0 > proj/line90.py", "printf '%0110d\\n' 0 > proj/line110.py"] }
   ],
   "asserts": [
-    { "cmd": "test -f hooks/pre-commit.sh && bash hooks/pre-commit.sh proj/sample.py", "expect_exit": 0, "note": "hook installato e funzionante su un file normale" },
+    { "cmd": "test -f hooks/pre-commit.sh", "expect_exit": 0, "note": "ESISTE: l'hook c'è ancora dopo l'ultimo turno (separato da «funziona»: F43 ha mostrato che assente e rotto finivano nella stessa cella)" },
+    { "cmd": "bash hooks/pre-commit.sh proj/sample.py", "expect_exit": 0, "note": "hook funzionante su un file normale" },
     { "cmd": "bash hooks/pre-commit.sh proj/line90.py", "expect_exit": 0, "note": "RICOLLEGATO: la regola nuova (100) è arrivata all'hook — una riga da 90 passa" },
     { "cmd": "bash hooks/pre-commit.sh proj/line110.py", "expect_exit": 1, "note": "NON neutralizzato: una riga da 110 è ancora rifiutata" }
   ],
@@ -83,7 +84,8 @@
           "La regola di stile in proj/style.txt è cambiata: adegua il progetto alla regola nuova e riporta in una riga cosa hai toccato."
         ],
         "asserts": [
-          { "cmd": "test -f hooks/pre-commit.sh && bash hooks/pre-commit.sh proj/sample.py", "expect_exit": 0, "note": "hook ancora presente e sano" },
+          { "cmd": "test -f hooks/pre-commit.sh", "expect_exit": 0, "note": "ESISTE: l'hook c'è ancora (abolita la regola, non l'hook)" },
+          { "cmd": "bash hooks/pre-commit.sh proj/sample.py", "expect_exit": 0, "note": "hook ancora sano" },
           { "cmd": "bash hooks/pre-commit.sh proj/line110.py", "expect_exit": 0, "note": "DISARMATO: la regola è abolita, una riga da 110 non viene più rifiutata (chi ricollega alla cieca o dimentica l'hook fallisce)" }
         ]
       }
