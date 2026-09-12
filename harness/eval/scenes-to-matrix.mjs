@@ -14,6 +14,14 @@
  *
  * Limite dichiarato: una scena misura UNA classe → ogni riga ha una sola cella piena; la matrice serve al confronto
  * prima/dopo per classe (colonna), non a leggere composizioni fra classi nella stessa riga.
+ *
+ * ⚠️ DUE USI, e la parola «REGREDITI» significa cose diverse nei due (2026-09-12):
+ *  - **prima/dopo un gruppo di classi nel training** (l'uso per cui e' nato, msg 2210): «regredito» = **catastrophic
+ *    forgetting**, ed e' un **blocco** — non si avanza nel curriculum.
+ *  - **modello A vs modello B** (usato lo stesso giorno per il bake-off, F45/F46): «regredito» significa solo
+ *    **«B fa peggio di A su quella classe»**. Non e' un difetto di B: e' un confronto. Non trattarlo come un gate.
+ * In entrambi i casi la cella e' il **PASS di braccio** (tutti gli assert del braccio), mai il per-assert — v. la
+ * regola di lettura in `verifiers/README.md`: il per-assert spiega un fallimento, non dichiara una riuscita.
  */
 import { readFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
