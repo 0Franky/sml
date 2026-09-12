@@ -43,7 +43,7 @@ La stessa disciplina vale un livello sopra: **si introduce un gruppo di classi a
 - **Le scene col rumore** (fase 2) sono le righe più sensibili alla regressione: un gruppo nuovo che «insegna a rispondere in fretta» degrada prima di tutto il ricollegare-dopo-k-turni.
 - **#35 vale anche qui**: la regressione è **model-specific**; una riga della matrice non si generalizza a un altro modello senza rimisurare.
 
-**Cosa manca (dichiarato)**: la matrice oggi gira sui lab a criterio; le **scene** (run-scene) vanno collegate come righe — lavoro di harness, tracciato in `todo.md`; e la soglia «regressione» (quante celle, quanto sotto) va fissata con i primi dati, non a priori.
+**Cosa manca (dichiarato)**: ~~le **scene** (run-scene) vanno collegate come righe~~ → **fatto il 2026-09-12**: `harness/eval/scenes-to-matrix.mjs` traduce i jsonl di `run-scene-batch` in righe *scena·braccio* con la classe misurata in colonna e, con `--before … --after …`, stampa le classi regredite (exit 1 = blocco). Prima esecuzione sui dati di F43 (vanilla→ours): nessuna regressione, nessun guadagno. Resta aperta la **soglia** «regressione» (quante celle, quanto sotto): il default del curriculum (calo di 0,10) con n=1-2 per cella scatta per una scena sola → va fissata con i primi dati a n≥3, non a priori.
 
 ## Cosa la ribalterebbe / cosa manca
 

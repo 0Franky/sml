@@ -112,15 +112,15 @@ export function detectRegression(before, after, { minDrop = DEFAULT_REGRESSION_D
 /** renderMatrix — dump testuale leggibile (righe task, colonne skill, celle "p/t"). Per report/debug. */
 export function renderMatrix(matrix) {
   const rates = perSkillRates(matrix);
-  const head = ["task".padEnd(24), ...matrix.skills.map((s) => s.slice(0, 12).padStart(13))].join("");
+  const head = ["task".padEnd(40), ...matrix.skills.map((s) => s.slice(0, 12).padStart(13))].join("");
   const rows = matrix.tasks.map((task) => {
     const cellsTxt = matrix.skills.map((skill) => {
       const c = matrix.cells[task]?.[skill];
       return (c ? `${c.pass}/${c.total}` : "-").padStart(13);
     });
-    return [String(task).slice(0, 24).padEnd(24), ...cellsTxt].join("");
+    return [String(task).slice(0, 40).padEnd(40), ...cellsTxt].join("");
   });
-  const foot = ["RATE".padEnd(24), ...matrix.skills.map((s) => {
+  const foot = ["RATE".padEnd(40), ...matrix.skills.map((s) => {
     const r = rates[s]?.rate;
     return (r == null ? "-" : `${Math.round(r * 100)}%`).padStart(13);
   })].join("");
