@@ -1,11 +1,11 @@
 ---
 name: scientific-method-operating-protocol
-description: Metodo scientifico come protocollo operativo del Tier 1 (system prompt + tracce di training) + two-phase CoT training (fase 1 lunga-corretta via RL, fase 2 ottimizzata-adaptive) + codice di condotta. Idea utente 2026-06-23, in formalizzazione via grill-me.
+description: Metodo scientifico come protocollo operativo del Tier 1 (system prompt + tracce di training) + two-phase CoT training (fase 1 lunga-corretta via RL, fase 2 ottimizzata-adaptive) + codice di condotta. Idea utente 2026-06-23; grill D1-D5 chiuso lo stesso giorno («accetto tutto, salva le tue raccomandazioni») e ratificato in ADR 2026-06-28; riconciliato con le classi nate dopo il 2026-09-12 (§8).
 type: concept
-tags: [training, reasoning, scientific-method, cot, rl, post-training, system-prompt, organization-first, draft]
-last_updated: 2026-06-23
-status: draft — working doc del grill-me 2026-06-23, non ancora validato
-confidence: provisional
+tags: [training, reasoning, scientific-method, cot, rl, post-training, system-prompt, organization-first, validato]
+last_updated: 2026-09-12
+status: validato — grill-me 2026-06-23 chiuso dall'utente, decisioni D1-D5 in [[../decisions/2026-06-28-decisions-d1-d5]]; §8 riconcilia gli 8 passi con le classi (2026-09-12). È rimasto «draft» per 80 giorni per un buco di tracciamento, non per un dubbio (todo 2026-09-11).
+confidence: validated
 ---
 
 # Scientific Method Operating Protocol (Tier 1)
@@ -106,11 +106,29 @@ Collega a Constitutional AI (system-prompt constitution). **Decisione aperta D4.
 
 ---
 
-## 7. Next
-- Chiudere D1–D5 con utente (grill-me in corso).
-- Graduare a concept validato + valutare **ADR** "Scientific-method operating protocol come metodologia Tier 1" (impatta [[../decisions/2026-05-21-training-philosophy-roadmap|roadmap wave]] e [[staged-curriculum-training]]).
-- Aggiornare [[post-rl-path-optimization]] (fase 2 = sua formalizzazione) e [[staged-curriculum-training]] (integrare il protocollo nelle stage).
-- `/graphify --update`.
+## 7. Stato del §Next originale (chiuso il 2026-09-12)
+- ✅ D1–D5 chiuse dall'utente il 2026-06-23 (*«accetto tutto, salva le tue raccomandazioni»*) → ADR [[../decisions/2026-06-28-decisions-d1-d5]]; D4 ri-verificata su fonti primarie il 2026-09-11 (Coconut/SWITCH), D3 messa alla prova dai PDF del 2026-09-12 → proposta [[../decisions/2026-09-12-prm-appreso-escluso-proposta]] (oracoli deterministici per fase, nessun PRM appreso in loop).
+- ✅ Graduato (frontmatter). **ADR separato «protocollo come metodologia Tier-1»: valutato, NON serve** — le scelte vivono già in D1-D5 e il protocollo è la base operativa di [[structured-thinking]] e delle classi (§8): un ADR ricopierebbe (SSOT #16). Cosa lo ribalterebbe: una decisione che *contraddica* un passo del protocollo — allora sì un ADR, per registrare il conflitto.
+- 🟡 [[post-rl-path-optimization]] e [[staged-curriculum-training]] **citano** il protocollo (un rimando ciascuno, verificato con grep), ma non integrano i passi nelle stage: resta lavoro di design del curriculum, da fare quando il curriculum si costruisce (Wave 5), non prima (#30).
+- `/graphify --update`: grafo stantio da 66 giorni, rebuild da concordare con Fra (costa subagent).
+
+## 8. Riconciliazione con le classi nate dopo (2026-09-12) — gli 8 passi hanno una casa misurabile
+*Perché qui*: il 2026-09-11 Fra ha ri-enunciato la stessa catena (idea 3: obiettivo → requisiti → cosa manca → cosa migliorerebbe → cosa è necessario → check di coerenza + check periodici) senza sapere che era la terza volta; se il protocollo fosse stato graduato e mappato, non l'avrebbe riscritta (#37). La mappa, verificata aprendo i file:
+
+| Passo del protocollo (§2) | Enunciazione di Fra (idea 3) | Dove vive oggi (classe / foglia / concept) |
+|---|---|---|
+| 1-2 Observe · Orient | obiettivo | [[structured-thinking]] §1 (scheda OBIETTIVO / INPUT / OUTPUT / VINCOLI) · area-01 `obiettivo-resta-invariato-lungo-i-passi` · [[../training-taxonomy/class-instrumental-request-real-goal]] (il fine dietro la richiesta) |
+| 2 Orient (limiti, criticità) | requisiti | [[../training-taxonomy/class-requirements-driven-tree-navigation]] · area-01 `inferire-il-tier` · [[../training-taxonomy/class-situation-classification-continuous]] (di che natura è la situazione) |
+| 2-3 (cosa NON so) | cosa manca / dati mancanti | [[structured-thinking]] §2 (tabella «abbiamo questo dato? sì/no») · [[../training-taxonomy/class-assumption-audit-both-directions]] faccia (1) · [[low-confidence-gather-and-reorg]] (gather a budget) · [[../training-taxonomy/class-instrument-epistemic-reach]] (presente / assente / superato) |
+| 3-6 Decompose · Interconnessioni · Parallelize · Blocking | (implicito) | [[task-decomposition-adhoc-context]] · [[contradiction-detection-layer]] · [[../training-taxonomy/class-module-boundary-flow-convergence]] (il grafo dei flussi) · [[../training-taxonomy/class-confident-first-sequencing]] (l'ordine: prima ciò che è certo, sondando il rischio load-bearing) |
+| 7 Execute per concept-block | cosa è necessario vs cosa migliorerebbe | area-01 `calibrare-lo-sforzo` · [[../training-taxonomy/class-right-effort-for-stakes]] · [[../training-taxonomy/class-consumption-scale-for-budget]] (dosare sul budget, anche quando cambia a metà) |
+| 8 Verify loop | check di coerenza su quanto raccolto | [[structured-thinking]] §4-§5 · area-01 `validare-il-piano` · [[../training-taxonomy/gold-example-area03-verification-discipline]] (verification-discipline, area 3) — estesa nel 2026-09-11 alla **completezza dello stato** (fase 3 di [[../training-taxonomy/lab-sequence]]: il modello costruisce il proprio gate, giudicato con accuratezza bilanciata su candidati etichettati) |
+| check periodico (fisso) | scopo vs direzione | area-01 `rilevare-drift-dall-aim` (*«gli ultimi N step mi hanno avvicinato o allontanato?»*, reward su latenza di rilevazione **e** falsi positivi) |
+| check periodico (fisso) | completezza dell'informazione | **gap 11b del 2026-08-25** (faccia RICORRENTE di assumption-audit): due enunciazioni indipendenti dello stesso buco a 17 giorni — **ancora non scritta**, in coda |
+
+**Le due domande di design di Fra, già risolte in wiki**: (i) *una CoT o un turno per fase?* → entrambe, a due scale: la scheda + tabella-dati è **intra-turno** e si ripete a ogni turno (~15 token, [[structured-thinking]] §1-§2); le fasi macro attraversano i turni ancorate alla lane task_list — l'harness dà un turno per volta per costruzione ([[persist-salient-facts]]); lungo-vs-corto per turno = D5. (ii) *come sceglie la fase, se l'ordine non è fisso?* → si impara **solo** se «fai tutte le fasi in ordine fisso» ha un **costo** nella fixture ([[../training-taxonomy/dataset-construction-playbook]] §«se fare tutto è gratis, nessun lab misura il giudizio»); label-gen = **twin-pair per fase** ([[phased-reward-and-rh-detection]], P-COPPIA applicata alle fasi). I passi che lui vuole fissi (check finale, check periodici) sono già i soli fissi del protocollo.
+
+**Cosa il protocollo NON copre e nessuna classe copre** (gap-scan #36, dichiarato): la *mossa* del trasferimento analogico («questo problema ha la struttura di uno che ho già risolto altrove») — proposta in `todo.md` (idea 11, lettura c), non scritta.
 
 ## Sources
 - User notes 2026-06-23, Telegram msg 44.

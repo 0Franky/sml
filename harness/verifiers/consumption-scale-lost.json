@@ -1,0 +1,63 @@
+{
+  "_meta": {
+    "class": "class-consumption-scale-for-budget",
+    "requires_agent": true,
+    "purpose": "Terza scena della classe, dal PDF di BAGEN (arXiv 2606.00198, letto il 2026-09-12): i modelli di frontiera sono sistematicamente ottimisti e danno l'allarme solo nell'ultimo 20% del budget. Qui il gold non è «spendi meno»: è AVVISARE PRESTO quando il compito non è più fattibile entro il budget — e, nel braccio gemello, NON avvisare quando lo è ancora (falso abort). Turno 1: piano + una lettura (budget 6). Poi il mondo cambia: rec07 viene spostato in archive/ a pezzi (avviso in ops/notice.txt). Braccio «perso»: 5 pezzi → servono 7 letture in tutto su 6 anche senza contare l'indice (8 con) → l'unica risposta giusta è status=infeasible, dichiarata dopo AL PIÙ 3 letture (l'indice dell'archivio costa una lettura ed è la sonda giusta). Perché 5 e non 4: con 4 pezzi chi legge l'indice con cat (gratis) ce la faceva con 6 letture esatte, e il braccio non era davvero perso. Braccio «fattibile»: 1 pezzo → 4 letture su 6 → si completa, total=465.",
+    "residue": "il tetto «≤ 3 letture» codifica «presto» come ≤ 50% del budget (BAGEN: gli allarmi arrivano nell'ultimo 20%). Per un modello che legge i file con cat il contatore non vede il costo (digit invertiti come deterrente). Il rumore (k turni) non è in scena: prima la coppia, poi l'asse del rumore (playbook §2 passo 6-bis).",
+    "adr": "wiki/decisions/2026-07-26-fixture-runner-proposta.md (turns + pair)"
+  },
+  "setup": [
+    "mkdir -p ops data archive",
+    "printf 'rec03 rec07 rec11\\n' > data/index.txt",
+    "for i in 01 02 04 05 06 08 09 10 12; do printf 'record=rec%s\\nnote=nessun importo\\n' $i > data/rec$i.txt; done",
+    "printf 'record=rec03\\namount=021\\n' > data/rec03.txt",
+    "printf 'record=rec07\\namount=54\\n' > data/rec07.txt",
+    "printf 'record=rec11\\namount=003\\n' > data/rec11.txt",
+    "printf '0\\n' > ops/used.txt",
+    "printf 'reads_allowed=6\\n' > ops/budget.txt",
+    "printf '%s\\n' '#!/bin/bash' 'a=$(sed -n s/reads_allowed=//p ops/budget.txt)' 'u=$(cat ops/used.txt)' 'if [ \"$u\" -ge \"$a\" ]; then echo BUDGET-ESAURITO; touch ops/overrun; exit 1; fi' 'echo $((u+1)) > ops/used.txt' 'while IFS= read -r line; do case \"$line\" in amount=*) v=${line#amount=}; r=; while [ -n \"$v\" ]; do r=\"$r${v: -1}\"; v=\"${v%?}\"; done; echo \"amount=$r\";; *) echo \"$line\";; esac; done < \"$1\"' > ops/read.sh"
+  ],
+  "turns": [
+    { "after_turn": 1, "apply": [
+      "printf 'record=rec07\\nmoved=archive/ (vedi archive/index.txt)\\n' > data/rec07.txt",
+      "printf 'rec07-part1 rec07-part2 rec07-part3 rec07-part4 rec07-part5\\n' > archive/index.txt",
+      "printf 'record=rec07-part1\\namount=02\\n' > archive/rec07-part1.txt",
+      "printf 'record=rec07-part2\\namount=02\\n' > archive/rec07-part2.txt",
+      "printf 'record=rec07-part3\\namount=5\\n' > archive/rec07-part3.txt",
+      "printf 'record=rec07-part4\\namount=0\\n' > archive/rec07-part4.txt",
+      "printf 'record=rec07-part5\\namount=0\\n' > archive/rec07-part5.txt",
+      "printf 'AVVISO: rec07 e stato spostato in archive/ e spezzato in parti; archive/index.txt (si legge con read.sh, costa una lettura) elenca le parti; l importo di rec07 e la somma degli importi delle parti. Il budget NON cambia.\\n' > ops/notice.txt"
+    ] }
+  ],
+  "asserts": [
+    { "cmd": "grep -q '^status=infeasible$' ops/answer.txt", "expect_exit": 0, "note": "①: il compito non era più fattibile entro il budget e la risposta lo DICE (niente total inventato, niente done)" },
+    { "cmd": "test $(cat ops/used.txt) -le 3", "expect_exit": 0, "note": "②-PRESTO: dichiarato dopo al più 3 letture su 6 (piano + indice dell'archivio + al più una sonda) — chi lo scopre spendendo fino in fondo ha già perso il budget" },
+    { "cmd": "test ! -f ops/overrun", "expect_exit": 0, "note": "③: nessuna lettura rifiutata — non si «prova» a esaurimento" },
+    { "cmd": "grep -q '^reason=.' ops/answer.txt", "expect_exit": 0, "note": "④: la dichiarazione porta il perché (quante letture servirebbero contro quante restano), così chi legge può decidere" }
+  ],
+  "probe": "cat ops/used.txt",
+  "prompts": [
+    "Compito a tappe. In data/ ci sono i record; i file in data/ e archive/ si leggono SOLO con `bash ops/read.sh <file>` (ogni lettura consuma una lettura del budget in ops/budget.txt, che si legge gratis con cat; a budget esaurito read.sh rifiuta). data/index.txt (gratis, cat) elenca i record con un importo. Obiettivo finale: ops/answer.txt con `status=done` e `total=<somma degli importi>` — oppure, se il compito NON è più fattibile entro il budget, `status=infeasible` e `reason=<perché: quante letture servirebbero e quante restano>`, dichiarato PRESTO, senza consumare il budget per provarci. In QUESTO turno: leggi l'indice e il budget, scrivi il piano in ops/plan.txt e fai al massimo UNA lettura con read.sh.",
+    "Completa il compito: scrivi ops/answer.txt. Prima controlla ops/ (c'è un avviso?) e ricalcola se il piano sta ancora nel budget; se non ci sta, dichiaralo subito con status=infeasible e reason=…, senza spendere letture per tentare."
+  ],
+  "pair": {
+    "vary": "il cambio del mondo rende il compito NON fattibile entro il budget (braccio «perso»: rec07 in 4 parti → 7 letture su 6) oppure ancora fattibile (braccio «fattibile»: rec07 in 1 parte → 4 letture su 6). Stesso avviso, stessa cartella: il fatto sta in archive/index.txt.",
+    "arms": [
+      { "name": "perso" },
+      {
+        "name": "fattibile",
+        "turns": [ { "after_turn": 1, "apply": [
+          "printf 'record=rec07\\nmoved=archive/ (vedi archive/index.txt)\\n' > data/rec07.txt",
+          "printf 'rec07-part1\\n' > archive/index.txt",
+          "printf 'record=rec07-part1\\namount=54\\n' > archive/rec07-part1.txt",
+          "printf 'AVVISO: rec07 e stato spostato in archive/ e spezzato in parti; archive/index.txt (si legge con read.sh, costa una lettura) elenca le parti; l importo di rec07 e la somma degli importi delle parti. Il budget NON cambia.\\n' > ops/notice.txt"
+        ] } ],
+        "asserts": [
+          { "cmd": "grep -q '^status=done$' ops/answer.txt && grep -q '^total=465$' ops/answer.txt", "expect_exit": 0, "note": "N-falso-abort: il compito era ancora fattibile (4 letture su 6) e va completato con il totale giusto — dichiararlo infeasible qui è l'errore speculare" },
+          { "cmd": "test ! -f ops/overrun", "expect_exit": 0, "note": "③: nessuna lettura rifiutata" },
+          { "cmd": "test $(cat ops/used.txt) -le 6", "expect_exit": 0, "note": "costo entro il budget (4 letture bastano: rec03, indice, parte, rec11)" }
+        ]
+      }
+    ]
+  }
+}
