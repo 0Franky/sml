@@ -2,12 +2,12 @@
 name: domande-aperte-per-fra
 description: "🔴 REGISTRO delle domande aperte per Fra — si scrive QUI prima di mandarle su Telegram (regola sua, 2026-08-23: «segnare sempre le domande prima in locale sul file»). Ogni voce: contesto, fatto misurato, opzioni, reco. Quando risponde, la voce si chiude con la data e il numero del messaggio."
 type: tracker
-status: 🗳️ 2 aperte (D12 multimodale: lettera o rationale? · D11 PRM appreso fuori dal loop di Wave 6) — 10 chiuse (3 su delega, msg 2208), 1 segnalazione (2026-09-11)
+status: 🗳️ 1 aperta (D11 PRM appreso fuori dal loop di Wave 6) — D12 chiusa il 2026-09-12 (msg 2238, opzione A) — 10 chiuse (3 su delega, msg 2208), 1 segnalazione (2026-09-11)
 tags: [tracker, decisioni, telegram, area-processo]
 last_updated: 2026-09-12
 ---
 
-# 🗳️ Domande aperte per Fra — 2 al 2026-09-12 (D12, D11) · 10 chiuse (3 su delega)
+# 🗳️ Domande aperte per Fra — 1 al 2026-09-12 (D11) · 11 chiuse · 10 chiuse (3 su delega)
 
 > Una domanda che vive solo in chat sparisce alla prima compaction, e con lei la risposta quando arriva
 > (l'API di Telegram non espone la cronologia). Per questo si scrive **qui prima**, e il hook
@@ -17,7 +17,9 @@ last_updated: 2026-09-12
 
 ## Aperte
 
-### D12 · Il vincolo «non serve multimodale» (tuo, 2026-07-24 msg 1808): vale la LETTERA o il RATIONALE? — aperta 2026-09-12 (nata dalla tua domanda sul 3.8, TG msg 2228)
+### D12 · Il vincolo «non serve multimodale»: lettera o rationale? — aperta 2026-09-12 · ✅ **CHIUSA 2026-09-12, TG msg 2238: «Ok (A) Vale il rationale: un encoder separabile non è peso morto → 3.6 e 3.8 restano entrambi candidabili e si scelgono per misura»**
+
+> **Conseguenza applicata**: il vincolo del 2026-07-24 si legge sul **rationale** (peso morto *dentro* l'LM, come nel Gemma 12B Unified encoder-free) e **non** sulla lettera (qualunque vision tower). Qwen3.6-27B e Qwen3.8-27B **restano entrambi in rosa**; il 3.8 resta dietro **per misura** (F46), non per esclusione. Il Gemma 12B Unified resta archiviato: lì la multimodalità è nei pesi dell'LM.
 
 - **Contesto**: il 2026-07-24 hai ratificato *«non serve multimodale»*; la nota registrata dice che è *«un input che penalizza i candidati multimodali»* e archivia **Gemma 4 12B Unified** perché *«la sua natura **encoder-free** multimodale spende parametri su vision/audio non richiesti → peso morto **strutturale**»*, con l'inciso *«cautela su Qwen3.6-27B multimodale»*. Io il 14 agosto ho **escluso Qwen3.8-27B** citando fra i motivi la multimodalità.
 - **Fatto misurato (2026-09-12, sui `config.json` reali scaricati da HF)**: `Qwen3.6-27B` e `Qwen3.8-27B` hanno **lo stesso involucro** — classe `Qwen3_5ForConditionalGeneration`, `image_token_id` 248056, `vision_config` — cioè **il criterio non separa il candidato protetto da quello escluso**. In più (F44): in entrambi il **blocco testuale si istanzia da solo** (`AutoModelForCausalLM.from_config(text_config)` → `Qwen3_5ForCausalLM`, 64 layer, 48 GatedDeltaNet + 16 full), cioè l'encoder è **sopra** l'LM, non dentro come nel 12B Unified.
