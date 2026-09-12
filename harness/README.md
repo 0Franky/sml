@@ -145,6 +145,22 @@ La cattura automatica (`regexIngress`) e la redazione degli output riconoscono i
 
 > **Contributi** 🙌 — questa lista è una base pensata per il progetto e per l'uso personale: oggi non punta a coprire *ogni* provider esistente, ma a coprire bene i più comuni. **Le PR che aggiungono shape di secret diffuse sono benvenute**: basta un pattern in `src/secrets-redact.mjs`, un test in `test/unit/secrets-redact*`/`sealed-secrets`, e una riga in questa tabella. Miglioramenti previsti = quelli che servono al progetto o all'uso reale; il resto lo porta avanti volentieri la community.
 
+## Misura — scene, lab, gate *(la parte che oggi fa il lavoro; aggiunta al README il 2026-09-12)*
+
+Questo README descriveva solo le **estensioni**. Ma da luglio l'attività principale dell'harness è **misurare**: decidere quale modello base scegliere e quali skill vanno addestrate, con oracoli deterministici invece che a occhio.
+
+| cosa | dove | a cosa serve |
+|---|---|---|
+| **Scene** (10) | `verifiers/*.json` | una spec che **avanza fra i turni** (`turns`) e si sdoppia in **bracci** (`pair`): il mondo cambia dopo che il modello ha deciso. L'elenco e come si leggono: [`verifiers/README.md`](verifiers/README.md) |
+| **Lab** (22) | `verifiers/*-lab.mjs` | eseguono il **criterio** contro il gold e ≥3 **policy a intelligenza zero**: spedibili solo se il gold passa e ogni policy fissa cade. Un lab che nessuna policy fa cadere non misura nulla |
+| **Gate** | `node tools/gate.mjs` (da `harness/`) | 22 lab + **6 checker strutturali** + suite unit/integration. Esce non-zero se qualcosa è rosso — l'hook di pre-commit legge la lista **da qui** (SSOT) |
+| **Modello vero nel loop** | `eval/run-scene.mjs` · `eval/run-scene-batch.mjs` | una sessione pi headless gioca la scena (`EVAL_PROVIDER`, `MODEL_ID`, `EVAL_ARM=vanilla\|ours`); il batch dà **k/n per assert e per modello** |
+| **Vista per classe** | `eval/scenes-to-matrix.mjs` | i jsonl del batch → **matrice task × competenza**, con `--before/--after` per il confronto (prima/dopo un gruppo di classi, oppure modello A vs B) |
+| **Costo, a spesa zero** | `eval/tools-offered.mjs` · `eval/measure-tool-payload.mjs` | quali tool arrivano davvero al modello e quanto pesano, con chiave invalida: nessun token speso |
+
+> 🔴 **Come si legge un risultato**: il **PASS** (tutti gli assert di un braccio) è l'unica cifra con cui si rivendica un successo; il **per-assert spiega un fallimento**. Un assert-reward può passare *perché il compito non è stato fatto* — v. `verifiers/README.md` e i finding F43/F45 in `../wiki/harness-experiment-log.md`.
+> ⚠️ **Non modificare runner o scene mentre un batch gira**: ogni spawn rilegge da disco e la tabella cambia forma a metà.
+
 ## Roadmap
 
 - **Fase 0** (questo scaffold) → walking skeleton + verifier-sandbox.
