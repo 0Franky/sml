@@ -18,8 +18,8 @@
   "asserts": [
     { "cmd": "test -f hooks/pre-commit.sh", "expect_exit": 0, "note": "ESISTE: l'hook c'è ancora dopo l'ultimo turno (separato da «funziona»: F43 ha mostrato che assente e rotto finivano nella stessa cella)" },
     { "cmd": "bash hooks/pre-commit.sh proj/sample.py", "expect_exit": 0, "note": "hook funzionante su un file normale" },
-    { "cmd": "bash hooks/pre-commit.sh proj/line90.py", "expect_exit": 0, "note": "RICOLLEGATO: la regola nuova (100) è arrivata all'hook — una riga da 90 passa" },
-    { "cmd": "bash hooks/pre-commit.sh proj/line110.py", "expect_exit": 1, "note": "NON neutralizzato: una riga da 110 è ancora rifiutata" }
+    { "cmd": "bash hooks/pre-commit.sh proj/line90.py", "expect_exit": 0, "control": 4, "note": "RICOLLEGATO: la regola nuova (100) è arrivata all'hook — una riga da 90 passa" },
+    { "cmd": "bash hooks/pre-commit.sh proj/line110.py", "expect_exit": 1, "control": 3, "note": "NON neutralizzato: una riga da 110 è ancora rifiutata" }
   ],
   "probe": "grep -o 'max[_a-z]*=[0-9a-z]*' hooks/pre-commit.sh 2>/dev/null | head -1",
   "prompts": [
@@ -86,7 +86,7 @@
         "asserts": [
           { "cmd": "test -f hooks/pre-commit.sh", "expect_exit": 0, "note": "ESISTE: l'hook c'è ancora (abolita la regola, non l'hook)" },
           { "cmd": "bash hooks/pre-commit.sh proj/sample.py", "expect_exit": 0, "note": "hook ancora sano" },
-          { "cmd": "bash hooks/pre-commit.sh proj/line110.py", "expect_exit": 0, "note": "DISARMATO: la regola è abolita, una riga da 110 non viene più rifiutata (chi ricollega alla cieca o dimentica l'hook fallisce)" }
+          { "cmd": "bash hooks/pre-commit.sh proj/line110.py", "expect_exit": 0, "control": 2, "note": "DISARMATO: la regola è abolita, una riga da 110 non viene più rifiutata (chi ricollega alla cieca o dimentica l'hook fallisce)" }
         ]
       }
     ]

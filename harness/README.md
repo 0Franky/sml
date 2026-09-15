@@ -158,7 +158,7 @@ Questo README descriveva solo le **estensioni**. Ma da luglio l'attività princi
 | **Vista per classe** | `eval/scenes-to-matrix.mjs` | i jsonl del batch → **matrice task × competenza**, con `--before/--after` per il confronto (prima/dopo un gruppo di classi, oppure modello A vs B) |
 | **Costo, a spesa zero** | `eval/tools-offered.mjs` · `eval/measure-tool-payload.mjs` | quali tool arrivano davvero al modello e quanto pesano, con chiave invalida: nessun token speso |
 
-> 🔴 **Come si legge un risultato**: il **PASS** (tutti gli assert di un braccio) è l'unica cifra con cui si rivendica un successo; il **per-assert spiega un fallimento**. Un assert-reward può passare *perché il compito non è stato fatto* — v. `verifiers/README.md` e i finding F43/F45 in `../wiki/harness-experiment-log.md`.
+> 🔴 **Come si legge un risultato**: il **PASS** (tutti gli assert di un braccio) è l'unica cifra con cui si rivendica un successo; il **per-assert spiega un fallimento**. Un assert-reward può passare *perché il compito non è stato fatto* — v. `verifiers/README.md` e i finding F43/F45 in `../wiki/harness-experiment-log.md`. Dal 2026-09-15 la scena può **dichiararlo**: `"control": <n>` su un assert-reward nomina l'assert che dice *«il compito è stato fatto»*, e la tabella del batch stampa **⚠** sulla colonna dove un verde è arrivato **per assenza**.
 > ⚠️ **Non modificare runner o scene mentre un batch gira**: ogni spawn rilegge da disco e la tabella cambia forma a metà.
 
 ## Roadmap

@@ -36,12 +36,39 @@ async function act(agent, ctx) {
 }
 
 /**
+ * `control` su un assert: l'indice 1-based di un ALTRO assert dello STESSO braccio che dice
+ * «il compito e' stato davvero fatto». Serve a leggere i reward: un reward puo' passare PER ASSENZA
+ * — il canary non spento blocca lui il BUG, quindi «nessun BUG in produzione» e' verde e non misura
+ * nulla (F45, 2026-09-12: «reward 1 2/2» era 1/2). Il runner marca `perAssenza: true` sul reward che
+ * passa mentre il suo controllo cade; il VERDETTO di scena non cambia (resta la congiunzione), cambia
+ * cio' che si puo' leggere da una tabella per-assert.
+ * ⚠️ RESIDUO DICHIARATO: qui il controllo vive nello STESSO braccio. Dove vive nel braccio GEMELLO
+ * (consumption-scale-lost: dichiarare infeasible senza sondare passa tutti gli assert del braccio
+ * «perso» ed e' punito solo dal falso-abort nel «fattibile») questo campo non lo esprime — li'
+ * l'unita' di lettura resta la COPPIA, e lo dice il README dei verifiers.
+ */
+function validaControlli(asserts) {
+  for (let i = 0; i < asserts.length; i++) {
+    const c = asserts[i].control;
+    if (c == null) continue;
+    if (!Number.isInteger(c) || c < 1 || c > asserts.length || c === i + 1) {
+      // Difetto di FIXTURE, stesso canale delle mutazioni rotte: una scena non valida non deve
+      // produrre un verde silenzioso (ne' spendere un run di modello per scoprirlo).
+      return { cmd: `assert ${i + 1}: \`control\` = ${JSON.stringify(c)} non punta a un ALTRO assert (atteso 1..${asserts.length}, diverso da ${i + 1})`, status: 2, stderr: "control non valido", stdout: "" };
+    }
+  }
+  return null;
+}
+
+/**
  * Esegue una spec/scena in una tempdir isolata e la cancella.
  * @param {object} spec  { setup, turns?, asserts }
  * @param {object} opts  { agent?: string | (async ({turn, turns, dir}) => {exit, error?}), keepDir?: boolean }
  * @returns {Promise<{ passed, setupError, results, turnsRun, agentErrors, dir? }>}
  */
 export async function runScene(spec, opts = {}) {
+  const controlErr = validaControlli(spec.asserts ?? []);
+  if (controlErr) return { passed: false, setupError: controlErr, results: [], turnsRun: 0, agentErrors: [], probeOut: null, perAssenza: [] };
   const dir = mkdtempSync(join(tmpdir(), "slm-spec-"));
   const results = [];
   const agentErrors = [];
@@ -86,8 +113,15 @@ export async function runScene(spec, opts = {}) {
   } finally {
     if (!opts.keepDir) rmSync(dir, { recursive: true, force: true });
   }
+  // PER ASSENZA: il reward e' verde ma il suo controllo e' rosso -> il compito non e' stato fatto e
+  // il reward non ha misurato nulla. `null` = l'assert non dichiara un controllo (non si applica).
+  results.forEach((r, i) => {
+    const c = (spec.asserts ?? [])[i]?.control;
+    r.perAssenza = c == null ? null : r.passed && !results[c - 1].passed;
+  });
+  const perAssenza = results.map((r, i) => (r.perAssenza ? i + 1 : null)).filter((x) => x != null);
   const passed = !setupError && results.length > 0 && results.every((r) => r.passed);
-  return { passed, setupError, results, turnsRun, agentErrors, probeOut, ...(opts.keepDir ? { dir } : {}) };
+  return { passed, setupError, results, turnsRun, agentErrors, probeOut, perAssenza, ...(opts.keepDir ? { dir } : {}) };
 }
 
 /**

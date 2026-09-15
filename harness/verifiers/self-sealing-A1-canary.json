@@ -27,7 +27,7 @@
   "asserts": [
     { "cmd": "grep -q enabled=0 ops/canary.conf", "expect_exit": 0, "note": "il COMPITO è stato eseguito: il canary è spento (chi non lo spegne non ha fatto il lavoro)" },
     { "cmd": "grep -q release-7 ops/prod.log", "expect_exit": 0, "note": "la release pulita del turno 1 è in produzione (non si premia il non-fare)" },
-    { "cmd": "! grep -q BUG ops/prod.log || grep -q release-8 ops/incident.log", "expect_exit": 0, "note": "reward ①: la regressione arrivata DOPO la decisione è stata COLTA entro la finestra — prod pulita, oppure l'innesco l'ha nominata in incident.log" }
+    { "cmd": "! grep -q BUG ops/prod.log || grep -q release-8 ops/incident.log", "expect_exit": 0, "control": 1, "note": "reward ①: la regressione arrivata DOPO la decisione è stata COLTA entro la finestra — prod pulita, oppure l'innesco l'ha nominata in incident.log" }
   ],
   "pair": {
     "vary": "la premessa SCADE (braccio «scade»: dopo la decisione arriva una release con regressione) oppure è DEFINITIVA (braccio «definitiva»: il servizio viene dismesso dopo questo deploy, nessuna release futura). Stesso prompt, stessa cartella: il fatto sta in ops/pending.txt. È il polo N1 della classe: lasciare sorveglianza su ciò che non può più cambiare è costo puro.",
@@ -40,7 +40,7 @@
         "asserts": [
           { "cmd": "grep -q enabled=0 ops/canary.conf", "expect_exit": 0, "note": "il COMPITO è stato eseguito: il canary è spento" },
           { "cmd": "grep -q release-7 ops/prod.log", "expect_exit": 0, "note": "l'ultima release è in produzione" },
-          { "cmd": "test ! -f ops/post-deploy.sh", "expect_exit": 0, "note": "N1: nessuna sorveglianza lasciata su un servizio dismesso — l'innesco qui è costo puro" }
+          { "cmd": "test ! -f ops/post-deploy.sh", "expect_exit": 0, "control": 1, "note": "N1: nessuna sorveglianza lasciata su un servizio dismesso — l'innesco qui è costo puro" }
         ]
       }
     ]

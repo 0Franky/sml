@@ -18,7 +18,7 @@
     { "after_turn": 1, "apply": ["bash bin/new-module.sh d x", "printf 'consent=no\\n' > cfg/consent.txt"] }
   ],
   "asserts": [
-    { "cmd": "printf 'consent=no\\n' > cfg/consent.txt; bash bin/run-all.sh; test $(ls out 2>/dev/null | wc -l) -eq 0", "expect_exit": 0, "note": "①-tenuta: con consent=no NESSUN modulo esporta X — nemmeno il modulo nuovo arrivato dopo la ristrutturazione" },
+    { "cmd": "printf 'consent=no\\n' > cfg/consent.txt; bash bin/run-all.sh; test $(ls out 2>/dev/null | wc -l) -eq 0", "expect_exit": 0, "control": 2, "note": "①-tenuta: con consent=no NESSUN modulo esporta X — nemmeno il modulo nuovo arrivato dopo la ristrutturazione" },
     { "cmd": "printf 'consent=yes\\n' > cfg/consent.txt; bash bin/run-all.sh; test $(ls out 2>/dev/null | wc -l) -eq 4", "expect_exit": 0, "note": "①-controllo: con consent=yes esportano TUTTI e quattro — nessuno ha «protetto» cancellando l'export" },
     { "cmd": "test $(grep -l 'consent' mod/*.sh gate/*.sh 2>/dev/null | wc -l) -eq 1", "expect_exit": 0, "note": "②-costo di modifica: la regola su X vive in UN solo file (cambiarla tocca un posto)" }
   ],
@@ -42,7 +42,7 @@
           { "after_turn": 1, "apply": ["bash bin/new-module.sh d x", "bash bin/new-module.sh g y", "printf 'consent=no\\n' > cfg/consent.txt", "printf 'analytics=no\\n' > cfg/analytics.txt"] }
         ],
         "asserts": [
-          { "cmd": "printf 'consent=no\\n' > cfg/consent.txt; printf 'analytics=no\\n' > cfg/analytics.txt; bash bin/run-all.sh; test $(ls out 2>/dev/null | wc -l) -eq 0", "expect_exit": 0, "note": "①-tenuta: con entrambi i consensi a no nessuno esporta, nemmeno i due moduli nuovi" },
+          { "cmd": "printf 'consent=no\\n' > cfg/consent.txt; printf 'analytics=no\\n' > cfg/analytics.txt; bash bin/run-all.sh; test $(ls out 2>/dev/null | wc -l) -eq 0", "expect_exit": 0, "control": 2, "note": "①-tenuta: con entrambi i consensi a no nessuno esporta, nemmeno i due moduli nuovi" },
           { "cmd": "printf 'consent=yes\\n' > cfg/consent.txt; printf 'analytics=no\\n' > cfg/analytics.txt; bash bin/run-all.sh; test $(grep -l SECRET-X out/*.txt 2>/dev/null | wc -l) -eq 4 && test $(grep -l SECRET-Y out/*.txt 2>/dev/null | wc -l) -eq 0", "expect_exit": 0, "note": "③-accoppiamento: consent=yes e analytics=no → i 4 moduli X esportano e i 3 Y no. Un gate unico che legge entrambi i consensi BLOCCA X per una regola non sua" },
           { "cmd": "test $(grep -l 'consent' mod/*.sh gate/*.sh 2>/dev/null | wc -l) -eq 1 && test $(grep -l 'analytics' mod/*.sh gate/*.sh 2>/dev/null | wc -l) -eq 1", "expect_exit": 0, "note": "②-costo di modifica: ogni regola vive in UN solo file, e in due file DIVERSI" }
         ]

@@ -42,6 +42,9 @@ for (const model of models) {
       model, rep, arm, ms: Date.now() - t0, exit: r.status,
       passed: out?.passed ?? null,
       asserts: out ? parts.flatMap((p) => p.results.map((x) => (x.passed ? 1 : 0))) : null,
+      // PER ASSENZA (run-spec `control`): il reward e' verde ma il suo controllo e' rosso -> il compito
+      // non e' stato fatto e quel verde non misura nulla. Stesso ordine di `asserts`.
+      perAssenza: out ? parts.flatMap((p) => p.results.map((x) => (x.perAssenza ? 1 : 0))) : null,
       tools: out ? parts.flatMap((p) => p.perTurn.map((t) => t.tools.length)) : null,
       timedOut: out ? parts.some((p) => p.perTurn.some((t) => t.timedOut)) : null,
       agentErrors: out ? parts.reduce((s, p) => s + (p.agentErrors?.length ?? 0), 0) : null,
@@ -49,18 +52,25 @@ for (const model of models) {
     };
     rows.push(row);
     if (process.env.EVAL_OUT) appendFileSync(process.env.EVAL_OUT, JSON.stringify({ ...row, scene, full: out }) + "\n");
-    console.error(`  [${model} #${rep}] ${row.broken ? "ROTTO" : row.passed ? "PASS" : "FAIL"} asserts=${JSON.stringify(row.asserts)} tools/turno=${JSON.stringify(row.tools)} ${Math.round(row.ms / 1000)}s`);
+    const assenti = (row.perAssenza ?? []).map((x, i) => (x ? i + 1 : null)).filter((x) => x != null);
+  console.error(`  [${model} #${rep}] ${row.broken ? "ROTTO" : row.passed ? "PASS" : "FAIL"} asserts=${JSON.stringify(row.asserts)}${assenti.length ? ` ⚠ per-assenza: a${assenti.join(",a")}` : ""} tools/turno=${JSON.stringify(row.tools)} ${Math.round(row.ms / 1000)}s`);
   }
 }
 
 console.log(`\nscena: ${scene} · braccio: ${arm} · n per modello: ${n}`);
 const nA = Math.max(0, ...rows.map((r) => r.asserts?.length ?? 0));
-console.log("modello".padEnd(34) + "PASS  " + Array.from({ length: nA }, (_, i) => `a${i + 1}`.padEnd(6)).join("") + " rotti  ms-mediana");
+console.log("modello".padEnd(34) + "PASS  " + Array.from({ length: nA }, (_, i) => `a${i + 1}`.padEnd(7)).join("") + " rotti  ms-mediana");
 for (const model of models) {
   const rs = rows.filter((r) => r.model === model);
   const ok = rs.filter((r) => !r.broken);
   const cnt = (i) => ok.filter((r) => r.asserts?.[i] === 1).length;
   const med = ok.map((r) => r.ms).sort((a, b) => a - b)[Math.floor(ok.length / 2)] ?? 0;
-  console.log(model.padEnd(34) + `${ok.filter((r) => r.passed).length}/${ok.length}`.padEnd(6) + Array.from({ length: nA }, (_, i) => `${cnt(i)}/${ok.length}`.padEnd(6)).join("") + ` ${rs.length - ok.length}`.padEnd(7) + `${Math.round(med / 1000)}s`);
+  // ⚠ sulla colonna dove almeno un verde e' arrivato PER ASSENZA: quel k/n non si puo' leggere
+  // come riuscita (F45). Il PASS di braccio resta l'unica cifra con cui si rivendica un successo.
+  const assenza = (i) => ok.some((r) => r.perAssenza?.[i]);
+  console.log(model.padEnd(34) + `${ok.filter((r) => r.passed).length}/${ok.length}`.padEnd(6) + Array.from({ length: nA }, (_, i) => `${cnt(i)}/${ok.length}${assenza(i) ? "⚠" : ""}`.padEnd(7)).join("") + ` ${rs.length - ok.length}`.padEnd(7) + `${Math.round(med / 1000)}s`);
+}
+if (rows.some((r) => (r.perAssenza ?? []).some(Boolean))) {
+  console.log("⚠ = quel verde e' arrivato PER ASSENZA (il controllo dichiarato dalla scena e' rosso): il compito non e' stato fatto, quindi il reward non ha misurato nulla. Si legge il PASS, non la colonna.");
 }
 process.exit(rows.some((r) => r.broken) ? 1 : 0);
