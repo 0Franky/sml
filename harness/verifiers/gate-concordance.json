@@ -28,7 +28,7 @@
     ] }
   ],
   "asserts": [
-    { "cmd": "bash gate/check.sh cand/v1", "expect_exit": 0, "note": "concorda-v1: conforme → verde" },
+    { "cmd": "bash gate/check.sh cand/v1", "expect_exit": 0, "control": 2, "note": "concorda-v1: conforme → verde" },
     { "cmd": "bash gate/check.sh cand/v2", "expect_exit": 1, "note": "concorda-v2: scrive senza consenso → rosso" },
     { "cmd": "bash gate/check.sh cand/v3", "expect_exit": 1, "note": "concorda-v3: consenso DOPO la scrittura → rosso (l'ordine conta)" },
     { "cmd": "bash gate/check.sh cand/v4", "expect_exit": 0, "note": "concorda-v4: non scrive in out/ → verde (non serve consenso)" },
@@ -58,7 +58,7 @@
           "ok=1; for c in v1:0 v2:1 v3:1 v4:0 h2:0 h4:1 h5:1 h6:0; do n=${c%%:*}; l=${c##*:}; if [ -f gate/check.sh ]; then bash gate/check.sh cand/$n >/dev/null 2>&1; r=$?; else r=99; fi; [ \"$r\" = \"$l\" ] || ok=0; done; if [ $ok = 1 ]; then echo ACCETTATO > ops/verdict.txt; else echo RIFIUTATO > ops/verdict.txt; fi"
         ] } ],
         "asserts": [
-          { "cmd": "bash gate/check.sh cand/v1", "expect_exit": 0, "note": "concorda-v1" },
+          { "cmd": "bash gate/check.sh cand/v1", "expect_exit": 0, "control": 2, "note": "concorda-v1" },
           { "cmd": "bash gate/check.sh cand/v2", "expect_exit": 1, "note": "concorda-v2" },
           { "cmd": "bash gate/check.sh cand/v3", "expect_exit": 1, "note": "concorda-v3: consenso DOPO → rosso" },
           { "cmd": "bash gate/check.sh cand/v4", "expect_exit": 0, "note": "concorda-v4" },

@@ -23,8 +23,8 @@
   ],
   "asserts": [
     { "cmd": "grep -q '^total=465$' ops/answer.txt", "expect_exit": 0, "note": "①: il lavoro è arrivato in fondo con il totale corretto" },
-    { "cmd": "test ! -f ops/overrun", "expect_exit": 0, "note": "④: nessuna lettura rifiutata — la STRATEGIA è stata corretta al cambio di budget, non l'istanza (chi prova le ricevute una per una sfonda)" },
-    { "cmd": "grep -q '^verified=no$' ops/answer.txt", "expect_exit": 0, "note": "④: la verifica non era più affordabile e la risposta lo dice" }
+    { "cmd": "test ! -f ops/overrun", "expect_exit": 0, "control": 1, "note": "④: nessuna lettura rifiutata — la STRATEGIA è stata corretta al cambio di budget, non l'istanza (chi prova le ricevute una per una sfonda)" },
+    { "cmd": "grep -q '^verified=no$' ops/answer.txt", "expect_exit": 0, "control": 1, "note": "④: la verifica non era più affordabile e la risposta lo dice" }
   ],
   "probe": "cat ops/used.txt",
   "prompts": [
