@@ -28,6 +28,20 @@
  *    branch-reward di #32. Si gronda **la ricerca**, non il ramo.
  *    Il **tetto** chiude l'altro lato: sforare = fallire, cosi' `cerca-tutto-sempre` non vince.
  *
+ * 3. **RI-QUERY IDENTICA = NEGATIVO** (aggiunto il 2026-09-15 da `2608.01913`: ripetere la stessa
+ *    interrogazione e' il predittore piu' pulito del fallimento, rho = -0,83). Non e' una penalita'
+ *    morbida ma una condizione di fallimento, e la ragione e' che **non porta informazione**: la
+ *    stessa via da' la stessa risposta, quindi e' costo puro travestito da ricerca. Distingue
+ *    **quattro sonde** da **quattro sonde DIVERSE**, cioe' riformulare da insistere.
+ *    Per tenerlo separabile dal tetto le vie sono passate a SEI con il tetto fermo a quattro:
+ *    prima, sforare il tetto era possibile solo ripetendo una via, e i due difetti erano
+ *    strutturalmente accoppiati — il lab non poteva dire quale dei due stava punendo.
+ *    ⚠️ **Quanto pesa, MISURATO con l'ablazione**: spenta la regola, la policy che insiste passa
+ *    **2 righe su 9** (`valido-L1` e `superato-L1`: indovina il verdetto senza aver guadagnato
+ *    l'informazione). Il VERDETTO del gate **non cambia** (2 < 9: non diventa mai una sopravvissuta).
+ *    Quindi la regola e' load-bearing **a livello di riga, non di gate** — ed e' li' che serve,
+ *    perche' un modello vero puo' insistere e avere ragione per fortuna.
+ *
  * ⚠️ COSA QUESTO GATE NON MISURA, dichiarato: la **formalizzazione in documentazione** di cio'
  * che si e' recuperato (la parte finale della richiesta) e' un'ALTRA skill — `class-design-artifact-lifecycle`
  * e `class-knowledge-base-curation`. Tenerla qui confonderebbe due misure: se il modello perde,
@@ -47,7 +61,11 @@ const TETTO = 4;
 
 /** livello 1 = palese (via 1) · 2 = nascosta (via 2) · 3 = da dedurre dal codice (via 3). */
 function traccia(id, livello, stato) {
-  const vie = [0, 1, 2, 3].map((i) => ({ nome: `via-${i + 1}`, trova: false, fresco: false, contraddice: false }));
+  // SEI vie con un tetto di QUATTRO: serve a tenere separati due segnali che altrimenti si
+  // confondono — «ha speso troppo» (sonde > tetto) e «ha ri-chiesto la stessa cosa» (ri-query).
+  // Con quattro vie e tetto quattro, sforare era possibile SOLO ripetendo una via: i due difetti
+  // erano strutturalmente accoppiati e il lab non poteva dire quale dei due stava punendo.
+  const vie = [0, 1, 2, 3, 4, 5].map((i) => ({ nome: `via-${i + 1}`, trova: false, fresco: false, contraddice: false }));
   const hit = livello - 1;
   if (stato === "valido") { vie[hit].trova = true; vie[hit].fresco = true; }
   if (stato === "superato") { vie[hit].trova = true; vie[hit].fresco = false; vie[3].contraddice = true; }
@@ -64,13 +82,21 @@ for (const stato of ["assente", "valido", "superato"]) {
 /** Una policy riceve un sondatore e restituisce {verdetto, residuo}. Il numero di sonde e' contato qui. */
 function run(fx, policy) {
   let sonde = 0;
-  const sonda = (i) => { sonde++; return fx.vie[i]; };
+  const viste = new Set();
+  let riquery = 0;
+  const sonda = (i) => { sonde++; if (viste.has(i)) riquery++; viste.add(i); return fx.vie[i]; };
   const out = policy(sonda, fx.vie.length);
   const corretto = out.verdetto === fx.stato;
   const dentroIlTetto = sonde <= fx.tetto;
+  // ⭐ RI-QUERY IDENTICA = NEGATIVO (2608.01913, letto il 2026-09-12: ripetere la stessa interrogazione
+  // e' il predittore piu' pulito del fallimento, rho = -0,83). Qui non e' una penalita' morbida ma una
+  // condizione di fallimento, e la ragione e' che NON PORTA INFORMAZIONE: la stessa via da' la stessa
+  // risposta, quindi e' costo puro travestito da ricerca. Distingue «quattro sonde» da «quattro sonde
+  // DIVERSE», che e' la differenza fra riformulare e insistere.
+  const senzaRiquery = riquery === 0;
   // Sull'assenza non basta il verdetto: serve la ricerca esaurita E il residuo dichiarato.
-  const provaSufficiente = fx.stato !== "assente" ? true : (sonde >= fx.tetto && out.residuo === true);
-  return { pass: corretto && dentroIlTetto && provaSufficiente, sonde, verdetto: out.verdetto };
+  const provaSufficiente = fx.stato !== "assente" ? true : (viste.size >= fx.tetto && out.residuo === true);
+  return { pass: corretto && dentroIlTetto && senzaRiquery && provaSufficiente, sonde, riquery, verdetto: out.verdetto };
 }
 
 // --- POLICY: il gold, e le scorciatoie a intelligenza zero -------------------
@@ -100,10 +126,21 @@ const POLICIES = {
 
   "cerca TUTTO sempre (ignora il tetto)": (sonda, n) => {
     let trovato = null, superato = false;
+    // sei vie DIVERSE contro un tetto di quattro: sfora il costo senza ripetere nulla, cosi' il lab
+    // punisce qui la spesa e non la ri-query (sono due difetti distinti e vanno tenuti distinti).
     for (let i = 0; i < n; i++) { const v = sonda(i); if (v.trova) trovato = v; if (v.contraddice && trovato) superato = true; }
-    sonda(0); sonda(1);                                               // due sonde di troppo: sfora
     if (!trovato) return { verdetto: "assente", residuo: true };
     return { verdetto: superato || !trovato.fresco ? "superato" : "valido", residuo: false };
+  },
+
+  // ⭐ INSISTE invece di riformulare: quattro sonde, cioe' DENTRO il tetto, ma sempre la stessa via.
+  // E' il difetto che 2608.01913 misura come predittore del fallimento; qui deve cadere anche quando
+  // per puro caso azzecca il verdetto, perche' non ha guadagnato l'informazione con cui risponde.
+  "insiste sulla STESSA via (ri-query identica, non riformulazione)": (sonda) => {
+    let trovato = null;
+    for (let k = 0; k < 4; k++) { const v = sonda(0); if (v.trova) trovato = v; }
+    if (!trovato) return { verdetto: "assente", residuo: true };
+    return { verdetto: trovato.fresco ? "valido" : "superato", residuo: false };
   },
 
   "cerimonia: dichiara il residuo senza cercare": () => ({ verdetto: "assente", residuo: true }),
@@ -115,7 +152,7 @@ for (const [nome, p] of Object.entries(POLICIES)) res[nome] = FIXTURES.map((fx) 
 if (VERBOSE) {
   for (const [nome, rs] of Object.entries(res)) {
     console.log(`\n${nome}`);
-    rs.forEach((r, i) => console.log(`   ${FIXTURES[i].id.padEnd(14)} ${r.pass ? "ok " : "NO "} verdetto=${r.verdetto} sonde=${r.sonde}`));
+    rs.forEach((r, i) => console.log(`   ${FIXTURES[i].id.padEnd(14)} ${r.pass ? "ok " : "NO "} verdetto=${r.verdetto} sonde=${r.sonde}${r.riquery ? ` ri-query=${r.riquery}` : ""}`));
   }
 }
 
