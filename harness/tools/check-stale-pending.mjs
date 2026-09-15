@@ -197,6 +197,15 @@ for (const file of mdFiles(WIKI)) {
     for (let i = 1; i < righe.length && righe[i] !== "---"; i++) {
       const m = righe[i].match(/^status:\s*(.+)$/);
       if (!m) continue;
+      // Se `status:` porta gia' un TAG della stessa tabella, QUELLO e' lo stato: e' la stessa SSOT del
+      // titolo, e le parole chiave sotto sono solo il ripiego per gli status scritti in prosa.
+      // ⚠️ Perche' (misurato il 2026-09-15 aprendo tutti i casi a mano, 7 su 7 falsi positivi):
+      // `status: 🟡 PLACEMENT RATIFICATO ... il CONTENUTO resta non revisionato` veniva ridotto alla
+      // parola «RATIFICATO» = «chiuso» e segnalato come incoerente col 🟡 del titolo — mentre il campo
+      // portava ESATTAMENTE lo stesso tag. Uno stato COMPOSTO ridotto a una parola misura la forma,
+      // non lo stato (playbook §4 ORACOLI). Tasso di segnale di quel ramo prima del fix: 0/7.
+      const tagNelloStatus = TAGS.find((t) => m[1].trimStart().startsWith(t));
+      if (tagNelloStatus) { statusAtteso = TAG_STATO[tagNelloStatus]; break; }
       const hit = STATUS_A_STATO.find(([re]) => re.test(m[1]));
       if (hit) statusAtteso = hit[1];
       break;
