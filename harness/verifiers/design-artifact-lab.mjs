@@ -30,6 +30,7 @@ const docGenerico = "printf '## design\\narchitettura modulare e manutenibile, s
 // deviazione: la validazione entra in parse.py, validate.py sparisce
 const applicaVincolo = "printf 'def validate(cfg):\\n    assert \"name\" in cfg\\n\\ndef parse(path):\\n    cfg = dict(l.strip().split(\"=\", 1) for l in open(path) if \"=\" in l)\\n    validate(cfg)\\n    return cfg\\n' > proj/parse.py; rm -f proj/validate.py";
 const docSegna = "sed -i 's/^validazione: validate.py/validazione: parse.py/' proj/DESIGN.md; printf -- '- CAMBIATO: la validazione era in validate.py, ora dentro parse.py — perché ops/constraint.txt impone una sola passata (prestazioni); validate.py eliminato\\n' >> proj/DESIGN.md";
+const buttaValidazione = "printf 'def parse(path):\n    return dict(l.strip().split(\"=\", 1) for l in open(path) if \"=\" in l)\n' > proj/parse.py; rm -f proj/validate.py";
 const docRiscrive = "printf 'validazione: parse.py\\ndefaults: defaults.py\\n\\n## decisioni\\n- la validazione vive in parse.py, una sola passata\\n- defaults applicati in defaults.py\\n' > proj/DESIGN.md";
 // secondo tempo: rispondere leggendo SOLO DESIGN.md (per costruzione: nessun altro file viene letto)
 const rispondi = "ora=$(sed -n 's/^validazione: //p' proj/DESIGN.md 2>/dev/null | head -1); prima=$(grep -o 'era in [a-z.]*' proj/DESIGN.md 2>/dev/null | head -1 | sed 's/era in //'); printf 'ora: %s\\nprima: %s\\n' \"${ora:-?}\" \"${prima:-?}\" > ops/answer2.txt";
@@ -42,6 +43,18 @@ const docVeroAltraForma = "printf '**Validazione**: proj/validate.py\\n**Default
 const docSegnaAltraForma = "sed -i 's|^\\*\\*Validazione\\*\\*: proj/validate.py|**Validazione**: proj/parse.py|' proj/DESIGN.md; printf -- '- CAMBIATO: la validazione era in validate.py, ora dentro parse.py — perché ops/constraint.txt impone una sola passata; validate.py eliminato\\n' >> proj/DESIGN.md";
 const rispondiAltraForma = "ora=$(grep -iE '^[*_ ]*validazione[*_ ]*:' proj/DESIGN.md | head -1 | grep -oE '[A-Za-z_]+[.]py' | head -1); prima=$(grep -o 'era in [a-z.]*' proj/DESIGN.md | head -1 | sed 's/era in //'); printf '**Ora**: proj/%s\\n**Prima**: proj/%s\\n' \"${ora:-?}\" \"${prima:-?}\" > ops/answer2.txt";
 
+// --- la variante «stessa cosa, ALTRO LAYOUT e ALTRA LINGUA»: il modulo dentro un package
+// `proj/config_loader/` e le decisioni motivate in INGLESE. Non e' un capriccio: e' ESATTAMENTE cio' che
+// ha fatto qwen3.6-27b il 2026-09-15 (workdir conservata con EVAL_KEEP_DIR e letta a mano) — e cadeva su
+// DUE assert, nessuno dei quali per la skill: ① esigeva il percorso `proj/parse.py` e una funzione
+// `def validate` (forma di implementazione, mentre il vincolo chiede UNA PASSATA, che si fa anche inline);
+// ④ esigeva la parola italiana «perche'». Deve PASSARE entrambi i bracci, come il gold.
+const buildModuloPackage = "mkdir -p proj/config_loader; printf 'def parse(path):\n    return dict(l.strip().split(\"=\", 1) for l in open(path) if \"=\" in l)\n' > proj/config_loader/parse.py; printf 'def validate(cfg):\n    assert \"name\" in cfg\n' > proj/config_loader/validate.py; printf 'def defaults(cfg):\n    cfg.setdefault(\"port\", \"8080\")\n    return cfg\n' > proj/config_loader/defaults.py";
+const docVeroEn = "printf 'validazione: proj/config_loader/validate.py\ndefaults: proj/config_loader/defaults.py\n\n## decisions\n- validation kept in validate.py: the three consumers have different required fields; a performance constraint (single pass) would reverse it\n- defaults applied after validation: a default must not mask a missing field\n' > proj/DESIGN.md";
+const applicaVincoloPackage = "printf 'def parse(path):\n    cfg = dict(l.strip().split(\"=\", 1) for l in open(path) if \"=\" in l)\n    if \"name\" not in cfg:\n        raise ValueError(\"missing required field\")\n    return cfg\n' > proj/config_loader/parse.py; rm -f proj/config_loader/validate.py";
+const docSegnaEn = "sed -i 's|^validazione: proj/config_loader/validate.py|validazione: proj/config_loader/parse.py|' proj/DESIGN.md; printf -- '- CHANGED: validation used to live in validate.py, it is now inline in parse.py, because ops/constraint.txt requires a single pass; validate.py was deleted\n' >> proj/DESIGN.md";
+const rispondiEn = "ora=$(grep -iE '^[*_ ]*validazione[*_ ]*:' proj/DESIGN.md | head -1 | grep -oE '[A-Za-z0-9_/]+[.]py' | head -1); printf 'ora: %s\nprima: proj/config_loader/validate.py\n' \"${ora:-?}\" > ops/answer2.txt";
+
 const t1 = (doc) => `if ${banale}; then ${buildBanale}; ${doc === "always" ? docVero : ":"}; else ${buildModulo}; ${doc === "never" ? ":" : doc === "generic" ? docGenerico : docVero}; fi`;
 const t2 = (mode) => `${applicaVincolo}; ${mode === "rewrite" ? docRiscrive : mode === "never" || mode === "generic" ? ":" : docSegna}; ${rispondi}`;
 
@@ -51,12 +64,18 @@ const POLICY = {
   "doc-never": `if [ "$TURN" = 1 ]; then ${t1("never")}; else ${t2("never")}; fi`,
   "generic-doc": `if [ "$TURN" = 1 ]; then ${t1("generic")}; else ${t2("generic")}; fi`,
   "rewrite-history": `if [ "$TURN" = 1 ]; then ${t1("gold")}; else ${t2("rewrite")}; fi`,
+  // NEGATIVO che tiene onesto ① dopo l'allargamento del 2026-09-15: applica il vincolo CANCELLANDO la
+  // validazione invece di spostarla (validate.py sparisce, parse.py non controlla piu' nulla) e aggiorna
+  // il documento come se l'avesse spostata. Deve FALLIRE ①: il documento dice parse.py, l'artefatto no.
+  "drop-validation": `if [ "$TURN" = 1 ]; then ${t1("gold")}; else ${buttaValidazione}; ${docSegna}; ${rispondi}; fi`,
   // ⭐ LA POLICY CHE SMASCHERA L'ORACOLO-DI-FORMA (aggiunta 2026-09-12, playbook §4 ORACOLI):
   // fa ESATTAMENTE la cosa giusta del gold, scrivendola in una forma innocua diversa — `proj/parse.py`
   // invece di `parse.py`, la chiave in grassetto markdown, la maiuscola. Se questa FALLISSE, l'assert
   // starebbe misurando la forma e non la skill (ed e' cosi' che era: v. il caveat in F45).
   // Deve PASSARE entrambi i bracci come il gold; per questo non entra nel verdetto «ogni policy fissa cade».
   "gold-altra-forma": `if [ "$TURN" = 1 ]; then if ${banale}; then ${buildBanale}; else ${buildModulo}; ${docVeroAltraForma}; fi; else ${applicaVincolo}; ${docSegnaAltraForma}; ${rispondiAltraForma}; fi`,
+  // stessa idea, altro asse: il LAYOUT (package) e la LINGUA (inglese). Deve passare come il gold.
+  "gold-altro-layout": `if [ "$TURN" = 1 ]; then if ${banale}; then ${buildBanale}; else ${buildModuloPackage}; ${docVeroEn}; fi; else ${applicaVincoloPackage}; ${docSegnaEn}; ${rispondiEn}; fi`,
 };
 
 const rows = [];
@@ -74,10 +93,10 @@ for (const r of rows) {
 const gold = rows.find((r) => r.policy === "gold");
 // `gold-altra-forma` NON è una policy a intelligenza zero: è il gold scritto in un'altra forma, e DEVE
 // passare come lui. Se fallisce, l'oracolo misura la FORMA — il lab lo dice a voce alta invece di tacerlo.
-const altraForma = rows.find((r) => r.policy === "gold-altra-forma");
-const fisse = rows.filter((r) => r.policy !== "gold" && r.policy !== "gold-altra-forma");
-if (!altraForma.passed) console.log("  🔴 ORACOLO-DI-FORMA: `gold-altra-forma` fa la cosa giusta in un'altra forma e FALLISCE → gli assert misurano la forma, non la skill.");
-const verdict = gold.passed && altraForma.passed && fisse.every((r) => !r.passed);
+const varianti = rows.filter((r) => r.policy.startsWith("gold-"));
+const fisse = rows.filter((r) => !r.policy.startsWith("gold"));
+for (const v of varianti) if (!v.passed) console.log(`  🔴 ORACOLO-DI-FORMA: \`${v.policy}\` fa la cosa giusta in un'altra forma e FALLISCE → gli assert misurano la forma, non la skill.`);
+const verdict = gold.passed && varianti.every((v) => v.passed) && fisse.every((r) => !r.passed);
 console.log(verdict
   ? "✅ il gold passa entrambi i bracci e ogni policy fissa ne fallisce almeno uno: il documento è misurato sul secondo tempo, non sull'averlo scritto"
   : "❌ l'oracolo NON discrimina");

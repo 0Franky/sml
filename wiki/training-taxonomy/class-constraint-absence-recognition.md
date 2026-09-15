@@ -82,7 +82,7 @@ Senza i negativi, *"di' sempre che sono equivalenti"* **oppure** *"trova sempre 
 
 ## Held-out di validazione (#18 — decontaminazione)
 
-**Item N1 di E-COMP** ([[../harness-experiment-log]], uno dei 4 negativi dove la risposta giusta è FERMARSI, harness-experiment-log.md:384 «se spezziamo una skill in due classi»): *scegliere fra bianco opaco e verde salvia per un ambiente dove — per costruzione della fixture — tutte le dimensioni rilevanti (resa, costo, copertura, durata) sono equivalenti*. Il gold: riconoscere l'equivalenza + non fabbricare una preferenza. **Tenuto HELD-OUT**: mai nel training set; se il modello ha imparato la skill lo risolve **per transfer**, non per memorizzazione (msg 1125). È anche la **metrica di successo**.
+**Item N1 di E-COMP** ([[../harness-experiment-log]], uno dei 4 negativi dove la risposta giusta è FERMARSI, harness-experiment-log.md:397 «se spezziamo una skill in due classi»): *scegliere fra bianco opaco e verde salvia per un ambiente dove — per costruzione della fixture — tutte le dimensioni rilevanti (resa, costo, copertura, durata) sono equivalenti*. Il gold: riconoscere l'equivalenza + non fabbricare una preferenza. **Tenuto HELD-OUT**: mai nel training set; se il modello ha imparato la skill lo risolve **per transfer**, non per memorizzazione (msg 1125). È anche la **metrica di successo**.
 
 ## Amendment al PADRE richiesto da questa classe (gap-scan orizzontale #36)
 
