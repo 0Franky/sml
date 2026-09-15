@@ -124,6 +124,50 @@ test("6. virgolettato AMBIGUO (piu' righe) → mai un numero suggerito, solo l'a
   }
 });
 
+// Il §0 del diario PUNTA ai finding invece di ricopiarli: il puntatore E' il meccanismo, e uno che
+// mente manda a leggere il finding sbagliato. Difetto misurato sul diario reale il 2026-09-15:
+// 7 puntatori su 11 sbagliati, uno di 154 righe. NB: le fixture qui sotto uniscono le righe con
+// String.fromCharCode(10) per non dipendere da come l'editor tratta le sequenze di escape.
+const NL = String.fromCharCode(10);
+
+test("8. PUNTATORE A UN FINDING che manda alla riga sbagliata → ERROR con la riga giusta", () => {
+  const r = withDoc([
+    "# diario",                     // 1
+    "| modello | esito | dove |",   // 2
+    "| x | y | F12 `:5` |",         // 3  ← punta a :5
+    "",                             // 4
+    "- **F11 — primo**",            // 5
+    "- **F12 — secondo**",          // 6  ← F12 sta QUI
+    "",
+  ].join(NL));
+  equal(r.exit, 1, "un puntatore che manda alla riga sbagliata deve fallire");
+  ok(kinds(r).includes("finding-pointer"), `atteso un finding-pointer, visti: ${JSON.stringify(kinds(r))}`);
+  const f = r.report.findings.find((x) => x.kind === "finding-pointer");
+  equal(f.suggest, 6, `la riga giusta e' 6 (dove comincia F12), suggerita: ${f.suggest}`);
+});
+
+test("8b. lo stesso puntatore GIUSTO non dice niente (niente falsi allarmi)", () => {
+  // 1 "# diario" · 2 il puntatore · 3 vuota · 4 F11 · 5 F12  →  il puntatore giusto e' :5
+  const r = withDoc(["# diario", "| x | F12 `:5` |", "", "- **F11 — primo**", "- **F12 — secondo**", ""].join(NL));
+  equal(kinds(r).filter((k) => k === "finding-pointer").length, 0, "un puntatore corretto non e' un difetto");
+});
+
+test("8d. l'asse completo: vale anche per gli ESPERIMENTI E## (#36, la sorella che si dimentica)", () => {
+  // Il diario numera due serie: F## (finding) ed E## (esperimenti). Coprire solo la prima lascia
+  // meta' asse scoperto — ed e' esattamente com'era: il puntatore a E16 sbagliava di 68 righe.
+  const r = withDoc(["# diario", "| x | E16 `:9` |", "", "- **E15 — quindici**", "- **E16 — sedici**", ""].join(NL));
+  equal(r.exit, 1, "un puntatore a un esperimento sbagliato deve fallire come uno a un finding");
+  const f = r.report.findings.find((x) => x.kind === "finding-pointer");
+  equal(f.suggest, 5, `E16 comincia a 5, suggerita: ${f.suggest}`);
+});
+
+test("8c. PERIMETRO: in un file che NON definisce finding il puntatore non e' risolvibile → muto", () => {
+  // `F12 :5` scritto altrove punta a un ALTRO file: da qui non si sa quale, e indovinare
+  // sostituirebbe un numero sbagliato con un altro numero sbagliato.
+  const r = withDoc("vedi F12 `:5` nel diario" + NL);
+  equal(kinds(r).filter((k) => k === "finding-pointer").length, 0, "fuori perimetro: nessun giudizio");
+});
+
 test("7. la wiki reale passa (regressione: nessun drift introdotto dagli edit)", () => {
   const r = run(join(ROOT, "wiki", "training-taxonomy"));
   equal(r.exit, 0, `drift in wiki/training-taxonomy:\n${r.report.findings.filter((f) => f.sev === "ERROR").map((f) => `  ${f.at} → ${f.cite} [${f.kind}] ${f.detail}`).join("\n")}`);

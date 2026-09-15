@@ -48,7 +48,7 @@
  *    Ri-esegui **senza** `--fix` per confermare.
  */
 import { readFileSync, writeFileSync, existsSync, statSync, readdirSync } from "node:fs";
-import { join, dirname, resolve, relative, extname } from "node:path";
+import { join, dirname, resolve, relative, extname, sep } from "node:path";
 
 const ROOT = resolve(dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")), "..", "..");
 const FUZZ = 2; // tolleranza ± righe per il match della stringa citata: un drift di 1-2 righe e' comunque un drift, ma lo segnaliamo come WARN non come ERROR
@@ -170,7 +170,8 @@ const norm = (s) => s.toLowerCase().replace(/[«»"''`*_]/g, "").replace(/\s+/g,
 const findings = [];
 let stats = { citations: 0, ok: 0, bare: 0, files: 0, fixture: 0 };
 
-for (const abs of collectTargets(process.argv.slice(2))) {
+const bersagli = collectTargets(process.argv.slice(2));
+for (const abs of bersagli) {
   stats.files++;
   const src = linesOf(abs);
   if (!src) continue;
@@ -255,6 +256,50 @@ for (const abs of collectTargets(process.argv.slice(2))) {
   });
 }
 
+// ---- PUNTATORI AI FINDING (§0 del playbook) --------------------------------------------------
+// Il §0 di `wiki/harness-experiment-log.md` PUNTA ai finding invece di ricopiarli (#35: una pagina
+// che ricopia diverge in silenzio). Il puntatore E' quindi il meccanismo — e un puntatore che mente
+// e' PEGGIO di nessun puntatore, perche' manda a leggere il finding sbagliato con l'aria di saperlo.
+// Formalmente questi sono bare `:NNN`, che il tool in generale NON giudica; ma questa forma e'
+// risolvibile senza congetture: in un file che DEFINISCE i finding (righe `- **F12 …`), un
+// ``F12 `:345``` dello stesso file deve puntare alla riga dove F12 comincia. Non c'e' una scelta da
+// fare, c'e' solo un numero da confrontare.
+// ⚠️ PERIMETRO: si controlla solo dentro i file che definiscono almeno un finding. Un `F43 :301`
+// scritto in un'altra pagina punta a un file diverso e NON e' risolvibile da qui: resta fra le bare.
+// ⚠️ LA MISURA, contata sul commit che precede questo check (2026-09-15): su **13 puntatori, 12
+// erano sbagliati** — ne funzionava UNO. Quattro di uno scarto di 1 riga, gli altri da 60 a 129.
+// Non e' il caso raro ma il regime normale: ogni riga inserita sopra li sposta tutti, in silenzio,
+// e non se ne accorge nessuno finche' non prova a seguirne uno. Li avevo corretti a mano due volte
+// nella stessa giornata, ed erano di nuovo sbagliati nel giro di ore: e' un lavoro da macchina.
+const DEF_FINDING = /^- \*\*([EF])(\d+)\b/;
+const PUNT_FINDING = /\b([EF])(\d+) `:(\d+)`/g;
+for (const abs of bersagli) {
+  if (extname(abs) !== ".md") continue;
+  const righeF = linesOf(abs);
+  if (!righeF) continue;
+  const inizioF = new Map();
+  righeF.forEach((r, i) => { const m = DEF_FINDING.exec(r); if (m && !inizioF.has(m[1] + m[2])) inizioF.set(m[1] + m[2], i + 1); });
+  if (!inizioF.size) continue;   // non e' un file di finding: i suoi puntatori guardano altrove
+  const relF = relative(ROOT, abs).split(sep).join("/");
+  righeF.forEach((r, i) => {
+    for (const m of r.matchAll(PUNT_FINDING)) {
+      const [tutto, pre, num, riga] = m;
+      const n = pre + num;
+      const vero = inizioF.get(n);
+      // Se QUESTO file non definisce F<n>, il puntatore parla di un altro file: fuori perimetro, e
+      // il tool tace invece di indovinare. ⚠️ Falso positivo preso subito (2026-09-15): `wiki/log.md`
+      // nomina dei finding in prosa e contiene l'ESEMPIO ``F12 `:345``` di questa stessa regola —
+      // segnalarlo sarebbe gridare su un file che non e' un diario dei finding.
+      if (!vero) continue;
+      stats.citations++;
+      if (Number(riga) === vero) { stats.ok++; continue; }
+      findings.push({ sev: "ERROR", kind: "finding-pointer", at: `${relF}:${i + 1}`, cite: `${n} :${riga}`,
+        detail: `manda a :${riga}, ma ${n} comincia a :${vero} (${Math.abs(vero - Number(riga))} righe di scarto)`,
+        suggest: vero, fix: { abs, lineNo: i + 1, from: tutto, to: n + " `:" + vero + "`" } });
+    }
+  });
+}
+
 const asJson = process.argv.includes("--json");
 if (asJson) {
   console.log(JSON.stringify({ stats, findings }, null, 2));
@@ -298,7 +343,7 @@ ${stats.files} file · ${stats.citations} citazioni · ${stats.ok} ok · ${errs.
 if (process.argv.includes("--fix")) {
   const perFile = new Map();
   for (const f of findings) {
-    if (f.kind !== "anchor-drift" || !f.fix) continue;
+    if ((f.kind !== "anchor-drift" && f.kind !== "finding-pointer") || !f.fix) continue;
     if (!perFile.has(f.fix.abs)) perFile.set(f.fix.abs, []);
     perFile.get(f.fix.abs).push(f.fix);
   }
