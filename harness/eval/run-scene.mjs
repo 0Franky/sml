@@ -12,6 +12,9 @@
  * Env:  EVAL_PROVIDER=ollama|openrouter|groq|openai|gemini (default ollama) · MODEL_ID (default qwen-ctx16k)
  *       EVAL_ARM=vanilla|ours (default vanilla) · EVAL_TURN_TIMEOUT_MS (default 180000) · MODEL_CTX
  *       EVAL_TRACE=<file> → salva anche l'ultimo testo del modello per turno e i tool chiamati (diagnosi)
+ *       EVAL_KEEP_DIR=1 → NON cancella la workdir della scena e ne mette il path nell'output (diagnosi:
+ *                        serve a guardare CIO' CHE IL MODELLO HA SCRITTO quando un assert cade, invece
+ *                        di indovinarlo dal suo riassunto — che e' la presentazione, non il fatto)
  *       EVAL_INTERCALL_DELAY_MS=<ms> → **pacing fra le chiamate al provider** (default 0 = no-op)
  *
  * ⚠️ PERCHE' IL PACING E' QUI (2026-09-12). `eval/pacer.mjs` esisteva dal 2026-07-26 — estratto da
@@ -42,6 +45,14 @@ const MODEL_ID = process.env.MODEL_ID || "qwen-ctx16k";
 const ARM = process.env.EVAL_ARM || "vanilla";
 const TURN_TIMEOUT = Number(process.env.EVAL_TURN_TIMEOUT_MS || 180000);
 const usePair = !!scene.pair && !args.includes("--no-pair");
+// EVAL_KEEP_DIR=1 -> la workdir della scena NON viene cancellata e il suo path finisce nell'output.
+// ⚠️ PERCHE' ESISTE (2026-09-15): `run-spec` sapeva gia' tenerla (`keepDir`), ma nessun runner lo
+// esponeva -> quando un assert cadeva si poteva solo INDOVINARE cosa il modello avesse scritto. Sulla
+// ri-misura di design-artifact due assert erano rossi e le due spiegazioni candidate (il modello non ha
+// fatto il lavoro / l'oracolo chiede una FORMA) portano a conclusioni opposte: senza il file non si
+// sceglie fra le due, e scegliere a naso e' esattamente la spiegazione comoda che #38 vieta.
+// Non e' il default: lascia cartelle in tmp. Si accende per diagnosticare, non per misurare.
+const KEEP_DIR = process.env.EVAL_KEEP_DIR === "1";
 if (!(scene.prompts ?? []).length) { console.error(JSON.stringify({ error: "la scena non ha `prompts` (uno per turno)" })); process.exit(2); }
 
 /** Un agente = una sessione pi che vive per tutta la scena (o per tutto il braccio). */
@@ -70,17 +81,17 @@ function makeAgent(prompts) {
 let out;
 if (usePair) {
   const made = [];
-  const p = await runPair(scene, { agentFactory: (arm) => { const m = makeAgent(arm.prompts ?? scene.prompts); made.push(m); return m.agent; } });
+  const p = await runPair(scene, { keepDir: KEEP_DIR, agentFactory: (arm) => { const m = makeAgent(arm.prompts ?? scene.prompts); made.push(m); return m.agent; } });
   made.forEach((m) => m.dispose());
   out = {
     scene: scenePath, provider: PROVIDER, model: MODEL_ID, arm: ARM, pair: true, vary: p.vary, invariant: p.invariant, passed: p.passed,
-    arms: p.arms.map((a, i) => ({ name: a.name, passed: a.passed, turnsRun: a.turnsRun, setupError: a.setupError, agentErrors: a.agentErrors, results: a.results, probeOut: a.probeOut, perTurn: made[i]?.st.perTurn ?? [] })),
+    arms: p.arms.map((a, i) => ({ name: a.name, passed: a.passed, turnsRun: a.turnsRun, setupError: a.setupError, agentErrors: a.agentErrors, results: a.results, perAssenza: a.perAssenza, probeOut: a.probeOut, dir: a.dir, perTurn: made[i]?.st.perTurn ?? [] })),
   };
 } else {
   const m = makeAgent(scene.prompts);
-  const r = await runScene(scene, { agent: m.agent });
+  const r = await runScene(scene, { agent: m.agent, keepDir: KEEP_DIR });
   m.dispose();
-  out = { scene: scenePath, provider: PROVIDER, model: MODEL_ID, arm: ARM, pair: false, nExt: m.st.sess?.nExt ?? 0, passed: r.passed, turnsRun: r.turnsRun, setupError: r.setupError, agentErrors: r.agentErrors, results: r.results, perTurn: m.st.perTurn };
+  out = { scene: scenePath, provider: PROVIDER, model: MODEL_ID, arm: ARM, pair: false, nExt: m.st.sess?.nExt ?? 0, passed: r.passed, turnsRun: r.turnsRun, setupError: r.setupError, agentErrors: r.agentErrors, results: r.results, perAssenza: r.perAssenza, dir: r.dir, perTurn: m.st.perTurn };
 }
 if (process.env.EVAL_TRACE) { const fs = await import("node:fs"); fs.writeFileSync(process.env.EVAL_TRACE, JSON.stringify(out, null, 2)); }
 process.stdout.write(JSON.stringify(out) + "\n");
