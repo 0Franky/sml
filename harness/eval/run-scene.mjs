@@ -12,6 +12,8 @@
  * Env:  EVAL_PROVIDER=ollama|openrouter|groq|openai|gemini (default ollama) · MODEL_ID (default qwen-ctx16k)
  *       EVAL_ARM=vanilla|ours (default vanilla) · EVAL_TURN_TIMEOUT_MS (default 180000) · MODEL_CTX
  *       EVAL_TRACE=<file> → salva anche l'ultimo testo del modello per turno e i tool chiamati (diagnosi)
+ *       EVAL_TSTAR=0 → spegne il calcolo di t* (default: acceso; costa una copia della workdir e
+ *                     una passata di assert per turno, valutati su quella copia)
  *       EVAL_KEEP_DIR=1 → NON cancella la workdir della scena e ne mette il path nell'output (diagnosi:
  *                        serve a guardare CIO' CHE IL MODELLO HA SCRITTO quando un assert cade, invece
  *                        di indovinarlo dal suo riassunto — che e' la presentazione, non il fatto)
@@ -53,6 +55,12 @@ const usePair = !!scene.pair && !args.includes("--no-pair");
 // sceglie fra le due, e scegliere a naso e' esattamente la spiegazione comoda che #38 vieta.
 // Non e' il default: lascia cartelle in tmp. Si accende per diagnosticare, non per misurare.
 const KEEP_DIR = process.env.EVAL_KEEP_DIR === "1";
+// t* — il primo turno (dall'ultima mutazione in poi) in cui gli assert sono gia' tutti soddisfatti:
+// i turni dopo t* sono overhead pagato. ACCESO di default QUI, dove c'e' un modello vero e la domanda
+// ha senso; i lab lo lasciano spento (le policy fisse non hanno un costo da misurare). `EVAL_TSTAR=0`
+// per spegnerlo. Costa una copia della workdir + una passata di assert per turno, su una COPIA:
+// gli assert di alcune scene SCRIVONO, e valutarli nel mondo vero cambierebbe cio' che si misura.
+const TSTAR = process.env.EVAL_TSTAR !== "0";
 if (!(scene.prompts ?? []).length) { console.error(JSON.stringify({ error: "la scena non ha `prompts` (uno per turno)" })); process.exit(2); }
 
 /** Un agente = una sessione pi che vive per tutta la scena (o per tutto il braccio). */
@@ -81,17 +89,17 @@ function makeAgent(prompts) {
 let out;
 if (usePair) {
   const made = [];
-  const p = await runPair(scene, { keepDir: KEEP_DIR, agentFactory: (arm) => { const m = makeAgent(arm.prompts ?? scene.prompts); made.push(m); return m.agent; } });
+  const p = await runPair(scene, { keepDir: KEEP_DIR, perTurnAsserts: TSTAR, agentFactory: (arm) => { const m = makeAgent(arm.prompts ?? scene.prompts); made.push(m); return m.agent; } });
   made.forEach((m) => m.dispose());
   out = {
     scene: scenePath, provider: PROVIDER, model: MODEL_ID, arm: ARM, pair: true, vary: p.vary, invariant: p.invariant, passed: p.passed,
-    arms: p.arms.map((a, i) => ({ name: a.name, passed: a.passed, turnsRun: a.turnsRun, setupError: a.setupError, agentErrors: a.agentErrors, results: a.results, perAssenza: a.perAssenza, probeOut: a.probeOut, dir: a.dir, perTurn: made[i]?.st.perTurn ?? [] })),
+    arms: p.arms.map((a, i) => ({ name: a.name, passed: a.passed, turnsRun: a.turnsRun, setupError: a.setupError, agentErrors: a.agentErrors, results: a.results, perAssenza: a.perAssenza, tStar: a.tStar, primoTurnoTuttiVeri: a.primoTurnoTuttiVeri, turniDopoTStar: a.turniDopoTStar, probeOut: a.probeOut, dir: a.dir, perTurn: made[i]?.st.perTurn ?? [] })),
   };
 } else {
   const m = makeAgent(scene.prompts);
-  const r = await runScene(scene, { agent: m.agent, keepDir: KEEP_DIR });
+  const r = await runScene(scene, { agent: m.agent, keepDir: KEEP_DIR, perTurnAsserts: TSTAR });
   m.dispose();
-  out = { scene: scenePath, provider: PROVIDER, model: MODEL_ID, arm: ARM, pair: false, nExt: m.st.sess?.nExt ?? 0, passed: r.passed, turnsRun: r.turnsRun, setupError: r.setupError, agentErrors: r.agentErrors, results: r.results, perAssenza: r.perAssenza, dir: r.dir, perTurn: m.st.perTurn };
+  out = { scene: scenePath, provider: PROVIDER, model: MODEL_ID, arm: ARM, pair: false, nExt: m.st.sess?.nExt ?? 0, passed: r.passed, turnsRun: r.turnsRun, setupError: r.setupError, agentErrors: r.agentErrors, results: r.results, perAssenza: r.perAssenza, tStar: r.tStar, primoTurnoTuttiVeri: r.primoTurnoTuttiVeri, turniDopoTStar: r.turniDopoTStar, dir: r.dir, perTurn: m.st.perTurn };
 }
 if (process.env.EVAL_TRACE) { const fs = await import("node:fs"); fs.writeFileSync(process.env.EVAL_TRACE, JSON.stringify(out, null, 2)); }
 process.stdout.write(JSON.stringify(out) + "\n");

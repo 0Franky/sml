@@ -28,7 +28,14 @@ import { openSession } from "./_pi-session.mjs";
 
 const ARM = process.argv[2] || "ours";
 const MODEL_ID = process.argv[3] || "qwen/qwen3-32b";
-// Chiave volutamente invalida: il body si legge PRIMA dell'invio, la chiamata muore in 401 → spesa zero.
+// Chiave volutamente invalida: il body si legge PRIMA dell'invio.
+// ⚠️ 2026-09-15 — QUESTA RIGA NON E' LA RAGIONE PER CUI NON SI SPENDE, e il punto merita precisione.
+// FATTO MISURATO: girando questo tool il credito OpenRouter **non si muove** (letto prima e dopo, due
+// volte). FATTO MISURATO ALTROVE: `process.env.OPENROUTER_KEYS` **non disarma** — `eval/env-keys.mjs`
+// legge solo il file `.env` e ignora l'ambiente; con lo stesso trucco su `run-scene` ho speso 0,054 $.
+// Quindi la spesa-zero qui e' un fatto, ma la sua CAUSA non l'ho stabilita (#38: due osservazioni non
+// fanno una causa). Non copiare questa riga altrove credendo che protegga: l'unica prova di «non ha
+// speso» e' il **credito prima/dopo**.
 // ⚠️ NON deve *assomigliare* a una chiave (niente prefisso `sk-…`): il 2026-09-12 la prima stesura usava
 // un finto `sk-or-v1-…` e **gitleaks ha bloccato il push** (regola `generic-api-key`) — giustamente, perche'
 // un repo pubblico non puo' distinguere un finto da un vero. Meglio cambiare la stringa che allowlistare:

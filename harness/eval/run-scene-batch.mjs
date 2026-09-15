@@ -45,6 +45,9 @@ for (const model of models) {
       // PER ASSENZA (run-spec `control`): il reward e' verde ma il suo controllo e' rosso -> il compito
       // non e' stato fatto e quel verde non misura nulla. Stesso ordine di `asserts`.
       perAssenza: out ? parts.flatMap((p) => p.results.map((x) => (x.perAssenza ? 1 : 0))) : null,
+      // t* per braccio e turni pagati DOPO t*: il lavoro era gia' finito e si e' continuato a lavorare.
+      tStar: out ? parts.map((p) => p.tStar ?? null) : null,
+      dopoTStar: out ? parts.map((p) => p.turniDopoTStar ?? null) : null,
       tools: out ? parts.flatMap((p) => p.perTurn.map((t) => t.tools.length)) : null,
       timedOut: out ? parts.some((p) => p.perTurn.some((t) => t.timedOut)) : null,
       agentErrors: out ? parts.reduce((s, p) => s + (p.agentErrors?.length ?? 0), 0) : null,
@@ -59,7 +62,7 @@ for (const model of models) {
 
 console.log(`\nscena: ${scene} · braccio: ${arm} · n per modello: ${n}`);
 const nA = Math.max(0, ...rows.map((r) => r.asserts?.length ?? 0));
-console.log("modello".padEnd(34) + "PASS  " + Array.from({ length: nA }, (_, i) => `a${i + 1}`.padEnd(7)).join("") + " rotti  ms-mediana");
+console.log("modello".padEnd(34) + "PASS  " + Array.from({ length: nA }, (_, i) => `a${i + 1}`.padEnd(7)).join("") + " rotti  ms-mediana turni-dopo-t*");
 for (const model of models) {
   const rs = rows.filter((r) => r.model === model);
   const ok = rs.filter((r) => !r.broken);
@@ -68,7 +71,11 @@ for (const model of models) {
   // ⚠ sulla colonna dove almeno un verde e' arrivato PER ASSENZA: quel k/n non si puo' leggere
   // come riuscita (F45). Il PASS di braccio resta l'unica cifra con cui si rivendica un successo.
   const assenza = (i) => ok.some((r) => r.perAssenza?.[i]);
-  console.log(model.padEnd(34) + `${ok.filter((r) => r.passed).length}/${ok.length}`.padEnd(6) + Array.from({ length: nA }, (_, i) => `${cnt(i)}/${ok.length}${assenza(i) ? "⚠" : ""}`.padEnd(7)).join("") + ` ${rs.length - ok.length}`.padEnd(7) + `${Math.round(med / 1000)}s`);
+  // Overhead medio: quanti turni si sono pagati DOPO che gli assert erano gia' tutti veri. Si conta
+  // solo dove t* esiste (dove non esiste il lavoro non e' mai finito: non c'e' un «dopo»).
+  const dopo = ok.flatMap((r) => (r.dopoTStar ?? []).filter((x) => x != null));
+  const overhead = dopo.length ? (dopo.reduce((a, b) => a + b, 0) / dopo.length).toFixed(1) : "—";
+  console.log(model.padEnd(34) + `${ok.filter((r) => r.passed).length}/${ok.length}`.padEnd(6) + Array.from({ length: nA }, (_, i) => `${cnt(i)}/${ok.length}${assenza(i) ? "⚠" : ""}`.padEnd(7)).join("") + ` ${rs.length - ok.length}`.padEnd(7) + `${Math.round(med / 1000)}s`.padEnd(8) + `${overhead}`);
 }
 if (rows.some((r) => (r.perAssenza ?? []).some(Boolean))) {
   console.log("⚠ = quel verde e' arrivato PER ASSENZA (il controllo dichiarato dalla scena e' rosso): il compito non e' stato fatto, quindi il reward non ha misurato nulla. Si legge il PASS, non la colonna.");

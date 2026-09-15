@@ -10,7 +10,7 @@
 // async ({ turn, turns, dir }) => { exit, error? } — è così che eval/run-scene.mjs ci mette un modello vero.
 // Senza `turns` il comportamento è quello di sempre: setup → asserts (l'agente, se dato, agisce una volta).
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, rmSync, readFileSync } from "node:fs";
+import { mkdtempSync, rmSync, readFileSync, cpSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -72,6 +72,7 @@ export async function runScene(spec, opts = {}) {
   const dir = mkdtempSync(join(tmpdir(), "slm-spec-"));
   const results = [];
   const agentErrors = [];
+  const perTurnAsserts = [];
   let setupError = null;
   let turnsRun = 0;
   let probeOut = null;
@@ -98,6 +99,19 @@ export async function runScene(spec, opts = {}) {
           if (setupError) break;
         }
         if (!setupError) turnsRun = i;
+        // t* — QUANDO il lavoro era gia' finito (opt-in, `perTurnAsserts`). Si valuta lo stato ALLA FINE
+        // del turno, cioe' dopo che l'agente ha agito E dopo che il mondo ha applicato le sue mutazioni.
+        // ⚠️ SU UNA COPIA, e non e' un dettaglio: gli assert di alcune scene SCRIVONO (module-boundary
+        // riscrive `cfg/consent.txt` e lancia `bin/run-all.sh`) — valutarli nella workdir vera
+        // cambierebbe il mondo sotto i piedi dell'agente, cioe' la misura distruggerebbe cio' che misura.
+        if (opts.perTurnAsserts && !setupError) {
+          const snap = mkdtempSync(join(tmpdir(), "slm-snap-"));
+          try {
+            cpSync(dir, snap, { recursive: true });
+            const esiti = (spec.asserts ?? []).map((a) => sh(a.cmd, snap, process.env).exit === (a.expect_exit ?? 0));
+            perTurnAsserts.push({ turn: i, passati: esiti.filter(Boolean).length, su: esiti.length, tutti: esiti.length > 0 && esiti.every(Boolean) });
+          } finally { rmSync(snap, { recursive: true, force: true }); }
+        }
       }
     }
     if (!setupError) {
@@ -121,7 +135,21 @@ export async function runScene(spec, opts = {}) {
   });
   const perAssenza = results.map((r, i) => (r.perAssenza ? i + 1 : null)).filter((x) => x != null);
   const passed = !setupError && results.length > 0 && results.every((r) => r.passed);
-  return { passed, setupError, results, turnsRun, agentErrors, probeOut, perAssenza, ...(opts.keepDir ? { dir } : {}) };
+  // t* e overhead. ⚠️ Prima dell'ultima mutazione un assert puo' essere vero per PURA ASSENZA del fatto
+  // (nel canary «nessun BUG in produzione» e' vero al turno 1 perche' il BUG arriva dopo) → t* si conta
+  // solo da li' in poi. Il grezzo resta leggibile come `primoTurnoTuttiVeri`, ma non si chiama t*.
+  const extra = {};
+  if (opts.perTurnAsserts) {
+    const ultimaMutazione = Math.max(0, ...(spec.turns ?? []).map((t) => t.after_turn));
+    const daQui = Math.max(1, ultimaMutazione);
+    const primo = perTurnAsserts.find((x) => x.tutti)?.turn ?? null;
+    const t = perTurnAsserts.find((x) => x.tutti && x.turn >= daQui)?.turn ?? null;
+    extra.perTurnAsserts = perTurnAsserts;
+    extra.primoTurnoTuttiVeri = primo;
+    extra.tStar = t;
+    extra.turniDopoTStar = t == null ? null : turnsRun - t;
+  }
+  return { passed, setupError, results, turnsRun, agentErrors, probeOut, perAssenza, ...extra, ...(opts.keepDir ? { dir } : {}) };
 }
 
 /**

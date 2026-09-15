@@ -6,6 +6,14 @@
  *   KAGGLE_KEYS = k1         → prefix "KAGGLE"
  *   GEMINI_API_KEYS = ...    → prefix "GEMINI_API" (usato da gemini-keys via delega)
  * MAI stampare i valori delle chiavi (usa maskKey per il logging).
+ *
+ * ⚠️ TRAPPOLA MISURATA IL 2026-09-15 — questo loader legge SOLO IL FILE `.env` e **non guarda
+ * `process.env`**. Esportare `OPENROUTER_KEYS=chiave-finta` prima di lanciare un eval **non disarma
+ * nulla**: la chiave vera del file viene usata lo stesso. Ci sono cascato credendo di fare una prova
+ * a spesa zero, ed è costata 0,054 $. Chi legge queste chiavi (`eval/_pi-session.mjs:50`) prova
+ * PRIMA `process.env.OPENAI_API_KEY` — quella è la leva documentata, ma non l'ho verificata: so che
+ * viene letta per prima, non che disarmi. ⭐ L'unica prova di «non ha speso» resta il **credito
+ * prima/dopo**, non la convinzione di aver disarmato una variabile.
  */
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
