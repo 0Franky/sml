@@ -12,14 +12,14 @@ last_updated: 2026-09-29
 
 # DeepSeek-V4.1-Flash e Qwen3.8-Flash-Next — le due architetture da cui parte la discussione
 
-> ⚠️ **Livello di verifica**: abstract e introduzione dei due paper letti **da me sul PDF**; il resto (numero di layer, dettagli di CSA2, Engram da 196B) viene da **riassunti** di pagine web, `[via riassunto]`, da confermare sul PDF prima di costruirci sopra. **Nessuna scelta** è fatta qui: la discussione sull'architettura è nuova e segue il workflow a stadi (definisci → chiarisci → approva → design), non si anticipa.
+> ⚠️ **Livello di verifica**: letti **da me sul PDF** abstract e introduzione di tutti e tre i paper, più §2.2 (CED), §2.4.1 (mHC) e §2.4.2 (Engram) di DeepSeek-V4.1-Flash. Il resto (dettagli di CSA2, le ablazioni del Gated Residual) non l'ho ancora letto. **Nessuna scelta** è fatta qui: la discussione sull'architettura è nuova e segue il workflow a stadi (definisci → chiarisci → approva → design), non si anticipa.
 
 ## DeepSeek-V4.1-Flash (10-17/09/2026)
 
 - **Il problema dichiarato**: i carichi degli agenti sono **input-heavy** — il prefill resta caro e le KV cache saturano memoria e banda. È il nostro stesso regime: tracce agentiche lunghe, contesto che cresce.
-- **Causal Encoder-Decoder (CED)**: 552B di backbone MoE, **8B attivi per token in prefill e 16B in decode**. Il prompt lo legge un encoder causale più leggero; la generazione la fa un decoder più pesante. `[via riassunto]` 40 layer, 20 + 20.
+- **Causal Encoder-Decoder (CED)**: 552B di backbone MoE, **8B attivi per token in prefill e 16B in decode**. Il prompt lo legge un encoder causale più leggero; la generazione la fa un decoder più pesante. Dal PDF: è ispirato a **YOCO** — la metà inferiore dei layer è l'**encoder causale**; per la metà superiore le KV dell'attenzione globale **non** si calcolano dai propri stati ma si **proiettano dallo stato del layer di mezzo**, con pesi diversi per layer. Così in prefill si calcola **solo la prima metà** dei layer: *«riduce quasi metà del calcolo di prefill mantenendo prestazioni comparabili»*. L'attenzione a finestra (SWA) resta calcolata layer per layer, e per questo serve il *replay* degli ultimi token.
 - **KV cache**: riuso della KV **fra layer** dentro *Compressed Sparse Attention 2* + KV in **FP4** → **890 byte per token** nella cache globale, ~1/4 di V4-Flash e ~1/437 di V1; con *SWA Bounded Replay* (ricostruire su richiesta gli stati mancanti rigiocando gli ultimi token) la cache persistente scende a ~1/8.
-- **Estensioni**: *Single-Pass mHC* (connessioni iper-residuali: più flussi residui), **Engram** (memoria condizionale a lookup di n-gram, `[via riassunto]` 196B), *DSpark* (decodifica speculativa). Pre-training su **45T token** multimodali.
+- **Estensioni** (dal PDF): *mHC* mantiene **n flussi residui** fra blocchi adiacenti, aggiornati con coefficienti predetti token per token (la versione *Single-Pass* riduce solo il traffico di memoria); **Engram con 196B parametri** in due moduli (ai layer 1 e 14), n-grammi di ordine 2-3-4, 8 teste di hash, tabelle da ~16M righe con dimensioni prime, in FP8, **precaricate dalla memoria host** perché l'indirizzo è deterministico; *DSpark* (decodifica speculativa semi-autoregressiva con verifica schedulata sulla confidenza). Pre-training su **45T token** multimodali.
 
 ## Qwen3.8-Flash-Next (31/08/2026)
 
@@ -31,6 +31,15 @@ last_updated: 2026-09-29
 ## L'idea comune ai due: separare la conoscenza STATICA dal ragionamento DINAMICO
 
 Engram lo dice in chiaro: la memoria condizionale è il complemento del calcolo condizionale dei MoE, e serve a *disaccoppiare il lookup statico di conoscenza dal ragionamento dinamico*. I parametri n-gram si possono tenere fuori dalla GPU perché l'indirizzo del lookup è noto in anticipo. Per un progetto il cui Tier-1 deve essere **intelligenza operativa** e non deposito di conoscenza ([[../decisions/2026-06-28-decisions-d1-d5]], three-tier), è una separazione architetturale dello stesso asse — da discutere, non da assumere.
+
+## ⭐ Engram, dal suo paper (arXiv 2601.07372) — il risultato che conta per noi
+
+Il paper parte da una tesi: il linguaggio richiede **due sotto-compiti qualitativamente diversi**, ragionamento composizionale e recupero di conoscenza, e i Transformer **simulano il recupero con il calcolo** perché non hanno un primitivo di lookup. Engram glielo dà (n-gram embedding moderno, lookup in O(1)). Tre risultati:
+1. **Una legge di scala a U** fra calcolo neurale (MoE) e memoria statica (Engram): c'è un'allocazione ottima, non «più memoria è sempre meglio».
+2. ⭐ **A parità stretta di parametri e FLOP, il guadagno maggiore NON è sulla conoscenza ma sul ragionamento**: MMLU +3,4 · CMMLU +4,0, ma **BBH +5,0** · ARC-Challenge +3,7 · HumanEval +3,0 · MATH +2,4. La spiegazione meccanistica: Engram **libera i primi layer dalla ricostruzione statica**, e questo *«approfondisce di fatto la rete per il ragionamento complesso»*.
+3. Delegando le dipendenze locali al lookup **libera l'attenzione per il contesto globale**: Multi-Query NIAH **84,2 → 97,0**.
+
+**Perché è il punto centrale per la nostra discussione**: il nostro Tier-1 deve essere **intelligenza operativa, non deposito di conoscenza**, e la conoscenza la portano i verticali. Engram dice, con un'ablazione a parità di costo, che **togliere la conoscenza statica dal backbone non lo impoverisce: lo rende più bravo a ragionare**. È lo stesso asse dei tre livelli, spostato dentro i pesi. ⚠️ Non è una prova che i LoRA verticali facciano lo stesso: Engram è un lookup condizionato sul contesto locale, integrato con un gate a ogni token; un LoRA è un delta sui pesi. Stessa intuizione, meccanismo diverso — ed è esattamente la domanda da portare nella discussione.
 
 ## Cosa questo NON dice (residui)
 - Né l'uno né l'altro è un modello che possiamo addestrare **noi da zero** alla loro scala; il valore è nei **principi** e nelle **ablazioni**, non nei pesi.

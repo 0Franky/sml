@@ -511,6 +511,31 @@ Tier-1), **non un'adozione automatica**.
 
 **Cosa cambia, in una riga per decisione**: (1) config SFT → *un template per batch* (zero costo); (2) forma delle scene nuove → *prefisso reale + coda con oracolo* (LURE); (3) Wave 6 post-training → **PRM appreso escluso**, ADR dopo il PDF di 2603.06621 con VPR come confronto; (4) consumption-scale → regime di training a *curriculum sui budget* (AnySearch) con BAGEN come negativo; (5) fase 3 di lab-sequence → ExecCritic come riferimento, SEAL come vincolo; (6) calibrazione → protocollo CALIBER + ECE, poi Agent-BRACE a 27B; (7) hack-check → CapCode; (8) lab presenza/assenza → due assert (retrieval ≠ utilization). **Residuo**: 10 PDF da leggere (elenco in `todo.md`) — nessuna delle otto entra in un ADR o in una fixture prima.
 
+## RL-8 — [2026-09-29/30] Tecniche dai report di settembre (MiMo-V2.6 · MiniCPM5 · TGOPD · LensVLM · DeepSeek-V4.1-Flash · Qwen3.8-Next · Engram)
+
+> Richiesta di Fra (TG msg 2246, 2255). **Questa sezione indicizza, non ricopia** (SSOT #16): i dettagli, i numeri e il livello di verifica stanno in [[entities/modelli-piccoli-settembre-2026]] e [[entities/architetture-deepseek-v41-flash-e-qwen38-next]]. Verdetti nella forma di RL-7.
+
+| tecnica | fonte | cosa fa | verdetto per noi | dove tocca |
+|---|---|---|---|---|
+| **GAR** — ordinare per qualità solo chi ha passato il test | MiMo-V2.6 §4.3.2 | il giudice ordina i tentativi riusciti su 5 dimensioni, azzera prima gli hack; senza, turni e token esplodono | **CITA + evidenza per D11** (terza posizione: giudice subordinato al cancello) | D11 · t\* |
+| **GRS** — rubriche offline, reward = test × qualità × comportamento | MiMo §4.3.1 | il giudice lavora offline; il fallimento resta zero | **IMPORTA** (compatibile con D11-A) | reward delle classi Q |
+| **Audit della supervisione con i rollout** (falsi positivi E negativi dell'oracolo) | MiMo §4.2.1 | 4 tentativi + revisore che confronta il suo giudizio col reward | **IMPORTA** — è F48 industrializzato; i nostri falsi negativi non hanno un controllo | todo · verifiers |
+| **Controlli negativi sui file non correlati** | MiMo §4.2.2 | ogni ambiente verifica che niente fuori dal compito sia cambiato | **IMPORTA** — manca nelle nostre scene | todo · scene |
+| **Hack agent + audit del trace + isolamento di rete** | MiMo §4.2.6 | un agente cerca exploit finché non ne trova; hack confermati < 2 % | **IMPORTA il principio** (non il canarino: stessa conclusione del 15/09) | lab · class-evaluation-integrity |
+| **Esempi di mid-training che correggono il proprio hack** | MiMo §4.2.6 | il modello riflette sul ragionamento sbagliato e lo corregge, lasciando l'errore riconoscibile | **COPERTO** — è la nostra classe WRONG-recovery; loro misurano che aiuta | tassonomia (5 classi) |
+| **Mini-harness disaccoppiati** in training | MiMo §4.2.5 | «i requisiti che il reward non misura vengono ignorati»; harness mai visti 50 → 66 % | **IMPORTA** — spiega F43/F47; leva = i nostri profili | harness · F43 |
+| **Penalità di lunghezza relativa al gruppo, solo sui successi** | MiMo §4.3.3 | riferimento = quantile dei riusciti dello stesso prompt; attiva solo sopra una soglia di pass-rate | **IMPORTA** — forma corretta della #32 per usare t\* come reward | class-right-effort-for-stakes |
+| **MixRL** (un solo RL, domini e harness mescolati) | MiMo §5 | il difficile a parte, fuso dopo | **HELD-OUT** fino a decisione sul curriculum | D10 · lab-sequence |
+| **MOPD2 / SFT-prefix OPD** per domini senza verificatore | MiMo §5.6 | maestro SFT + lo studente genera il proprio turno da un prefisso | **IMPORTA** — strada per le classi L senza PRM nel loop | D11 |
+| **Specialisti per dominio + fusione di 16 esperti per OPD** | MiniCPM5 | reverse KL sull'intero vocabolario come advantage; +10,96 / +6,96 | **HELD-OUT, convergenza n=2 con MiMo** | D10 · three-tier (distinta) |
+| **TGOPD** — sondare il maestro prompt per prompt prima di distillare | arXiv 2609.02998 | se il maestro non è affidabile sul prompt → GRPO col verificatore | **IMPORTA** — criterio 3 del dossier generatori, reso operativo | generatori |
+| **Espansione selettiva appresa** (vista compressa → espandi) | LensVLM, arXiv 2605.07019 | un tool di espansione che il modello impara a usare | **CITA** — versione S del nostro contesto F | harness · F43 |
+| **Engram / n-gram embedding** — memoria statica separata dal calcolo | arXiv 2601.07372 · DeepSeek-V4.1 · Qwen3.8-Next | guadagno maggiore sul ragionamento che sulla conoscenza | **CITA per la discussione sull'architettura** | three-tier · from-scratch |
+| **CED** (encoder causale + decoder che proietta le KV dal layer di mezzo) | DeepSeek-V4.1-Flash §2.2 | quasi metà del prefill in meno | **CITA** — solo per un modello da zero | architettura |
+| **Gated Residual / mHC** (più flussi residui + gate) | Qwen3.8-Next §2.2 · DeepSeek §2.4.1 | capacità e stabilità | **CITA** — collegato a un'idea privata di Fra del 10/07 | architettura |
+
+**Due cose che il catalogo deve ricordare anche senza aprire le pagine**: (1) un oracolo **solo funzionale non è neutro** — MiMo ha osservato che senza controllo di qualità la policy impara da sola *exception swallowing* e validazione rilassata; (2) **loss e accuratezza a valle non si muovono insieme** (Qwen3.8-Next: più vocabolario n-gram abbassa sempre la loss, i benchmark si fermano).
+
 ## RL-5 — Disciplina di scope (agnostico) + ref da verificare
 
 **Tagliare/relegare a ∞ (fuori-scope MVP coding-org, alcuni contraddicono "latenza non-priorità")**: Tree/Graph-of-Thoughts, MCTS/rStar-Math (è math-competition), MTP-heads, speculative-decoding (single-user locale), per-expert-MoE-quant (gated su MoE-35B = 2 wave avanti), self-play/SPIN (collasso su 4B/<$200), char-level-precision, MemGPT-hierarchy (error-memo+VARS coprono il 90%). → distinguere **F3-pianificato** da **∞-forse-mai** (il catalogo usa "F3" come parcheggio → diluisce il segnale).

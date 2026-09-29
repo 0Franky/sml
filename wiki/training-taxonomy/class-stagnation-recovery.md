@@ -44,5 +44,8 @@ last_updated: 2026-07-05
 - **Jot-spam** (jottare per il reward) → neutralizzato: reward = outcome, non conteggio-jot.
 - **Abbandono mascherato** (dichiarare fatto con soluzione incompleta, il vettore-#145 `pass`) → penalizzato quando l'oracolo fallisce.
 
+
+> 🔗 **2026-09-29 — proposta aperta che tocca questa classe** (Fra, TG msg 2246; non ratificata, D14): una classe **sorella** per il grilletto della *confidenza che cala senza stallo*, con il punto schematico e l'uscita a tre rami — incluso **fermarsi**, che la radice di questa classe non ammette. Valutazione completa in [[../concepts/valutazione-idee-2026-09-29]].
+
 ## Links
 [[class-sign-wrap-blindspot]] (trigger naturale) · [[../concepts/stuck-state-focus-protocol]] · [[../concepts/compositional-curriculum-thinking-optimization]] · [[area-03-reasoning-scientific-method]] · [[area-04-context-metacognition]] · [[../feedback_intelligence_gap_to_training_class]] · [[../harness-experiment-log]] (F14)

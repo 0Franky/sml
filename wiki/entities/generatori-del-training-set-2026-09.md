@@ -60,5 +60,13 @@ Ordinati per **costo in OUTPUT**, che è quello che conta quando si genera. `too
 - 🗳️ **Da decidere (Fra) QUANDO si comincia a generare — non prima** *(nata il 2026-09-12; oggi non blocca niente: il dataset non si sta generando, e chiedere adesso sarebbe anticipare una scelta su lavoro non iniziato, #30)*: se il generatore debba essere **API commerciale** (economico, rischio ToS sul dataset) o **pesi aperti girati da noi** (nessun rischio, costo GPU-ora). È una scelta di **rischio**, non di prezzo, e non la decido io. Il momento in cui va posta è **prima della prima generazione di volume**, non prima delle prove.
 - ✅ **Da misurare subito, costa ~0,06 $**: `deepseek-v4.1-flash` sulle nostre 4 scene come **soffitto** — dice insieme (a) quanto è alto il tetto delle scene e (b) se questo modello è davvero *sopra* i 27B, cioè se può fare il maestro.
 
+## Aggiornamento 2026-09-30 — tre fatti nuovi (dai report di settembre)
+
+- **Il criterio 3 («il maestro deve stare sopra lo studente») ha ora una forma operativa**: TGOPD (arXiv 2609.02998) non decide una volta per modello ma **prompt per prompt**, sondando il maestro con un verificatore; dove non è affidabile, si passa a GRPO sul verificatore. I verificatori li abbiamo: sono gli assert delle scene.
+- **La scala di riferimento per un 9B agentico**: MiMo-V2.6-Distill-Qwen-9B è stato addestrato su **77,4B token** (27,2B con loss) generati dai modelli grandi. Con il generatore più economico di questa pagina sono **~2.200 $** di solo output, prima di filtraggi e rifiuti.
+- **Dati agentici già aperti**: MiniCPM5 ha pubblicato UltraData-SFT-Agent-2609 (500K campioni) e UltraData-RL-2609 (80K+). Potrebbero coprire la parte agentica **generica** senza generarla. ⛔ Licenza esatta dei dataset e decontaminazione contro i nostri held-out prima di qualsiasi uso (#29, #18).
+
+Dettagli: [[modelli-piccoli-settembre-2026]].
+
 ## Links
 [[base-model-candidates-2026-07]] (il ruolo opposto: chi diventa il modello) · [[../concepts/valutazione-graft-e-deepseek-v41-flash]] (la valutazione che ha generato questa pagina) · [[../decisions/2026-06-28-decisions-d1-d5]] (D5: il giudice) · [[../training-taxonomy/dataset-construction-playbook]] (come si costruiscono gli esempi, una volta scelto chi li genera) · [[../harness-experiment-log]] (F45/F46: cosa passano davvero i candidati) · [[../../memory|project_teacher_deepseek_v4]] · [[../../memory|feedback_training_data_compliance]]

@@ -246,6 +246,9 @@ un controllo che non guarda lì.)*
   [[../feedback_coverage_not_observed_failure]]). Le tre istanze held-out sono **mie**, non di un modello
   sotto test.
 
+
+> 🔗 **2026-09-29 — proposta aperta che tocca questa classe** (Fra, TG msg 2246; non ratificata, D14): una **faccia (c)** per il *ciclo fra due lenti distribuito nel tempo*, rotto leggendo il registro delle decisioni **per area**. Valutazione completa in [[../concepts/valutazione-idee-2026-09-29]].
+
 ## Links
 [[class-situational-awareness]] (**padre**) · [[class-knowledge-base-curation]] (**sorella** — dove/come si
 scrive, qui cosa deve esserci) · [[class-durable-knowledge-retraction]] (ritira ciò che è diventato falso;

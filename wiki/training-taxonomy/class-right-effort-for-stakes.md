@@ -93,6 +93,9 @@ Il fallimento più comune **non è scegliere male il livello: è non porsi la do
 
 ---
 
+
+> 🔗 **2026-09-29 — proposta aperta che tocca questa classe** (Fra, TG msg 2246; non ratificata, D14): una **figlia** per la *checklist di rilascio derivata da tipo di artefatto × posta*, con la promozione usa-e-getta → produzione; evidenza esterna: un oracolo solo funzionale insegna il fail-silent (MiMo-V2.6). Valutazione completa in [[../concepts/valutazione-idee-2026-09-29]].
+
 ## Links
 
 [[class-constraint-fit-decision]] (padre) · [[class-code-optimization]] (figlia: la faccia 3 applicata al codice) · [[class-project-stakes-awareness]] (**fornisce la POSTA** — questa classe la consuma: là si percepisce quanto conta il progetto, qui si decide quanto sforzo metterci) · [[class-instrument-coverage-scope]] (la faccia 1 ha bisogno di sapere **fin dove** guarda lo strumento) · [[../fix-ledger]].
