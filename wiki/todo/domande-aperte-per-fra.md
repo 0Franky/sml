@@ -17,6 +17,13 @@ last_updated: 2026-09-12
 
 ## Aperte
 
+### D14 · Le tre famiglie di esercizi e la fase «annota tutto»: ratifichi le home proposte? — aperta 2026-09-29 (TG msg 2246)
+
+- **Contesto**: quattro idee di Fra del 2026-09-29. Valutazione completa, con gap-scan su 80 classi, in [[../concepts/valutazione-idee-2026-09-29]].
+- **Fatto misurato**: nessuna delle tre famiglie è scoperta del tutto — la foglia 5.1 di area-03 ha già la checklist degli edge case e il caso oscillante; awareness-transmission ha già *«il perché va letto prima di ri-decidere»*. I buchi veri sono più stretti: (1) il grilletto della **confidenza** che cala senza stallo + il punto schematico + l'uscita a tre rami; (2) l'**enumerazione delle proprietà non funzionali** per tipo di artefatto, con la **promozione** da usa-e-getta a produzione; (3) il ciclo **distribuito nel tempo** e la consultazione **per area**.
+- **Opzioni**: **(A)** ratificare le tre home così come proposte — (1) figlia nuova di metacognitive-self-audit, sorella di stagnation-recovery · (2) figlia nuova di right-effort-for-stakes · (3) faccia (c) di awareness-transmission, non una classe — e la fase «annota tutto» con le tre condizioni e il test di ri-espansione. **(B)** ratificarne solo alcune. **(C)** una collocazione diversa che decidi tu.
+- **Reco**: **(A)**, e nell'ordine di costruzione **(2) → (3) → (1)**: la (2) è interamente deterministica e a costo zero, la (3) usa i `turns` del runner che esistono già, la (1) ha bisogno di tre bracci ben tarati sulla posta ed è la più facile da sbagliare. **Cosa la ribalterebbe**: se per te «fermarsi» (1) deve stare dentro stagnation-recovery allargandone la radice — è un cambio strutturale di una classe approvata, e lo decidi tu.
+- 👉 **Domanda**: (A), (B) o (C)? E l'ordine (2)→(3)→(1) va bene?
 ### D13 · Le altre tre scene sono state misurate con l'oracolo di allora: le rigiriamo tutte (~2 \$)? — aperta 2026-09-15 (chiesta su TG nel messaggio delle 14:40)
 
 - **Contesto**: il 2026-09-15 ho scoperto che l'oracolo di `design-artifact` misurava la **forma** su tre assi (formato · percorso/layout · lingua) e che il «0/2 per tutti i modelli» **non era una misura della capacità** ([[../harness-experiment-log]] F48). Corretto e ri-misurato, la scena **discrimina**: il 3.8-27B la passa 2/2 (unico), il 3.6 tiene il documento ma sfora le righe, il 32B sta nelle righe ma non tiene il documento.
