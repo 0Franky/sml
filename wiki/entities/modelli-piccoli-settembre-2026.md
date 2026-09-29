@@ -1,6 +1,6 @@
 ---
 name: modelli-piccoli-settembre-2026
-description: "Ricerca chiesta da Fra (TG msg 2246, 2026-09-29): i due modelli piccoli nuovi — «uno di Apple» e «un ~8B straordinario per la sua taglia» — e cosa delle loro tecniche e dei loro workflow ci serve. Nomi NON ancora confermati da Fra (domanda msg 2248). Candidato principale: MiMo-V2.6-Distill-Qwen-9B (Xiaomi, 22/09), con il report tecnico del 21/09 e 7.000+ ambienti di RL pubblicati; candidato Apple: LensVLM-9B (paper di maggio, in tendenza ora). Sei cose importabili, mappate sulle nostre decisioni aperte — una delle quali tocca D11."
+description: "Ricerca chiesta da Fra (TG msg 2246, 2026-09-29): i due modelli piccoli nuovi e cosa delle loro tecniche ci serve. Identità chiarita da Fra (msg 2253): il piccolo è MiniCPM5-2B (OpenBMB, 7/09, 2,5B denso Apache-2.0 che batte Qwen3.5-4B; ricetta: SFT deep-thinking 400B token, RL con maestri specialisti, fusione di 16 esperti per distillazione on-policy; dati SFT/RL agentici aperti). Letto anche il report di MiMo-V2.6 sul PDF (giudice subordinato al test, fail-silent insegnato dal reward solo funzionale, mini-harness). Convergenza n=2: specialisti separati + fusione per distillazione. Apple: da confermare."
 type: entity
 tags: [ricerca, modelli, distillazione, rl, agentic, apple, xiaomi, teacher, d11, decision-input]
 sources:
@@ -17,7 +17,7 @@ last_updated: 2026-09-29
 
 > ⚠️ **Livello di verifica, dichiarato**: il **report tecnico di MiMo-V2.6** (PDF ufficiale, `MiMo_V2_6_technical_report.pdf` sul repo HF del Pro-RL) l'ho letto **io, sezioni 4.2, 4.3, 5 e 7** — i numeri di quelle sezioni sono `[EXTRACTED dal PDF]`. La sezione 6 (infrastruttura) è solo scorsa. LensVLM, AFM 3 e TGOPD restano `[EXTRACTED via riassunto]` dell'abstract. Attenzione a una tabella: nel testo estratto la Tabella 4 ha le etichette sfalsate di una riga; i valori giusti sono quelli qui sotto, e coincidono con la model card.
 >
-> ⚠️ **Identità non confermata**: la descrizione di Fra (*«uno rilasciato da Apple e un altro, straordinario per la piccola taglia, forse 8B, la rosa delle skill ampia su tutto»*) non basta a identificarli con certezza. Domanda aperta, msg 2248.
+> ✅ **Identità chiarita da Fra (TG msg 2253, 2026-09-30): il modello piccolo è MiniCPM** — cioè **MiniCPM5-2B** (OpenBMB, 7/09/2026), non MiMo. La descrizione («forse 8B») era a memoria: il modello è da **2,5B** e batte i 4B. MiMo-V2.6 resta in questa pagina perché è stato letto sul PDF e le sue lezioni valgono comunque; sul modello Apple Fra non ha ancora risposto.
 
 ## Chi sono i candidati
 
@@ -27,6 +27,24 @@ last_updated: 2026-09-29
 | **LensVLM-9B** | Apple, paper 2605.07019 (7/05), in tendenza su HF il 27/09 | il **primo modello aperto di Apple**: VLM su Qwen3.5-9B-Base che legge testo reso come immagine compressa ed **espande solo le pagine rilevanti** con tool appresi (SFT + RL) | è Apple ed è nuovo come *apertura*; ma non è un modello generalista |
 | **AFM 3** (Core 3B denso · Core Advanced 20B sparso con 1-4B attivi) | Apple, 8/06/2026, pesi chiusi | i modelli di sistema di Apple Intelligence; il report tecnico era annunciato per *«later this summer»* | è «il» modello Apple dell'anno, ma non è piccolo-e-aperto |
 | meno probabili | Granite 4.2 8B (IBM, 25/08) · MiniCPM5-2B (7/09, AIME 86,5) · Ling-3.0-tiny 7,9B MoE | | |
+
+## ⭐ MiniCPM5-2B — il modello che intendeva Fra (OpenBMB, 7/09/2026)
+
+> Livello: model card e README del repo, `[EXTRACTED via riassunto]`. Il link al report tecnico punta ancora a quello di MiniCPM4 (arXiv 2506.07900): un report specifico di MiniCPM5 **non l'ho trovato**.
+
+**Cos'è**: **2,52B** densi (1,98B senza embedding), 42 layer, GQA 16/2, contesto 128K, **Apache-2.0**, architettura **`LlamaForCausalLM` standard** — nessun kernel custom, nessun fork. Media **53,9** su 34 benchmark contro **51,1** di Qwen3.5-4B; alcuni contro Qwen3.5-4B: LiveCodeBench 69,1 vs 56,4 · AIME 2025 86,5 vs 78,8 · τ²-Bench Telecom 97,1 vs 92,1 · **IFBench 66,3 vs 59,0** · **SWE-bench Verified 46,4 vs 33,6** · GAIA testo 88,7 vs 78,6. Perde sul contesto lungo (AA-LCR 59,0 vs 61,0).
+
+**La ricetta, in ordine**:
+1. **Base**: pre-training stabile + fase di decadimento su Ultra-FineWeb / Ultra-FineWeb-L3.
+2. **Mid-training** sulle capacità bersaglio: UltraX, UltraData-Code, UltraData-Math.
+3. **SFT «deep-thinking» da 400B token** (UltraData-SFT-2605 + **UltraData-SFT-Agent-2609**, 500K campioni agentici).
+4. **RL con un maestro SPECIALISTA per dominio** (matematica, codice, agenti, scrittura…), su UltraData-RL-2609 (80K+ campioni), algoritmi critic-based da JustRL II.
+5. ⭐ **On-Policy Distillation che FONDE 16 esperti in un solo checkpoint** (5 sono agentici): l'advantage è la **reverse KL sull'intero vocabolario** fra studente e maestro, e si riusano i prompt dell'RL senza costruire un corpus nuovo. Effetto dichiarato di RL + OPD rispetto al solo SFT: **+10,96** in media su ragionamento e generale, **+6,96** sugli agenti.
+
+**Cosa ci serve — tre cose, e una è una convergenza**:
+- ⭐ **Specialisti separati + fusione per distillazione on-policy: ora sono DUE laboratori su due** (MiMo con MOPD2 per i domini difficili, MiniCPM con 16 esperti). È la risposta che due gruppi indipendenti hanno dato alla domanda che la nostra sequenza a fasi ([[../training-taxonomy/lab-sequence]], D10) affronta con l'**ordine**: come insegnare molte capacità senza che l'ultima cancelli le prime. Loro non ordinano: **addestrano a parte e fondono**. Non smentisce D10 — la nostra sequenza misura *cosa è stato appreso* fra una fase e l'altra — ma è un'alternativa con evidenza, n=2, e chi decide il curriculum deve averla davanti. ⚠️ E va tenuta distinta dall'idea protetta dei tre livelli (regola #1): loro fondono gli specialisti **nei pesi**; nel nostro disegno i verticali restano **LoRA separabili** a runtime. Sono due risposte allo stesso problema, non una che sostituisce l'altra.
+- **I dati sono aperti**: UltraData-SFT-Agent-2609 (500K campioni agentici) e UltraData-RL-2609 (80K+) potrebbero ridurre molto il lavoro del [[generatori-del-training-set-2026-09|generatore]] per la parte agentica generica. ⛔ Prima di usarli: **licenza dei dataset** (la model card dice «open-source», non quale) e **decontaminazione** contro i nostri held-out (#18, #29).
+- **Un banco di prova locale plausibile**: 2,5B in architettura Llama standard stanno sulla nostra 2080 Ti da 11 GB con margine per un LoRA, e battono Qwen3.5-4B. Come **modello di test** (mai di target: [[../../memory|project_test_model_vs_target]]) potrebbe sostituire il 4B per provare la pipeline SFT/LoRA in locale senza il problema dell'ibrido GDN di F44. Da provare, non deciso.
 
 ## Le sei cose importabili (dal report di MiMo-V2.6 salvo dove detto)
 
@@ -72,7 +90,7 @@ last_updated: 2026-09-29
 - Un 9B distillato **non** è la prova che la ricetta riproduca a scala i risultati del modello da 1T.
 
 ## Cosa manca, prima di costruirci sopra
-1. La conferma di Fra su quali modelli intendeva (msg 2248).
+1. ✅ Il modello piccolo è MiniCPM5-2B (Fra, msg 2253). Apple: ancora da confermare.
 2. ✅ Report MiMo letto (§4.2, 4.3, 5, 7). Restano 2609.02998 (TGOPD) per intero e la §6.
 3. Aggiungere a **D11** la terza posizione (giudice subordinato al cancello) con l'evidenza di GAR — lo faccio nel registro, non lo decido.
 
