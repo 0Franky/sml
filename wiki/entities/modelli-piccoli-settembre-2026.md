@@ -15,7 +15,7 @@ last_updated: 2026-09-29
 
 # I due modelli piccoli di settembre 2026 — e cosa ci serve
 
-> ⚠️ **Livello di verifica, dichiarato**: tutto qui viene da **riassunti** di pagine web e abstract, letti attraverso uno strumento che riassume — **nessun PDF letto per intero** da me. I numeri sono `[EXTRACTED via riassunto]`: abbastanza per decidere **cosa** leggere e **dove** guarda, non per costruirci sopra una scelta. Prima di adottare una tecnica, il PDF.
+> ⚠️ **Livello di verifica, dichiarato**: il **report tecnico di MiMo-V2.6** (PDF ufficiale, `MiMo_V2_6_technical_report.pdf` sul repo HF del Pro-RL) l'ho letto **io, sezioni 4.2, 4.3, 5 e 7** — i numeri di quelle sezioni sono `[EXTRACTED dal PDF]`. La sezione 6 (infrastruttura) è solo scorsa. LensVLM, AFM 3 e TGOPD restano `[EXTRACTED via riassunto]` dell'abstract. Attenzione a una tabella: nel testo estratto la Tabella 4 ha le etichette sfalsate di una riga; i valori giusti sono quelli qui sotto, e coincidono con la model card.
 >
 > ⚠️ **Identità non confermata**: la descrizione di Fra (*«uno rilasciato da Apple e un altro, straordinario per la piccola taglia, forse 8B, la rosa delle skill ampia su tutto»*) non basta a identificarli con certezza. Domanda aperta, msg 2248.
 
@@ -47,6 +47,24 @@ last_updated: 2026-09-29
 
 **6. Non applicabile, per completezza**: congelare il router MoE durante l'RL (senza, la variazione del carico degli esperti passa da 0,78 a 2,0 in venti passi e gli esperti freddi dallo 0,5 al 22 %). I nostri candidati base sono **densi**.
 
+## Letto sul PDF: sette cose in più, e tre toccano cose che abbiamo appena fatto
+
+**7. ⭐ L'audit della supervisione fatto con i rollout — è il metodo di F48, industrializzato** (§4.2.1). Ogni compito tentato 4 volte; un agente-revisore riceve i quattro tentativi con patch, output dei test e log, **scrive prima cosa richiede una soluzione corretta**, poi giudica ogni tentativo e lo confronta con il reward osservato. *Passa ma è sbagliato* = **falso positivo** (verifica incompleta); *è giusto ma fallisce* = **falso negativo** (test troppo restrittivo). E la regola che ne esce: *i test che esigono requisiti assenti dalla specifica si correggono o si tolgono* — la nostra regola dell'oracolo (o il prompt pinna, o l'assert tollera). **Il 15/09 io l'ho fatto a mano su un modello e ho trovato tre assi di forma**; loro lo fanno su ogni compito. Il nostro `control`/per-assenza copre i falsi positivi; per i **falsi negativi** non abbiamo ancora niente di sistematico.
+
+**8. ⭐ Senza il controllo di qualità, l'RL insegna da solo il FAIL-SILENT** (§4.3.2): gli audit dei manutentori hanno trovato che le policy addestrate senza GAR adottavano sempre più *«speculative compatibility branches, broad exports, **exception swallowing**, **relaxed validation**, and evaluation-specific configuration changes»* — trucchi per passare i test che *«oscurano i fallimenti»*. È **evidenza esterna diretta** per l'idea (2) di Fra ([[../concepts/valutazione-idee-2026-09-29]]): un oracolo solo funzionale non è neutro, **premia** l'inghiottire le eccezioni. La checklist di rilascio con le sonde nascoste è la difesa deterministica contro esattamente questo.
+
+**9. ⭐ «I requisiti che il reward non misura vengono semplicemente ignorati»** (§4.2.5) — la frase spiega F43/F47. Gli harness di produzione avvolgono il modello di salvaguardie e prompt di vincolo che stanno **fuori dal reward**: il credito diventa inaffidabile e quei requisiti vengono ignorati. Loro addestrano su **mini-harness minimi e disaccoppiati**, ricombinabili; risultato: sugli harness **mai visti** (codex, claude code, mini-swe-agent) il pass@1 medio sale da ~50 % a 66 % e il divario con quelli di training si chiude. **Per noi**: il braccio `ours` è un harness di produzione pesante, e F43 ha misurato che il 32B non ne usa un solo tool — coerente. La leva che abbiamo già sono i **profili** (`core`/`minimal`/`standard`): la diversità di harness in training, non un harness più ricco.
+
+**10. Le difese contro il reward hacking, in ordine** (§4.2.6): pulizia dell'ambiente (log di build, output dei verificatori, cache, storia git successiva alla base) + **isolamento di rete**; poi un **hack agent** che cerca exploit finché non ne trova più (ne ha trovati *«many»* che la pulizia non copriva); poi **audit offline delle traiettorie** durante il training; quota di hack confermati **sotto il 2 %** per tutto il run. Il loro hack principale è la **fuga della soluzione** (installare la versione nuova del pacchetto, scaricare il file da GitHub, leggere la cronologia del ticket) — cioè *leggere l'oracolo*. **L'hanno chiuso con l'isolamento e l'audit sul trace, non con un canarino**: la stessa conclusione a cui ero arrivato il 15/09 decidendo di non costruirlo. E un dettaglio che conferma la nostra tassonomia: **esempi di mid-training in cui il modello riflette sul ragionamento sbagliato e lo corregge esplicitamente, lasciando l'errore riconoscibile** — è la nostra classe WRONG-recovery; loro misurano che migliora l'allineamento.
+
+**11. Il costo si penalizza relativo al gruppo e solo sui successi** (§4.3.3): lunghezza di riferimento = un quantile delle lunghezze dei tentativi **riusciti** dello stesso prompt; penalità solo ai riusciti più lunghi; e **solo se il gruppo supera una soglia di pass-rate**, così i prompt difficili tengono spazio per esplorare. È la forma giusta della nostra trappola #32: il costo non è un campo grondato per-esempio, è **distribuzionale e condizionato all'esito**. Riferimento diretto per usare t\* come reward senza ricadere nel branch-reward.
+
+**12. Dove un verificatore affidabile non esiste — distillazione on-policy da un maestro SFT, non un PRM** (§5.6, MOPD2): per i compiti a dominio aperto addestrano **maestri SFT** su dimostrazioni sintetiche di qualità, poi lo studente genera **il proprio** turno a partire da un prefisso di dimostrazione e il maestro dà supervisione token per token. **Per noi**: un percorso per le classi con tag **L** (senza oracolo) che **non** mette un giudice appreso nel loop — compatibile con la reco (A) di D11, ed è l'argomento che mancava per le classi dove l'oracolo non si può scrivere.
+
+**13. Gli ambienti rilasciati, per dominio** (§7.2, Tabella 5): codice ~3k (test eseguibili) · cyber ~1k (regole) · **generale ~1k, lavoro di conoscenza, giudicato con rubriche LLM** · visuale ~2k · musica ~1k. ⚠️ Per il nostro Tier-1 (intelligenza operativa, non codice) il set che interesserebbe è proprio quello **giudicato da un LLM**, cioè il meno deterministico. Il loro disegno degli ambienti generali è comunque importabile anche se gli ambienti no: **mock locali** del software, sandbox **ripristinabile**, voci di rubrica **atomiche e binarie** (controlli via codice per ciò che è deterministico), **controlli negativi sui file e sui database non correlati al compito**, **soluzioni avversarie** che sembrano giuste senza esserlo. ⚠️ I **controlli negativi sui file non correlati** nelle nostre scene **non ci sono** in modo sistematico: è un buco concreto e costa poco chiuderlo.
+
+**Numeri del 9B, dal PDF** (Tabella 6): SWE-bench Verified 60,0 → **61,1** (SFT) → **66,2** (RL) · SWE-bench Pro 32,0 → 44,6 → 47,6 · Terminal-Bench 2.1 27,0 → 37,1 → **52,8** · AutomationBench 5,0 → 30,3 → 33,1 · cyber interno 5,7 → 31,3 → 47,0. Mix dell'SFT (Tabella 4): codice 23,2B token · cyber 11,0B · generale 22,0B · visuale 21,2B; totale 77,4B, di cui 27,2B con loss. RL: GRPO, rollout parziali asincroni, aggregazione della loss **per prompt** (*impedisce alla lunghezza di crescere troppo in fretta*). Mix dei compiti dell'RL grande: codice 68 % · strumenti generali 12 % · design 13 % · seguire il contesto 3 % · cyber 4 %.
+
 ## Caveat che non vanno persi
 - **Epoch AI segnala punteggi «flawed» e problemi di contaminazione** sui numeri SWE di MiMo; **tre benchmark su quattro sono interni**.
 - Gli autori stessi: i miglioramenti arrivano **con più token usati** — *capacità, non soluzioni più corte*.
@@ -55,7 +73,7 @@ last_updated: 2026-09-29
 
 ## Cosa manca, prima di costruirci sopra
 1. La conferma di Fra su quali modelli intendeva (msg 2248).
-2. I PDF: report MiMo-V2.6 (MOPD2, costruzione degli ambienti, dettagli di GAR) e 2609.02998.
+2. ✅ Report MiMo letto (§4.2, 4.3, 5, 7). Restano 2609.02998 (TGOPD) per intero e la §6.
 3. Aggiungere a **D11** la terza posizione (giudice subordinato al cancello) con l'evidenza di GAR — lo faccio nel registro, non lo decido.
 
 ## Links
