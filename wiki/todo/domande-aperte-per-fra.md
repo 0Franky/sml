@@ -17,7 +17,7 @@ last_updated: 2026-09-12
 
 ## Aperte
 
-### D14 · Le tre famiglie di esercizi e la fase «annota tutto»: ratifichi le home proposte? — aperta 2026-09-29 (TG msg 2246)
+### D14 · Le tre famiglie di esercizi e la fase «annota tutto»: ratifichi le home proposte? — aperta 2026-09-29 (TG msg 2246) · ✅ **CHIUSA 2026-10-01, messaggio di Fra nel terminale: «per il resto accetto le tue reco»** → (A) e ordine (2)→(3)→(1). Aggiunta di Fra alla (2): **default ROSSO** — un gate è verde solo se TUTTI i controlli passano (vedi [[../concepts/valutazione-idee-2026-09-29]] §2)
 
 - **Contesto**: quattro idee di Fra del 2026-09-29. Valutazione completa, con gap-scan su 80 classi, in [[../concepts/valutazione-idee-2026-09-29]].
 - **Fatto misurato**: nessuna delle tre famiglie è scoperta del tutto — la foglia 5.1 di area-03 ha già la checklist degli edge case e il caso oscillante; awareness-transmission ha già *«il perché va letto prima di ri-decidere»*. I buchi veri sono più stretti: (1) il grilletto della **confidenza** che cala senza stallo + il punto schematico + l'uscita a tre rami; (2) l'**enumerazione delle proprietà non funzionali** per tipo di artefatto, con la **promozione** da usa-e-getta a produzione; (3) il ciclo **distribuito nel tempo** e la consultazione **per area**.

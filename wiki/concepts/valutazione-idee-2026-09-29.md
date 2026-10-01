@@ -5,14 +5,14 @@ type: concept
 tags: [training, proposta, gap-scan, metacognizione, verifica, decisioni, curriculum, thinking-optimization]
 sources:
   - utente TG msg 2246 (2026-09-29) — testo integrale in wiki/_private/user-ideas-2026-09-29.md
-last_updated: 2026-09-29
+last_updated: 2026-10-01
 ---
 
 # Quattro idee di Fra, valutate — e dove stanno già
 
 > **Metodo** (#33, #36): prima di proporre una classe si cerca se esiste. Indicizzate le **80 classi** per descrizione e lette le candidate. Esito in una riga: **le tre famiglie di esercizi sono già coperte per metà o più**, e il valore sta nel nominare **esattamente** il pezzo che manca — altrimenti si scrive una classe che duplica tre sorelle e nessuno se ne accorge.
 >
-> ⛔ **Niente qui è ratificato** (#26): sono proposte con reco. La ratifica è la domanda **D14** in [[../todo/domande-aperte-per-fra]]. Nessuna classe e nessun lab è stato scritto (#18: l'utente approva prima dell'aggiunta).
+> ✅ **Ratificato il 2026-10-01** (Fra, messaggio nel terminale: *«per il resto accetto le tue reco»*): home (A) e ordine (2)→(3)→(1). Fino a quel giorno erano proposte con reco: la domanda era la **D14** in [[../todo/domande-aperte-per-fra]]. Nessuna classe e nessun lab è stato scritto (#18: l'utente approva prima dell'aggiunta).
 
 ## 1. Quando la confidenza cala: fermati, fai il punto in forma schematica, poi riprendi — o fermati davvero
 
@@ -45,6 +45,9 @@ last_updated: 2026-09-29
 - [[../training-taxonomy/lab-sequence]] fase 3 e la scena `gate-concordance`: il modello **costruisce il proprio gate**.
 
 **Il buco vero**: nessuna classe insegna l'**enumerazione delle proprietà NON funzionali** che «fatto» richiede per **quel tipo** di artefatto — per uno script di produzione: fallire rumorosamente con exit ≠ 0, niente fail-silent, log ed errori persistiti su file, scrittura atomica (nessun output a metà), rieseguibilità idempotente, configurazione e segreti fuori dal codice, e così via. È in parte **conoscenza** (cosa conta per un cron notturno) e in parte **skill** (scegliere in base alla posta). Oggi 5.1 verifica bene una lista che nessuno ha insegnato a scrivere.
+
+> ✅ **Aggiunta di Fra (2026-10-01, ratifica D14) — la voce che regge tutte le altre: DEFAULT ROSSO.** Un gate, un firewall, una checklist di rilascio parte da **deny/rosso** e diventa verde **solo se TUTTI i controlli sono stati eseguiti e passati**. Testuale: *«così se si rompe un gate o ha mancanze ce ne accorgiamo subito. Questa è la strada sicura. […] è implicitamente un campanello d'allarme quando c'è qualcosa che non va o mancanza di completezza da parte nostra»*. Il perché `[INFERRED]`: con il default verde, un controllo che **non gira** (crasha, non trova i file, ha il perimetro vuoto) è indistinguibile da un controllo che **passa** — il guasto del gate si traveste da successo. Con il default rosso il guasto si vede da solo, e diventa anche un **segnale di completezza**: una voce mancante tiene il rosso. **Cosa lo ribalterebbe**: nulla per i gate di rilascio e sicurezza; per i controlli **consultivi** (un avviso che non blocca) il costo è il rumore, e lì si dichiara il perimetro invece di bloccare.
+> **Nella fixture**: un braccio in più — *il gate del modello stesso è rotto* (la sonda di una voce crasha, o la voce manca dall'elenco). PASS solo se il gate del modello esce **rosso**; un gate che in quel braccio esce verde è il fail-silent spostato un livello più su. È anche la prova che separa *«il modello ha scritto una checklist»* da *«il modello ha scritto un gate che funziona»*.
 
 **Home proposta**: figlia nuova di [[../training-taxonomy/class-right-effort-for-stakes]] (la radice che calibra), con la metà «esegui ogni voce» delegata per cross-link a verification-discipline invece che duplicata. **Gap-scan orizzontale** (#36): l'asse ha una quarta posizione che la tua idea implica senza dirla — la **PROMOZIONE**. Lo script scritto usa-e-getta che finisce in cron è il caso reale più comune, ed è la posta **dinamica** già prevista in project-stakes-awareness (P1-9): la checklist va **ri-derivata** quando lo stadio cambia, e simmetricamente alleggerita quando un artefatto viene retrocesso.
 

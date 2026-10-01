@@ -238,6 +238,8 @@ Principio comune: l'oracolo è **deterministico** e premia l'**esito**; i distra
 
 ---
 
+- ⭐ **DEFAULT ROSSO per ogni gate, oracolo e checklist** (Fra, 2026-10-01): un controllo parte da deny/rosso ed è verde **solo se tutti i suoi controlli sono stati eseguiti e passati**. Un controllo che non gira — crash, file non trovati, perimetro vuoto, voce mancante — deve uscire **rosso**, mai verde. Vale per i gate che **costruiamo noi** (oracoli delle scene, script, hook) e per quelli che il **modello** impara a costruire (lab-sequence fase 3, checklist di rilascio). Prova obbligatoria: rompi il gate e guarda che diventi rosso. Origine e fixture: [[../concepts/valutazione-idee-2026-09-29]] §2.
+
 ## §4-bis — ⭐ COPERTURA A MATRICE (non a campione) — e i CATALOGHI da copiare
 
 > **Mandato utente 2026-07-25** (msg 1885/1886/1899): *"completa il dataset per ogni **matrice di possibilità** … tutte le possibilità. **Non fare il compitino**"* + *"test che vengono correttamente **accettati**, test errati che **non dovrebbero** venire accettati, **tutte le casistiche per categoria** … altrimenti non controlliamo l'intera superficie **neanche a campione**"* + *"applica i **loop di completezza e correttezza** sia sull'**ingest** sia su **quello che produci**"*.

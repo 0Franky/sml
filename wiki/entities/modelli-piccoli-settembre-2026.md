@@ -10,14 +10,16 @@ sources:
   - "arXiv 2609.02998 — Verify Before You Distill (TGOPD)"
   - "arXiv 2605.07019 — LensVLM · model card https://huggingface.co/apple/LensVLM-9B"
   - "Apple, Introducing the Third Generation of Apple's Foundation Models (8/06/2026) — https://machinelearning.apple.com/research/introducing-third-generation-of-apple-foundation-models"
-last_updated: 2026-09-29
+last_updated: 2026-10-01
 ---
 
 # I due modelli piccoli di settembre 2026 — e cosa ci serve
 
 > ⚠️ **Livello di verifica, dichiarato**: il **report tecnico di MiMo-V2.6** (PDF ufficiale, `MiMo_V2_6_technical_report.pdf` sul repo HF del Pro-RL) l'ho letto **io, sezioni 4.2, 4.3, 5 e 7** — i numeri di quelle sezioni sono `[EXTRACTED dal PDF]`. La sezione 6 (infrastruttura) è solo scorsa. LensVLM, AFM 3 e TGOPD restano `[EXTRACTED via riassunto]` dell'abstract. Attenzione a una tabella: nel testo estratto la Tabella 4 ha le etichette sfalsate di una riga; i valori giusti sono quelli qui sotto, e coincidono con la model card.
 >
-> ✅ **Identità chiarita da Fra (TG msg 2253, 2026-09-30): il modello piccolo è MiniCPM** — cioè **MiniCPM5-2B** (OpenBMB, 7/09/2026), non MiMo. La descrizione («forse 8B») era a memoria: il modello è da **2,5B** e batte i 4B. MiMo-V2.6 resta in questa pagina perché è stato letto sul PDF e le sue lezioni valgono comunque; sul modello Apple Fra non ha ancora risposto.
+> ✅ **Identità chiarita da Fra (TG msg 2253, 2026-09-30): il modello piccolo è MiniCPM** — cioè **MiniCPM5-2B** (OpenBMB, 7/09/2026), non MiMo. La descrizione («forse 8B») era a memoria: il modello è da **2,5B** e batte i 4B. MiMo-V2.6 resta in questa pagina perché è stato letto sul PDF e le sue lezioni valgono comunque.
+>
+> ✅ **2026-10-01 (Fra, messaggio nel terminale)**: (1) il modello Apple **era LensVLM-9B**; (2) **MiniCPM5-2B diventa il modello di TEST locale** (*«potremmo usare minicpm come modello base per fare i test»*) al posto del Qwen 4B — test-only, il target resta il 27B-class; (3) **scaricare i dati aperti** utili al training → fatto con `lm/tools/fetch-training-data.py` (sotto, §Dati scaricati).
 
 ## Chi sono i candidati
 
@@ -90,9 +92,22 @@ last_updated: 2026-09-29
 - Un 9B distillato **non** è la prova che la ricetta riproduca a scala i risultati del modello da 1T.
 
 ## Cosa manca, prima di costruirci sopra
-1. ✅ Il modello piccolo è MiniCPM5-2B (Fra, msg 2253). Apple: ancora da confermare.
+1. ✅ Il modello piccolo è MiniCPM5-2B (Fra, msg 2253). Apple = LensVLM-9B (Fra, 2026-10-01).
 2. ✅ Report MiMo letto (§4.2, 4.3, 5, 7). Restano 2609.02998 (TGOPD) per intero e la §6.
 3. Aggiungere a **D11** la terza posizione (giudice subordinato al cancello) con l'evidenza di GAR — lo faccio nel registro, non lo decido.
+
+## Dati scaricati (2026-10-01)
+
+Fuori dal repo (il repo è pubblico), in `$SLM_DATA_DIR`, con `lm/tools/fetch-training-data.py` — verde solo se ogni file ha la dimensione dichiarata dall'hub. Licenza **Apache-2.0** per tutte le voci, letta sull'hub il 2026-10-01. ⛔ **Scaricato non vuol dire usabile**: la **decontaminazione** contro i nostri held-out (#18) e la lettura dei README su provenienza e generatore (#29: conta l'USO — se un dataset è stato generato da un modello i cui ToS vietano l'addestramento, Apache sul dataset non basta) **non sono fatte**.
+
+| sorgente | peso | cosa | perché |
+|---|---|---|---|
+| `openbmb/MiniCPM5-2B` | 5,0 GB | pesi | modello di test locale |
+| `openbmb/UltraData-SFT-Agent-2609` | 54,2 GB | SFT agentico: `Code_Agent` (7 parti) + `General_Agent` (32 parti) | la parte agentica generica del Tier-1 |
+| `openbmb/UltraData-RL-2609` **senza `data/Code`** | 3,7 GB | RL: Long_Context, Knowledge, Math | prompt RL non-coding |
+| `XiaomiMiMo/MiMo-V2.6-RL-oss` | 12,1 GB | ambienti RL rilasciati (41.284 file in `general/envs`) + parquet di code/webdev/cyber/music | il **disegno** degli ambienti generali (§13) |
+
+**Non scaricati, per spazio** (D: 125 GB liberi al momento del download): `UltraData-RL-2609/data/Code` (**184 GB**, e il Tier-1 non è coding — servirebbe semmai al LoRA di programmazione) · `openbmb/UltraData-SFT-2605` (**319 GB**, gated «auto»: è l'SFT generale «deep-thinking»). **Non scaricati per scelta**: i dataset di tracce Fable — chiusi sui fatti il 2026-07-16 (il ragionamento non c'è o non è autentico, [[../todo]] §Fable).
 
 ## Links
 [[generatori-del-training-set-2026-09]] · [[base-model-candidates-2026-07]] · [[../decisions/2026-09-12-prm-appreso-escluso-proposta]] (D11) · [[../training-taxonomy/lab-sequence]] (D10) · [[../training-taxonomy/class-right-effort-for-stakes]] (t\*) · [[../concepts/valutazione-graft-e-deepseek-v41-flash]] · [[../harness-experiment-log]] (F43)
