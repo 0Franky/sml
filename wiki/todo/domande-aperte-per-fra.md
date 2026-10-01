@@ -2,12 +2,12 @@
 name: domande-aperte-per-fra
 description: "🔴 REGISTRO delle domande aperte per Fra — si scrive QUI prima di mandarle su Telegram (regola sua, 2026-08-23: «segnare sempre le domande prima in locale sul file»). Ogni voce: contesto, fatto misurato, opzioni, reco. Quando risponde, la voce si chiude con la data e il numero del messaggio."
 type: tracker
-status: 🗳️ 1 aperta (D11 PRM appreso fuori dal loop di Wave 6) — D12 chiusa il 2026-09-12 (msg 2238, opzione A) — 10 chiuse (3 su delega, msg 2208), 1 segnalazione (2026-09-11)
+status: 🗳️ 5 aperte (D11 PRM appreso · D13 rigirare le scene · D15 file non correlati · D16 auto-pickup · D17 journal) — D14 chiusa il 2026-10-01 — D12 chiusa il 2026-09-12 (msg 2238, opzione A) — 10 chiuse (3 su delega, msg 2208), 1 segnalazione (2026-09-11)
 tags: [tracker, decisioni, telegram, area-processo]
-last_updated: 2026-09-12
+last_updated: 2026-10-01
 ---
 
-# 🗳️ Domande aperte per Fra — 1 al 2026-09-12 (D11) · 11 chiuse · 10 chiuse (3 su delega)
+# 🗳️ Domande aperte per Fra — 5 al 2026-10-01 (D11, D13, D15, D16, D17) · 11 chiuse · 10 chiuse (3 su delega)
 
 > Una domanda che vive solo in chat sparisce alla prima compaction, e con lei la risposta quando arriva
 > (l'API di Telegram non espone la cronologia). Per questo si scrive **qui prima**, e il hook
@@ -16,6 +16,29 @@ last_updated: 2026-09-12
 > **Canale**: dal **TG msg 2159** (2026-09-11, *«aggiornami qui, non sono più al PC»*) gli aggiornamenti e le risposte vanno su Telegram, non nel terminale.
 
 ## Aperte
+
+### D17 · La verifica di chiusura promette un controllo del journal che non fa — renderlo vero o togliere la promessa? — aperta 2026-10-01
+
+- **Contesto**: nel repo condiviso degli hook (cc-wiki-core), lo stage J del `completion-check` calcola se esiste il journal di oggi e poi **non usa il risultato**: in nessun progetto il journal viene controllato, ma la descrizione dello stage dice che lo fa. In più cercherebbe solo il nome esatto `<oggi>.md`, mentre in WillHouse 247 journal su 281 hanno un suffisso.
+- **Fatto misurato** (agente di audit, 2026-10-01; non riletto da me nel codice): variabile `journalExists` calcolata e mai letta. slm non usa il journal (`wiki/memory/journal/` vuota).
+- **Opzioni**: **(A)** controllo vero, col suffisso accettato, **rosso** se il journal manca; i progetti che non lo usano lo dichiarano (slm: spento). **(B)** togliere la promessa dalla descrizione e basta. **(C)** lasciare com'è.
+- **Reco**: **(A)** — è la tua regola del default rosso applicata a un gate che oggi sembra verde senza guardare. **Cosa la ribalterebbe**: se il journal non serve più in nessun progetto, (B) è più onesta e costa meno.
+- 👉 **Domanda**: (A), (B) o (C)?
+
+### D16 · Le richieste di «riprendi un bug aperto» su progetti senza bug tracker — come spegnerle? — aperta 2026-10-01
+
+- **Contesto**: tre hook del core (all'avvio, a fine chiusura, e un suggerimento) chiedono di programmare l'**auto-pickup** (riprendere da solo un bug da `wiki/bugs/open`). slm quella cartella non ce l'ha → rumore. E l'attesa di 6 ore fra una richiesta e l'altra è **globale**: un avvio in slm la consuma anche per WillHouse.
+- **Opzioni**: **(A)** variabile dichiarata per progetto (`AUTO_PICKUP=0` nell'`env` locale di slm), con l'hook che dice una volta «spento qui per dichiarazione»; attesa resa per-progetto. **(B)** spegnerle da sole quando la cartella manca. **(C)** lasciare.
+- **Reco**: **(A)**. La (B) indovina invece di sapere: dentro un sottomodulo di WillHouse la cartella può sembrare assente e l'auto-pickup si spegnerebbe a torto, in silenzio — l'opposto del default rosso. **Cosa la ribalterebbe**: se l'auto-pickup non lo usi più neanche in WillHouse, si toglie e basta.
+- 👉 **Domanda**: (A), (B) o (C)?
+
+### D15 · Ogni scena controlla anche che i file NON toccati dal compito restino intatti? — aperta 2026-10-01 (proposta del 2026-09-29, dal report MiMo-V2.6 §13)
+
+- **Contesto**: oggi le scene verificano che il modello abbia fatto la cosa giusta, non che **non abbia rotto altro**. Un modello che sistema il file giusto e intanto ne riscrive tre a caso passa. MiMo lo controlla su ogni ambiente.
+- **Fatto misurato (2026-10-01, `harness/eval/run-scene-batch.mjs:44`)**: i risultati per-assert sono un array **appiattito per braccio**; un assert in più sposta le colonne del secondo braccio, e soprattutto **cambia il PASS complessivo**. Quindi i run vecchi non sono confrontabili con i nuovi su nessuna colonna — la rinumerazione è il problema minore.
+- **Opzioni**: **(A)** aggiungerlo a tutte le scene (un controllo generico: hash dei file non citati dal compito, prima e dopo), datando il cambio e confrontando solo run successivi. **(B)** solo nelle scene nuove. **(C)** no.
+- **Reco**: **(A)**, costo zero in dollari. ⚠️ **Si lega a D13**: se (A), conviene farla **prima** di rigirare le scene, e allora per D13 la reco passa da (B) ad **(A)** — il giro completo (~2 $) dà anche la base omogenea col controllo nuovo. **Cosa la ribalterebbe**: un falso rosso frequente (file legittimamente toccati, es. cache o log) — si vede al primo giro e si risolve con un elenco di eccezioni per scena.
+- 👉 **Domanda**: (A), (B) o (C)?
 
 ### D14 · Le tre famiglie di esercizi e la fase «annota tutto»: ratifichi le home proposte? — aperta 2026-09-29 (TG msg 2246) · ✅ **CHIUSA 2026-10-01, messaggio di Fra nel terminale: «per il resto accetto le tue reco»** → (A) e ordine (2)→(3)→(1). Aggiunta di Fra alla (2): **default ROSSO** — un gate è verde solo se TUTTI i controlli passano (vedi [[../concepts/valutazione-idee-2026-09-29]] §2)
 
