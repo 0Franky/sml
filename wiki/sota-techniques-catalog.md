@@ -93,7 +93,7 @@ confidence: provisional
 | **Scientific-method protocol (8 passi)** | observe→orient→…→verify-loop | ✅ | S | MVP | macro-loop Tier 1 |
 | **Self-consistency** (2203.11171) | N campioni → maggioranza | ✅ | F-serving+S | F3 | costo×N, per task critici |
 | **Two-phase CoT** (lunga-corretta→corta-adaptive) | curriculum di compressione | ✅ | S | F2 | idea utente |
-| **Adaptive-depth / think-or-not** (S-GRPO 2505.10832, AdaptThink, AutoThink) | decide *se/quanto* pensare | 🔶 | S | F2 | reward decaying su exit-position |
+| **Adaptive-depth / think-or-not** (2505.10832 = *«Learning When to Think»*, multi-stage RL — l'id era attribuito a S-GRPO, corretto 2026-10-01; AdaptThink, AutoThink) — applicato all'effort in [[concepts/valutazione-pensiero-adattivo-ed-effort]] | decide *se/quanto* pensare | 🔶 | S | F2 | reward decaying su exit-position |
 | **Self-Refine** (2303.17651) | genera→critica→rivedi (stesso modello) | ✅ | S | F2 | rischio confabulazione del critique |
 | **Reflexion** (2303.11366) | riflessione verbale da feedback → memoria | ✅ | S+F | F2 | lega a error-memo |
 | **MCTS / lookahead reasoning** (rStar-Math 2501.04519) | ricerca ad albero sui passi | ✅ | S+F-serving | F3 | costoso, per math/algoritmi |

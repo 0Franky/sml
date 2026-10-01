@@ -2,12 +2,12 @@
 name: domande-aperte-per-fra
 description: "🔴 REGISTRO delle domande aperte per Fra — si scrive QUI prima di mandarle su Telegram (regola sua, 2026-08-23: «segnare sempre le domande prima in locale sul file»). Ogni voce: contesto, fatto misurato, opzioni, reco. Quando risponde, la voce si chiude con la data e il numero del messaggio."
 type: tracker
-status: 🗳️ 5 aperte (D11 PRM appreso · D13 rigirare le scene · D15 file non correlati · D16 auto-pickup · D17 journal) — D14 chiusa il 2026-10-01 — D12 chiusa il 2026-09-12 (msg 2238, opzione A) — 10 chiuse (3 su delega, msg 2208), 1 segnalazione (2026-09-11)
+status: 🗳️ 6 aperte (D11 PRM appreso · D13 rigirare le scene · D15 file non correlati · D16 auto-pickup · D17 journal · D18 pensiero adattivo) — D14 chiusa il 2026-10-01 — D12 chiusa il 2026-09-12 (msg 2238, opzione A) — 10 chiuse (3 su delega, msg 2208), 1 segnalazione (2026-09-11)
 tags: [tracker, decisioni, telegram, area-processo]
 last_updated: 2026-10-01
 ---
 
-# 🗳️ Domande aperte per Fra — 5 al 2026-10-01 (D11, D13, D15, D16, D17) · 11 chiuse · 10 chiuse (3 su delega)
+# 🗳️ Domande aperte per Fra — 6 al 2026-10-01 (D11, D13, D15, D16, D17, D18) · 11 chiuse · 10 chiuse (3 su delega)
 
 > Una domanda che vive solo in chat sparisce alla prima compaction, e con lei la risposta quando arriva
 > (l'API di Telegram non espone la cronologia). Per questo si scrive **qui prima**, e il hook
@@ -16,6 +16,14 @@ last_updated: 2026-10-01
 > **Canale**: dal **TG msg 2159** (2026-09-11, *«aggiornami qui, non sono più al PC»*) gli aggiornamenti e le risposte vanno su Telegram, non nel terminale.
 
 ## Aperte
+
+### D18 · Pensiero adattivo ed effort: ratifichi le due classi nuove e la tabella dei livelli? — aperta 2026-10-01
+
+- **Contesto**: la tua idea della seconda nota del 2026-10-01. Valutazione completa in [[../concepts/valutazione-pensiero-adattivo-ed-effort]].
+- **Fatto misurato**: tre pezzi su cinque sono già coperti (P6 e la penalità di MiMo solo sui successi · effort-honesty · confidenza calibrata). L'*«high meglio di max»* è un effetto pubblicato (arXiv 2507.14417). Buchi veri: **(A)** l'effort dichiarato dall'utente come contratto di **scope** (low = minimo per lo scopo di adesso, rimanda dichiarando, chiedi; mai meno cura sull'irreversibile); **(B)** a effort alto, **meno cicli pensa-agisci** per lo stesso esito, senza speculare su ciò che si sa solo agendo.
+- **Opzioni**: **(A)** ratificare entrambe, come sorelle di right-effort-for-stakes e consumption-scale-for-budget sotto constraint-fit-decision, più la tabella dei livelli (low / medium / high / max = ampiezza e non lunghezza / adattivo come default). **(B)** solo una delle due. **(C)** un'altra collocazione.
+- **Reco**: **(A)**. La penalità di prolissità si fa con le forme già importate (spreco misurato in modo strutturale, solo sui successi), **mai** contando parole come «aspetta». **Cosa la ribalterebbe**: se per te il livello di effort deve cambiare solo la lunghezza e non lo scope, la classe A non serve.
+- 👉 **Domanda**: (A), (B) o (C)? E la tabella dei livelli va bene?
 
 ### D17 · La verifica di chiusura promette un controllo del journal che non fa — renderlo vero o togliere la promessa? — aperta 2026-10-01
 
