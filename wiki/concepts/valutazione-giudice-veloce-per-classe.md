@@ -6,12 +6,12 @@ tags: [reward, judge, cascata, calibrazione, proposta, d11, classi-L]
 sources:
   - "Fra, messaggio nel terminale 2026-10-01: «addestrare un open jev like per classe o sottoclasse così abbiamo un giudice veloce … deve segnalare se c'è bisogno di un modello llm per analizzare meglio»"
   - "[[judge-design]] · [[../decisions/2026-09-12-prm-appreso-escluso-proposta]] (D11) · [[../entities/modelli-piccoli-settembre-2026]] §1 GAR e §12 MOPD2"
-last_updated: 2026-10-01
+last_updated: 2026-10-02
 ---
 
 # Un giudice veloce per classe, che sa quando chiamare quello grande
 
-> ⛔ **PROPOSTA, non ratificata** (#26). `[?]` Il nome «open jev» l'ho letto come *un giudice aperto addestrato* (famiglia JudgeLM/Prometheus); se intendevi un progetto preciso, il verdetto va ricontrollato su quello.
+> ⛔ **PROPOSTA, non ratificata** (#26). `[?]` ⚠️ **Correzione 2026-10-02**: «open jev» l'avevo letto come *giudice aperto addestrato*; dalla terza idea di Fra («mix tra jev e un llm») è quasi certamente **JEPA**, da confermare. Il verdetto (cascata offline, calibrazione) non cambia; cambia il candidato per il piccolo — vedi [[valutazione-front-jepa-e-llm]], che è lo stesso pezzo messo prima del modello invece che dopo.
 
 ## Cosa resta vero dell'idea
 
