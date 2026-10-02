@@ -11,7 +11,7 @@ last_updated: 2026-10-02
 
 # Un giudice veloce per classe, che sa quando chiamare quello grande
 
-> ⛔ **PROPOSTA, non ratificata** (#26). `[?]` ⚠️ **Correzione 2026-10-02**: «open jev» l'avevo letto come *giudice aperto addestrato*; dalla terza idea di Fra («mix tra jev e un llm») è quasi certamente **JEPA**, da confermare. Il verdetto (cascata offline, calibrazione) non cambia; cambia il candidato per il piccolo — vedi [[valutazione-front-jepa-e-llm]], che è lo stesso pezzo messo prima del modello invece che dopo.
+> ⛔ **PROPOSTA, non ratificata** (#26). ⚠️ **Correzione 2026-10-02**: «open jev» è **Jev**, il *System One model* di TypeSafe AI (decisioni tipizzate con probabilità calibrate, niente testo), non un giudice generativo e non JEPA come avevo scritto. Il verdetto sotto non cambia, e Jev ne è la forma concreta: l'uscita di un giudice è limitata, e la calibrazione è proprio la proprietà decisiva. Dettaglio in [[valutazione-front-jev-e-llm]].
 
 ## Cosa resta vero dell'idea
 
