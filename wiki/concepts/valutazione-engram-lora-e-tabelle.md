@@ -75,4 +75,4 @@ Già trattato: è **Coconut** (arXiv 2412.06769). La tua conclusione è nell'ADR
 La divisione regge **come principio**, ed è quella che due lavori del 2026 hanno costruito. Ma: Engram si mette in **pre-training**, quindi riguarda il modello futuro; la tabella dà **fatti**, non collegamenti; e una memoria scrivibile ha un **tetto** di qualità e un **rischio** di sicurezza misurati.
 
 ## Links
-[[../entities/architetture-deepseek-v41-flash-e-qwen38-next]] · [[valutazione-front-jepa-e-llm]] · [[../decisions/2026-06-28-decisions-d1-d5]] (D4) · [[catastrophic-forgetting]] · [[lora-stacking]]
+[[../entities/architetture-deepseek-v41-flash-e-qwen38-next]] · [[valutazione-front-jev-e-llm]] · [[../decisions/2026-06-28-decisions-d1-d5]] (D4) · [[catastrophic-forgetting]] · [[lora-stacking]]
