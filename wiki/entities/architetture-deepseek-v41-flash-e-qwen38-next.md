@@ -46,5 +46,7 @@ Il paper parte da una tesi: il linguaggio richiede **due sotto-compiti qualitati
 - I numeri di layer e di Engram non sono verificati sul PDF.
 - Nessuna delle due è stata confrontata con i nostri vincoli (una 2080 Ti da 11 GB in locale, training in cloud, LoRA che deve coprire l'ibrido — F44).
 
+> ➡️ **2026-10-02**: le domande di Fra su aggiornamento a caldo, più tabelle, conoscenza e LoRA hanno risposta dai PDF in [[../concepts/valutazione-engram-lora-e-tabelle]] — tra cui una correzione: la frase di Qwen3.8 descrive **saturazione**, non degrado.
+
 ## Links
 [[base-model-candidates-2026-07]] · [[modelli-piccoli-settembre-2026]] (LensVLM: la stessa idea «vista compressa → espandi dove serve», a livello di tool invece che di attenzione) · [[../harness-experiment-log]] (F44: LoRA sull'ibrido GDN) · [[generatori-del-training-set-2026-09]]
