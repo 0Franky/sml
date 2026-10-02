@@ -4,6 +4,7 @@ description: "Due idee di Fra (2026-10-01/02) con Jev, il «System One model» d
 type: concept
 tags: [routing, jev, system-one, calibrazione, latenza, effort, cascata, proposta, architettura]
 sources:
+  - "versioni open, README letti il 2026-10-02: https://github.com/ikermoel/open-alternative-jev · https://github.com/wfzyx/von · https://github.com/rupeshpoojary9/poorjev · https://github.com/mithalouni/system-one-open · https://huggingface.co/autotrust/JEV-9B"
   - "Fra, messaggi nel terminale 2026-10-01 e 2026-10-02 — testo in wiki/_private/user-ideas-2026-10-01.md (terza nota); chiarito «cerca jev system one» il 2026-10-02"
   - "TypeSafe AI, https://typesafe.ai — pagina del prodotto letta il 2026-10-02"
   - "DataCamp, «Jev: TypeSafe's System One Model Explained», https://www.datacamp.com/blog/system-one-models-jev — letto il 2026-10-02 (secondaria)"
@@ -58,11 +59,34 @@ Il routing c'è dal 2026-05-21 ([[../architecture/orchestrator-layer]]): un clas
 
 **E migliora le prestazioni?** `[INFERRED]` Può, per una via indiretta. Il budget giusto evita sia l'overthinking (che peggiora l'accuratezza, arXiv 2507.14417) sia il sotto-pensiero, e il LoRA giusto evita di caricare quello sbagliato. Va misurato sulle scene come qualsiasi altro pezzo.
 
+## Le versioni open di Jev (ricerca del 2026-10-02)
+
+> ⚠️ **Livello**: README e model card letti il 2026-10-02 per cinque progetti; il resto da risultati di ricerca. **Tutti i numeri sono dichiarati dagli autori**, nessuno verificato da terzi, e i benchmark sono diversi fra progetto e progetto, quindi **non si confrontano fra righe**. Gli elenchi (topic GitHub `jev-alternative` 30 repo, `typed-decisions` 93; madewithjev.com 146 build) non li ho scorsi tutti: ho preso un rappresentante per famiglia.
+
+Quattro famiglie, che funzionano in modo diverso:
+
+| famiglia | esempio | come funziona | numeri dichiarati | per noi |
+|---|---|---|---|---|
+| **A · lettura vincolata dal LLM** | `ikermoel/open-alternative-jev` (Apache-2.0) | **nessun training**: il LLM che hai già legge stato + domande in **una passata**; la risposta è la softmax sui logit delle sole lettere-opzione; calibrazione = una temperatura fittata su metà dei dati e misurata sull'altra | Qwen3.6-27B a 8 bit: **73,7%**, ECE **0,020**, **582 ms** per caso su *typed-decisions* (400 casi, 2.000 decisioni), su uno slice H200 | ottima per il **giudice**; per il front non è veloce |
+| **B · encoder piccolo + testa tipizzata** | `wfzyx/von` (ModernBERT 395M, Apache-2.0) · Laya (421M inglese, **322M multilingue** su mmBERT) | encoder con testa di decisione, niente generazione | Von: **0,023 s** su A10G, 0,34 s su CPU; Banking77 0,838 / ECE 0,135; misto 0,775 / ECE 0,108 (tabella di poorjev, n non dato); «intelligence» 34,5 su JevBench | il più economico, ma ⚠️ **Von è solo inglese** e le nostre richieste sono in italiano; fuori dominio degrada |
+| **C · decoder piccolo + LoRA + testa, addestrato su dati pubblici** | `mithalouni/system-one-open` (Gemma 4 E2B, MIT) · *decider* (Qwen3.5-2B-Base) | LoRA sull'attenzione + testa, addestrato su **92 dataset pubblici** di decisioni (intent, routing, NLI, scelta del tool…) più generatori sintetici; **dichiaratamente non distillato da Jev** | **76,7%** contro **86,9%** di Jev su 343 coppie dell'eval pubblico di TypeSafe; 74,8% su 23 tipi di compito mai visti; 97 ms su H100; pesi non ancora su HF | è **il nostro piano** (MiniCPM5-2B + LoRA + testa) già provato da altri |
+| **D · distillato dalle uscite di Jev** | `autotrust/JEV-9B` (Qwen3.5-9B congelato + LoRA r=16 + testa) | addestrato su **498.010 righe di uscite di Jev 1.13** raccolte via OpenRouter | KL ≈ 0,019 da Jev; 90,2% d'accordo | ⛔ **escluso**: è distillazione da un modello proprietario. L'etichetta Apache-2.0 sul corpus non pulisce la provenienza (regola #29, `provenance-manifest`: il rischio è il modello maestro, non il tag di licenza). ToS di TypeSafe non letti |
+
+E una tecnica che vale **a prescindere dalla famiglia**: `poorjev` (MIT) combina la temperatura con una **soglia conforme**, che converte un budget di rischio scelto («al massimo il 5% di errori fra le decisioni prese») nel segnale *«non lo so, passa al LLM»*. È la forma rigorosa del **default rosso** per una cascata. poorjev riporta anche, con onestà, che **Jev resta il più forte** sul suo benchmark misto (0,906 / ECE 0,045) e che a 77 classi la miscalibrazione è strutturale: la temperatura non la corregge (0,414 → 0,416).
+
+### Quale per noi `[INFERRED]`
+
+- **Giudice (offline) → famiglia A.** Zero training. Si usa il modello che fa già da giudice e si calibra la temperatura sulle **nostre** etichette, con la soglia conforme per decidere cosa passare al grande. La latenza non conta. ⚠️ Serve accesso ai **logit**: su un modello aperto servito da noi sì; via API solo se l'API restituisce le logprob delle opzioni — da verificare sul giudice deciso in D5.
+- **Front (online) → famiglia C**, con la B come **baseline economica**. Un decoder piccolo con LoRA e testa tipizzata, addestrato sulle etichette che abbiamo (il budget minimo dalle scene a più livelli, D18; la LoRA dal routing di maggio) e su dataset pubblici di decisione **con licenza verificata**. Prototipo su MiniCPM5-2B. Laya multilingue come baseline, perché Von non regge l'italiano. ⚠️ Che MiniCPM5-2B regga bene l'italiano **non l'ho verificato**: è il primo controllo da fare.
+- **La famiglia A fa anche da tetto di riferimento per il front**: con il Tier-1 che legge le stesse domande si sa quanto si perde scendendo al piccolo.
+- **Una misura sola per tutte**: lo stesso insieme di decisioni nostre, e per ciascuna **richiamo degli errori passati al grande**, quota passata al grande, ECE. L'eval pubblico di TypeSafe come secondo riferimento, licenza permettendo.
+
 ## Ordine proposto
 1. **Misurare la distribuzione** delle richieste: quota chiudibile con una decisione tipizzata.
 2. **Front = il classifier di maggio con più teste** (budget, LoRA, tool), calibrato. Etichette dalle scene a più livelli.
 3. **Giudice = lo stesso modello** con le teste di rubrica, offline.
 4. Facoltativo: Jev via API come **confronto** sulle stesse etichette, se le condizioni d'uso lo permettono.
+5. Prima di tutto il resto, a costo zero: verificare che MiniCPM5-2B regga l'**italiano**; se no, la base del front va cambiata.
 
 **Cosa la ribalterebbe**: se la calibrazione del nostro piccolo non regge (un errore non escalato è frequente), allora il front resta il classifier minimo di maggio, e budget e configurazione li sceglie il LLM stesso.
 
