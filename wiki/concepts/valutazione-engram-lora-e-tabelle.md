@@ -64,11 +64,27 @@ Distinguere due cose:
 ⚠️ **Tre limiti da tenere davanti** `[INFERRED]`:
 - **Le preferenze non sono fatti.** «Preferisce i commit in italiano» si scrive come riga, ma «di solito, prima di un deploy, vuole vedere i test» è una **procedura**. Probabilmente sta meglio nella LoRA (o nell'adapter di abilità) che in una tabella indirizzata da n-grammi.
 - **Il tetto del 35% a 1000 fatti** rende la memoria utente nella tabella **più debole** di un file di memoria letto nel contesto, che oggi abbiamo già nell'harness. Per ora la tabella non lo sostituisce.
-- **Una tabella scrivibile è una superficie d'attacco.** *BadEngram* (arXiv 2609.13478): modificando circa lo 0,019% dei parametri, cioè solo la tabella, si impianta un comportamento nascosto che scatta su un trigger, con successo del 47,8-64% su Qwen3.8 `[abstract + PDF-agente]`. Se la memoria utente si scrive a caldo, chi scrive deve essere controllato come una scrittura di pesi, non come una nota.
+- **Una tabella scrivibile è una superficie d'attacco** — ⚠️ *precisazione del 2026-10-02*: si intende scrivibile **da una procedura di scrittura** (come quella di User as Engram) o da chi ha accesso ai pesi. Un input **non** scrive nella tabella durante l'uso (§7). *BadEngram* (arXiv 2609.13478): modificando circa lo 0,019% dei parametri, cioè solo la tabella, si impianta un comportamento nascosto che scatta su un trigger, con successo del 47,8-64% su Qwen3.8 `[abstract + PDF-agente]`. Se la memoria utente si scrive a caldo, chi scrive deve essere controllato come una scrittura di pesi, non come una nota.
 
 ## 6. Il vettore dell'ultimo layer rimesso in input
 
 Già trattato: è **Coconut** (arXiv 2412.06769). La tua conclusione è nell'ADR D4 ([[../decisions/2026-06-28-decisions-d1-d5]]): pensiero latente per la parte di ricerca, poi verbalizzazione, con la verifica sempre in token. Su **GPT-6 Astra** il «recurrent depth» ci risulta solo dalla stampa, non da OpenAI. Non ricontrollato il 2026-10-02.
+
+## 7. Idea di Fra (2026-10-02): mettere layer normali PRIMA di Engram, perché ragionino sull'input e non scrivano un'injection nella tabella
+
+**Correzione di partenza: in inferenza la tabella si LEGGE soltanto.** L'indirizzo dipende **solo dai token in input**: gli n-grammi vengono hashati con una funzione deterministica (§2.2, §2.5) `[PDF-io]`. I valori sono **parametri appresi in training**. Nessun input li modifica mentre il modello lavora. *BadEngram* è un attacco **post-training sui parametri**, cioè richiede accesso ai pesi, non un prompt. Quindi oggi un'injection **non può scrivere** nella tabella: può solo **attivarne** delle righe, come qualsiasi testo.
+
+**Il pre-ragionamento sulla LETTURA esiste già.** Il modulo sta al **layer 2**, quindi c'è già un blocco normale (attenzione + MLP) davanti. E il gate usa lo stato nascosto *«che ha aggregato il contesto globale tramite i layer di attenzione precedenti»* come query contro la riga recuperata: *«se la memoria recuperata contraddice il contesto, il gate tende a zero»* (§2.3) `[PDF-io]`. È la tua idea, applicata al leggere invece che allo scrivere.
+
+**Spostare Engram più in profondità peggiora, misurato.** Con un solo modulo spostato dal layer 1 al 12, *«l'iniezione precoce (layer 2) è ottimale, mentre l'efficacia degrada nei layer più profondi»* (§6.2, Fig. 5) `[PDF-io]`. La ragione: il valore di Engram sta nel **togliere ai primi layer** la ricostruzione dei pattern locali; se arriva tardi, quei layer hanno già fatto il lavoro. Le due cose che migliorano sono lo **sdoppiamento** (due moduli, layer 2 e 15 nel modello finale) e più spazio per nascondere la latenza del prefetch, che è l'unico vantaggio della profondità dichiarato dagli autori. Rendere la chiave dipendente da stati profondi, infine, farebbe perdere il **prefetch** dalla RAM: l'indirizzo non sarebbe più noto prima del forward pass `[PDF-io §2.5 + INFERRED]`.
+
+**Dove l'idea vale davvero: sul percorso di SCRITTURA, se lo costruiamo.** Se un giorno la memoria utente si scrive nella tabella (User as Engram), la scrittura è una **procedura separata** che parte dal contenuto della conversazione. Lì la tua idea è giusta, nella forma `[INFERRED]`:
+- a decidere **cosa** scrivere è il **modello intero**, con tutto il ragionamento, non i primi layer. È la skill di cattura dei fatti durevoli che c'è già in tassonomia (memoria `project_durable_fact_capture_is_training`);
+- **provenienza come cancello**: si scrive solo ciò che viene dall'**utente**, mai dal contenuto di un tool o di un documento letto, che è dove vivono le injection. È la stessa disciplina dei sigilli dei segreti dell'harness;
+- **default rosso**: una scrittura che non passa il cancello non si fa, e si registra;
+- la riga scritta resta **ispezionabile e revocabile**, che è il vantaggio vero di una tabella rispetto a un LoRA.
+
+**In sintesi**: davanti a Engram un blocco normale c'è già e serve, ma metterne di più peggiora. Il filtro anti-injection non va nella rete: va sulla procedura di scrittura, che oggi non esiste.
 
 ## In una riga, per la discussione sull'architettura
 
